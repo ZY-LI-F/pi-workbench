@@ -22,7 +22,7 @@
 2. `AgentTask`：独立于 Kanban Task 和 Workflow Run 的持久执行队列，支持根任务、Squad Leader、子委派、终态和 Pi 产物。
 3. `Squad`：保存 Leader、成员和 Leader 指令；Leader 输出的成员 `@mention` 会生成串行子任务。
 4. `Autopilot` / `AutopilotRun`：保存创建任务的模板、执行目标、手动/周期/Webhook 触发配置和每次触发审计。
-5. `AgentTaskRunner`：Electron 主进程内的单执行者，调用安装包内置的 Pi 0.80.10 RPC entry；不查找全局 CLI。
+5. `AgentTaskRunner`：Electron 主进程内的单执行者，调用安装包内置、精确锁定的 Pi 0.82.1 RPC entry；不查找全局 CLI。
 6. 应用运行期间的 `ScheduleRunner` 与仅监听 `127.0.0.1` 的 Webhook Server。
 
 固定 Workflow 的已有能力保持不变。任务新增执行目标，用户可选择固定 Workflow、单个 Agent 或一个 Squad；三种分发入口共享同一张看板和任务详情。

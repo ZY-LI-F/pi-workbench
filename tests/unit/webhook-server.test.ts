@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { AutopilotService } from "../../src/main/autopilot-service";
 import type { BoardRepository } from "../../src/main/board-repository";
+import { CapabilityHealthStore } from "../../src/main/capability-health";
 import {
   WebhookServer,
   webhookMaxBytesFromEnvironment,
@@ -206,8 +207,11 @@ describe("WebhookServer", () => {
       maxBodyBytes: 1_048_576,
     });
     try {
-      const status = await second.start();
-      expect(status).toMatchObject({ state: "error", host: "127.0.0.1", port: first.status.port, error: expect.stringContaining("EADDRINUSE") });
+      const health = new CapabilityHealthStore({ now: () => "2026-07-18T00:00:00.000Z", emitChanged: () => undefined });
+      const started = await health.run("webhook", async () => { await second.start(); });
+      expect(started).toBe(false);
+      expect(health.snapshot().webhook).toMatchObject({ state: "error", error: expect.stringContaining("EADDRINUSE") });
+      expect(second.status).toMatchObject({ state: "error", host: "127.0.0.1", port: first.status.port, error: expect.stringContaining("EADDRINUSE") });
       expect(events).toContainEqual(expect.objectContaining({ type: "automation-error", source: "webhook", message: expect.stringContaining("EADDRINUSE") }));
     } finally {
       await second.stop();

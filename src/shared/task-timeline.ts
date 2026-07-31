@@ -67,7 +67,21 @@ function entry(value: Omit<TaskTimelineEntry, "provenance"> & { readonly provena
   return Object.freeze({ ...value, provenance: freezeProvenance(value.provenance) });
 }
 
-function messageEntry(message: TaskComment): TaskTimelineEntry {
+function artifactFromAgentTask(agentTask: AgentTask | undefined): AgentArtifact | undefined {
+  if (!agentTask?.output) return undefined;
+  return Object.freeze({
+    title: "Agent 最终产物与运行指标",
+    content: agentTask.output,
+    sessionPath: agentTask.sessionPath,
+    inputTokens: agentTask.inputTokens,
+    outputTokens: agentTask.outputTokens,
+    cost: agentTask.cost,
+    startedAt: agentTask.startedAt,
+    completedAt: agentTask.completedAt,
+  });
+}
+
+function messageEntry(message: TaskComment, agentTasksById: ReadonlyMap<string, AgentTask>): TaskTimelineEntry {
   const kind: TaskTimelineKind = message.messageKind === "acceptance"
     ? "review"
     : message.messageKind === "execution-report" || message.author === "agent"
@@ -89,6 +103,9 @@ function messageEntry(message: TaskComment): TaskTimelineEntry {
     title,
     body: message.body,
     authorAgentId: message.authorAgentId,
+    artifact: message.messageKind === "execution-report" && message.agentTaskId
+      ? artifactFromAgentTask(agentTasksById.get(message.agentTaskId))
+      : undefined,
     provenance: {
       source: "message",
       sourceId: message.id,
@@ -203,6 +220,7 @@ function compareText(left: string, right: string): number {
 }
 
 export function projectTaskTimeline(input: ProjectTaskTimelineInput): readonly TaskTimelineEntry[] {
+  const agentTasksById = new Map(input.agentTasks.map((agentTask) => [agentTask.id, agentTask] as const));
   const reportMessageAgentTaskIds = new Set(
     input.comments
       .filter((message) => message.messageKind === "execution-report" && message.agentTaskId)
@@ -220,7 +238,7 @@ export function projectTaskTimeline(input: ProjectTaskTimelineInput): readonly T
   });
   const entries = [
     goal,
-    ...input.comments.map(messageEntry),
+    ...input.comments.map((message) => messageEntry(message, agentTasksById)),
     ...input.activities.map(activityEntry),
     ...input.runs.flatMap(runEntries),
     ...input.agentTasks.flatMap((agentTask) => agentTaskEntries(agentTask, reportMessageAgentTaskIds)),

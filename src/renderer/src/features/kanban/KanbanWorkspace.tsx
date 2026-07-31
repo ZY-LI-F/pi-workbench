@@ -47,6 +47,7 @@ interface KanbanWorkspaceProps {
   readonly onOpenSidebar: () => void;
   readonly onOpenTerminal: () => void;
   readonly onError: (message: string) => void;
+  readonly modelLabel?: string;
 }
 
 const MANUAL_LANES = new Set<BoardLane>(MANUAL_TASK_STAGES);
@@ -84,6 +85,7 @@ export function KanbanWorkspace({
   onOpenSidebar,
   onOpenTerminal,
   onError,
+  modelLabel,
 }: KanbanWorkspaceProps) {
   const { state } = controller;
   const [query, setQuery] = useState("");
@@ -121,11 +123,17 @@ export function KanbanWorkspace({
     name: editorTask.projectName,
     trusted: editorTask.trusted,
     requiresTrust: false,
+    requiresSelection: false,
   }) : project;
 
   useEffect(() => {
     if (selectedTaskId && board && !board.tasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(undefined);
   }, [board, selectedTaskId]);
+
+  useEffect(() => {
+    if (projectScope !== "current" || !project || !selectedTask || selectedTask.projectPath === project.cwd) return;
+    setSelectedTaskId(undefined);
+  }, [project, projectScope, selectedTask]);
 
   const visibleTasks = useMemo(() => {
     if (!board) return [];
@@ -206,6 +214,7 @@ export function KanbanWorkspace({
           <em>Stella</em>
         </div>
         <div className="kanban-header__actions">
+          <span className="current-model-chip" title="所有页面共享的当前 Pi 模型">{modelLabel ?? "未选择模型"}</span>
           <button type="button" className="button-secondary" onClick={() => setCatalogOpen(true)}><Users size={15} />编排目录</button>
           <button type="button" className="button-secondary" disabled={!project} onClick={() => setAutomationOpen(true)}><Zap size={15} />自动化</button>
           <button type="button" className="icon-button" disabled={!project} aria-label="打开命令终端" onClick={onOpenTerminal}><TerminalSquare size={16} /></button>

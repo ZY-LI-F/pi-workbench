@@ -1,10 +1,19 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "productName": "Stella Pi Workbench",
   "private": true,
   "description": "A polished desktop GUI for the Pi coding agent, signed by Stella.",
   "author": "Stella",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZY-LI-F/stella-pi-workbench.git"
+  },
+  "homepage": "https://github.com/ZY-LI-F/stella-pi-workbench#readme",
+  "bugs": {
+    "url": "https://github.com/ZY-LI-F/stella-pi-workbench/issues"
+  },
   "type": "module",
   "main": "./out/main/index.js",
   "engines": {
@@ -31,12 +40,13 @@
     "test:e2e": "playwright test",
     "test:e2e:pharma": "npm run build && playwright test tests/e2e/pharma-early-research.spec.ts",
     "test:e2e:pharma:live": "npm run build && playwright test --config playwright.live.config.ts",
+    "test:e2e:qwen:live": "npm run build && playwright test --config playwright.live.config.ts tests/e2e/aliyun-qwen.live.ts",
     "test:packaged": "playwright test tests/e2e/packaged.spec.ts",
     "release:checksums": "node scripts/write-release-checksums.mjs",
     "check": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "0.80.10",
+    "@earendil-works/pi-coding-agent": "0.82.1",
     "@fontsource-variable/manrope": "5.2.8",
     "@fontsource/marck-script": "5.2.8",
     "lucide-react": "1.24.0",
@@ -44,7 +54,11 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-markdown": "10.1.0",
-    "remark-gfm": "4.0.1"
+    "remark-gfm": "4.0.1",
+    "typebox": "1.1.38"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

@@ -7,7 +7,7 @@ import {
 } from "@renderer/lib/runtime-state";
 
 const BOOTSTRAP = {
-  project: { cwd: "C:/workspace", name: "workspace", trusted: false, requiresTrust: false },
+  project: { cwd: "C:/workspace", name: "workspace", trusted: false, requiresTrust: false, requiresSelection: false },
   recentProjects: [],
   state: {
     thinkingLevel: "off",
@@ -22,6 +22,7 @@ const BOOTSTRAP = {
   },
   messages: [],
   models: [],
+  thinkingLevels: ["off", "medium", "high"],
   commands: [],
   sessions: [],
   stats: {

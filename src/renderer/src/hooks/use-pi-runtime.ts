@@ -102,17 +102,28 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
 
   const command = useCallback(
     async (piCommand: PiCommand, refreshAfter = false) => {
+      let response: PiResponse;
       try {
-        const response = await api.command(piCommand);
+        response = await api.command(piCommand);
         // success:false 与传输失败同样记录为可见通知；调用方仍负责处理命令后的本地步骤。
         if (!response.success) throw new Error(response.error);
-        if (refreshAfter) await refresh();
-        return response;
       } catch (error) {
         const message = errorMessage(error);
         dispatch({ type: "SYNC_FAILED", error: message });
         throw new ReportedRuntimeError(error);
       }
+
+      if (refreshAfter) {
+        try {
+          await refresh();
+        } catch (error) {
+          const detail = errorMessage(error);
+          const completed = piCommand.type === "prompt" ? "消息已发送" : "命令已执行";
+          const message = `${completed}，但状态刷新失败：${detail}`;
+          dispatch({ type: "SYNC_WARNING", error: message });
+        }
+      }
+      return response;
     },
     [api, refresh],
   );

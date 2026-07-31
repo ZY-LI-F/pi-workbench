@@ -38,6 +38,7 @@ export default {
   },
   files: [
     "out/**/*",
+    "resources/extensions/**/*",
     "!out/**/*.map",
   ],
   asar: true,

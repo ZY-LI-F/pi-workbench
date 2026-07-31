@@ -4,8 +4,6 @@ const TEAM_LAUNCH_MENTION_PATTERN = /(?:^|\s)@([A-Za-z0-9_-]+)(?=$|\s|[^\p{L}\p{
 const LEAD_MENTION_PATTERN = /(^|\s)@lead(?=$|\s|[^\p{L}\p{N}_-])/iu;
 const TITLE_LIMIT = 42;
 
-export const TEAM_LAUNCH_ACCEPTANCE_CRITERIA = "LEAD 必须先澄清目标并形成可验证的验收标准；所有 Worker 报告经 LEAD 汇总后由用户最终验收。";
-
 export interface TeamLaunchDraft {
   readonly title: string;
   readonly objective: string;
@@ -22,14 +20,18 @@ function titleFromObjective(objective: string): string {
     : firstSentence;
 }
 
-export function deriveTeamLaunchDraft(body: string): TeamLaunchDraft {
+export function deriveTeamLaunchDraft(body: string, acceptanceCriteria: string): TeamLaunchDraft {
+  if (typeof body !== "string") throw new Error("任务启动指令必须是字符串");
   const message = body.trim();
   if (!message) throw new Error("请先写明要交给团队的任务目标");
+  if (typeof acceptanceCriteria !== "string") throw new Error("验收标准必须是字符串");
+  const normalizedAcceptance = acceptanceCriteria.trim();
+  if (!normalizedAcceptance) throw new Error("请先写明可验证的验收标准");
 
   const mentions = [...message.matchAll(TEAM_LAUNCH_MENTION_PATTERN)].map((match) => match[1]?.toLocaleLowerCase()).filter((token): token is string => Boolean(token));
-  if (mentions.length === 0) throw new Error("项目启动室需要通过 @LEAD 创建任务");
+  if (mentions.length === 0) throw new Error("任务启动台需要通过 @LEAD 创建任务");
   const nonLead = mentions.find((token) => token !== "lead");
-  if (nonLead) throw new Error(`项目启动室只接受 @LEAD；@${nonLead.toLocaleUpperCase()} 请在已有 Task Room 中使用`);
+  if (nonLead) throw new Error(`任务启动台只接受 @LEAD；@${nonLead.toLocaleUpperCase()} 请在已有 Task Room 中使用`);
   if (mentions.length !== 1) throw new Error("每条启动指令只能包含一个 @LEAD");
 
   const objective = message
@@ -42,7 +44,7 @@ export function deriveTeamLaunchDraft(body: string): TeamLaunchDraft {
   return Object.freeze({
     title: titleFromObjective(objective),
     objective,
-    acceptanceCriteria: TEAM_LAUNCH_ACCEPTANCE_CRITERIA,
+    acceptanceCriteria: normalizedAcceptance,
     priority: "medium",
   });
 }

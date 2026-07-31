@@ -4,10 +4,12 @@ import { backgroundSessionName } from "../shared/session-policy";
 import type { PiRuntimeStartOptions } from "./pi-rpc-runtime";
 import { resolveAgentRuntimeModel, type RuntimeModelSelection } from "../shared/runtime-model";
 import { assertRequiredAgentSkills, requiredSkillsPrompt } from "./required-agent-skills";
+import { coordinatorActionResult, finalAssistantResult } from "./pi-execution-result";
 import { AgentTaskRuntimeExpiredError, AgentTaskService, type ClaimedAgentTask } from "./agent-task-service";
 import {
   WorkspaceAdmission,
   WorkspaceAdmissionAbortError,
+  agentRequiresWorkspaceLease,
   assertAgentWorkspacePolicy,
   type WorkspaceLease,
 } from "./workspace-admission";
@@ -33,7 +35,12 @@ interface AgentTaskRunnerDependencies {
   readonly emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly admission: WorkspaceAdmission;
   readonly globalModel: () => RuntimeModelSelection | undefined;
+  readonly resolveProjectTrust: (projectPath: string) => Promise<boolean>;
   readonly resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly coordinatorExtensionPath: string;
+  readonly skills: {
+    assertAgentsReady(projectPath: string, trusted: boolean, agents: readonly ClaimedAgentTask["agentTask"]["agentSnapshot"][]): Promise<void>;
+  };
 }
 
 interface ActiveExecution {
@@ -42,6 +49,7 @@ interface ActiveExecution {
   readonly runtimeToken: string;
   readonly runtime: AgentTaskRuntime;
   readonly lease?: WorkspaceLease;
+  readonly structuredCoordinator: boolean;
   settling: boolean;
 }
 
@@ -81,7 +89,10 @@ export class AgentTaskRunner {
   readonly #emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly #admission: WorkspaceAdmission;
   readonly #globalModel: () => RuntimeModelSelection | undefined;
+  readonly #resolveProjectTrust: (projectPath: string) => Promise<boolean>;
   readonly #resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly #coordinatorExtensionPath: string;
+  readonly #skills: AgentTaskRunnerDependencies["skills"];
   #active?: ActiveExecution;
   #waiting?: WaitingExecution;
   #drainPromise?: Promise<void>;
@@ -94,7 +105,10 @@ export class AgentTaskRunner {
     this.#emitBoardEvent = dependencies.emitBoardEvent;
     this.#admission = dependencies.admission;
     this.#globalModel = dependencies.globalModel;
+    this.#resolveProjectTrust = dependencies.resolveProjectTrust;
     this.#resolveProjectPath = dependencies.resolveProjectPath;
+    this.#coordinatorExtensionPath = dependencies.coordinatorExtensionPath;
+    this.#skills = dependencies.skills;
   }
 
   start(): void {
@@ -159,12 +173,15 @@ export class AgentTaskRunner {
       const agent = queued.agentTask.agentSnapshot;
       try {
         assertAgentWorkspacePolicy(agent);
+        const trusted = await this.#resolveProjectTrust(queued.task.projectPath);
+        const projectPath = await this.#resolveProjectPath(queued.task.projectPath, trusted);
+        await this.#skills.assertAgentsReady(projectPath, trusted, Object.freeze([agent]));
       } catch (cause) {
         await this.#service.rejectQueued(queued.agentTask.id, cause);
         return;
       }
       let lease: WorkspaceLease | undefined;
-      if (agent.workspaceAccess === "write") {
+      if (agentRequiresWorkspaceLease(agent)) {
         const controller = new AbortController();
         const waiting = Object.freeze({ taskId: queued.task.id, agentTaskId: queued.agentTask.id, controller });
         this.#waiting = waiting;
@@ -208,6 +225,11 @@ export class AgentTaskRunner {
       lease?.release();
       throw new Error(`已认领 AgentTask ${claimed.agentTask.id} 缺少 runtimeToken`);
     }
+    const agent = claimed.agentTask.agentSnapshot;
+    const structuredCoordinator = claimed.agentTask.kind === "coordinator" || claimed.agentTask.kind === "coordinator-review";
+    const allowedTools = structuredCoordinator
+      ? Object.freeze([...new Set([...agent.allowedTools, "coordinator_action"])])
+      : agent.allowedTools;
     const runtime = this.#runtimeFactory.create({
       emitPiEvent: (event) => void this.#handlePiEvent(claimed.agentTask.id, runtimeToken, event).catch((error) => this.#reportError(error)),
       emitRuntimeSignal: (signal) => this.#handleRuntimeSignal(claimed.agentTask.id, runtimeToken, signal),
@@ -218,16 +240,17 @@ export class AgentTaskRunner {
       runtimeToken,
       runtime,
       lease,
+      structuredCoordinator,
       settling: false,
     };
     this.#active = active;
-    const agent = claimed.agentTask.agentSnapshot;
     const selectedModel = resolveAgentRuntimeModel(agent, this.#globalModel());
     try {
-      const projectPath = await this.#resolveProjectPath(claimed.task.projectPath, claimed.task.trusted);
+      const trusted = await this.#resolveProjectTrust(claimed.task.projectPath);
+      const projectPath = await this.#resolveProjectPath(claimed.task.projectPath, trusted);
       await runtime.start({
         cwd: projectPath,
-        trusted: claimed.task.trusted,
+        trusted,
         sessionName: backgroundSessionName({
           taskId: claimed.task.id,
           executionKind: "agent-task",
@@ -237,11 +260,13 @@ export class AgentTaskRunner {
         provider: selectedModel.provider,
         model: selectedModel.model,
         thinking: agent.thinking,
-        allowedTools: agent.allowedTools,
+        allowedTools,
         appendSystemPrompt: requiredSkillsPrompt(agent),
         disableExtensions: agent.disableExtensions,
         disableSkills: agent.disableSkills,
         disablePromptTemplates: agent.disablePromptTemplates,
+        disableContextFiles: agent.disableContextFiles,
+        extensions: structuredCoordinator ? Object.freeze([this.#coordinatorExtensionPath]) : undefined,
       });
       if (this.#active !== active || this.#stopping) {
         await runtime.stop();
@@ -299,17 +324,27 @@ export class AgentTaskRunner {
         active.runtime.send({ type: "get_messages" }),
       ]);
       if (this.#active !== active) return;
-      const output = responseData<{ readonly text: string }>(textResponse, "get_last_assistant_text").text.trim();
-      if (output.length === 0) throw new Error("Agent 已结束，但没有返回最终文本产物");
-      const messages = responseData<{ readonly messages: readonly unknown[] }>(messagesResponse, "get_messages").messages;
-      const lastAssistant = [...messages].reverse().map(record).find((message) => message?.role === "assistant");
-      if (lastAssistant?.stopReason === "error" || lastAssistant?.stopReason === "aborted") {
-        throw new Error(typeof lastAssistant.errorMessage === "string" ? lastAssistant.errorMessage : `Agent 以 ${lastAssistant.stopReason} 结束`);
+      let protocolError: string | undefined;
+      let output: string;
+      if (active.structuredCoordinator) {
+        try {
+          output = coordinatorActionResult(messagesResponse).output;
+        } catch (cause) {
+          protocolError = cause instanceof Error ? cause.message : String(cause);
+          try {
+            output = finalAssistantResult(textResponse, messagesResponse).output;
+          } catch {
+            output = protocolError;
+          }
+        }
+      } else {
+        output = finalAssistantResult(textResponse, messagesResponse).output;
       }
       const state = responseData<RpcStateData>(stateResponse, "get_state");
       const stats = responseData<RpcStatsData>(statsResponse, "get_session_stats");
       await this.#service.complete(active.agentTaskId, active.runtimeToken, {
         output,
+        protocolError,
         sessionPath: state.sessionFile,
         inputTokens: stats.tokens?.input,
         outputTokens: stats.tokens?.output,

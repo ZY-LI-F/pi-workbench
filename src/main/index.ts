@@ -42,6 +42,7 @@ import {
   type CreateProjectAgentInput,
   type CreateTaskCommentInput,
   type CreateTaskInput,
+  type KanbanTask,
   type LaunchTeamTaskInput,
   type ExecutionTarget,
   type CreateSquadInput,
@@ -58,13 +59,14 @@ import { BUILTIN_ORCHESTRATION_CATALOG } from "../shared/orchestration-catalog";
 import { runtimeModelSelectionFromSession, type RuntimeModelSelection } from "../shared/runtime-model";
 import { AgentTaskRunner, type AgentTaskRuntimeFactory } from "./agent-task-runner";
 import { AgentTaskService } from "./agent-task-service";
+import { AgentSkillService } from "./agent-skill-service";
 import { AutopilotService } from "./autopilot-service";
 import { BoardService } from "./board-service";
 import { BoardStore } from "./board-store";
 import { CapabilityHealthStore } from "./capability-health";
 import { ExecutionReviewService } from "./execution-review-service";
 import { InteractiveCommandRouter } from "./interactive-command-router";
-import { PiRpcRuntime } from "./pi-rpc-runtime";
+import { PiRpcRuntime, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
 import { ScheduleRunner } from "./schedule-runner";
 import { StateStore } from "./state-store";
 import { SquadService } from "./squad-service";
@@ -86,8 +88,10 @@ import {
   canonicalPathWithinRoots,
   pathComparisonKey,
 } from "./path-security";
+import { LocalPathService } from "./local-path-service";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
+const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
 const preloadPath = fileURLToPath(new URL("../preload/index.cjs", import.meta.url));
 const SKIN_ARTWORK_SCHEME = "stella-artwork";
 
@@ -101,6 +105,7 @@ protocol.registerSchemesAsPrivileged([
 interface CurrentProject {
   readonly cwd: string;
   readonly trusted: boolean;
+  readonly implicitDefault: boolean;
 }
 
 interface RpcModelsData {
@@ -113,6 +118,10 @@ interface RpcMessagesData {
 
 interface RpcCommandsData {
   readonly commands: readonly Record<string, unknown>[];
+}
+
+interface RpcThinkingLevelsData {
+  readonly levels: readonly RuntimeBootstrap["state"]["thinkingLevel"][];
 }
 
 interface RpcEntriesData {
@@ -128,6 +137,7 @@ interface RpcTreeData {
 const PI_COMMAND_TYPES = new Set<string>([
   "prompt", "steer", "follow_up", "abort", "new_session", "get_state", "set_model",
   "cycle_model", "get_available_models", "set_thinking_level", "cycle_thinking_level",
+  "get_available_thinking_levels",
   "set_steering_mode", "set_follow_up_mode", "compact", "set_auto_compaction",
   "set_auto_retry", "abort_retry", "bash", "abort_bash", "get_session_stats", "export_html",
   "switch_session", "fork", "clone", "get_fork_messages", "get_entries", "get_tree",
@@ -184,6 +194,7 @@ let boardStore: BoardStore;
 let boardService: BoardService;
 let workflowOrchestrator: WorkflowOrchestrator;
 let agentTaskService: AgentTaskService;
+let agentSkillService: AgentSkillService;
 let agentTaskRunner: AgentTaskRunner;
 let executionReviewService: ExecutionReviewService;
 let squadService: SquadService;
@@ -192,6 +203,7 @@ let scheduleRunner: ScheduleRunner;
 let webhookServer: WebhookServer;
 let skinArtworkService: SkinArtworkService;
 let modelConfigurationService: ModelConfigurationService;
+let localPathService: LocalPathService;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
 function broadcast(source: "pi" | "runtime" | "board" | "capability", payload: unknown): void {
@@ -244,6 +256,7 @@ const runtime = new PiRpcRuntime({
     }
     broadcast("runtime", signal);
   },
+  requestTimeoutMs: piRpcRequestTimeoutMs,
 });
 
 interactiveCommandRouter = new InteractiveCommandRouter({ runtime, admission: workspaceAdmission });
@@ -255,6 +268,7 @@ const workflowRuntimeFactory: WorkflowRuntimeFactory = Object.freeze({
     spawnProcess: (command, args, options) => spawn(command, [...args], options),
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
+    requestTimeoutMs: piRpcRequestTimeoutMs,
   }),
 });
 
@@ -265,6 +279,7 @@ const agentTaskRuntimeFactory: AgentTaskRuntimeFactory = Object.freeze({
     spawnProcess: (command, args, options) => spawn(command, [...args], options),
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
+    requestTimeoutMs: piRpcRequestTimeoutMs,
   }),
 });
 
@@ -386,7 +401,10 @@ function validatedTaskComment(value: unknown): CreateTaskCommentInput {
 
 function validatedTeamLaunch(value: unknown): LaunchTeamTaskInput {
   const input = objectValue(value, "团队启动参数");
-  return Object.freeze({ body: textValue(input.body, "body") });
+  return Object.freeze({
+    body: textValue(input.body, "body"),
+    acceptanceCriteria: textValue(input.acceptanceCriteria, "acceptanceCriteria"),
+  });
 }
 
 function validatedProjectAgent(value: unknown): CreateProjectAgentInput {
@@ -408,6 +426,7 @@ function validatedProjectAgent(value: unknown): CreateProjectAgentInput {
     disableExtensions: booleanValue(input.disableExtensions, "disableExtensions"),
     disableSkills: booleanValue(input.disableSkills, "disableSkills"),
     disablePromptTemplates: booleanValue(input.disablePromptTemplates, "disablePromptTemplates"),
+    disableContextFiles: booleanValue(input.disableContextFiles, "disableContextFiles"),
     projectPath: textValue(input.projectPath, "projectPath"),
   });
 }
@@ -421,7 +440,7 @@ async function createProjectAgentForCurrentProject(value: unknown): Promise<Boar
   assertTaskCapability();
   if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedProjectAgent(value);
-  if (resolve(input.projectPath) !== currentProject.cwd) throw new Error("自定义 Agent 必须属于当前主进程工作区");
+  if (!sameProject(input.projectPath, currentProject.cwd)) throw new Error("自定义 Agent 必须属于当前主进程工作区");
   return boardService.createProjectAgent(Object.freeze({ ...input, projectPath: currentProject.cwd }));
 }
 
@@ -429,7 +448,7 @@ async function updateProjectAgentForCurrentProject(value: unknown): Promise<Boar
   assertTaskCapability();
   if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedUpdateProjectAgent(value);
-  if (resolve(input.projectPath) !== currentProject.cwd) throw new Error("自定义 Agent 必须属于当前主进程工作区");
+  if (!sameProject(input.projectPath, currentProject.cwd)) throw new Error("自定义 Agent 必须属于当前主进程工作区");
   return boardService.updateProjectAgent(Object.freeze({ ...input, projectPath: currentProject.cwd }));
 }
 
@@ -518,7 +537,7 @@ async function createAutopilotForCurrentProject(value: unknown): Promise<BoardBo
   assertTaskCapability();
   if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedCreateAutopilot(value);
-  if (resolve(input.projectPath) !== currentProject.cwd) throw new Error("Autopilot 项目必须与当前主进程工作区一致");
+  if (!sameProject(input.projectPath, currentProject.cwd)) throw new Error("Autopilot 项目必须与当前主进程工作区一致");
   const project = await getProjectMeta(currentProject);
   const bootstrap = await autopilotService.create(Object.freeze({
     ...input,
@@ -534,7 +553,8 @@ async function updateAutopilotForCurrentProject(value: unknown): Promise<BoardBo
   assertTaskCapability();
   if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedUpdateAutopilot(value);
-  if (resolve(input.projectPath) !== currentProject.cwd) throw new Error("Autopilot 项目必须与当前主进程工作区一致");
+  if (!sameProject(input.projectPath, currentProject.cwd)) throw new Error("Autopilot 项目必须与当前主进程工作区一致");
+  await assertCurrentProjectAutopilot(input.autopilotId);
   const project = await getProjectMeta(currentProject);
   const bootstrap = await autopilotService.update(Object.freeze({
     ...input,
@@ -548,6 +568,7 @@ async function updateAutopilotForCurrentProject(value: unknown): Promise<BoardBo
 
 async function deleteAutopilot(autopilotId: string): Promise<BoardBootstrap> {
   assertTaskCapability();
+  await assertCurrentProjectAutopilot(autopilotId);
   const bootstrap = await autopilotService.delete(autopilotId);
   await notifyScheduleCapability();
   return bootstrap;
@@ -557,7 +578,7 @@ async function createBoardTaskForCurrentProject(value: unknown): Promise<BoardBo
   assertTaskCapability();
   if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedCreateTask(value);
-  if (resolve(input.projectPath) !== currentProject.cwd) {
+  if (!sameProject(input.projectPath, currentProject.cwd)) {
     throw new Error("任务项目必须与当前主进程工作区一致");
   }
   const project = await getProjectMeta(currentProject);
@@ -602,11 +623,14 @@ async function dispatchBoardTask(taskId: string): Promise<BoardBootstrap> {
   return bootstrap;
 }
 
+async function dispatchCurrentProjectTask(taskId: string): Promise<BoardBootstrap> {
+  await currentProjectTask(taskId);
+  return dispatchBoardTask(taskId);
+}
+
 async function abortBoardTask(taskId: string): Promise<BoardBootstrap> {
   assertTaskCapability();
-  const state = await boardStore.read();
-  const task = state.tasks.find((candidate) => candidate.id === taskId);
-  if (!task) throw new Error(`找不到任务: ${taskId}`);
+  const task = await currentProjectTask(taskId);
   if (task.activeRunId) return workflowOrchestrator.abort(taskId);
   if (task.activeAgentTaskId) return agentTaskRunner.abortTask(taskId);
   throw new Error("任务当前没有可中止的执行");
@@ -730,6 +754,7 @@ async function getProjectMeta(project: CurrentProject): Promise<ProjectMeta> {
     branch: await readGitBranch(project.cwd),
     trusted: project.trusted,
     requiresTrust: hasTrustRequiringProjectResources(project.cwd),
+    requiresSelection: project.implicitDefault,
   });
 }
 
@@ -737,11 +762,12 @@ async function hydrate(): Promise<RuntimeBootstrap> {
   if (!currentProject) throw new Error("尚未选择项目");
   if (!runtime.running) await runtime.start(currentProject);
 
-  const [stateResponse, messagesResponse, modelsResponse, commandsResponse, statsResponse, entriesResponse, treeResponse] =
+  const [stateResponse, messagesResponse, modelsResponse, thinkingLevelsResponse, commandsResponse, statsResponse, entriesResponse, treeResponse] =
     await Promise.all([
       runtime.send({ type: "get_state" }),
       runtime.send({ type: "get_messages" }),
       runtime.send({ type: "get_available_models" }),
+      runtime.send({ type: "get_available_thinking_levels" }),
       runtime.send({ type: "get_commands" }),
       runtime.send({ type: "get_session_stats" }),
       runtime.send({ type: "get_entries" }),
@@ -752,6 +778,7 @@ async function hydrate(): Promise<RuntimeBootstrap> {
   globalModelSelection = runtimeModelSelectionFromSession(state.model);
   const messages = dataFromResponse<RpcMessagesData>(messagesResponse, "get_messages").messages;
   const models = dataFromResponse<RpcModelsData>(modelsResponse, "get_available_models").models.map(mapModel);
+  const thinkingLevels = dataFromResponse<RpcThinkingLevelsData>(thinkingLevelsResponse, "get_available_thinking_levels").levels;
   const commands = dataFromResponse<RpcCommandsData>(commandsResponse, "get_commands").commands.map(mapCommand);
   const stats = dataFromResponse<RuntimeBootstrap["stats"]>(statsResponse, "get_session_stats");
   const entriesData = dataFromResponse<RpcEntriesData>(entriesResponse, "get_entries");
@@ -769,6 +796,7 @@ async function hydrate(): Promise<RuntimeBootstrap> {
     state,
     messages: messages as RuntimeBootstrap["messages"],
     models: Object.freeze(models),
+    thinkingLevels: Object.freeze([...thinkingLevels]),
     commands: Object.freeze(commands),
     sessions: visibleInteractiveSessions(sessions.map(mapSession)),
     stats,
@@ -792,7 +820,11 @@ async function initializeRuntime(): Promise<RuntimeBootstrap> {
         (project) => canonicalSessionPath(project.path) === canonicalSessionPath(requestedPath),
       );
       const identityUnchanged = canonicalSessionPath(requestedPath) === canonicalSessionPath(cwd);
-      currentProject = Object.freeze({ cwd, trusted: identityUnchanged && (remembered?.trusted ?? false) });
+      currentProject = Object.freeze({
+        cwd,
+        trusted: identityUnchanged && (remembered?.trusted ?? false),
+        implicitDefault: persisted.lastProject === undefined,
+      });
     }
     const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
@@ -897,9 +929,13 @@ async function openProject(path: string, trusted: boolean): Promise<RuntimeBoots
   try {
     await runtime.stop();
     interactiveCommandRouter?.release();
-    currentProject = Object.freeze({ cwd: resolvedPath, trusted });
-    await runtime.start(currentProject);
     await stateStore.recordProject(resolvedPath, trusted);
+    currentProject = Object.freeze({ cwd: resolvedPath, trusted, implicitDefault: false });
+    if (capabilityHealth.snapshot().task.state === "ready") {
+      await boardService.updateProjectTrust(resolvedPath, trusted);
+      if (!trusted) await revokeProjectExecutions(resolvedPath);
+    }
+    await runtime.start(currentProject);
     const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
     return bootstrap;
@@ -911,6 +947,45 @@ async function openProject(path: string, trusted: boolean): Promise<RuntimeBoots
 
 function canonicalSessionPath(path: string): string {
   return pathComparisonKey(path);
+}
+
+function sameProject(left: string, right: string): boolean {
+  return pathComparisonKey(resolve(left)) === pathComparisonKey(resolve(right));
+}
+
+async function resolveProjectTrust(projectPath: string): Promise<boolean> {
+  if (currentProject && sameProject(currentProject.cwd, projectPath)) return currentProject.trusted;
+  const persisted = await stateStore.read();
+  return persisted.recentProjects.find((project) => sameProject(project.path, projectPath))?.trusted ?? false;
+}
+
+function assertCurrentProjectPath(projectPath: string, subject: string): void {
+  if (!currentProject) throw new Error("尚未选择项目");
+  if (!sameProject(projectPath, currentProject.cwd)) throw new Error(`${subject}不属于当前项目，请先打开对应项目`);
+}
+
+async function currentProjectTask(taskId: string): Promise<KanbanTask> {
+  const state = await boardStore.read();
+  const task = state.tasks.find((candidate) => candidate.id === taskId);
+  if (!task) throw new Error(`找不到任务: ${taskId}`);
+  assertCurrentProjectPath(task.projectPath, "任务");
+  return task;
+}
+
+async function assertCurrentProjectAutopilot(autopilotId: string): Promise<void> {
+  const state = await boardStore.read();
+  const autopilot = state.autopilots.find((candidate) => candidate.id === autopilotId);
+  if (!autopilot) throw new Error(`找不到 Autopilot: ${autopilotId}`);
+  assertCurrentProjectPath(autopilot.projectPath, "Autopilot");
+}
+
+async function revokeProjectExecutions(projectPath: string): Promise<void> {
+  const state = await boardStore.read();
+  const activeTasks = state.tasks.filter((task) => sameProject(task.projectPath, projectPath));
+  for (const task of activeTasks) {
+    if (task.activeRunId) await workflowOrchestrator.abort(task.id);
+    else if (task.activeAgentTaskId) await agentTaskRunner.abortTask(task.id);
+  }
 }
 
 async function canonicalProjectDirectory(path: string): Promise<string> {
@@ -999,9 +1074,14 @@ async function openTaskSession(value: unknown): Promise<RuntimeBootstrap> {
   assertTaskCapability();
   assertPiExecutionCapability();
   const state = await boardStore.read();
-  const target = resolveTaskSessionTarget(state, validatedOpenTaskSession(value), canonicalSessionPath);
+  const input = validatedOpenTaskSession(value);
+  const task = state.tasks.find((candidate) => candidate.id === input.taskId);
+  if (!task) throw new Error(`找不到任务: ${input.taskId}`);
+  assertCurrentProjectPath(task.projectPath, "任务");
+  const target = resolveTaskSessionTarget(state, input, canonicalSessionPath);
+  const trusted = await resolveProjectTrust(target.projectPath);
   const requestedProjectPath = resolve(target.projectPath);
-  const projectPath = await canonicalExecutionProjectPath(requestedProjectPath, target.trusted);
+  const projectPath = await canonicalExecutionProjectPath(requestedProjectPath, trusted);
   const project = await stat(projectPath);
   if (!project.isDirectory()) throw new Error(`任务项目路径不是目录: ${projectPath}`);
   const sessionPath = await canonicalExistingPath(target.sessionPath);
@@ -1011,9 +1091,11 @@ async function openTaskSession(value: unknown): Promise<RuntimeBootstrap> {
   try {
     await runtime.stop();
     interactiveCommandRouter?.release();
-    currentProject = Object.freeze({ cwd: projectPath, trusted: target.trusted });
-    await runtime.start({ ...currentProject, sessionPath });
+    currentProject = Object.freeze({ cwd: projectPath, trusted, implicitDefault: false });
     await stateStore.recordProject(currentProject.cwd, currentProject.trusted);
+    await boardService.updateProjectTrust(projectPath, trusted);
+    if (!trusted) await revokeProjectExecutions(projectPath);
+    await runtime.start({ ...currentProject, sessionPath });
     const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
     return bootstrap;
@@ -1069,7 +1151,9 @@ async function initializeTaskCapability(): Promise<void> {
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: emitSnapshot,
+      projectIdentity: pathComparisonKey,
     });
+    agentSkillService = new AgentSkillService();
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
@@ -1077,12 +1161,15 @@ async function initializeTaskCapability(): Promise<void> {
       emitBoardEvent: (event) => broadcast("board", event),
       admission: workspaceAdmission,
       globalModel: () => globalModelSelection,
+      resolveProjectTrust,
       resolveProjectPath: canonicalExecutionProjectPath,
+      skills: agentSkillService,
     });
     agentTaskService = new AgentTaskService({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: emitSnapshot,
+      skills: agentSkillService,
     });
     executionReviewService = new ExecutionReviewService({
       repository: boardStore,
@@ -1093,6 +1180,7 @@ async function initializeTaskCapability(): Promise<void> {
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: emitSnapshot,
+      projectIdentity: pathComparisonKey,
     });
     autopilotService = new AutopilotService({
       repository: boardStore,
@@ -1117,8 +1205,12 @@ async function initializeTaskCapability(): Promise<void> {
       emitBoardEvent: (event) => broadcast("board", event),
       admission: workspaceAdmission,
       globalModel: () => globalModelSelection,
+      resolveProjectTrust,
       resolveProjectPath: canonicalExecutionProjectPath,
+      coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
+      skills: agentSkillService,
     });
+    if (currentProject) await boardService.updateProjectTrust(currentProject.cwd, currentProject.trusted);
     agentTaskRunner.start();
     capabilityHealth.set("task", "ready");
     await Promise.all([startScheduleCapability(), startWebhookCapability()]);
@@ -1176,23 +1268,17 @@ function registerIpcHandlers(): void {
     const grantTrust = trustDecision;
     return openProject(projectPath, grantTrust);
   });
-  ipcMain.handle("stella:reveal-path", async (_event, path: unknown) => {
-    const requestedPath = requiredString(path, "待显示路径");
-    const resolvedPath = resolve(requestedPath);
-    if (/^[\\/]{2}/.test(requestedPath) || /^[\\/]{2}/.test(resolvedPath)) {
-      throw new Error(`不允许显示网络（UNC）路径: ${requestedPath}`);
-    }
-    const canonicalPath = await canonicalPathWithinRoots(resolvedPath, allowedRevealRoots());
-    if (!canonicalPath) {
-      throw new Error(`只允许显示当前项目、Pi 数据或应用数据目录内的路径: ${resolvedPath}`);
-    }
-    const target = await stat(canonicalPath);
-    if (target.isDirectory()) {
-      const error = await shell.openPath(canonicalPath);
-      if (error) throw new Error(error);
-      return;
-    }
-    shell.showItemInFolder(canonicalPath);
+  ipcMain.handle("stella:local-path:inspect", (event, path: unknown) => {
+    assertMainWindowFrame(event);
+    return localPathService.inspect(path);
+  });
+  ipcMain.handle("stella:open-path", (event, path: unknown) => {
+    assertMainWindowFrame(event);
+    return localPathService.open(path);
+  });
+  ipcMain.handle("stella:reveal-path", (event, path: unknown) => {
+    assertMainWindowFrame(event);
+    return localPathService.reveal(path);
   });
   ipcMain.handle("stella:open-external", async (_event, url: unknown) => {
     const parsed = new URL(requiredString(url, "外部链接"));
@@ -1233,21 +1319,29 @@ function registerIpcHandlers(): void {
   });
   ipcMain.handle("stella:board:create-task", (_event, input: unknown) => createBoardTaskForCurrentProject(input));
   ipcMain.handle("stella:board:launch-team-task", (_event, input: unknown) => launchTeamTaskForCurrentProject(input));
-  ipcMain.handle("stella:board:update-task", (_event, input: unknown) => {
+  ipcMain.handle("stella:board:update-task", async (_event, input: unknown) => {
     assertTaskCapability();
-    return boardService.updateTask(validatedUpdateTask(input));
+    const validated = validatedUpdateTask(input);
+    await currentProjectTask(validated.taskId);
+    return boardService.updateTask(validated);
   });
-  ipcMain.handle("stella:board:move-task", (_event, taskId: unknown, status: unknown) => {
+  ipcMain.handle("stella:board:move-task", async (_event, taskId: unknown, status: unknown) => {
     assertTaskCapability();
-    return boardService.moveTask(requiredString(taskId, "taskId"), validatedManualStage(status));
+    const validatedId = requiredString(taskId, "taskId");
+    await currentProjectTask(validatedId);
+    return boardService.moveTask(validatedId, validatedManualStage(status));
   });
-  ipcMain.handle("stella:board:delete-task", (_event, taskId: unknown) => {
+  ipcMain.handle("stella:board:delete-task", async (_event, taskId: unknown) => {
     assertTaskCapability();
-    return boardService.deleteTask(requiredString(taskId, "taskId"));
+    const validatedId = requiredString(taskId, "taskId");
+    await currentProjectTask(validatedId);
+    return boardService.deleteTask(validatedId);
   });
   ipcMain.handle("stella:board:add-comment", async (_event, input: unknown) => {
     assertTaskCapability();
-    const bootstrap = await agentTaskService.addComment(validatedTaskComment(input));
+    const validated = validatedTaskComment(input);
+    await currentProjectTask(validated.taskId);
+    const bootstrap = await agentTaskService.addComment(validated);
     agentTaskRunner.notify();
     return bootstrap;
   });
@@ -1260,20 +1354,23 @@ function registerIpcHandlers(): void {
     const state = await boardStore.read();
     const agent = state.customAgents.find((candidate) => candidate.id === validatedId);
     if (!agent) throw new Error(`找不到自定义 Agent: ${validatedId}`);
-    if (resolve(agent.projectPath) !== currentProject.cwd) throw new Error("只能删除当前项目的自定义 Agent");
+    if (!sameProject(agent.projectPath, currentProject.cwd)) throw new Error("只能删除当前项目的自定义 Agent");
     return boardService.deleteProjectAgent(validatedId);
   });
   ipcMain.handle("stella:board:create-squad", (_event, input: unknown) => {
     assertTaskCapability();
-    return squadService.create(validatedCreateSquad(input));
+    if (!currentProject) throw new Error("尚未选择项目");
+    return squadService.create(validatedCreateSquad(input), currentProject.cwd);
   });
   ipcMain.handle("stella:board:update-squad", (_event, input: unknown) => {
     assertTaskCapability();
-    return squadService.update(validatedUpdateSquad(input));
+    if (!currentProject) throw new Error("尚未选择项目");
+    return squadService.update(validatedUpdateSquad(input), currentProject.cwd);
   });
   ipcMain.handle("stella:board:delete-squad", (_event, squadId: unknown) => {
     assertTaskCapability();
-    return squadService.delete(requiredString(squadId, "squadId"));
+    if (!currentProject) throw new Error("尚未选择项目");
+    return squadService.delete(requiredString(squadId, "squadId"), currentProject.cwd);
   });
   ipcMain.handle("stella:board:create-autopilot", (_event, input: unknown) =>
     createAutopilotForCurrentProject(input),
@@ -1284,22 +1381,28 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:board:delete-autopilot", (_event, autopilotId: unknown) =>
     deleteAutopilot(requiredString(autopilotId, "autopilotId")),
   );
-  ipcMain.handle("stella:board:trigger-autopilot", (_event, autopilotId: unknown) => {
+  ipcMain.handle("stella:board:trigger-autopilot", async (_event, autopilotId: unknown) => {
     assertTaskCapability();
     assertPiExecutionCapability();
-    return autopilotService.trigger({ autopilotId: requiredString(autopilotId, "autopilotId"), triggerKind: "manual" });
+    const validatedId = requiredString(autopilotId, "autopilotId");
+    await assertCurrentProjectAutopilot(validatedId);
+    return autopilotService.trigger({ autopilotId: validatedId, triggerKind: "manual" });
   });
   ipcMain.handle("stella:board:dispatch-task", (_event, taskId: unknown) =>
-    dispatchBoardTask(requiredString(taskId, "taskId")),
+    dispatchCurrentProjectTask(requiredString(taskId, "taskId")),
   );
-  ipcMain.handle("stella:board:resolve-gate", (_event, input: unknown) => {
+  ipcMain.handle("stella:board:resolve-gate", async (_event, input: unknown) => {
     assertTaskCapability();
     assertPiExecutionCapability();
-    return workflowOrchestrator.resolveGate(validatedGate(input));
+    const validated = validatedGate(input);
+    await currentProjectTask(validated.taskId);
+    return workflowOrchestrator.resolveGate(validated);
   });
-  ipcMain.handle("stella:board:review-execution", (_event, input: unknown) => {
+  ipcMain.handle("stella:board:review-execution", async (_event, input: unknown) => {
     assertTaskCapability();
-    return executionReviewService.review(validatedExecutionReview(input));
+    const validated = validatedExecutionReview(input);
+    await currentProjectTask(validated.taskId);
+    return executionReviewService.review(validated);
   });
   ipcMain.handle("stella:board:abort-task", (_event, taskId: unknown) =>
     abortBoardTask(requiredString(taskId, "taskId")),
@@ -1400,6 +1503,13 @@ if (!singleInstanceLock) {
       agentDir: piAgentDir(),
       storage: new FileModelConfigurationStorage(),
       inspect: inspectModelCatalog,
+    });
+    localPathService = new LocalPathService({
+      allowedRoots: allowedRevealRoots,
+      canonicalizeWithinRoots: canonicalPathWithinRoots,
+      inspectPath: stat,
+      openWithSystem: (path) => shell.openPath(path),
+      revealWithSystem: (path) => shell.showItemInFolder(path),
     });
     registerSkinArtworkProtocol();
     registerIpcHandlers();

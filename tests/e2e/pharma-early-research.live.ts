@@ -1,7 +1,8 @@
 import { access } from "node:fs/promises";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
-import { APP_ROOT, PHARMA_PROJECT, createNlrp3Task, launchPharmaApp } from "./helpers/pharma-app";
+import { PHARMA_PROJECT, createNlrp3Task, launchPharmaApp } from "./helpers/pharma-app";
+import { e2eScreenshotPath } from "./helpers/screenshot-path";
 
 test("runs the complete NLRP3 evidence, report, audit, gates, DAG, and acceptance flow", async ({}, testInfo) => {
   const { electronApp, window } = await launchPharmaApp(testInfo);
@@ -22,7 +23,7 @@ test("runs the complete NLRP3 evidence, report, audit, gates, DAG, and acceptanc
     await access(join(PHARMA_PROJECT, "evidence", "e2e", `${runId}-clinical.json`));
     await scopeGate.getByPlaceholder(/填写批准说明/).fill("身份、纳排规则、失败项目和快照日期已核对，批准进入评分。" );
     await window.setViewportSize({ width: 1_600, height: 1_000 });
-    await window.screenshot({ path: join(APP_ROOT, "docs", "pharma-e2e-nlrp3-evidence-gate.png"), animations: "disabled" });
+    await window.screenshot({ path: e2eScreenshotPath(testInfo, "pharma-e2e-nlrp3-evidence-gate.png"), animations: "disabled" });
     await scopeGate.getByRole("button", { name: "批准并继续" }).click();
 
     const finalGate = taskRoom.locator(".human-gate-card", { hasText: "组合评审" });
@@ -44,7 +45,7 @@ test("runs the complete NLRP3 evidence, report, audit, gates, DAG, and acceptanc
     await acceptance.getByPlaceholder(/接受可选填说明/).fill("接受 NLRP3 靶点评估报告及其 HOLD 边界。" );
     await acceptance.getByRole("button", { name: "接受报告" }).click();
     await expect(taskRoom.getByText("验收 · 已接受", { exact: true })).toBeVisible();
-    await window.screenshot({ path: join(APP_ROOT, "docs", "pharma-e2e-nlrp3-live.png"), animations: "disabled" });
+    await window.screenshot({ path: e2eScreenshotPath(testInfo, "pharma-e2e-nlrp3-live.png"), animations: "disabled" });
     expect(pageErrors).toEqual([]);
   } finally {
     await electronApp.close();

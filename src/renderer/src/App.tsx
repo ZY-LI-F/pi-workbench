@@ -7,16 +7,19 @@ import {
   LayoutDashboard,
   ListPlus,
   Menu,
+  MessageSquarePlus,
   MessagesSquare,
   Plus,
   RefreshCw,
   Settings2,
   SlidersHorizontal,
+  Sparkles,
   TerminalSquare,
   UsersRound,
 } from "lucide-react";
 import type {
   ModelSummary,
+  PiThinkingLevel,
   PiResponse,
   RecentProject,
   SessionSummary,
@@ -24,11 +27,12 @@ import type {
   StellaDesktopApi,
 } from "@shared/contracts";
 import type { SkinArtworkDescriptor, SkinId } from "@shared/skin-artwork";
-import { AGENT_THINKING_LEVELS, type AgentThinkingLevel } from "@shared/kanban";
 import { isReportedRuntimeError, usePiRuntime } from "./hooks/use-pi-runtime";
 import { useKanban } from "./hooks/use-kanban";
 import { useCapabilities } from "./hooks/use-capabilities";
+import { useMediaQuery } from "./hooks/use-media-query";
 import { usePreferences } from "./hooks/use-preferences";
+import { useSessionComposerDraft } from "./hooks/use-session-composer-draft";
 import { useSkinArtwork } from "./hooks/use-skin-artwork";
 import type { SkinPreference } from "./lib/skins";
 import chenxiArtwork from "./assets/skins/chenxi.png";
@@ -46,7 +50,7 @@ import { ExtensionDialog } from "./components/ExtensionDialog";
 import { Inspector } from "./components/Inspector";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar, type WorkspaceView } from "./components/Sidebar";
-import { TerminalDrawer, type BashResult } from "./components/TerminalDrawer";
+import { TerminalDrawer } from "./components/TerminalDrawer";
 import { TextPromptDialog } from "./components/TextPromptDialog";
 import { ToastStack } from "./components/ToastStack";
 import { Topbar } from "./components/Topbar";
@@ -55,6 +59,7 @@ import { KanbanWorkspace } from "./features/kanban/KanbanWorkspace";
 import { createPiTaskDraft, type PiTaskDraft } from "./features/kanban/pi-task-draft";
 import { TeamWorkspace } from "./features/team/TeamWorkspace";
 import { ModelConfigurationWorkspace } from "./features/models/ModelConfigurationWorkspace";
+import { parseBashResult } from "./lib/pi-bash-result";
 
 interface AppProps {
   readonly api: StellaDesktopApi;
@@ -68,26 +73,6 @@ function responseData(response: PiResponse): unknown {
 
 function errorMessage(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
-}
-
-function parseBashResult(value: unknown): BashResult {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error("Pi 返回了无效的 Bash 结果");
-  const record = value as Record<string, unknown>;
-  if (
-    typeof record.output !== "string" ||
-    (typeof record.exitCode !== "number" && record.exitCode !== null) ||
-    typeof record.cancelled !== "boolean" ||
-    typeof record.truncated !== "boolean"
-  ) {
-    throw new Error("Pi 返回的 Bash 结果字段不完整");
-  }
-  return Object.freeze({
-    output: record.output,
-    exitCode: record.exitCode,
-    cancelled: record.cancelled,
-    truncated: record.truncated,
-    fullOutputPath: typeof record.fullOutputPath === "string" ? record.fullOutputPath : undefined,
-  });
 }
 
 function exportedPath(value: unknown): string {
@@ -145,16 +130,17 @@ export function App({ api }: AppProps) {
   const { state } = controller;
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
   const skinArtwork = useSkinArtwork(api);
-  const [draft, setDraft] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth >= 1280);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [modelChanging, setModelChanging] = useState(false);
-  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("kanban");
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("chat");
   const [createTaskRequest, setCreateTaskRequest] = useState(0);
+  const [teamLaunchRequest, setTeamLaunchRequest] = useState(0);
   const [createTaskDraft, setCreateTaskDraft] = useState<PiTaskDraft>();
   const [queueMode, setQueueMode] = useState<"steer" | "followUp">(
     preferences.defaultQueueMode,
@@ -164,7 +150,14 @@ export function App({ api }: AppProps) {
   const piHealth = capabilitySnapshot?.pi;
   const taskHealth = capabilitySnapshot?.task;
   const bootstrap = state.bootstrap;
+  const composerDraft = useSessionComposerDraft(bootstrap);
+  const compactSidebar = useMediaQuery("(max-width: 1060px)");
+  const sidebarVisible = compactSidebar ? sidebarOpen : !sidebarCollapsed;
   const piReady = piHealth?.state === "ready" && Boolean(bootstrap);
+  const teamFeaturesEnabled = preferences.teamFeaturesEnabled;
+  const activeView: WorkspaceView = !teamFeaturesEnabled && (workspaceView === "team" || workspaceView === "kanban")
+    ? "chat"
+    : workspaceView;
 
   const reportActionError = (action: string, cause: unknown) => {
     if (isReportedRuntimeError(cause)) return;
@@ -173,6 +166,11 @@ export function App({ api }: AppProps) {
 
   const runAction = (action: string, operation: () => Promise<unknown>) => {
     void operation().catch((cause: unknown) => reportActionError(action, cause));
+  };
+
+  const retryPi = async () => {
+    const snapshot = await capabilities.retry("pi");
+    if (snapshot.pi.state === "ready") await controller.refresh();
   };
 
   useEffect(() => {
@@ -187,6 +185,12 @@ export function App({ api }: AppProps) {
     if (!preferencesStorageError) return;
     runtimeNotify(preferencesStorageError, "error");
   }, [preferencesStorageError, runtimeNotify]);
+
+  useEffect(() => {
+    if (teamFeaturesEnabled || (workspaceView !== "team" && workspaceView !== "kanban")) return;
+    setWorkspaceView("chat");
+    setSidebarOpen(false);
+  }, [teamFeaturesEnabled, workspaceView]);
 
   const runtimeCommand = controller.command;
   useEffect(() => {
@@ -204,6 +208,33 @@ export function App({ api }: AppProps) {
     window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="给 Pi 的消息"]')?.focus(), 0);
   };
 
+  const openSidebar = () => {
+    if (compactSidebar) setSidebarOpen(true);
+    else {
+      setSidebarCollapsed(false);
+      window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
+    }
+  };
+
+  const closeSidebar = () => {
+    if (compactSidebar) setSidebarOpen(false);
+    else {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement && activeElement.closest(".sidebar")) activeElement.blur();
+      setSidebarCollapsed(true);
+      window.requestAnimationFrame(() => {
+        const trigger = Array.from(document.querySelectorAll<HTMLButtonElement>('button[aria-label="打开侧栏"]'))
+          .find((button) => button.getClientRects().length > 0 && !button.disabled);
+        trigger?.focus();
+      });
+    }
+  };
+
+  const openSettings = () => {
+    closeSidebar();
+    setSettingsOpen(true);
+  };
+
   const newSession = async () => {
     if (!bootstrap) {
       controller.notify("Pi Runtime 尚未就绪", "warning");
@@ -215,11 +246,15 @@ export function App({ api }: AppProps) {
       return;
     }
     setWorkspaceView("chat");
-    setDraft("");
     focusComposer();
   };
 
   const newTask = () => {
+    if (!teamFeaturesEnabled) {
+      controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
+      openSettings();
+      return;
+    }
     if (!bootstrap) {
       controller.notify("需要先选择一个可用项目，才能新建任务", "warning");
       return;
@@ -229,7 +264,26 @@ export function App({ api }: AppProps) {
     setCreateTaskRequest((value) => value + 1);
   };
 
+  const newTeamTask = () => {
+    if (!teamFeaturesEnabled) {
+      controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
+      openSettings();
+      return;
+    }
+    if (!bootstrap) {
+      controller.notify("需要先选择一个可用项目，才能启动团队任务", "warning");
+      return;
+    }
+    setWorkspaceView("team");
+    setTeamLaunchRequest((value) => value + 1);
+  };
+
   const solidifyCurrentSession = () => {
+    if (!teamFeaturesEnabled) {
+      controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
+      openSettings();
+      return;
+    }
     if (!bootstrap) {
       controller.notify("Pi Runtime 尚未就绪，无法读取当前会话", "warning");
       return;
@@ -257,13 +311,19 @@ export function App({ api }: AppProps) {
   const chooseProject = async () => {
     const selection = await controller.chooseProject();
     if (!selection) return;
-    await controller.openProject(selection.path, selection.requiresTrust);
+    const opened = await controller.openProject(selection.path, selection.requiresTrust);
+    if (!opened) return;
+    setWorkspaceView("chat");
+    setSidebarOpen(false);
+    focusComposer();
   };
 
   const openRecentProject = async (project: RecentProject) => {
     const opened = await controller.openProject(project.path, project.trusted);
     if (!opened) return;
+    setWorkspaceView("chat");
     setSidebarOpen(false);
+    focusComposer();
   };
 
   const switchSession = async (session: SessionSummary) => {
@@ -275,6 +335,7 @@ export function App({ api }: AppProps) {
     }
     setWorkspaceView("chat");
     setSidebarOpen(false);
+    focusComposer();
   };
 
   const setModel = async (model: ModelSummary) => {
@@ -290,8 +351,8 @@ export function App({ api }: AppProps) {
   };
 
   const setThinking = async (level: string) => {
-    if (!AGENT_THINKING_LEVELS.includes(level as AgentThinkingLevel)) throw new Error(`不支持的思考级别: ${level}`);
-    await controller.command({ type: "set_thinking_level", level: level as AgentThinkingLevel }, true);
+    if (!bootstrap?.thinkingLevels.includes(level as PiThinkingLevel)) throw new Error(`当前模型不支持思考级别: ${level}`);
+    await controller.command({ type: "set_thinking_level", level: level as PiThinkingLevel }, true);
   };
 
   const chooseSkinArtwork = async (skin: SkinId) => {
@@ -359,28 +420,35 @@ export function App({ api }: AppProps) {
   const paletteActions = useMemo<readonly PaletteAction[]>(
     () => {
       const actions: PaletteAction[] = [
-        { id: "team", label: "打开团队协作", detail: "在 Task Room 中 @lead 或直接委派 Worker", icon: UsersRound, run: () => setWorkspaceView("team") },
-        { id: "kanban", label: "打开任务看板", detail: "监督固定 Agent 团队与流程", icon: LayoutDashboard, run: () => setWorkspaceView("kanban") },
         { id: "models", label: "打开模型配置", detail: "连接 Provider、维护自定义模型并选择全局路由", icon: SlidersHorizontal, run: () => setWorkspaceView("models") },
         { id: "project", label: "打开项目", detail: "选择新的本地工作目录", icon: FolderOpen, run: () => runAction("打开项目", chooseProject) },
       ];
+      if (teamFeaturesEnabled) {
+        actions.push(
+          { id: "team", label: "打开团队协作", detail: "在 Task Room 中 @lead 或直接委派 Worker", icon: UsersRound, run: () => setWorkspaceView("team") },
+          { id: "kanban", label: "打开任务看板", detail: "监督固定 Agent 团队与流程", icon: LayoutDashboard, run: () => setWorkspaceView("kanban") },
+        );
+      }
       if (!bootstrap) return actions;
       return [
         ...actions,
-        { id: "task", label: "新建看板任务", detail: "选择固定流程并分发", icon: Plus, run: newTask },
-        { id: "capture-task", label: "固化当前会话为任务", detail: "打开带来源 identity 的可编辑草稿", icon: ListPlus, run: solidifyCurrentSession },
+        ...(teamFeaturesEnabled ? [
+          { id: "team-task", label: "通过 @LEAD 启动任务", detail: "进入任务启动台并填写可验证验收标准", icon: MessageSquarePlus, run: newTeamTask },
+          { id: "task", label: "新建看板任务", detail: "选择固定流程并分发", icon: Plus, run: newTask },
+          { id: "capture-task", label: "固化当前会话为任务", detail: "打开带来源 identity 的可编辑草稿", icon: ListPlus, run: solidifyCurrentSession },
+        ] : []),
         { id: "chat", label: "返回当前会话", detail: "与 Pi 直接对话", icon: MessagesSquare, run: () => setWorkspaceView("chat") },
         { id: "new", label: "新建会话", detail: "开始一个干净的 Pi 会话", icon: Plus, run: () => runAction("新建会话", newSession) },
         { id: "terminal", label: "运行命令", detail: "打开本地命令抽屉", icon: TerminalSquare, run: () => setTerminalOpen(true) },
         { id: "tree", label: "查看会话图谱", detail: "检查工具活动与分支结构", icon: GitFork, run: () => { setWorkspaceView("chat"); setInspectorOpen(true); } },
         { id: "compact", label: "压缩上下文", detail: "生成摘要并释放模型窗口", icon: Archive, run: () => runAction("压缩上下文", compact) },
         { id: "export", label: "导出 HTML", detail: "保存当前会话记录", icon: FileOutput, run: () => runAction("导出会话", exportSession) },
-        { id: "settings", label: "偏好设置", detail: "外观、队列和 Pi 行为", icon: Settings2, run: () => setSettingsOpen(true) },
+        { id: "settings", label: "偏好设置", detail: "外观、队列和 Pi 行为", icon: Settings2, run: openSettings },
       ];
     },
     // 动作闭包读取 bootstrap（messages / sessionFile）与 taskHealth，必须随它们重建，否则固化会话用到旧数据。
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 动作函数每次渲染重建；只需在 bootstrap/taskHealth 变化时重算，其余依赖会导致 memo 失效
-    [bootstrap, taskHealth],
+    [bootstrap, taskHealth, teamFeaturesEnabled],
   );
 
   useEffect(() => {
@@ -392,7 +460,8 @@ export function App({ api }: AppProps) {
       }
       if (ctrl && event.key.toLocaleLowerCase() === "n") {
         event.preventDefault();
-        if (workspaceView === "kanban" || workspaceView === "team") newTask();
+        if (workspaceView === "team") newTeamTask();
+        else if (workspaceView === "kanban") newTask();
         else runAction("新建会话", newSession);
       }
       if (ctrl && event.key.toLocaleLowerCase() === "l") {
@@ -422,7 +491,7 @@ export function App({ api }: AppProps) {
   }, [workspaceView, bootstrap]);
 
   return (
-    <div className={`app-shell app-shell--${workspaceView} ${workspaceView === "chat" && inspectorOpen ? "has-inspector" : ""} ${terminalOpen ? "has-terminal" : ""}`}>
+    <div className={`app-shell app-shell--${activeView} ${activeView === "chat" && inspectorOpen ? "has-inspector" : ""} ${terminalOpen ? "has-terminal" : ""} ${sidebarVisible ? "" : "sidebar-collapsed"}`}>
       <SkinBackdrop skin={preferences.skin} customArtwork={skinArtwork.bySkin[preferences.skin]} />
       <div className="titlebar-drag" />
       <WindowControls api={api} />
@@ -430,55 +499,93 @@ export function App({ api }: AppProps) {
         bootstrap={bootstrap}
         capabilities={capabilitySnapshot}
         skin={preferences.skin}
-        open={sidebarOpen}
-        activeView={workspaceView}
+        open={sidebarVisible}
+        activeView={activeView}
+        teamFeaturesEnabled={teamFeaturesEnabled}
         modelChanging={modelChanging}
-        onClose={() => setSidebarOpen(false)}
+        onClose={closeSidebar}
         onNewSession={() => runAction("新建会话", newSession)}
-        onNewTask={newTask}
-        onSwitchView={(view) => { setWorkspaceView(view); setSidebarOpen(false); }}
+        onNewTask={activeView === "kanban" ? newTask : newTeamTask}
+        onSwitchView={(view) => {
+          if (!teamFeaturesEnabled && (view === "team" || view === "kanban")) {
+            controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
+            openSettings();
+            return;
+          }
+          setWorkspaceView(view);
+          setSidebarOpen(false);
+          if (view === "chat") focusComposer();
+        }}
         onChooseProject={() => runAction("打开项目", chooseProject)}
         onOpenRecentProject={(project) => runAction("打开最近项目", () => openRecentProject(project))}
         onSwitchSession={(session) => runAction("切换会话", () => switchSession(session))}
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenTerminal={() => setTerminalOpen(true)}
-        onOpenInspector={() => setInspectorOpen(true)}
-        onOpenSettings={() => {
-          setSidebarOpen(false);
-          setSettingsOpen(true);
-        }}
+        onOpenInspector={() => { setWorkspaceView("chat"); setInspectorOpen(true); setSidebarOpen(false); focusComposer(); }}
+        onOpenSettings={openSettings}
         onModelChange={(model) => void setModel(model)}
       />
 
-      {workspaceView === "chat" && bootstrap && piReady ? <main className="workspace">
+      {bootstrap?.project.requiresSelection && activeView !== "models" ? (
+        <main className="first-run-setup" aria-labelledby="first-run-title">
+          <span className="first-run-setup__orbit" aria-hidden="true"><i /><b /><Sparkles size={24} /></span>
+          <small>STELLA · FIRST LIGHT</small>
+          <h1 id="first-run-title">先选择要工作的项目</h1>
+          <p>当前目录只是首次启动占位，不会被当作你的项目保存。选择代码或研究资料所在目录后，Pi 会在该工作区恢复会话、命令与项目资源。</p>
+          <div className="first-run-setup__model"><span>当前模型</span><strong>{bootstrap.state.model ? `${bootstrap.state.model.provider} / ${bootstrap.state.model.id}` : "尚未选择"}</strong></div>
+          <div className="first-run-setup__actions">
+            <button type="button" className="button-primary" onClick={() => runAction("打开项目", chooseProject)}><FolderOpen size={16} />选择项目目录</button>
+            <button type="button" className="button-secondary" onClick={() => setWorkspaceView("models")}><SlidersHorizontal size={16} />配置模型</button>
+          </div>
+        </main>
+      ) : activeView === "chat" && bootstrap ? <main className="workspace">
         <Topbar
           bootstrap={bootstrap}
           streaming={state.streaming}
           compacting={state.compacting}
           retrying={state.retrying}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          online={piReady}
+          onOpenSidebar={openSidebar}
+          onFocusSession={focusComposer}
+          onNewSession={() => runAction("新建会话", newSession)}
           onToggleInspector={() => setInspectorOpen((value) => !value)}
-          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenSettings={openSettings}
           onThinkingChange={(level) => runAction("切换思考级别", () => setThinking(level))}
           onAbortRetry={() => runAction("停止自动重试", () => controller.command({ type: "abort_retry" }))}
-          onSolidifyTask={solidifyCurrentSession}
+          onSolidifyTask={teamFeaturesEnabled && piReady ? solidifyCurrentSession : undefined}
         />
-        <Conversation
-          api={api}
-          bootstrap={bootstrap}
-          messages={state.messages}
-          tools={state.tools}
-          streaming={state.streaming}
-          onPrefill={(text) => { setDraft(text); focusComposer(); }}
-          onFork={(entryId) => runAction("创建会话分支", () => fork(entryId))}
-        />
+        <div className="conversation-stage">
+          {!piReady && (
+            <section className="chat-runtime-banner" role="status" aria-live="polite">
+              <span className={`capability-dot capability-dot--${piHealth?.state ?? "loading"}`} />
+              <div>
+                <strong>{piHealth?.state === "loading" || state.phase === "loading" ? "Pi 正在恢复连接" : "Pi 暂不可用，当前草稿已保留"}</strong>
+                <small>{piHealth?.error ?? state.error ?? capabilities.state.error ?? "恢复后即可发送；你仍可编辑消息、添加附件和切换页面。"}</small>
+              </div>
+              <button type="button" className="button-secondary" disabled={capabilities.state.retrying.includes("pi")} onClick={() => runAction("重试 Pi", retryPi)}>
+                <RefreshCw size={14} />{capabilities.state.retrying.includes("pi") ? "正在重试" : "重试连接"}
+              </button>
+            </section>
+          )}
+          <Conversation
+            api={api}
+            bootstrap={bootstrap}
+            messages={state.messages}
+            tools={state.tools}
+            streaming={piReady && state.streaming}
+            onPrefill={(text) => { composerDraft.setText(text); focusComposer(); }}
+            onFork={(entryId) => runAction("创建会话分支", () => fork(entryId))}
+          />
+        </div>
         <Composer
-          draft={draft}
-          onDraftChange={setDraft}
+          draft={composerDraft.text}
+          onDraftChange={composerDraft.setText}
+          images={composerDraft.images}
+          onImagesChange={composerDraft.setImages}
           editorInjection={state.editorInjection}
           commands={bootstrap.commands}
           widgets={state.extensionWidgets}
-          streaming={state.streaming}
+          streaming={piReady && state.streaming}
           queueMode={queueMode}
           onQueueModeChange={(mode) => {
             setQueueMode(mode);
@@ -489,11 +596,13 @@ export function App({ api }: AppProps) {
           onOpenTerminal={() => setTerminalOpen(true)}
           onOpenPalette={() => setPaletteOpen(true)}
           onError={(message) => controller.notify(message, "error")}
+          sendDisabled={!piReady}
+          sendDisabledReason={!piReady ? (piHealth?.state === "loading" || state.phase === "loading" ? "Pi 正在连接，草稿不会丢失" : "Pi 恢复后即可发送") : undefined}
         />
-      </main> : workspaceView === "chat" ? (
+      </main> : activeView === "chat" ? (
         <main className="workspace capability-workspace">
           <header className="capability-workspace__bar">
-            <button type="button" className="icon-button" aria-label="打开侧栏" onClick={() => setSidebarOpen(true)}><Menu size={18} /></button>
+            <button type="button" className="icon-button" aria-label="打开侧栏" onClick={openSidebar}><Menu size={18} /></button>
             <div><small>PI WORKSPACE</small><strong>{piHealth?.state === "loading" || state.phase === "loading" ? "正在连接" : "连接已中断"}</strong></div>
             <span className={`capability-state capability-state--${piHealth?.state ?? "loading"}`}>{piHealth?.state ?? "loading"}</span>
           </header>
@@ -501,45 +610,49 @@ export function App({ api }: AppProps) {
             {piHealth?.state === "loading" || state.phase === "loading" ? <>
               <div className="startup-screen__loader"><span /><span /><span /></div>
               <h1>正在恢复 Pi 工作区</h1>
-              <p>任务看板已独立启动，你可以随时切换过去查看历史。</p>
+              <p>{teamFeaturesEnabled ? "团队任务历史仍可独立查看。" : "正在恢复会话、模型、命令与项目资源。"}</p>
             </> : <>
               <span className="startup-screen__error-mark">!</span>
               <h1>Pi 工作区暂不可用</h1>
               <p>{piHealth?.error ?? state.error ?? capabilities.state.error ?? "初始化没有返回工作区状态。"}</p>
               {state.stderr && <details><summary>查看 Pi 诊断输出</summary><pre>{state.stderr}</pre></details>}
               <div className="capability-workspace__actions">
-                <button type="button" className="button-primary" disabled={capabilities.state.retrying.includes("pi")} onClick={() => void capabilities.retry("pi").then((snapshot) => {
-                  if (snapshot.pi.state === "ready") void controller.refresh().catch((cause: unknown) => controller.notify(`刷新 Pi 工作区失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"));
-                }).catch((cause: unknown) => controller.notify(`重试 Pi 失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))}><RefreshCw size={15} />{capabilities.state.retrying.includes("pi") ? "正在重试" : "重试 Pi"}</button>
+                <button type="button" className="button-primary" disabled={capabilities.state.retrying.includes("pi")} onClick={() => runAction("重试 Pi", retryPi)}><RefreshCw size={15} />{capabilities.state.retrying.includes("pi") ? "正在重试" : "重试 Pi"}</button>
                 <button type="button" className="button-secondary" onClick={() => runAction("打开项目", chooseProject)}><FolderOpen size={15} />选择其他项目</button>
-                <button type="button" className="button-secondary" onClick={() => setWorkspaceView("kanban")}><LayoutDashboard size={15} />查看任务看板</button>
+                {teamFeaturesEnabled && <button type="button" className="button-secondary" onClick={() => setWorkspaceView("kanban")}><LayoutDashboard size={15} />查看任务看板</button>}
               </div>
             </>}
           </section>
         </main>
-      ) : workspaceView === "models" ? (
+      ) : activeView === "models" ? (
         <ModelConfigurationWorkspace
           api={api}
           bootstrap={bootstrap}
           online={piReady}
           modelChanging={modelChanging}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSidebar={openSidebar}
           onModelChange={setModel}
           onRuntimeRefresh={controller.refresh}
           onNotify={controller.notify}
         />
-      ) : workspaceView === "team" ? (
+      ) : activeView === "team" && teamFeaturesEnabled ? (
         <TeamWorkspace
           api={api}
           controller={kanban}
           project={bootstrap?.project}
           executionEnabled={piReady}
-          onOpenSidebar={() => setSidebarOpen(true)}
-          onNewTask={newTask}
+          onOpenSidebar={openSidebar}
+          onNewTask={newTeamTask}
+          focusLaunchRequest={teamLaunchRequest}
+          availableSkillNames={bootstrap?.commands.flatMap((command) => command.source === "skill" && command.name.startsWith("skill:") ? [command.name.slice(6)] : [])}
+          modelLabel={bootstrap?.state.model ? `${bootstrap.state.model.provider} / ${bootstrap.state.model.id}` : undefined}
+          taskCapabilityError={taskHealth?.error}
+          taskCapabilityRetrying={capabilities.state.retrying.includes("task")}
+          onRetryTaskCapability={() => void capabilities.retry("task").catch((cause: unknown) => controller.notify(`重试 Task Control 失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))}
           onContinueTaskSession={(taskId, sessionPath) => continueTaskSession(taskId, sessionPath)}
           onError={(message) => controller.notify(message, "error")}
         />
-      ) : (
+      ) : activeView === "kanban" && teamFeaturesEnabled ? (
         <KanbanWorkspace
           api={api}
           controller={kanban}
@@ -552,13 +665,14 @@ export function App({ api }: AppProps) {
           createDraft={createTaskDraft}
           onCreateRequestConsumed={() => setCreateTaskRequest(0)}
           onContinueTaskSession={(taskId, sessionPath) => continueTaskSession(taskId, sessionPath)}
-          onOpenSidebar={() => setSidebarOpen(true)}
+          onOpenSidebar={openSidebar}
           onOpenTerminal={() => setTerminalOpen(true)}
           onError={(message) => controller.notify(message, "error")}
+          modelLabel={bootstrap?.state.model ? `${bootstrap.state.model.provider} / ${bootstrap.state.model.id}` : undefined}
         />
-      )}
+      ) : null}
 
-      {workspaceView === "chat" && bootstrap && piReady && <Inspector
+      {activeView === "chat" && bootstrap && piReady && <Inspector
         bootstrap={bootstrap}
         open={inspectorOpen}
         tools={state.tools}
@@ -590,7 +704,7 @@ export function App({ api }: AppProps) {
           commands={bootstrap?.commands ?? []}
           actions={paletteActions}
           onClose={() => setPaletteOpen(false)}
-          onInsertCommand={(command: SlashCommandSummary) => { setDraft(`/${command.name} `); focusComposer(); }}
+          onInsertCommand={(command: SlashCommandSummary) => { composerDraft.setText(`/${command.name} `); setWorkspaceView("chat"); focusComposer(); }}
         />
       )}
       {state.extensionRequest && <ExtensionDialog request={state.extensionRequest} onRespond={(response) => void controller.respondToExtension(response).catch((cause: unknown) => controller.notify(`回复扩展请求失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))} onExpire={controller.expireExtensionRequest} />}

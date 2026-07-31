@@ -9,7 +9,7 @@ import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, type AgentDefinition, type Boa
 const TEST_AGENT: AgentDefinition = Object.freeze({
   id: "agent", version: 1, name: "Agent", callsign: "A", responsibility: "测试", instructions: "测试",
   workspaceAccess: "read", allowedTools: Object.freeze(["read"]), thinking: "off",
-  disableExtensions: true, disableSkills: true, disablePromptTemplates: true,
+  disableExtensions: true, disableSkills: true, disablePromptTemplates: true, disableContextFiles: true,
 });
 
 const temporaryDirectories: string[] = [];
@@ -51,10 +51,12 @@ describe("BoardStore", () => {
         id: "task-1", title: "运行中任务", description: "", acceptanceCriteria: "", priority: "medium",
         projectPath: "C:/project", projectName: "project", trusted: true,
         executionTarget: { kind: "workflow", workflowId: "flow" }, stage: "queued",
-        activeRunId: "run-1", createdAt: now, updatedAt: now,
+        specRevision: 1, executionAttempt: 1, activeRunId: "run-1", createdAt: now, updatedAt: now,
       }],
       runs: [{
-        id: "run-1", taskId: "task-1", status: "queued", acceptance: "not-ready", startedAt: now, updatedAt: now,
+        id: "run-1", taskId: "task-1", executionAttempt: 1,
+        taskSpec: { revision: 1, title: "运行中任务", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" } },
+        status: "queued", acceptance: "not-ready", startedAt: now, updatedAt: now,
         workflow: { id: "flow", version: 1, name: "流程", shortName: "流程", summary: "测试", teamId: "team", steps: [{ kind: "agent", id: "step", name: "步骤", summary: "", agentId: "agent", objective: "执行" }] },
         agents: [TEST_AGENT],
         currentStepId: "step",
@@ -160,14 +162,49 @@ describe("BoardStore", () => {
     expect(migrated.version).toBe(BOARD_SCHEMA_VERSION);
     expect(migrated.customAgents).toEqual([]);
     expect(migrated.tasks[0]).toMatchObject({ id: "task-v2", stage: "completed" });
-    expect(migrated.runs[0]).toMatchObject({ id: "run-v2", status: "reported", acceptance: "pending" });
-    expect(migrated.agentTasks[0]).toMatchObject({ id: "agent-task-v2", status: "reported", acceptance: "pending", output: "历史结果" });
+    expect(migrated.runs[0]).toMatchObject({ id: "run-v2", status: "reported", acceptance: "superseded" });
+    expect(migrated.agentTasks[0]).toMatchObject({ id: "agent-task-v2", status: "reported", acceptance: "superseded", output: "历史结果" });
     expect(migrated.comments[0]?.body).toBe("保留评论");
     expect(migrated.activities[0]?.summary).toBe("已有产物");
     expect(migrated.squads[0]?.name).toBe("历史 Squad");
     expect(migrated.autopilots[0]?.name).toBe("历史规则");
     expect(migrated.autopilotRuns[0]?.id).toBe("autopilot-run-v2");
     expect((await readdir(dirname(path))).some((file) => file.includes(".v2.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
+  });
+
+  it("migrates schema v4 by selecting one latest report and superseding older pending executions", async () => {
+    const path = await temporaryBoardPath();
+    const now = "2026-07-17T01:00:00.000Z";
+    const task = {
+      id: "task-v4", title: "多轮历史", description: "", acceptanceCriteria: "只验收最新结果", priority: "medium",
+      projectPath: "C:/project", projectName: "project", trusted: true,
+      executionTarget: { kind: "workflow", workflowId: "flow" }, stage: "review",
+      createdAt: "2026-07-17T00:00:00.000Z", updatedAt: now,
+    };
+    const pendingRun = (id: string, completedAt: string) => ({
+      id, taskId: task.id, status: "reported", acceptance: "pending", startedAt: completedAt, updatedAt: completedAt, completedAt,
+      workflow: { id: "flow", version: 1, name: "流程", shortName: "流程", summary: "测试", teamId: "team", steps: [{ kind: "agent", id: "step", name: "步骤", summary: "", agentId: "agent", objective: "执行" }] },
+      agents: [TEST_AGENT],
+      steps: [{ id: `${id}-step`, stepId: "step", stepKind: "agent", name: "步骤", status: "succeeded", agentId: "agent", completedAt }],
+    });
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, JSON.stringify({
+      ...EMPTY_BOARD_STATE,
+      version: 4,
+      tasks: [task],
+      runs: [pendingRun("run-old", "2026-07-17T00:10:00.000Z"), pendingRun("run-new", "2026-07-17T00:20:00.000Z")],
+    }), "utf8");
+
+    const migrated = await new BoardStore(path, { now: () => now, id: () => "backup-id" }).initialize();
+
+    expect(migrated.tasks[0]).toMatchObject({
+      id: task.id,
+      executionAttempt: 2,
+      awaitingReviewExecution: { kind: "workflow", id: "run-new", attempt: 2 },
+    });
+    expect(migrated.runs.find((run) => run.id === "run-new")?.acceptance).toBe("pending");
+    expect(migrated.runs.find((run) => run.id === "run-old")).toMatchObject({ acceptance: "superseded", acceptanceComment: expect.stringContaining("schema v5") });
+    expect((await readdir(dirname(path))).some((file) => file.includes(".v4.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
   });
 
   it("migrates an installed schema v3 board and adds the project Agent collection", async () => {
@@ -194,22 +231,26 @@ describe("BoardStore", () => {
           id: "task-running", title: "运行中", description: "", acceptanceCriteria: "", priority: "medium",
           projectPath: "C:/project", projectName: "project", trusted: true,
           executionTarget: { kind: "agent", agentId: "agent" }, stage: "running", activeAgentTaskId: "agent-task-running",
-          createdAt: now, updatedAt: now,
+          specRevision: 1, executionAttempt: 1, createdAt: now, updatedAt: now,
         },
         {
           id: "task-queued", title: "排队中", description: "", acceptanceCriteria: "", priority: "medium",
           projectPath: "C:/project", projectName: "project", trusted: true,
           executionTarget: { kind: "agent", agentId: "agent" }, stage: "queued", activeAgentTaskId: "agent-task-queued",
-          createdAt: now, updatedAt: now,
+          specRevision: 1, executionAttempt: 1, createdAt: now, updatedAt: now,
         },
       ],
       agentTasks: [
         {
-          id: "agent-task-running", taskId: "task-running", agentSnapshot: TEST_AGENT, kind: "direct", status: "running", acceptance: "not-ready",
+          id: "agent-task-running", taskId: "task-running", executionAttempt: 1,
+          taskSpec: { revision: 1, title: "运行中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" } },
+          agentSnapshot: TEST_AGENT, kind: "direct", status: "running", acceptance: "not-ready",
           prompt: "执行", runtimeToken: "runtime", createdAt: now, updatedAt: now, startedAt: now,
         },
         {
-          id: "agent-task-queued", taskId: "task-queued", agentSnapshot: TEST_AGENT, kind: "direct", status: "queued", acceptance: "not-ready",
+          id: "agent-task-queued", taskId: "task-queued", executionAttempt: 1,
+          taskSpec: { revision: 1, title: "排队中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" } },
+          agentSnapshot: TEST_AGENT, kind: "direct", status: "queued", acceptance: "not-ready",
           prompt: "等待", createdAt: now, updatedAt: now,
         },
       ],
@@ -243,6 +284,7 @@ function capTask(id: string): BoardState["tasks"][number] {
     id, title: `任务 ${id}`, description: "", acceptanceCriteria: "", priority: "medium",
     projectPath: "C:/project", projectName: "project", trusted: true,
     executionTarget: { kind: "workflow", workflowId: "flow" }, stage: "planned",
+    specRevision: 1, executionAttempt: 1,
     createdAt: CAP_NOW, updatedAt: CAP_NOW,
   };
 }
@@ -257,7 +299,9 @@ function capComment(id: string, taskId: string): BoardState["comments"][number] 
 
 function capRun(id: string, taskId: string): BoardState["runs"][number] {
   return {
-    id, taskId, status: "reported", acceptance: "pending", startedAt: CAP_NOW, updatedAt: CAP_NOW, completedAt: CAP_NOW,
+    id, taskId, executionAttempt: 1,
+    taskSpec: { revision: 1, title: `任务 ${taskId}`, description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" } },
+    status: "reported", acceptance: "accepted", reviewedAt: CAP_NOW, startedAt: CAP_NOW, updatedAt: CAP_NOW, completedAt: CAP_NOW,
     workflow: { id: "flow", version: 1, name: "流程", shortName: "流程", summary: "测试", teamId: "team", steps: [{ kind: "agent", id: "step", name: "步骤", summary: "", agentId: "agent", objective: "执行" }] },
     agents: [TEST_AGENT],
     steps: [{ id: `${id}-step`, stepId: "step", stepKind: "agent", name: "步骤", status: "succeeded", agentId: "agent", completedAt: CAP_NOW }],

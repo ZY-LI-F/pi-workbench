@@ -4,7 +4,7 @@ import { createPiTaskDraft } from "../../src/renderer/src/features/kanban/pi-tas
 
 function bootstrap(): RuntimeBootstrap {
   return {
-    project: { cwd: "C:/project", name: "project", trusted: true, requiresTrust: false },
+    project: { cwd: "C:/project", name: "project", trusted: true, requiresTrust: false, requiresSelection: false },
     recentProjects: [],
     state: {
       sessionId: "pi-session-1",
@@ -25,7 +25,7 @@ function bootstrap(): RuntimeBootstrap {
     models: [], commands: [],
     sessions: [{ path: "C:/sessions/pi-session-1.jsonl", id: "pi-session-1", cwd: "C:/project", name: "Task Room 设计", created: "2026-07-18T00:00:00.000Z", modified: "2026-07-18T00:01:00.000Z", messageCount: 2, firstMessage: "实现可视化任务房间" }],
     stats: { sessionFile: "C:/sessions/pi-session-1.jsonl", sessionId: "pi-session-1", userMessages: 1, assistantMessages: 1, toolCalls: 0, toolResults: 0, totalMessages: 2, tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 }, cost: 0 },
-    entries: [], tree: [], leafId: null, piVersion: "1.0.0",
+    entries: [], tree: [], leafId: null, piVersion: "1.0.0", thinkingLevels: ["off"],
   } as RuntimeBootstrap;
 }
 

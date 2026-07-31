@@ -4,10 +4,19 @@ import { availableMentionAgentsForTask, parseAgentMentions } from "../shared/age
 import { coordinatorActionMessage, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { applyTaskLifecycle } from "../shared/task-lifecycle";
+import {
+  beginAgentExecution,
+  finishExecutionLifecycle,
+  nextExecutionAttempt,
+  reportAgentExecution,
+  snapshotTaskSpec,
+  supersedePendingExecutions,
+} from "../shared/execution-state";
 import { deriveTeamLaunchDraft } from "../shared/team-launch";
 import {
   isTerminalAgentTaskStatus,
   type AgentDefinition,
+  type AgentExecutionPlanSnapshot,
   type AgentTask,
   type BoardBootstrap,
   type BoardState,
@@ -30,6 +39,9 @@ interface AgentTaskServiceDependencies {
   readonly repository: BoardRepository;
   readonly catalog: OrchestrationCatalog;
   readonly emitChanged: (bootstrap: BoardBootstrap) => void;
+  readonly skills: {
+    assertAgentsReady(projectPath: string, trusted: boolean, agents: readonly AgentDefinition[]): Promise<void>;
+  };
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -41,6 +53,8 @@ export interface ClaimedAgentTask {
 
 export interface AgentTaskResult {
   readonly output: string;
+  /** Set only when the Coordinator runtime ended without a valid terminating tool result. */
+  readonly protocolError?: string;
   readonly sessionPath?: string;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
@@ -82,7 +96,26 @@ function cloneAgent(agent: AgentDefinition): AgentDefinition {
   });
 }
 
-function normalizedRequired(value: string, label: string): string {
+function coordinatorPlan(availableAgents: readonly AgentDefinition[]): AgentExecutionPlanSnapshot {
+  return Object.freeze({
+    kind: "coordinator",
+    delegates: Object.freeze(availableAgents.filter((agent) => agent.id !== "lead").map(cloneAgent)),
+  });
+}
+
+function squadPlan(squad: Squad, members: readonly AgentDefinition[]): AgentExecutionPlanSnapshot {
+  return Object.freeze({
+    kind: "squad",
+    squadId: squad.id,
+    squadVersion: squad.version,
+    squadName: squad.name,
+    leaderInstructions: squad.leaderInstructions,
+    delegates: Object.freeze(members.map(cloneAgent)),
+  });
+}
+
+function normalizedRequired(value: unknown, label: string): string {
+  if (typeof value !== "string") throw new Error(`${label}必须是字符串`);
   const normalized = value.trim();
   if (normalized.length === 0) throw new Error(`${label}不能为空`);
   return normalized;
@@ -94,17 +127,24 @@ export class AgentTaskService {
   readonly #emitChanged: (bootstrap: BoardBootstrap) => void;
   readonly #now: () => string;
   readonly #id: () => string;
+  readonly #skills: AgentTaskServiceDependencies["skills"];
 
   constructor(dependencies: AgentTaskServiceDependencies) {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#emitChanged = dependencies.emitChanged;
+    this.#skills = dependencies.skills;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
 
   async addComment(input: CreateTaskCommentInput): Promise<BoardBootstrap> {
     const body = normalizedRequired(input.body, "评论内容");
+    const preview = await this.#repository.read();
+    const previewTask = this.#task(preview, input.taskId);
+    const previewAgents = availableMentionAgentsForTask(previewTask, this.#catalogFor(preview), preview.squads);
+    const previewMentions = parseAgentMentions(body, previewAgents).agents;
+    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#task(current, input.taskId);
@@ -146,10 +186,14 @@ export class AgentTaskService {
         throw new Error("@lead 协调模式不能与直接 Worker mention 混用；请让 LEAD 通过结构化计划委派");
       }
       const rootId = this.#id();
+      const executionAttempt = nextExecutionAttempt(task);
+      const taskSpec = snapshotTaskSpec(task);
       const squadId = task.executionTarget.kind === "squad" ? task.executionTarget.squadId : undefined;
       const root: AgentTask = Object.freeze({
         id: rootId,
         taskId: task.id,
+        executionAttempt,
+        taskSpec,
         agentSnapshot: cloneAgent(rootAgent),
         kind: rootAgent.id === "lead" ? "coordinator" : mentions.length > 1 ? "mention-root" : "direct",
         status: "queued",
@@ -158,12 +202,15 @@ export class AgentTaskService {
           ? this.#coordinatorPrompt(task, body, availableAgents, comments)
           : this.#promptFor(task, rootAgent, comments),
         squadId,
+        executionPlan: rootAgent.id === "lead" ? coordinatorPlan(availableAgents) : undefined,
         createdAt: now,
         updatedAt: now,
       });
       const children = (rootAgent.id === "lead" ? [] : mentions.slice(1)).map((agent) => Object.freeze({
         id: this.#id(),
         taskId: task.id,
+        executionAttempt,
+        taskSpec,
         agentSnapshot: cloneAgent(agent),
         kind: "delegated" as const,
         status: "queued" as const,
@@ -174,23 +221,29 @@ export class AgentTaskService {
         createdAt: now,
         updatedAt: now,
       }));
-      const nextTask = applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: rootId }), { type: "execution-queued" }, now);
+      const superseded = supersedePendingExecutions(current, task.id);
+      const nextTask = beginAgentExecution(task, rootId, executionAttempt, now);
       activities.push(this.#activity(task.id, "dispatch", `评论已分发给 ${mentions.map((agent) => agent.name).join("、")}`, body, now, rootId));
       return {
-        ...current,
-        tasks: current.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
-        comments: [...current.comments, comment],
-        agentTasks: [...current.agentTasks, root, ...children],
-        activities: [...current.activities, ...activities],
+        ...superseded,
+        tasks: superseded.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
+        comments: [...superseded.comments, comment],
+        agentTasks: [...superseded.agentTasks, root, ...children],
+        activities: [...superseded.activities, ...activities],
       };
     });
   }
 
   async launchTeamTask(input: TeamLaunchContext): Promise<BoardBootstrap> {
     const body = normalizedRequired(input.body, "启动指令");
-    const draft = deriveTeamLaunchDraft(body);
+    const acceptanceCriteria = normalizedRequired(input.acceptanceCriteria, "验收标准");
+    const draft = deriveTeamLaunchDraft(body, acceptanceCriteria);
     const projectPath = normalizedRequired(input.projectPath, "项目路径");
     const projectName = normalizedRequired(input.projectName, "项目名称");
+    const preview = await this.#repository.read();
+    const previewLead = this.#catalogFor(preview).agents.find((agent) => agent.id === "lead");
+    if (!previewLead) throw new Error("编排目录缺少通用调度负责人 LEAD");
+    await this.#skills.assertAgentsReady(projectPath, input.trusted, Object.freeze([previewLead]));
     const now = this.#now();
     return this.#commit((current) => {
       const catalog = this.#catalogFor(current);
@@ -208,13 +261,15 @@ export class AgentTaskService {
         trusted: input.trusted,
         executionTarget: Object.freeze({ kind: "agent", agentId: lead.id }),
         stage: "planned",
+        specRevision: 1,
+        executionAttempt: 0,
         createdAt: now,
         updatedAt: now,
       });
       const availableAgents = availableMentionAgentsForTask(task, catalog, current.squads);
       const parsed = parseAgentMentions(body, availableAgents);
       if (parsed.tokens.length !== 1 || parsed.agents.length !== 1 || parsed.agents[0]?.id !== lead.id) {
-        throw new Error("项目启动室只能通过一个 @LEAD 创建任务");
+        throw new Error("任务启动台只能通过一个 @LEAD 创建任务");
       }
 
       const comment: TaskComment = Object.freeze({
@@ -231,7 +286,7 @@ export class AgentTaskService {
         comments: [...current.comments, comment],
         activities: [
           ...current.activities,
-          this.#activity(task.id, "task", "任务由项目启动室创建", draft.objective, now),
+          this.#activity(task.id, "task", "任务由任务启动台创建", draft.objective, now),
           this.#activity(task.id, "comment", "用户向 LEAD 提交了启动指令", body, now),
         ],
       };
@@ -241,12 +296,19 @@ export class AgentTaskService {
         "coordinator",
         this.#coordinatorPrompt(task, body, availableAgents, [comment]),
         now,
+        undefined,
+        coordinatorPlan(availableAgents),
       );
-      return this.#withDispatchedRoot(seeded, task, coordinator, "项目启动室已交给 LEAD", `@${lead.callsign}`, now);
+      return this.#withDispatchedRoot(seeded, task, coordinator, "任务启动台已交给 LEAD", `@${lead.callsign}`, now);
     });
   }
 
   async dispatchDirect(taskId: string): Promise<BoardBootstrap> {
+    const preview = await this.#repository.read();
+    const previewTask = this.#dispatchableTask(preview, taskId);
+    if (previewTask.executionTarget.kind !== "agent") throw new Error("任务的执行目标不是单 Agent");
+    const previewAgent = this.#agent(preview, previewTask.executionTarget.agentId, previewTask.projectPath);
+    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze([previewAgent]));
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#dispatchableTask(current, taskId);
@@ -260,12 +322,23 @@ export class AgentTaskService {
           ? this.#coordinatorPrompt(task, `请规划并推进任务「${task.title}」`, availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads), current.comments.filter((comment) => comment.taskId === task.id))
           : this.#promptFor(task, agent, current.comments.filter((comment) => comment.taskId === task.id)),
         now,
+        undefined,
+        agent.id === "lead"
+          ? coordinatorPlan(availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads))
+          : undefined,
       );
       return this.#withDispatchedRoot(current, task, agentTask, `已分发给 ${agent.name}`, `@${agent.id}`, now);
     });
   }
 
   async dispatchSquad(taskId: string): Promise<BoardBootstrap> {
+    const preview = await this.#repository.read();
+    const previewTask = this.#dispatchableTask(preview, taskId);
+    if (previewTask.executionTarget.kind !== "squad") throw new Error("任务的执行目标不是 Squad");
+    const previewSquad = this.#squad(preview, previewTask.executionTarget.squadId);
+    const previewAgents = [previewSquad.leaderAgentId, ...previewSquad.memberAgentIds]
+      .map((agentId) => this.#agent(preview, agentId, previewTask.projectPath));
+    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze(previewAgents));
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#dispatchableTask(current, taskId);
@@ -279,7 +352,7 @@ export class AgentTaskService {
         leader,
         members,
         current.comments.filter((comment) => comment.taskId === task.id),
-      ), now, squad.id);
+      ), now, squad.id, squadPlan(squad, members));
       return this.#withDispatchedRoot(current, task, agentTask, `Squad「${squad.name}」已启动`, `${leader.name} 担任 Leader`, now);
     });
   }
@@ -364,7 +437,7 @@ export class AgentTaskService {
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: undefined }), { type: "execution-failed", reason: message }, now)
+          ? finishExecutionLifecycle(task, { type: "execution-failed", reason: message }, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => {
           if (candidate.id === agentTask.id) return Object.freeze({ ...candidate, status: "failed" as const, error: message, updatedAt: now, completedAt: now });
@@ -399,10 +472,7 @@ export class AgentTaskService {
       return {
         ...state,
         tasks: state.tasks.map((task) => task.activeAgentTaskId && brokenIds.has(task.activeAgentTaskId)
-          ? applyTaskLifecycle(Object.freeze({
-              ...task,
-              activeAgentTaskId: undefined,
-            }), { type: "execution-failed", reason: "子 AgentTask 未成功完成" }, now)
+          ? finishExecutionLifecycle(task, { type: "execution-failed", reason: "子 AgentTask 未成功完成" }, now)
           : task),
         agentTasks: state.agentTasks.map((agentTask) => {
           if (brokenIds.has(agentTask.id)) {
@@ -420,6 +490,28 @@ export class AgentTaskService {
 
   async complete(agentTaskId: string, runtimeToken: string, result: AgentTaskResult): Promise<BoardBootstrap> {
     const output = normalizedRequired(result.output, "Agent 最终输出");
+    const preview = await this.#repository.read();
+    const previewAttempt = this.#runningAgentTask(preview, agentTaskId, runtimeToken);
+    const previewTask = this.#task(preview, previewAttempt.taskId);
+    if (!result.protocolError && (previewAttempt.kind === "coordinator" || previewAttempt.kind === "coordinator-review")) {
+      const plan = previewAttempt.executionPlan;
+      if (plan?.kind === "coordinator") {
+        let action: CoordinatorAction | undefined;
+        try {
+          action = parseCoordinatorAction(output, plan.delegates);
+        } catch {
+          // The transactional path persists the exact protocol error and raw output.
+        }
+        if (action) {
+          const delegates = action.delegations.map((delegation) => plan.delegates.find((agent) => agent.id === delegation.agentId)!)
+            .filter(Boolean);
+          await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze(delegates));
+        }
+      }
+    } else if (previewAttempt.kind === "squad-leader" && previewAttempt.executionPlan?.kind === "squad") {
+      const delegates = parseAgentMentions(output, previewAttempt.executionPlan.delegates).agents;
+      await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, delegates);
+    }
     const now = this.#now();
     return this.#commit((current) => {
       const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
@@ -440,27 +532,38 @@ export class AgentTaskService {
       const baseActivities = [...current.activities, this.#activity(task.id, "artifact", `${agentTask.agentSnapshot.name}已产出结果`, result.sessionPath, now, agentTask.id)];
 
       if (agentTask.kind === "coordinator" || agentTask.kind === "coordinator-review") {
-        const availableAgents = availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads);
-        const action = parseCoordinatorAction(output, availableAgents);
+        const plan = agentTask.executionPlan;
+        if (plan?.kind !== "coordinator") throw new Error(`Coordinator AgentTask ${agentTask.id} 缺少分发时执行计划快照`);
+        if (result.protocolError) {
+          return this.#applyCoordinatorProtocolFailure(current, task, agentTask, resultFields, comment, baseActivities, new Error(result.protocolError), now);
+        }
+        let action: CoordinatorAction;
+        try {
+          action = parseCoordinatorAction(output, plan.delegates);
+        } catch (cause) {
+          return this.#applyCoordinatorProtocolFailure(current, task, agentTask, resultFields, comment, baseActivities, cause, now);
+        }
         const coordinatorComment: TaskComment = Object.freeze({ ...comment, body: coordinatorActionMessage(action) });
         return this.#applyCoordinatorAction(current, task, agentTask, resultFields, action, coordinatorComment, baseActivities, now);
       }
 
       if (agentTask.kind === "squad-leader") {
-        const squad = this.#squad(current, agentTask.squadId ?? "");
-        const members = squad.memberAgentIds.map((agentId) => this.#agent(current, agentId, task.projectPath));
-        const delegatedAgents = parseAgentMentions(output, members).agents;
+        const plan = agentTask.executionPlan;
+        if (plan?.kind !== "squad") throw new Error(`Squad Leader AgentTask ${agentTask.id} 缺少分发时执行计划快照`);
+        const delegatedAgents = parseAgentMentions(output, plan.delegates).agents;
         if (delegatedAgents.length > 0) {
           const children = delegatedAgents.map((agent) => Object.freeze({
             id: this.#id(),
             taskId: task.id,
+            executionAttempt: agentTask.executionAttempt,
+            taskSpec: agentTask.taskSpec,
             agentSnapshot: cloneAgent(agent),
             kind: "delegated" as const,
             status: "queued" as const,
             acceptance: "not-ready" as const,
-            prompt: this.#delegatedPrompt(task, squad, agent, output),
+            prompt: this.#delegatedPrompt(task, plan.squadName, agent, output),
             parentAgentTaskId: agentTask.id,
-            squadId: squad.id,
+            squadId: plan.squadId,
             createdAt: now,
             updatedAt: now,
           }));
@@ -534,7 +637,7 @@ export class AgentTaskService {
           ...current,
           tasks: current.tasks.map((candidate) => candidate.id === task.id
             ? allReported
-              ? applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: undefined }), { type: "execution-reported" }, now)
+              ? reportAgentExecution(task, parent, now)
               : applyTaskLifecycle(task, { type: "execution-queued" }, now)
             : candidate),
           agentTasks: current.agentTasks.map((candidate) => {
@@ -552,7 +655,7 @@ export class AgentTaskService {
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: undefined }), { type: "execution-reported" }, now)
+          ? reportAgentExecution(task, agentTask, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => candidate.id === agentTask.id ? reported : candidate),
         comments: [...current.comments, comment],
@@ -572,7 +675,7 @@ export class AgentTaskService {
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: undefined }), { type: "execution-failed", reason: message }, now)
+          ? finishExecutionLifecycle(task, { type: "execution-failed", reason: message }, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => {
           if (candidate.id === agentTask.id) return Object.freeze({ ...candidate, status: "failed" as const, runtimeToken: undefined, error: message, updatedAt: now, completedAt: now });
@@ -601,10 +704,7 @@ export class AgentTaskService {
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(Object.freeze({
-              ...task,
-              activeAgentTaskId: undefined,
-            }), { type: "execution-interrupted", reason: "用户中止 Agent 执行" }, now)
+          ? finishExecutionLifecycle(task, { type: "execution-interrupted", reason: "用户中止 Agent 执行" }, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => {
           if (!groupIds.has(candidate.id) || isTerminalAgentTaskStatus(candidate.status)) return candidate;
@@ -634,7 +734,7 @@ export class AgentTaskService {
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: undefined }), { type: "execution-interrupted", reason }, now)
+          ? finishExecutionLifecycle(task, { type: "execution-interrupted", reason }, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => {
           if (!groupIds.has(candidate.id) || isTerminalAgentTaskStatus(candidate.status)) return candidate;
@@ -681,9 +781,11 @@ export class AgentTaskService {
     prompt: string,
     now: string,
     squadId?: string,
+    executionPlan?: AgentExecutionPlanSnapshot,
   ): AgentTask {
+    const executionAttempt = nextExecutionAttempt(task);
     return Object.freeze({
-      id: this.#id(), taskId: task.id, agentSnapshot: cloneAgent(agent), kind, status: "queued", acceptance: "not-ready", prompt, squadId, createdAt: now, updatedAt: now,
+      id: this.#id(), taskId: task.id, executionAttempt, taskSpec: snapshotTaskSpec(task), agentSnapshot: cloneAgent(agent), kind, status: "queued", acceptance: "not-ready", prompt, squadId, executionPlan, createdAt: now, updatedAt: now,
     });
   }
 
@@ -695,12 +797,13 @@ export class AgentTaskService {
     detail: string,
     now: string,
   ): BoardState {
-    const nextTask = applyTaskLifecycle(Object.freeze({ ...task, activeAgentTaskId: agentTask.id }), { type: "execution-queued" }, now);
+    const superseded = supersedePendingExecutions(state, task.id);
+    const nextTask = beginAgentExecution(task, agentTask.id, agentTask.executionAttempt, now);
     return {
-      ...state,
-      tasks: state.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
-      agentTasks: [...state.agentTasks, agentTask],
-      activities: [...state.activities, this.#activity(task.id, "dispatch", summary, detail, now, agentTask.id)],
+      ...superseded,
+      tasks: superseded.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
+      agentTasks: [...superseded.agentTasks, agentTask],
+      activities: [...superseded.activities, this.#activity(task.id, "dispatch", summary, detail, now, agentTask.id)],
     };
   }
 
@@ -792,7 +895,7 @@ export class AgentTaskService {
       : Object.freeze({ output: resultFields.output, updatedAt: now });
 
     if (action.action === "delegate" || action.action === "request_revision" || action.action === "replan") {
-      const children = action.delegations.map((delegation) => this.#coordinatorDelegatedTask(state, task, root, action, delegation, now));
+      const children = action.delegations.map((delegation) => this.#coordinatorDelegatedTask(task, root, action, delegation, now));
       const waitingRoot: AgentTask = Object.freeze({
         ...root,
         ...resultOnRoot,
@@ -854,7 +957,7 @@ export class AgentTaskService {
     return {
       ...state,
       tasks: state.tasks.map((candidate) => candidate.id === task.id
-        ? applyTaskLifecycle(Object.freeze({ ...candidate, activeAgentTaskId: undefined }), { type: "execution-reported" }, now)
+        ? reportAgentExecution(candidate, root, now)
         : candidate),
       agentTasks: state.agentTasks.map((candidate) => {
         if (candidate.id === root.id) return reportedRoot;
@@ -866,18 +969,80 @@ export class AgentTaskService {
     };
   }
 
-  #coordinatorDelegatedTask(
+  #applyCoordinatorProtocolFailure(
     state: BoardState,
+    task: KanbanTask,
+    attempt: AgentTask,
+    resultFields: AgentTaskResultFields,
+    rawComment: TaskComment,
+    activities: readonly TaskActivity[],
+    cause: unknown,
+    now: string,
+  ): BoardState {
+    const root = attempt.kind === "coordinator" ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
+    const validationError = cause instanceof Error ? cause.message : String(cause);
+    const message = `LEAD 协议无效：${validationError}`;
+    const groupIds = this.#agentTaskGroupIds(state, root.id);
+    return {
+      ...state,
+      tasks: state.tasks.map((candidate) => candidate.id === task.id
+        ? finishExecutionLifecycle(candidate, { type: "execution-failed", reason: message }, now)
+        : candidate),
+      agentTasks: state.agentTasks.map((candidate) => {
+        if (candidate.id === attempt.id) {
+          return Object.freeze({
+            ...candidate,
+            ...resultFields,
+            status: "protocol-invalid" as const,
+            acceptance: "not-ready" as const,
+            error: validationError,
+            completedAt: now,
+          });
+        }
+        if (candidate.id === root.id) {
+          return Object.freeze({
+            ...candidate,
+            runtimeToken: undefined,
+            status: "protocol-invalid" as const,
+            acceptance: "not-ready" as const,
+            error: validationError,
+            updatedAt: now,
+            completedAt: now,
+          });
+        }
+        if (groupIds.has(candidate.id) && !isTerminalAgentTaskStatus(candidate.status)) {
+          return Object.freeze({
+            ...candidate,
+            runtimeToken: undefined,
+            status: "cancelled" as const,
+            error: "Coordinator 协议无效，同组执行已取消",
+            updatedAt: now,
+            completedAt: now,
+          });
+        }
+        return candidate;
+      }),
+      comments: [...state.comments, rawComment],
+      activities: [...activities, this.#activity(task.id, "error", "LEAD 输出未通过 Coordinator 协议校验", validationError, now, attempt.id)],
+    };
+  }
+
+  #coordinatorDelegatedTask(
     task: KanbanTask,
     root: AgentTask,
     action: CoordinatorAction,
     delegation: CoordinatorDelegation,
     now: string,
   ): AgentTask {
-    const agent = this.#agent(state, delegation.agentId, task.projectPath);
+    const plan = root.executionPlan;
+    if (plan?.kind !== "coordinator") throw new Error(`Coordinator AgentTask ${root.id} 缺少分发时执行计划快照`);
+    const agent = plan.delegates.find((candidate) => candidate.id === delegation.agentId);
+    if (!agent) throw new Error(`Coordinator 本轮执行计划不允许委派 Agent: ${delegation.agentId}`);
     return Object.freeze({
       id: this.#id(),
       taskId: task.id,
+      executionAttempt: root.executionAttempt,
+      taskSpec: root.taskSpec,
       agentSnapshot: cloneAgent(agent),
       kind: "delegated",
       status: "queued",
@@ -899,12 +1064,15 @@ export class AgentTaskService {
     return Object.freeze({
       id: this.#id(),
       taskId: task.id,
+      executionAttempt: root.executionAttempt,
+      taskSpec: root.taskSpec,
       agentSnapshot: cloneAgent(root.agentSnapshot),
       kind: "coordinator-review",
       status: "queued",
       acceptance: "not-ready",
       prompt: this.#coordinatorReviewPrompt(state, task, root, extraReport),
       parentAgentTaskId: root.id,
+      executionPlan: root.executionPlan,
       createdAt: now,
       updatedAt: now,
     });
@@ -937,12 +1105,11 @@ export class AgentTaskService {
       "", "## Task Room", discussion || "（暂无其他消息）",
       "", "## 可委派 Agent", workers || "（没有可委派 Agent；只能 complete 或 ask_human）",
       "", "## 严格行动协议",
-      "最终回复只能是一个 JSON 对象，不能使用 Markdown 代码块、前后说明或 @mention。允许字段只有 action、summary、delegations、question。",
+      "必须把 coordinator_action 工具作为本回合最后且唯一的终止动作；不要手写 JSON，也不要用自然语言或 @mention 代替工具调用。",
       "action 必须是 delegate、request_revision、replan、complete、ask_human 之一。",
       "delegate/request_revision/replan 必须提供非空 delegations；每项精确包含 agentId、objective、acceptanceCriteria。",
       "ask_human 必须提供 question 且 delegations 为空。complete 的 delegations 必须为空。",
-      '{"action":"delegate","summary":"为什么这样拆分","delegations":[{"agentId":"scout","objective":"真实工作目标","acceptanceCriteria":"可验证结果"}]}',
-      "你只提出结构化行动。Stella 在验证 JSON 后才会创建真实 AgentTask；不得声称尚未返回报告的 Agent 已完成工作。",
+      "Stella 只接受 coordinator_action 的已校验 details，然后才会创建真实 AgentTask；不得声称尚未返回报告的 Agent 已完成工作。",
     ].join("\n");
   }
 
@@ -967,8 +1134,7 @@ export class AgentTaskService {
       ...(reply ? ["", "## 用户刚刚的回复", reply] : []),
       "", "## Task Room", discussion || "（暂无消息）",
       "", "核对报告是否满足验收标准。信息充分时 complete；需要成员补做时 request_revision；任务拆解需要变化时 replan；缺少用户决定时 ask_human。",
-      "最终回复只能是严格 JSON，字段和约束与上一 Coordinator 回合完全相同；不能使用 Markdown 代码块、自然语言前后缀或 @mention。",
-      '{"action":"complete","summary":"基于哪些报告判定满足验收","delegations":[]}',
+      "必须调用 coordinator_action 作为本回合最后动作；不要输出 JSON、自然语言前后缀或 @mention 来冒充行动。",
     ].join("\n");
   }
 
@@ -1008,9 +1174,9 @@ export class AgentTaskService {
     ].join("\n");
   }
 
-  #delegatedPrompt(task: KanbanTask, squad: Squad, agent: AgentDefinition, leaderOutput: string): string {
+  #delegatedPrompt(task: KanbanTask, squadName: string, agent: AgentDefinition, leaderOutput: string): string {
     return [
-      "# Stella Squad 子任务", "", `Squad：${squad.name}`, `任务：${task.title}`, `执行成员：${agent.name}（@${agent.id}）`,
+      "# Stella Squad 子任务", "", `Squad：${squadName}`, `任务：${task.title}`, `执行成员：${agent.name}（@${agent.id}）`,
       "", "## 任务说明", task.description || "（未提供补充说明）", "", "## 验收标准",
       task.acceptanceCriteria || "（未提供补充标准）", "", "## Leader 产物与委派上下文", leaderOutput,
       "", "## 成员角色固定指令", agent.instructions,

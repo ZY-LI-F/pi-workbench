@@ -13,7 +13,7 @@ function initialState(): BoardState {
     tasks: [{
       id: "task-autopilot", title: "Autopilot 产出任务", description: "", acceptanceCriteria: "", priority: "medium",
       projectPath: "C:/project", projectName: "project", trusted: true,
-      executionTarget: { kind: "agent", agentId: "builder" }, stage: "planned", createdAt: NOW, updatedAt: NOW,
+      executionTarget: { kind: "agent", agentId: "builder" }, stage: "planned", specRevision: 1, createdAt: NOW, updatedAt: NOW,
     }],
     runs: [],
     activities: [],
@@ -44,12 +44,31 @@ class MemoryRepository implements BoardRepository {
 }
 
 describe("BoardService", () => {
+  it("synchronizes a project trust downgrade across Tasks and Autopilots", async () => {
+    const repository = new MemoryRepository();
+    const service = new BoardService({
+      repository,
+      catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      emitChanged: () => undefined,
+      projectIdentity: (path) => path.replaceAll("\\", "/").toLocaleLowerCase(),
+      now: () => "2026-07-18T00:05:00.000Z",
+      id: () => "trust-activity",
+    });
+
+    await service.updateProjectTrust("c:\\PROJECT", false);
+
+    expect(repository.state.tasks[0]).toMatchObject({ trusted: false, updatedAt: "2026-07-18T00:05:00.000Z" });
+    expect(repository.state.autopilots[0]).toMatchObject({ trusted: false, updatedAt: "2026-07-18T00:05:00.000Z" });
+    expect(repository.state.activities.at(-1)?.summary).toBe("项目已撤销信任执行权限");
+  });
+
   it("preserves an AutopilotRun task reference as deletion provenance", async () => {
     const repository = new MemoryRepository();
     const service = new BoardService({
       repository,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: () => undefined,
+      projectIdentity: (path) => path.toLocaleLowerCase(),
       now: () => NOW,
       id: () => "board-id",
     });

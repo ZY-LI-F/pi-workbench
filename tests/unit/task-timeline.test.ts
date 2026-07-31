@@ -18,6 +18,7 @@ const TASK: KanbanTask = Object.freeze({
   trusted: true,
   executionTarget: Object.freeze({ kind: "agent", agentId: "builder" }),
   stage: "planned",
+  specRevision: 1,
   createdAt: "2026-07-18T00:00:00.000Z",
   updatedAt: "2026-07-18T00:00:00.000Z",
 });
@@ -25,6 +26,8 @@ const TASK: KanbanTask = Object.freeze({
 const RUN: WorkflowRun = Object.freeze({
   id: "run-1",
   taskId: TASK.id,
+  executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
   workflow: WORKFLOW,
   agents: Object.freeze([BUILDER]),
   status: "reported",
@@ -48,14 +51,20 @@ const RUN: WorkflowRun = Object.freeze({
 const AGENT_TASK: AgentTask = Object.freeze({
   id: "agent-task-1",
   taskId: TASK.id,
+  executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
   agentSnapshot: BUILDER,
   kind: "direct",
   status: "reported",
   acceptance: "accepted",
   prompt: "实现",
   output: "Agent 报告",
+  inputTokens: 1_250_000,
+  outputTokens: 250_000,
+  cost: 0.42,
   createdAt: "2026-07-18T00:01:00.000Z",
   updatedAt: "2026-07-18T00:03:00.000Z",
+  startedAt: "2026-07-18T00:01:30.000Z",
   completedAt: "2026-07-18T00:03:00.000Z",
 });
 
@@ -82,6 +91,13 @@ describe("projectTaskTimeline", () => {
     });
     expect(timeline.find((item) => item.id === `agent-task:${AGENT_TASK.id}`)?.provenance.agentTaskId).toBe(AGENT_TASK.id);
     expect(timeline.filter((item) => item.id === `agent-task:${AGENT_TASK.id}:output`)).toHaveLength(0);
+    expect(timeline.find((item) => item.id === "message:message-output")?.artifact).toMatchObject({
+      content: "Agent 报告",
+      inputTokens: 1_250_000,
+      outputTokens: 250_000,
+      startedAt: "2026-07-18T00:01:30.000Z",
+      completedAt: "2026-07-18T00:03:00.000Z",
+    });
     expect(Object.isFrozen(timeline)).toBe(true);
     expect(Object.isFrozen(timeline[0]?.provenance)).toBe(true);
   });

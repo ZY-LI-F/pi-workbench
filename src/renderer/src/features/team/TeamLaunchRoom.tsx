@@ -12,9 +12,11 @@ interface TeamLaunchRoomProps {
   readonly lead?: AgentDefinition;
   readonly presences: readonly AgentPresence[];
   readonly mentionRequest?: AgentMentionRequest;
+  readonly focusRequest?: number;
+  readonly availableSkillNames?: readonly string[];
   readonly busy: boolean;
   readonly executionEnabled: boolean;
-  readonly onLaunch: (body: string) => Promise<void>;
+  readonly onLaunch: (body: string, acceptanceCriteria: string) => Promise<void>;
 }
 
 interface LaunchPreview {
@@ -27,11 +29,14 @@ export function TeamLaunchRoom({
   lead,
   presences,
   mentionRequest,
+  focusRequest,
+  availableSkillNames,
   busy,
   executionEnabled,
   onLaunch,
 }: TeamLaunchRoomProps) {
   const [body, setBody] = useState("");
+  const [acceptanceCriteria, setAcceptanceCriteria] = useState("");
   const [activeQuery, setActiveQuery] = useState<AgentMentionQuery>();
   const [error, setError] = useState("");
   const disabledReason = !project
@@ -44,18 +49,19 @@ export function TeamLaunchRoom({
   const preview = useMemo<LaunchPreview>(() => {
     if (!body.trim() || activeQuery) return Object.freeze({});
     try {
-      return Object.freeze({ draft: deriveTeamLaunchDraft(body) });
+      return Object.freeze({ draft: deriveTeamLaunchDraft(body, acceptanceCriteria) });
     } catch (cause) {
       return Object.freeze({ error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [activeQuery, body]);
+  }, [acceptanceCriteria, activeQuery, body]);
 
   const submit = async (): Promise<void> => {
     setError("");
     try {
-      deriveTeamLaunchDraft(body);
-      await onLaunch(body.trim());
+      deriveTeamLaunchDraft(body, acceptanceCriteria);
+      await onLaunch(body.trim(), acceptanceCriteria.trim());
       setBody("");
+      setAcceptanceCriteria("");
       setActiveQuery(undefined);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -63,9 +69,9 @@ export function TeamLaunchRoom({
   };
 
   return (
-    <section className="team-launch-room" aria-label="项目启动室">
+    <section className="team-launch-room" aria-label="任务启动台">
       <header className="team-launch-room__header">
-        <div><small>ALWAYS-ON ROOM</small><h2>项目启动室</h2></div>
+        <div><small>TASK LAUNCHPAD</small><h2>任务启动台</h2></div>
         <span><i />{project?.name ?? "尚未选择项目"}</span>
       </header>
 
@@ -85,14 +91,17 @@ export function TeamLaunchRoom({
         </article>
       </div>
 
-      <form className="team-launch-room__composer" aria-label="项目启动室输入器" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
+      <form className="team-launch-room__composer" aria-label="任务启动台输入器" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
         <div className="team-launch-room__composer-label"><span><Orbit size={11} />发送启动指令</span><small>只接受一个 @LEAD；直接 Worker 请进入已有 Task Room</small></div>
         <AgentMentionInput
           id="team-launch-message"
+          ariaLabel="向 LEAD 输入团队任务"
           value={body}
           agents={lead ? Object.freeze([lead]) : Object.freeze([])}
           presences={presences}
           mentionRequest={mentionRequest}
+          focusRequest={focusRequest}
+          availableSkillNames={availableSkillNames}
           mentionsDisabled={Boolean(disabledReason)}
           mentionsDisabledReason={disabledReason}
           placeholder="@LEAD 说明目标、边界和希望得到的结果…"
@@ -101,6 +110,15 @@ export function TeamLaunchRoom({
           onQueryChange={setActiveQuery}
           onRequestError={setError}
         />
+        <label className="kanban-field team-launch-room__acceptance">
+          <span>验收标准 <i>必填</i><small>结果应满足哪些可核查条件</small></span>
+          <textarea
+            value={acceptanceCriteria}
+            rows={3}
+            onChange={(event) => { setAcceptanceCriteria(event.target.value); setError(""); }}
+            placeholder="例如：输出带原始来源和数据日期的证据表；分别说明支持、反对与未知证据；给出可证伪的下一步实验。"
+          />
+        </label>
         <div className={`team-launch-room__impact ${error || preview.error ? "is-error" : preview.draft ? "is-ready" : ""}`} role={error || preview.error ? "alert" : "status"}>
           {error || preview.error
             ? <><AtSign size={12} /><span>{error || preview.error}</span></>
@@ -108,7 +126,7 @@ export function TeamLaunchRoom({
               ? <><AtSign size={12} /><span>选择 @LEAD，然后继续写明任务目标。</span></>
               : preview.draft
                 ? <><GitBranch size={12} /><span>将创建任务“{preview.draft.title}”，普通优先级，并立即启动 LEAD Coordinator。</span></>
-                : <><Sparkles size={12} /><span>消息发送成功后会进入新 Task Room；启动室不保存第二份聊天历史。</span></>}
+                : <><Sparkles size={12} /><span>消息发送成功后会进入新 Task Room；启动台不保存第二份聊天历史。</span></>}
         </div>
         <footer><span><i />原子写入 Task · Message · Coordinator</span><button type="submit" className="button-primary" disabled={busy || Boolean(disabledReason) || !preview.draft || Boolean(activeQuery)}><Send size={13} />{busy ? "正在建立任务…" : "创建任务并交给 LEAD"}</button></footer>
       </form>

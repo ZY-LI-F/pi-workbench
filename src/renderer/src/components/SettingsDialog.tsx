@@ -28,9 +28,9 @@ const THEMES: readonly { readonly value: ThemePreference; readonly label: string
 ]);
 
 const FONT_SIZES: readonly { readonly value: FontSizePreference; readonly label: string }[] = Object.freeze([
-  Object.freeze({ value: "small", label: "小" }),
-  Object.freeze({ value: "default", label: "默认" }),
-  Object.freeze({ value: "large", label: "大" }),
+  Object.freeze({ value: "small", label: "小（14px）" }),
+  Object.freeze({ value: "default", label: "默认（16px）" }),
+  Object.freeze({ value: "large", label: "大（19px）" }),
 ]);
 
 function Toggle({ checked, onChange, label }: { readonly checked: boolean; readonly onChange: (checked: boolean) => void; readonly label: string }) {
@@ -120,6 +120,22 @@ export function SettingsDialog({
           </div>
           <div className="setting-row"><span><strong>紧凑密度</strong><small>减少消息与侧栏的垂直留白</small></span><Toggle label="紧凑密度" checked={preferences.density === "compact"} onChange={(checked) => onPreferencesChange(Object.freeze({ ...preferences, density: checked ? "compact" : "comfortable" }))} /></div>
           <label className="setting-row setting-row--select"><span><strong>字体大小</strong><small>调整全局界面字号，当前为{FONT_SIZES.find((item) => item.value === preferences.fontSize)?.label ?? "默认"}</small></span><select value={preferences.fontSize} onChange={(event) => onPreferencesChange(Object.freeze({ ...preferences, fontSize: event.target.value as FontSizePreference }))}>{FONT_SIZES.map((item) => <option value={item.value} key={item.value}>{item.label}</option>)}</select></label>
+        </section>
+
+        <section className="settings-section settings-section--capabilities">
+          <div className="settings-section__heading"><span>功能页面</span><small>Pi 工作台与扩展能力分层显示</small></div>
+          <div className="setting-row">
+            <span>
+              <strong>显示团队功能（实验）</strong>
+              <small>显示团队协作、任务看板与自动化入口；关闭不会删除已有任务。</small>
+            </span>
+            <Toggle
+              label="显示团队功能"
+              checked={preferences.teamFeaturesEnabled}
+              onChange={(checked) => onPreferencesChange(Object.freeze({ ...preferences, teamFeaturesEnabled: checked }))}
+            />
+          </div>
+          <p className="settings-capability-note">Pi 会话、模型、命令、终端和会话图谱始终独立可用；团队层只通过 Pi 的公开接口执行任务。</p>
         </section>
 
         <section className="settings-section">

@@ -1,11 +1,19 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { expect, _electron as electron, type ElectronApplication, type Page, type TestInfo } from "@playwright/test";
+import { enableTeamFeatures } from "./team-features";
 
 export const APP_ROOT = resolve(process.cwd());
 export const PHARMA_PROJECT = join(APP_ROOT, "examples", "pharma-early-research");
 
-export async function launchPharmaApp(testInfo: TestInfo): Promise<{ readonly electronApp: ElectronApplication; readonly window: Page }> {
+interface LaunchPharmaAppOptions {
+  readonly teamFeatures?: boolean;
+}
+
+export async function launchPharmaApp(
+  testInfo: TestInfo,
+  options: LaunchPharmaAppOptions = {},
+): Promise<{ readonly electronApp: ElectronApplication; readonly window: Page }> {
   const userData = testInfo.outputPath("electron-user-data");
   await mkdir(userData, { recursive: true });
   await writeFile(join(userData, "stella-state.json"), `${JSON.stringify({
@@ -22,7 +30,6 @@ export async function launchPharmaApp(testInfo: TestInfo): Promise<{ readonly el
   await expect(window.locator(".app-shell, .startup-screen--error")).toBeVisible({ timeout: 45_000 });
   const startupError = window.locator(".startup-screen--error");
   if (await startupError.isVisible()) throw new Error(`Stella failed to initialize:\n${await startupError.innerText()}`);
-  await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
   const deadline = Date.now() + 60_000;
   let health = await window.evaluate(() => window.stella.capabilities());
   while (health.pi.state !== "ready" && health.pi.state !== "error" && Date.now() < deadline) {
@@ -30,6 +37,15 @@ export async function launchPharmaApp(testInfo: TestInfo): Promise<{ readonly el
     health = await window.evaluate(() => window.stella.capabilities());
   }
   if (health.pi.state !== "ready") throw new Error(`Pi capability ${health.pi.state}: ${health.pi.error ?? "unknown error"}`);
+  if (options.teamFeatures ?? true) {
+    await enableTeamFeatures(window);
+    await window.getByRole("button", { name: "任务看板", exact: true }).click();
+    await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
+  } else {
+    await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
+    await expect(window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
+  }
   return Object.freeze({ electronApp, window });
 }
 

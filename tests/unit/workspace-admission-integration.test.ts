@@ -9,6 +9,7 @@ import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import { WorkflowOrchestrator, type WorkflowAgentRuntime, type WorkflowRuntimeFactory } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -80,8 +81,8 @@ describe("shared WorkspaceAdmission integration", () => {
     const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.replaceAll("\\", "/").toLocaleLowerCase("en-US") });
     const workflowFactory = new SharedRuntimeFactory();
     const agentFactory = new SharedRuntimeFactory();
-    const boardService = new BoardService({ repository, catalog: CATALOG, emitChanged: () => undefined, id, now });
-    const agentTaskService = new AgentTaskService({ repository, catalog: CATALOG, emitChanged: () => undefined, id, now });
+    const boardService = new BoardService({ repository, catalog: CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
+    const agentTaskService = new AgentTaskService({ repository, catalog: CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, id, now });
     const workflow = new WorkflowOrchestrator({
       repository,
       catalog: CATALOG,
@@ -89,7 +90,9 @@ describe("shared WorkspaceAdmission integration", () => {
       admission,
       emitBoardEvent: () => undefined,
       globalModel: () => undefined,
+      resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
+      skills: READY_AGENT_SKILLS,
       id,
       now,
     });
@@ -99,7 +102,10 @@ describe("shared WorkspaceAdmission integration", () => {
       admission,
       emitBoardEvent: () => undefined,
       globalModel: () => undefined,
+      resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
+      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+      skills: READY_AGENT_SKILLS,
     });
 
     await boardService.createTask({

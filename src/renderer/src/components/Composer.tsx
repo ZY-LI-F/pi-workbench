@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import {
   ArrowUp,
   Command,
@@ -10,17 +10,15 @@ import {
 } from "lucide-react";
 import type { SlashCommandSummary } from "@shared/contracts";
 import type { RuntimeUiState } from "../lib/runtime-state";
+import type { ComposerImage } from "../hooks/use-session-composer-draft";
 
-export interface ComposerImage {
-  readonly type: "image";
-  readonly data: string;
-  readonly mimeType: string;
-  readonly name: string;
-}
+export type { ComposerImage } from "../hooks/use-session-composer-draft";
 
 interface ComposerProps {
   readonly draft: string;
   readonly onDraftChange: (draft: string) => void;
+  readonly images: readonly ComposerImage[];
+  readonly onImagesChange: Dispatch<SetStateAction<readonly ComposerImage[]>>;
   readonly editorInjection?: { readonly id: string; readonly text: string };
   readonly commands: readonly SlashCommandSummary[];
   readonly widgets: RuntimeUiState["extensionWidgets"];
@@ -32,6 +30,8 @@ interface ComposerProps {
   readonly onOpenTerminal: () => void;
   readonly onOpenPalette: () => void;
   readonly onError: (message: string) => void;
+  readonly sendDisabled?: boolean;
+  readonly sendDisabledReason?: string;
 }
 
 function fileToImage(file: File): Promise<ComposerImage> {
@@ -58,6 +58,8 @@ function fileToImage(file: File): Promise<ComposerImage> {
 export function Composer({
   draft,
   onDraftChange,
+  images,
+  onImagesChange,
   editorInjection,
   commands,
   widgets,
@@ -69,10 +71,11 @@ export function Composer({
   onOpenTerminal,
   onOpenPalette,
   onError,
+  sendDisabled = false,
+  sendDisabledReason,
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<readonly ComposerImage[]>(Object.freeze([]));
   const [sending, setSending] = useState(false);
   const slashQuery = draft.startsWith("/") && !draft.includes("\n") ? draft.slice(1).split(/\s/)[0] ?? "" : null;
   const matchingCommands = useMemo(
@@ -102,12 +105,12 @@ export function Composer({
   }, [draft]);
 
   const submit = async () => {
-    if (sending || (!draft.trim() && images.length === 0)) return;
+    if (sending || sendDisabled || (!draft.trim() && images.length === 0)) return;
     setSending(true);
     try {
       await onSend(draft.trim(), images);
       onDraftChange("");
-      setImages(Object.freeze([]));
+      onImagesChange(Object.freeze([]));
     } catch (error) {
       onError(`消息发送失败：${error instanceof Error ? error.message : String(error)}`);
     } finally {
@@ -144,7 +147,7 @@ export function Composer({
             {images.map((image, index) => (
               <div key={`${image.name}-${index}`}>
                 <img src={`data:${image.mimeType};base64,${image.data}`} alt={image.name} />
-                <button type="button" aria-label={`移除 ${image.name}`} onClick={() => setImages(Object.freeze(images.filter((_, imageIndex) => imageIndex !== index)))}><X size={12} /></button>
+                <button type="button" aria-label={`移除 ${image.name}`} onClick={() => onImagesChange((current) => Object.freeze(current.filter((_, imageIndex) => imageIndex !== index)))}><X size={12} /></button>
                 <span>{image.name}</span>
               </div>
             ))}
@@ -164,7 +167,7 @@ export function Composer({
             }
             if (event.key === "Escape" && streaming) onStop();
           }}
-          placeholder={streaming ? "补充指令，或排到当前任务之后…" : "描述目标，@ 文件，或输入 / 使用命令…"}
+          placeholder={sendDisabled ? "Pi 正在恢复；可以先准备消息和附件…" : streaming ? "补充指令，或排到当前任务之后…" : "描述目标，添加图片，或输入 / 使用命令…"}
           rows={1}
           aria-label="给 Pi 的消息"
         />
@@ -182,13 +185,13 @@ export function Composer({
               onChange={(event) => {
                 const files = Array.from(event.target.files ?? []);
                 void Promise.all(files.map(fileToImage))
-                  .then((next) => setImages((current) => Object.freeze([...current, ...next])))
+                  .then((next) => onImagesChange((current) => Object.freeze([...current, ...next])))
                   .catch((error: unknown) => onError(error instanceof Error ? error.message : String(error)));
                 event.currentTarget.value = "";
               }}
             />
             <button type="button" className="composer-tool" aria-label="添加图片" title="添加图片" onClick={() => fileInputRef.current?.click()}><Paperclip size={17} /></button>
-            <button type="button" className="composer-tool" aria-label="运行命令" title="运行命令" onClick={onOpenTerminal}><TerminalSquare size={17} /></button>
+            <button type="button" className="composer-tool" aria-label="运行命令" title="运行命令" disabled={sendDisabled} onClick={onOpenTerminal}><TerminalSquare size={17} /></button>
             <button type="button" className="composer-tool composer-tool--commands" onClick={onOpenPalette}><Command size={15} /><span>命令</span></button>
             {streaming && (
               <div className="queue-mode" role="group" aria-label="消息发送方式">
@@ -203,11 +206,11 @@ export function Composer({
             {streaming ? (
               <button type="button" className="send-button send-button--stop" aria-label="停止" onClick={onStop}><Square size={15} fill="currentColor" /></button>
             ) : (
-              <button type="button" className="send-button" disabled={sending || (!draft.trim() && images.length === 0)} aria-label="发送" onClick={() => void submit()}><ArrowUp size={18} /></button>
+              <button type="button" className="send-button" disabled={sending || sendDisabled || (!draft.trim() && images.length === 0)} aria-label="发送" onClick={() => void submit()}><ArrowUp size={18} /></button>
             )}
           </div>
         </div>
-        <div className="composer__attachment-note"><FileImage size={11} /> 图片会以内联数据发送给当前模型</div>
+        <div className="composer__attachment-note" aria-live="polite"><span><FileImage size={11} />{images.length > 0 ? `${images.length} 个附件已保留在当前会话草稿中` : "附件会随当前会话草稿保留，发送成功后进入消息记录"}</span>{sendDisabledReason && <strong>{sendDisabledReason}</strong>}</div>
       </div>
     </div>
   );

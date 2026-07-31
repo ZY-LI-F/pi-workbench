@@ -7,6 +7,7 @@ import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import { WorkflowOrchestrator, type WorkflowAgentRuntime, type WorkflowRuntimeFactory } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { READY_AGENT_SKILLS } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -82,11 +83,12 @@ async function setup(
   globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
   repository = new MemoryRepository(),
   resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string> = async (projectPath) => projectPath,
+  resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
 ) {
   const events: BoardBridgeEvent[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
   const id = idFactory();
-  const service = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, id, now: () => "2026-07-17T00:00:00.000Z" });
+  const service = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now: () => "2026-07-17T00:00:00.000Z" });
   await service.createTask({
     title: "实现固定流程", description: "真实执行", acceptanceCriteria: "经过人工关卡", priority: "high",
     projectPath: "C:/project", projectName: "project", trusted: true,
@@ -101,7 +103,9 @@ async function setup(
     emitBoardEvent: (event) => events.push(event),
     admission,
     globalModel,
+    resolveProjectTrust,
     resolveProjectPath,
+    skills: READY_AGENT_SKILLS,
     id,
     now: () => "2026-07-17T00:00:00.000Z",
   });
@@ -124,7 +128,7 @@ describe("WorkflowOrchestrator", () => {
     })));
   });
 
-  it("fails the workflow before starting Pi when project identity verification fails", async () => {
+  it("rejects dispatch before queuing when project identity verification fails", async () => {
     const runtimeFactory = new FakeRuntimeFactory();
     const resolveProjectPath = vi.fn(async () => { throw new Error("受信任项目路径的真实位置已变化"); });
     const { repository, orchestrator, taskId } = await setup(
@@ -134,12 +138,28 @@ describe("WorkflowOrchestrator", () => {
       resolveProjectPath,
     );
 
+    await expect(orchestrator.dispatch(taskId)).rejects.toThrow("受信任项目路径的真实位置已变化");
+    expect(resolveProjectPath).toHaveBeenCalledWith("C:/project", true);
+    expect(runtimeFactory.runtimes).toHaveLength(0);
+    expect(repository.state.runs).toHaveLength(0);
+    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("planned");
+  });
+
+  it("starts workflow Agents with the live trust decision rather than the saved Task flag", async () => {
+    const runtimeFactory = new FakeRuntimeFactory();
+    const resolveProjectPath = vi.fn(async (projectPath: string) => projectPath);
+    const { orchestrator, taskId } = await setup(
+      runtimeFactory,
+      () => undefined,
+      new MemoryRepository(),
+      resolveProjectPath,
+      async () => false,
+    );
+
     await orchestrator.dispatch(taskId);
 
-    await vi.waitFor(() => expect(repository.state.runs[0]?.status).toBe("failed"));
-    expect(resolveProjectPath).toHaveBeenCalledWith("C:/project", true);
-    expect(runtimeFactory.runtimes[0]?.start).not.toHaveBeenCalled();
-    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
+    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.start).toHaveBeenCalledWith(expect.objectContaining({ trusted: false })));
+    expect(resolveProjectPath).toHaveBeenCalledWith("C:/project", false);
   });
 
   it("runs isolated Agents in order and pauses at the plan gate", async () => {

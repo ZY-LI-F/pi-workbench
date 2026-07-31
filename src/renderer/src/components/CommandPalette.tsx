@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ComponentType } from "react";
 import {
   Archive,
   Command,
@@ -43,6 +43,10 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  const listId = useId();
+  closeRef.current = onClose;
   const normalized = query.trim().replace(/^\//, "").toLocaleLowerCase();
   const filteredActions = useMemo(
     () => actions.filter((action) => `${action.label} ${action.detail}`.toLocaleLowerCase().includes(normalized)),
@@ -54,7 +58,25 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
   );
   const itemCount = filteredActions.length + filteredCommands.length;
 
-  useEffect(() => inputRef.current?.focus(), []);
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    inputRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRef.current();
+      }
+      if (event.key === "Tab" && panelRef.current) {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      opener?.focus();
+    };
+  }, []);
   useEffect(() => setActiveIndex(0), [query]);
 
   const runAt = (index: number) => {
@@ -75,7 +97,7 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
     <div className="palette-layer" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
-      <div className="command-palette" role="dialog" aria-modal="true" aria-label="搜索与命令">
+      <div ref={panelRef} className="command-palette" role="dialog" aria-modal="true" aria-label="搜索与命令">
         <div className="command-palette__input">
           <Search size={18} />
           <input
@@ -83,8 +105,12 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="搜索操作、技能或提示词…"
+            role="combobox"
+            aria-label="搜索操作、技能或提示词"
+            aria-controls={listId}
+            aria-expanded="true"
+            aria-activedescendant={itemCount > 0 ? `${listId}-${activeIndex}` : undefined}
             onKeyDown={(event) => {
-              if (event.key === "Escape") onClose();
               if (event.key === "ArrowDown") {
                 event.preventDefault();
                 setActiveIndex((value) => (itemCount === 0 ? 0 : (value + 1) % itemCount));
@@ -101,12 +127,12 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
           />
           <kbd>ESC</kbd>
         </div>
-        <div className="command-palette__results">
+        <div className="command-palette__results" id={listId} role="listbox" aria-label="命令结果">
           {filteredActions.length > 0 && <p className="popover-label">工作台操作</p>}
           {filteredActions.map((action, index) => {
             const Icon = action.icon;
             return (
-              <button type="button" className={activeIndex === index ? "is-active" : ""} key={action.id} onMouseEnter={() => setActiveIndex(index)} onClick={() => runAt(index)}>
+              <button type="button" role="option" id={`${listId}-${index}`} aria-selected={activeIndex === index} tabIndex={-1} className={activeIndex === index ? "is-active" : ""} key={action.id} onMouseEnter={() => setActiveIndex(index)} onClick={() => runAt(index)}>
                 <span className="palette-icon"><Icon size={16} /></span><span><strong>{action.label}</strong><small>{action.detail}</small></span>
               </button>
             );
@@ -115,7 +141,7 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
           {filteredCommands.map((command, index) => {
             const absoluteIndex = filteredActions.length + index;
             return (
-              <button type="button" className={activeIndex === absoluteIndex ? "is-active" : ""} key={`${command.source}:${command.name}`} onMouseEnter={() => setActiveIndex(absoluteIndex)} onClick={() => runAt(absoluteIndex)}>
+              <button type="button" role="option" id={`${listId}-${absoluteIndex}`} aria-selected={activeIndex === absoluteIndex} tabIndex={-1} className={activeIndex === absoluteIndex ? "is-active" : ""} key={`${command.source}:${command.name}`} onMouseEnter={() => setActiveIndex(absoluteIndex)} onClick={() => runAt(absoluteIndex)}>
                 <span className={`palette-icon palette-icon--${command.source}`}><Command size={15} /></span>
                 <span><strong>/{command.name}</strong><small>{command.description || command.source}</small></span>
                 <em>{command.source}</em>

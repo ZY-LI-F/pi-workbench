@@ -1,6 +1,6 @@
-import { join } from "node:path";
 import { expect, test } from "@playwright/test";
-import { APP_ROOT, createNlrp3Task, launchPharmaApp } from "./helpers/pharma-app";
+import { createNlrp3Task, launchPharmaApp } from "./helpers/pharma-app";
+import { e2eScreenshotPath } from "./helpers/screenshot-path";
 
 test("creates an NLRP3 assessment from the trusted project through the real Electron UI", async ({}, testInfo) => {
   const { electronApp, window } = await launchPharmaApp(testInfo);
@@ -11,7 +11,7 @@ test("creates an NLRP3 assessment from the trusted project through the real Elec
     const palette = window.getByRole("dialog", { name: "搜索与命令" });
     const search = palette.getByPlaceholder("搜索操作、技能或提示词…");
     await search.fill("target-evidence");
-    await expect(palette.getByRole("button", { name: /skill:target-evidence/ })).toBeVisible();
+    await expect(palette.getByRole("option", { name: /skill:target-evidence/ })).toBeVisible();
     await expect(palette.getByText("skill", { exact: true })).toBeVisible();
     await window.keyboard.press("Escape");
 
@@ -33,7 +33,7 @@ test("creates an NLRP3 assessment from the trusted project through the real Elec
     await expect(taskRoom.getByText("尚无持久化 Run", { exact: true })).toBeVisible();
     await expect(taskRoom.getByRole("button", { name: "开始执行" })).toBeEnabled();
     await window.setViewportSize({ width: 1_600, height: 1_000 });
-    await window.screenshot({ path: join(APP_ROOT, "docs", "pharma-e2e-nlrp3.png"), animations: "disabled" });
+    await window.screenshot({ path: e2eScreenshotPath(testInfo, "pharma-e2e-nlrp3.png"), animations: "disabled" });
     expect(pageErrors).toEqual([]);
   } finally {
     await electronApp.close();

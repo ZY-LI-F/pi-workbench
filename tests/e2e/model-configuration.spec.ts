@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { e2eScreenshotPath } from "./helpers/screenshot-path";
 
 async function availableLoopbackPort(): Promise<number> {
   const server = createNetServer();
@@ -104,7 +105,7 @@ test("reveals the configured API key on demand and runs a real isolated model pr
     const closeNotice = window.getByRole("button", { name: "关闭通知" });
     if (await closeNotice.isVisible()) await closeNotice.click();
     await window.setViewportSize({ width: 1_850, height: 1_178 });
-    await window.screenshot({ path: "docs/model-configuration-stella.png", fullPage: true, animations: "disabled" });
+    await window.screenshot({ path: e2eScreenshotPath(testInfo, "model-configuration-stella.png"), fullPage: true, animations: "disabled" });
     await window.setViewportSize({ width: 600, height: 900 });
     const providerConsole = window.locator(".provider-console");
     await expect.poll(() => window.locator(".provider-saved-key").evaluate((element) => getComputedStyle(element).display)).toBe("grid");

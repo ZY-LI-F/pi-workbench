@@ -72,12 +72,29 @@ export async function canonicalWorkspaceKey(workspacePath: string): Promise<stri
   return process.platform === "win32" ? canonical.toLocaleLowerCase("en-US") : canonical;
 }
 
-export function assertAgentWorkspacePolicy(agent: Pick<AgentDefinition, "id" | "workspaceAccess" | "allowedTools">): void {
+type WorkspacePolicyAgent = Pick<AgentDefinition,
+  "id" | "workspaceAccess" | "allowedTools" | "disableExtensions" | "disableSkills" | "disablePromptTemplates" | "disableContextFiles"
+>;
+
+export function assertAgentWorkspacePolicy(agent: WorkspacePolicyAgent): void {
   if (agent.workspaceAccess !== "read") return;
   const unsafeTools = agent.allowedTools.filter((tool) => !READ_ONLY_TOOLS.has(tool));
   if (unsafeTools.length > 0) {
     throw new Error(`只读 Agent ${agent.id} 配置了可写或未验证工具: ${unsafeTools.join(", ")}`);
   }
+}
+
+/**
+ * A read-only tool list is lease-free only when every discovery surface that can
+ * register additional capabilities is disabled as well.
+ */
+export function agentRequiresWorkspaceLease(agent: WorkspacePolicyAgent): boolean {
+  assertAgentWorkspacePolicy(agent);
+  return agent.workspaceAccess === "write"
+    || !agent.disableExtensions
+    || !agent.disableSkills
+    || !agent.disablePromptTemplates
+    || !agent.disableContextFiles;
 }
 
 export class WorkspaceBusyError extends Error {

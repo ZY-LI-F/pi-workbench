@@ -10,19 +10,23 @@ if (!AGENT || !WORKFLOW) throw new Error("测试编排目录为空");
 const TASK: KanbanTask = Object.freeze({
   id: "task-1", title: "桥接", description: "", acceptanceCriteria: "", priority: "medium",
   projectPath: "C:/Project", projectName: "Project", trusted: true,
-  executionTarget: Object.freeze({ kind: "agent", agentId: AGENT.id }), stage: "planned",
+  executionTarget: Object.freeze({ kind: "agent", agentId: AGENT.id }), stage: "planned", specRevision: 1,
   sourcePiSessionPath: "C:/Sessions/source.jsonl", sourcePiSessionId: "source",
   createdAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:00:00.000Z",
 });
 
 const RUN: WorkflowRun = Object.freeze({
-  id: "run-1", taskId: TASK.id, workflow: WORKFLOW, agents: Object.freeze([AGENT]), status: "reported", acceptance: "pending",
+  id: "run-1", taskId: TASK.id, executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  workflow: WORKFLOW, agents: Object.freeze([AGENT]), status: "reported", acceptance: "pending",
   steps: Object.freeze([Object.freeze({ id: "step-run-1", stepId: "step-1", stepKind: "agent", name: "实现", status: "succeeded", sessionPath: "C:/Sessions/workflow.jsonl", startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" })]),
   startedAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:01:00.000Z",
 });
 
 const AGENT_TASK: AgentTask = Object.freeze({
-  id: "agent-task-1", taskId: TASK.id, agentSnapshot: AGENT, kind: "direct", status: "reported", acceptance: "pending", prompt: "执行",
+  id: "agent-task-1", taskId: TASK.id, executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  agentSnapshot: AGENT, kind: "direct", status: "reported", acceptance: "pending", prompt: "执行",
   sessionPath: "C:/Sessions/agent.jsonl", createdAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:01:00.000Z",
 });
 

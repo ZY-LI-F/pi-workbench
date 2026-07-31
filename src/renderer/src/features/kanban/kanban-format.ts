@@ -31,6 +31,7 @@ export const ACCEPTANCE_LABEL: Readonly<Record<ExecutionAcceptanceStatus, string
   accepted: "已接受",
   "revision-requested": "需修订",
   rejected: "已拒绝",
+  superseded: "已被后续执行取代",
 });
 
 export const EXECUTION_STATUS_LABEL: Readonly<Record<string, string>> = Object.freeze({
@@ -44,6 +45,7 @@ export const EXECUTION_STATUS_LABEL: Readonly<Record<string, string>> = Object.f
   waiting_children: "等待子任务",
   waiting_human: "等待用户",
   reported: "已报告",
+  "protocol-invalid": "协议输出无效",
   failed: "执行失败",
   interrupted: "已中断",
   cancelled: "已取消",

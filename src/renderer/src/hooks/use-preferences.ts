@@ -11,6 +11,7 @@ export interface Preferences {
   readonly theme: ThemePreference;
   readonly density: DensityPreference;
   readonly fontSize: FontSizePreference;
+  readonly teamFeaturesEnabled: boolean;
   readonly autoRetry: boolean;
   readonly defaultQueueMode: "steer" | "followUp";
 }
@@ -22,6 +23,7 @@ export const DEFAULT_PREFERENCES: Preferences = Object.freeze({
   theme: "dark",
   density: "comfortable",
   fontSize: "default",
+  teamFeaturesEnabled: false,
   autoRetry: true,
   defaultQueueMode: "steer",
 });
@@ -33,6 +35,7 @@ function normalizePreferences(value: unknown): Preferences | undefined {
   if (record.theme !== "system" && record.theme !== "dark" && record.theme !== "light") return undefined;
   if (record.density !== "comfortable" && record.density !== "compact") return undefined;
   if (record.fontSize !== undefined && record.fontSize !== "small" && record.fontSize !== "default" && record.fontSize !== "large") return undefined;
+  if (record.teamFeaturesEnabled !== undefined && typeof record.teamFeaturesEnabled !== "boolean") return undefined;
   if (typeof record.autoRetry !== "boolean") return undefined;
   if (record.defaultQueueMode !== "steer" && record.defaultQueueMode !== "followUp") return undefined;
   return Object.freeze({
@@ -40,12 +43,13 @@ function normalizePreferences(value: unknown): Preferences | undefined {
     theme: record.theme,
     density: record.density,
     fontSize: record.fontSize ?? DEFAULT_PREFERENCES.fontSize,
+    teamFeaturesEnabled: record.teamFeaturesEnabled ?? DEFAULT_PREFERENCES.teamFeaturesEnabled,
     autoRetry: record.autoRetry,
     defaultQueueMode: record.defaultQueueMode,
   });
 }
 
-type LegacyPreferences = Omit<Preferences, "skin" | "fontSize">;
+type LegacyPreferences = Omit<Preferences, "skin" | "fontSize" | "teamFeaturesEnabled">;
 
 function isLegacyPreferences(value: unknown): value is LegacyPreferences {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -112,7 +116,12 @@ function loadPreferences(): LoadedPreferences {
   try {
     const legacy = JSON.parse(legacyStored) as unknown;
     if (!isLegacyPreferences(legacy)) throw new Error(`本地偏好 ${LEGACY_PREFERENCES_STORAGE_KEY} 格式无效`);
-    migrated = Object.freeze({ ...legacy, skin: "stella" as const, fontSize: DEFAULT_PREFERENCES.fontSize });
+    migrated = Object.freeze({
+      ...legacy,
+      skin: "stella" as const,
+      fontSize: DEFAULT_PREFERENCES.fontSize,
+      teamFeaturesEnabled: DEFAULT_PREFERENCES.teamFeaturesEnabled,
+    });
   } catch (cause) {
     return Object.freeze({
       preferences: DEFAULT_PREFERENCES,

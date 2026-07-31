@@ -53,7 +53,11 @@ afterEach(() => {
 describe("preferences", () => {
   it("parses every supported skin and rejects unknown values", () => {
     for (const skin of ["stella", "chenxi", "dingyang", "xuri", "yuehua", "kuroshitsuji", "jojo", "qihun"] as const) {
-      expect(parsePreferences(JSON.stringify({ ...LEGACY_PREFERENCES, skin }))).toMatchObject({ skin, fontSize: "default" });
+      expect(parsePreferences(JSON.stringify({ ...LEGACY_PREFERENCES, skin }))).toMatchObject({
+        skin,
+        fontSize: "default",
+        teamFeaturesEnabled: false,
+      });
     }
     expect(() => parsePreferences(JSON.stringify({ ...LEGACY_PREFERENCES, skin: "unknown" }))).toThrow(
       `本地偏好 ${PREFERENCES_STORAGE_KEY} 格式无效`,
@@ -71,12 +75,23 @@ describe("preferences", () => {
       ...LEGACY_PREFERENCES,
       skin: "stella",
       fontSize: "default",
+      teamFeaturesEnabled: false,
     });
 
     await user.click(screen.getByRole("button", { name: "stella" }));
     expect(screen.getByRole("button", { name: "chenxi" })).toBeTruthy();
     expect(JSON.parse(localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "null").skin).toBe("chenxi");
     await waitFor(() => expect(document.documentElement.dataset.skin).toBe("chenxi"));
+  });
+
+  it("keeps team pages hidden by default and preserves an explicit opt-in", () => {
+    expect(DEFAULT_PREFERENCES.teamFeaturesEnabled).toBe(false);
+    expect(parsePreferences(JSON.stringify({
+      ...LEGACY_PREFERENCES,
+      skin: "stella",
+      fontSize: "default",
+      teamFeaturesEnabled: true,
+    })).teamFeaturesEnabled).toBe(true);
   });
 
   it("uses explicit defaults while preserving corrupted v2 JSON for diagnosis", () => {

@@ -142,7 +142,7 @@ export class WebhookServer {
   }
 
   async start(): Promise<AutomationRuntimeStatus["webhook"]> {
-    if (this.#server) throw new Error("Webhook Server 已启动");
+    if (this.#server) return this.#status;
     const server = createServer((request, response) => {
       void this.#handleRequest(request, response).catch((cause: unknown) => this.#handleRequestError(response, cause));
     });
@@ -171,7 +171,7 @@ export class WebhookServer {
       this.#status = Object.freeze({ state: "error", host: WEBHOOK_HOST, port: this.#configuredPort, error });
       this.#emitStatus();
       this.#emitBoardEvent({ type: "automation-error", source: "webhook", message: `Webhook Server 启动失败：${error}` });
-      return this.#status;
+      throw new Error(`Webhook Server 启动失败：${error}`, { cause });
     }
   }
 

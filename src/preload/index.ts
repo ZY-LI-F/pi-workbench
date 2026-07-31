@@ -52,6 +52,9 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:skin-artwork:reset", skin) as Promise<void>,
   openProject: (path: string, trusted: boolean) =>
     ipcRenderer.invoke("stella:open-project", path, trusted) as Promise<RuntimeBootstrap | null>,
+  inspectLocalPath: (path: string) =>
+    ipcRenderer.invoke("stella:local-path:inspect", path) as ReturnType<StellaDesktopApi["inspectLocalPath"]>,
+  openPath: (path: string) => ipcRenderer.invoke("stella:open-path", path) as Promise<void>,
   revealPath: (path: string) => ipcRenderer.invoke("stella:reveal-path", path) as Promise<void>,
   openExternal: (url: string) => ipcRenderer.invoke("stella:open-external", url) as Promise<void>,
   copyText: (value: string) => ipcRenderer.invoke("stella:copy-text", value) as Promise<void>,

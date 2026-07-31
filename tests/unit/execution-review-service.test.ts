@@ -9,6 +9,7 @@ import {
   type KanbanTask,
 } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
+import { snapshotTaskSpec } from "../../src/shared/execution-state";
 
 const CREATED_AT = "2026-07-18T00:00:00.000Z";
 const REVIEWED_AT = "2026-07-18T01:00:00.000Z";
@@ -27,23 +28,36 @@ const TASK: KanbanTask = Object.freeze({
   projectName: "project",
   trusted: true,
   executionTarget: Object.freeze({ kind: "workflow", workflowId: workflow.id }),
-  stage: "blocked",
-  blockedReason: "业务阶段由用户维护",
+  stage: "review",
+  specRevision: 1,
+  executionAttempt: 1,
+  awaitingReviewExecution: Object.freeze({ kind: "workflow", id: "run-reported", attempt: 1 }),
   createdAt: CREATED_AT,
   updatedAt: CREATED_AT,
 });
 
-function initialState(): BoardState {
+function initialState(awaiting: "workflow" | "agent-task" = "workflow"): BoardState {
+  const task: KanbanTask = Object.freeze({
+    ...TASK,
+    awaitingReviewExecution: Object.freeze({
+      kind: awaiting,
+      id: awaiting === "workflow" ? "run-reported" : "agent-reported",
+      attempt: 1,
+    }),
+  });
   return parseBoardState({
     version: BOARD_SCHEMA_VERSION,
-    tasks: [TASK],
+    tasks: [task],
     runs: [{
       id: "run-reported",
       taskId: TASK.id,
+      executionAttempt: 1,
+      taskSpec: snapshotTaskSpec(TASK),
       workflow,
       agents: BUILTIN_ORCHESTRATION_CATALOG.agents.filter((agent) => workflowAgentIds.has(agent.id)),
       status: "reported",
-      acceptance: "pending",
+      acceptance: awaiting === "workflow" ? "pending" : "superseded",
+      acceptanceComment: awaiting === "workflow" ? undefined : "由 AgentTask 验收测试取代",
       steps: workflow.steps.map((step, index) => ({
         id: `step-${index}`,
         stepId: step.id,
@@ -63,10 +77,13 @@ function initialState(): BoardState {
     agentTasks: [{
       id: "agent-reported",
       taskId: TASK.id,
+      executionAttempt: 1,
+      taskSpec: snapshotTaskSpec(TASK),
       agentSnapshot: builder,
       kind: "direct",
       status: "reported",
-      acceptance: "pending",
+      acceptance: awaiting === "agent-task" ? "pending" : "superseded",
+      acceptanceComment: awaiting === "agent-task" ? undefined : "由 Workflow 验收测试取代",
       prompt: "交付",
       output: "全部测试通过——这仍然只是 Agent 报告",
       createdAt: CREATED_AT,
@@ -90,8 +107,8 @@ class MemoryRepository implements BoardRepository {
   }
 }
 
-function setup() {
-  const repository = new MemoryRepository();
+function setup(awaiting: "workflow" | "agent-task" = "workflow") {
+  const repository = new MemoryRepository(initialState(awaiting));
   let id = 0;
   const service = new ExecutionReviewService({
     repository,
@@ -118,7 +135,7 @@ describe("ExecutionReviewService", () => {
   });
 
   it("records a revision reason once and never rewrites that decision", async () => {
-    const { repository, service } = setup();
+    const { repository, service } = setup("agent-task");
     await service.review({ taskId: TASK.id, executionKind: "agent-task", executionId: "agent-reported", decision: "revision-requested", comment: "补充 Windows 安装验证" });
 
     expect(repository.state.agentTasks[0]).toMatchObject({
@@ -130,7 +147,7 @@ describe("ExecutionReviewService", () => {
     expect(repository.state.tasks[0]).toMatchObject({ stage: "planned" });
     const decided = repository.state;
     await expect(service.review({ taskId: TASK.id, executionKind: "agent-task", executionId: "agent-reported", decision: "accept", comment: "改成接受" }))
-      .rejects.toThrow("验收结论已记录");
+      .rejects.toThrow("历史执行已经被取代");
     expect(repository.state).toBe(decided);
   });
 
@@ -138,12 +155,19 @@ describe("ExecutionReviewService", () => {
     const base = initialState();
     const repository = new MemoryRepository(parseBoardState({
       ...base,
-      tasks: base.tasks.map((task) => ({ ...task, activeAgentTaskId: "agent-active" })),
+      tasks: base.tasks.map((task) => ({
+        ...task,
+        stage: "queued",
+        executionAttempt: 2,
+        activeAgentTaskId: "agent-active",
+        awaitingReviewExecution: undefined,
+      })),
+      runs: base.runs.map((run) => ({ ...run, acceptance: "superseded", acceptanceComment: "由新执行取代" })),
       agentTasks: [
         ...base.agentTasks,
         {
           id: "agent-active", taskId: TASK.id, agentSnapshot: builder, kind: "direct", status: "queued",
-          acceptance: "not-ready", prompt: "新一轮执行", createdAt: REVIEWED_AT, updatedAt: REVIEWED_AT,
+          executionAttempt: 2, taskSpec: snapshotTaskSpec(TASK), acceptance: "not-ready", prompt: "新一轮执行", createdAt: REVIEWED_AT, updatedAt: REVIEWED_AT,
         },
       ],
     }));
@@ -166,11 +190,16 @@ describe("ExecutionReviewService", () => {
   });
 
   it("requires reasons for revision/rejection and rejects failed false-success review", async () => {
-    const { repository, service } = setup();
+    const { repository, service } = setup("agent-task");
+    repository.state = initialState();
     await expect(service.review({ taskId: TASK.id, executionKind: "workflow", executionId: "run-reported", decision: "reject", comment: "  " }))
       .rejects.toThrow("必须填写理由");
-    repository.state = parseBoardState({
+    repository.state = Object.freeze({
       ...repository.state,
+      tasks: Object.freeze(repository.state.tasks.map((task) => Object.freeze({
+        ...task,
+        awaitingReviewExecution: Object.freeze({ kind: "agent-task" as const, id: "agent-reported", attempt: 1 }),
+      }))),
       agentTasks: repository.state.agentTasks.map((agentTask) => ({
         ...agentTask,
         status: "failed",
@@ -178,9 +207,9 @@ describe("ExecutionReviewService", () => {
         output: undefined,
         error: "Runtime failed after a fluent final sentence",
       })),
-    });
+    }) as BoardState;
     await expect(service.review({ taskId: TASK.id, executionKind: "agent-task", executionId: "agent-reported", decision: "accept", comment: "" }))
       .rejects.toThrow("尚未 reported");
-    expect(repository.state.tasks[0]?.stage).toBe("blocked");
+    expect(repository.state.tasks[0]?.stage).toBe("review");
   });
 });

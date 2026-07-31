@@ -18,7 +18,9 @@ const WORKFLOW: WorkflowDefinition = Object.freeze({
   ]),
 });
 const RUN: WorkflowRun = Object.freeze({
-  id: "run-ui-dag", taskId: "task-1", workflow: WORKFLOW, agents: Object.freeze([AGENT]), status: "failed", acceptance: "not-ready",
+  id: "run-ui-dag", taskId: "task-1", executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: "DAG 测试", description: "", acceptanceCriteria: "核对报告", priority: "medium", executionTarget: Object.freeze({ kind: "workflow", workflowId: WORKFLOW.id }) }),
+  workflow: WORKFLOW, agents: Object.freeze([AGENT]), status: "failed", acceptance: "not-ready",
   steps: Object.freeze([
     Object.freeze({ id: "step-build", stepId: "build", stepKind: "agent", name: "实现", status: "succeeded", artifact: Object.freeze({ title: "实现产物", content: "完成" }), sessionPath: "C:/sessions/build.jsonl", startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" }),
     Object.freeze({ id: "step-accept", stepId: "accept", stepKind: "human-gate", name: "验收", status: "failed", error: "验收未通过", startedAt: "2026-07-18T00:01:00.000Z", completedAt: "2026-07-18T00:02:00.000Z" }),

@@ -19,6 +19,7 @@ import type {
   StellaDesktopApi,
 } from "@shared/contracts";
 import type { ToolExecutionState } from "../lib/runtime-state";
+import { LocalPathArtifacts } from "./LocalPathArtifacts";
 
 interface MessageCardProps {
   readonly api: StellaDesktopApi;
@@ -211,7 +212,12 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork }: M
             <div>{thinking.map((block, index) => <p key={index}>{block.redacted ? "推理内容已由提供方隐藏" : block.thinking}</p>)}</div>
           </details>
         )}
-        {textOnly && <div className="markdown-body"><MarkdownBody api={api} text={textOnly} /></div>}
+        {textOnly && (
+          <>
+            <div className="markdown-body"><MarkdownBody api={api} text={textOnly} /></div>
+            <LocalPathArtifacts api={api} text={textOnly} />
+          </>
+        )}
         {toolCalls.length > 0 && (
           <div className="tool-stack">
             {toolCalls.map((block) => <ToolCallCard key={block.id} block={block} execution={toolExecutions[block.id]} />)}

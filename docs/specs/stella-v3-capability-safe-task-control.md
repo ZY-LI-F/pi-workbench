@@ -1,8 +1,8 @@
-# Stella v3：Capability-safe Pi Workspace 与 Task Control
+# Stella v0.3.0：Capability-safe Pi Workspace 与 Task Control
 
 > 状态：Implemented / Verified on Windows x64
-> 日期：2026-07-18
-> 目标版本：Stella Pi Workbench v3
+> 日期：2026-07-26
+> 目标版本：Stella Pi Workbench v0.3.0 / Board schema v6
 > 权威性：本文覆盖 `stella-v2-simple-technical-spec.md` 与 `stella-local-agent-automation.md` 中关于 Board schema、Task 业务阶段、执行终态、Task Room、Coordinator、启动故障和工作区并发的冲突描述；未被本文覆盖的已实现功能继续有效。
 
 ## Problem Statement
@@ -21,8 +21,8 @@ Stella v3 保留两个并列能力面，但把它们定义为独立状态、运�
 4. Electron 主进程分别维护 Pi、Task、Schedule 和 Webhook 的 Capability Health。非核心 Capability 失败只禁用自己的能力并展示原始错误，不退出整个应用。
 5. 所有可能修改工作区的 Interactive Pi、Workflow 和 AgentTask 执行都通过一个应用级 `WorkspaceAdmission`。后台执行按规范化工作区路径获取独占 Lease；冲突必须等待或显式拒绝，不能并发写。
 6. Task 的固定业务阶段与 Execution 生命周期分离。运行正常结束只代表 `reported`；成果必须经过用户、Human Gate 或确定性验证后才是 `accepted`。`revision-requested` 与 `rejected` 保留真实验收结论。
-7. 当前 Board schema v2 无损迁移为 v3。v3 统一 Task stage、Execution acceptance、显式 Pi 来源/会话链接和 Capability-safe 数据，不复用第二个含义不同的 schema v2。
-8. Coordinator 不进入本版本。未来若实现，它只能是对同一 Execution 增加 Attempt、验收或重规划决定的策略，必须使用结构化、幂等的 Stella 工具，不能解析模型自然语言输出中的 mention 作为长期控制协议。
+7. Board schema v1–v5 均先创建时间戳备份，再确定性迁移为 v6。v6 统一 Task stage、Execution acceptance、`specRevision`、`executionAttempt`、不可变 `TaskSpecSnapshot`、Runtime token 和 Squad 作用域。
+8. Coordinator 以持久根 AgentTask 与复核 AgentTask 实现，不新增常驻服务。每个 LEAD 回合必须用终止型 `coordinator_action` 工具提交受 schema 校验的行动；自然语言、手写 JSON 和模型输出中的 mention 都没有控制权。
 
 ## User Stories
 
@@ -61,16 +61,16 @@ Stella v3 保留两个并列能力面，但把它们定义为独立状态、运�
 33. As a task user, I want timeline entries to preserve stable links to their Run, Step or AgentTask, so that provenance remains inspectable.
 34. As a task user, I want user comments and system execution receipts visually distinct, so that a message is not confused with a machine state transition.
 35. As a task user, I want user-entered mentions to show that they will create a real AgentTask, so that delegation side effects are explicit.
-36. As a task user, I want Agent natural-language mentions to remain plain text outside the existing legacy Squad Leader behavior, so that prose is not an implicit command channel.
+36. As a task user, I want Agent natural-language mentions and handwritten JSON to remain plain output unless a validated built-in control tool produced them, so that prose is not an implicit command channel.
 37. As a Workflow user, I want a read-only DAG generated from the persisted execution snapshot, so that I can understand dependencies without introducing a second execution engine.
 38. As a Workflow user, I want DAG nodes to show pending, running, waiting, reported/succeeded, failed and interrupted states, so that the graph reflects runtime truth.
 39. As a Workflow user, I want selecting a DAG node to reveal its agent, objective, artifact and error, so that the graph remains actionable.
-40. As a user of Stella, 晨曦 or 定阳, I want capability errors, Lease waits, timeline entries, acceptance controls and DAG states fully styled, so that the architecture is understandable in every skin.
+40. As a user of any bundled skin, I want capability errors, Lease waits, timeline entries, acceptance controls and DAG states fully styled, so that the architecture is understandable in every visual theme.
 41. As a keyboard user, I want all new actions reachable and focus-visible, so that the feature remains usable without a mouse.
 42. As a narrow-window user, I want the timeline and DAG to remain readable, so that desktop resizing does not hide controls.
 43. As a recipient of a Windows or macOS installer, I want Stella to launch its bundled Pi, so that my local Pi installation path is irrelevant.
 44. As a recipient of an installer, I want paths containing spaces and Chinese characters to work, so that installation and workspace location are not constrained.
-45. As a recipient of an installer, I want the v2 Board migrated with a backup and without history loss, so that upgrading is safe.
+45. As a recipient of an installer, I want every supported v1–v5 Board migrated with a backup and without history loss, so that upgrading is safe.
 46. As a recipient of an installer, I want migration failure to preserve the original Board and keep Pi available, so that recovery is possible.
 47. As a maintainer, I want release CI to run typecheck, unit tests, production build and packaged smoke tests, so that installers are not published from source-only evidence.
 48. As a maintainer, I want fault-injection tests for Board, Pi, Schedule and Webhook capabilities, so that independence is continuously verified.
@@ -83,13 +83,13 @@ Stella v3 保留两个并列能力面，但把它们定义为独立状态、运�
 2. Pi Capability, Task Capability, Schedule Capability and Webhook Capability each expose an immutable health record with `loading`, `ready`, `degraded` or `error`, an optional exact error and a last-change timestamp.
 3. The desktop shell and IPC boundary are registered before optional Task services initialize. A Task initialization error is retained and returned by Task commands; it does not terminate the desktop shell.
 4. Pi initialization and Task initialization are independently retryable. A failed Capability never returns placeholder data or mock success.
-5. Board schema version becomes 3. The parser accepts current v2 only for migration; all writes use v3.
-6. Before replacing v2 data, BoardStore writes a timestamped backup. Migration is pure, deterministic and preserves Tasks, Workflow Runs, Activities, Comments, AgentTasks, Squads, Autopilots and Autopilot Runs.
+5. Board schema version is 6. The parser accepts v1–v5 only for migration; all writes use v6.
+6. Before replacing legacy data, BoardStore writes a timestamped backup. Migration is pure, deterministic and preserves Tasks, Workflow Runs, Activities, Comments, AgentTasks, Squads, Autopilots and Autopilot Runs. Legacy executions that cannot be resumed safely terminate with an explicit migration error and activity.
 7. Task uses a fixed business `stage`; Execution and AgentTask use separate lifecycle states. Dispatch, Runtime settle, failure, interruption and acceptance never move the Task stage implicitly.
-8. Existing v2 task status migrates to the nearest business stage. Runtime-only values use this mapping: `queued → planned`, `running → planned`, `failed → blocked`, `interrupted → blocked`; existing `planned`, `review`, `blocked` and `completed` retain their matching stage.
+8. Legacy task status migrates to the nearest business stage. Runtime-only values use this mapping: `queued → planned`, `running → planned`, `failed → blocked`, `interrupted → blocked`; existing `planned`, `review`, `blocked` and `completed` retain their matching stage.
 9. A root Workflow Run or root AgentTask stores an acceptance state. A successful Runtime report produces `reported` with `pending` acceptance. Failed, interrupted and cancelled executions cannot be reviewed as successful.
 10. Acceptance commands require an explicit decision and non-empty comment for revision or rejection. They append immutable Activity and TaskMessage records.
-11. A future revision dispatch creates a new Execution/AgentTask attempt; historical acceptance is never rewritten to pretend the previous attempt succeeded.
+11. A future revision dispatch increments `executionAttempt` and captures the current `specRevision` in an immutable `TaskSpecSnapshot`; historical acceptance is never rewritten to pretend the previous attempt succeeded, and a late old-spec Runtime cannot mutate the new Task lifecycle.
 12. Task Room is a derived timeline sorted by timestamp and stable tie-breaker from Task metadata, TaskComment, Activity, Workflow Run/Step, AgentTask and Artifact records. No `TaskRoom` collection is added.
 13. The DAG is a derived read-only projection of the snapshotted Workflow definition and Step Runs. Graph layout state is renderer-only and never becomes execution truth.
 14. Pi→Task bridge stores explicit source session identity and presents an editable Task draft before persistence. It does not copy hidden tool messages or automatically dispatch.
@@ -100,17 +100,23 @@ Stella v3 保留两个并列能力面，但把它们定义为独立状态、运�
 19. Background execution acquires an exclusive Lease before launching a write-capable Pi turn and releases it on settle, failure, abort and shutdown. Waiters are FIFO and cancellable.
 20. Interactive `prompt`, `steer`, `follow_up` and `bash` are treated as write-capable because the active Pi configuration can invoke write tools. If a background owner holds the workspace, the command is rejected with the owner and Task identity.
 21. Background execution waits while an Interactive Pi turn owns the workspace. The wait is persisted or projected as an explicit execution/activity state; it is not reported as running before the Runtime starts.
-22. Read access is allowed only when actual tools exclude write-capable tools and Extensions, Skills, Prompt Templates and Context Files cannot introduce write authority. Otherwise the definition is rejected before launch.
+22. Read access can skip the exclusive Workspace Lease only when actual tools exclude write-capable tools and Extensions, Skills, Prompt Templates and Context Files are all disabled. Resource discovery therefore participates in the same admission boundary instead of silently expanding read authority.
 23. Existing Manual, Schedule and Webhook Autopilots remain. Schedule and Webhook start outside the application-critical path; their health errors are visible without disabling Manual execution.
-24. Existing Squad data remains readable. The current Leader is documented as first-round delegation. Persistent Coordinator, adaptive re-planning and automatic acceptance are not implemented in this version.
-25. Existing user-entered validated mentions may create AgentTasks. Parsing Agent natural-language output is not expanded as a general control protocol.
+24. Squad definitions are versioned and explicitly global or project-scoped. A Squad that references a project Agent cannot be used by another project; dispatch freezes its version, instructions and member Agent snapshots.
+25. User-entered validated mentions may create AgentTasks. LEAD control actions are accepted only from the built-in terminating `coordinator_action` tool; natural-language output and handwritten JSON are never parsed as a general control protocol.
 26. Renderer state for Pi and Task capabilities remains independent. A Pi error can coexist with a usable Task view, and a Task error can coexist with a usable Pi view.
 27. New code follows dependency injection and immutable state updates. Errors cross IPC as explicit failures or Capability Health; no silent fallback Board or fake successful execution is introduced.
+28. The Task Launchpad requires one `@LEAD`, a concrete goal and explicit acceptance criteria. Task, first message and queued Coordinator are committed atomically after project identity and required-Skill preflight succeed.
+29. Required Skills are discovered with Pi's Resource Loader before dispatch and checked again against the started Runtime. A missing Skill prevents queue creation or fails the exact claimed execution explicitly; it never produces a template result.
+30. Every running StepRun and AgentTask owns a Runtime token. Settle, fail, abort, shutdown and recovery transitions compare that token inside the same repository transaction.
+31. Pi RPC request timeout stops the child Runtime before pending work rejects and the workspace Lease releases; the error states that the execution result is unknown.
+32. The app has an explicit first-use project-selection state. A placeholder path is never presented as a user-confirmed project, and global model identity remains visible on Team, Kanban and Pi pages.
+33. Modal, command palette, sidebar, Task detail and compact Team Pulse provide focus containment/restoration, Escape semantics, `inert` off-canvas content and responsive access to every action.
 
 ## Testing Decisions
 
 1. Tests assert observable behavior at the highest available seam. Unit tests are used for pure migration, state transition and Lease ordering; integration tests exercise services through one shared Workspace Admission; renderer tests exercise user-visible controls; packaged tests verify the installed runtime boundary.
-2. BoardStore tests cover v2→v3 migration, backups, preservation of every collection, malformed input, migration failure and startup recovery.
+2. BoardStore tests cover v1/v2/v3/v4/v5→v6 migration, backups, preservation of every collection, malformed input, migration failure and startup recovery.
 3. Capability startup tests inject Board parse failure, Pi RPC failure, Schedule failure and Webhook bind conflict independently and assert that unrelated capabilities remain usable.
 4. WorkspaceAdmission tests cover canonical aliases, FIFO ordering, interactive rejection, background waiting, abort-before-acquire, release on every terminal path and shutdown cleanup.
 5. Cross-engine integration tests start a Workflow and AgentTask for the same workspace and prove the second Runtime cannot start until the first Lease releases.
@@ -136,10 +142,14 @@ Stella v3 保留两个并列能力面，但把它们定义为独立状态、运�
 
 2026-07-21 发布验证：应用版本已更新为 `0.2.0`；Windows x64 NSIS 为 `release/Stella Pi Workbench-0.2.0-win-x64.exe`，SHA-256 为 `AE91147C0C7CE633BC1E6E05A4E62055669FA4AD6BE32F3EA0FC3DFC013FA8EF`，打包版 E2E 通过。
 
+2026-07-24 初始 v0.3.0 加固验证：Board schema 升级到 v5，以唯一执行尝试和待验收引用隔离历史结果；Coordinator/Squad 保存分发计划快照；后台执行改用实时项目 trust；Task Room 增加项目边界；Pi RPC 请求具有显式超时；Coordinator 协议错误保留原始产物、会话与 token；全局字号覆盖所有页面。43 个 Vitest 文件、194 个测试全部通过。该同版本安装器已由 2026-07-26 的全量修复构建取代。
+
+2026-07-26 v0.3.0 全量修复验证：Board schema 升级到 v6，以不可变 `TaskSpecSnapshot`、规格修订、执行尝试和 Runtime token 阻止过期执行回写；Coordinator 改用必需的 `coordinator_action` 类型化工具；任务启动台原子创建 Task、首条消息和 LEAD；Pi Resource Loader 在入队与运行前验证 Skills；Squad 增加版本和项目作用域；首启项目选择、全局模型、响应式 Team/Kanban、焦点陷阱、字号和八套原创皮肤完成统一。46 个 Vitest 文件、203 个测试、3 项确定性 Electron E2E 及 1 项打包冒烟全部通过。打包冒烟清空 `PATH` 和 Pi 用户配置后，内置 Pi 0.82.1 与 Task capability 均为 `ready`。Windows x64 NSIS 为 `release/Stella Pi Workbench-0.3.0-win-x64.exe`，大小 `133619447` bytes，SHA-256 为 `F29AA268BB81B38A70D0BA4EDF29E4DFB4BF11F4C67FC0F0EBB3D59B487E7762`。
+
 ## Out of Scope
 
-- A persistent Coordinator identity or Coordinator Runtime.
-- Automatic acceptance, revision or replanning by an LLM.
+- A separate always-on Coordinator service or shared Coordinator Runtime outside persisted AgentTask execution.
+- LLM 自动越过人工最终验收；Coordinator 的委派、修订和重规划只能通过受校验的结构化协议推进。
 - A separate persistent TaskRoom entity or second Task message database.
 - External Matrix, Slack, Teams or HiClaw-style channel infrastructure.
 - PostgreSQL, Redis, a remote backend, an independently installed Daemon or multi-user synchronization.

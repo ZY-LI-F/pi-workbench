@@ -13,6 +13,7 @@ const PROJECT = Object.freeze({
   branch: "main",
   trusted: true,
   requiresTrust: false,
+  requiresSelection: false,
 });
 const LEAD = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "lead");
 if (!LEAD) throw new Error("测试目录缺少 LEAD");
@@ -28,10 +29,11 @@ describe("TeamLaunchRoom", () => {
     expect(screen.getByRole("listbox", { name: "选择要 @ 的 Agent" })).toBeTruthy();
     await user.keyboard("{Enter}");
     await user.type(composer, "评估 NLRP3 靶点并形成可审计报告");
+    await user.type(screen.getByRole("textbox", { name: /验收标准/ }), "报告包含原始来源、反证与下一步实验");
     expect(screen.getByRole("status").textContent).toContain("将创建任务“评估 NLRP3 靶点并形成可审计报告”");
     await user.click(screen.getByRole("button", { name: "创建任务并交给 LEAD" }));
 
-    await waitFor(() => expect(onLaunch).toHaveBeenCalledWith("@LEAD 评估 NLRP3 靶点并形成可审计报告"));
+    await waitFor(() => expect(onLaunch).toHaveBeenCalledWith("@LEAD 评估 NLRP3 靶点并形成可审计报告", "报告包含原始来源、反证与下一步实验"));
     expect(composer.value).toBe("");
   });
 
@@ -42,9 +44,10 @@ describe("TeamLaunchRoom", () => {
     await waitFor(() => expect(composer.value).toBe("@LEAD "));
 
     const user = userEvent.setup();
+    await user.type(screen.getByRole("textbox", { name: /验收标准/ }), "真实修改通过自动化验证");
     await user.clear(composer);
     await user.type(composer, "@BUILD 直接修改项目");
-    expect(screen.getByRole("alert").textContent).toContain("项目启动室只接受 @LEAD");
+    expect(screen.getByRole("alert").textContent).toContain("任务启动台只接受 @LEAD");
     expect((screen.getByRole("button", { name: "创建任务并交给 LEAD" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

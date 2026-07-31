@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Bot, CircleDot, Hash, Menu, MessageSquarePlus, Orbit, Pencil, Plus, Search, Sparkles, UsersRound } from "lucide-react";
+import { Bot, CircleDot, Hash, Menu, MessageSquarePlus, Orbit, Pencil, Plus, Search, Sparkles, UsersRound, X } from "lucide-react";
 import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
 import { deriveAgentPresences } from "@shared/agent-presence";
 import { availableMentionAgentsForTask } from "@shared/agent-mentions";
@@ -11,6 +11,7 @@ import type { AgentMentionRequest } from "../kanban/AgentMentionInput";
 import { TaskEditorDialog } from "../kanban/TaskEditorDialog";
 import { AgentDraftDialog } from "./AgentDraftDialog";
 import { TeamLaunchRoom } from "./TeamLaunchRoom";
+import { useMediaQuery } from "../../hooks/use-media-query";
 
 const TEAM_LAUNCH_ROOM_ID = "project-launch-room";
 
@@ -21,11 +22,17 @@ interface TeamWorkspaceProps {
   readonly executionEnabled: boolean;
   readonly onOpenSidebar: () => void;
   readonly onNewTask: () => void;
+  readonly focusLaunchRequest?: number;
+  readonly availableSkillNames?: readonly string[];
+  readonly modelLabel?: string;
+  readonly taskCapabilityError?: string;
+  readonly taskCapabilityRetrying?: boolean;
+  readonly onRetryTaskCapability?: () => void;
   readonly onContinueTaskSession: (taskId: string, sessionPath: string) => Promise<void>;
   readonly onError: (message: string) => void;
 }
 
-export function TeamWorkspace({ api, controller, project, executionEnabled, onOpenSidebar, onNewTask, onContinueTaskSession, onError }: TeamWorkspaceProps) {
+export function TeamWorkspace({ api, controller, project, executionEnabled, onOpenSidebar, onNewTask, focusLaunchRequest, availableSkillNames, modelLabel, taskCapabilityError, taskCapabilityRetrying = false, onRetryTaskCapability, onContinueTaskSession, onError }: TeamWorkspaceProps) {
   const { state } = controller;
   const [query, setQuery] = useState("");
   const [selectedChannelId, setSelectedChannelId] = useState(TEAM_LAUNCH_ROOM_ID);
@@ -33,32 +40,46 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
   const [editingTask, setEditingTask] = useState(false);
   const [localError, setLocalError] = useState("");
   const [mentionRequest, setMentionRequest] = useState<AgentMentionRequest>();
+  const [pulseOpen, setPulseOpen] = useState(false);
+  const compactPulse = useMediaQuery("(max-width: 1060px)");
   const mentionRequestSequence = useRef(0);
   const bootstrap = state.bootstrap;
   const board = bootstrap?.board;
   const catalog = bootstrap?.catalog;
 
-  const tasks = useMemo(() => {
+  const projectTasks = useMemo(() => {
     if (!board) return [];
-    const normalized = query.trim().toLocaleLowerCase();
     return board.tasks
       .filter((task) => !project || task.projectPath === project.cwd)
-      .filter((task) => !normalized || `${task.title} ${task.description} ${task.acceptanceCriteria}`.toLocaleLowerCase().includes(normalized))
       .sort((left, right) => Number(Boolean(right.activeRunId || right.activeAgentTaskId)) - Number(Boolean(left.activeRunId || left.activeAgentTaskId)) || Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
-  }, [board, project, query]);
+  }, [board, project]);
+
+  const tasks = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    return projectTasks
+      .filter((task) => !normalized || `${task.title} ${task.description} ${task.acceptanceCriteria}`.toLocaleLowerCase().includes(normalized))
+  }, [projectTasks, query]);
 
   useEffect(() => {
-    if (selectedChannelId === TEAM_LAUNCH_ROOM_ID || !board || board.tasks.some((task) => task.id === selectedChannelId)) return;
+    if (selectedChannelId === TEAM_LAUNCH_ROOM_ID || projectTasks.some((task) => task.id === selectedChannelId)) return;
     setSelectedChannelId(TEAM_LAUNCH_ROOM_ID);
-  }, [board, selectedChannelId]);
+  }, [projectTasks, selectedChannelId]);
 
   useEffect(() => setMentionRequest(undefined), [selectedChannelId]);
 
+  useEffect(() => {
+    if (!focusLaunchRequest) return;
+    setSelectedChannelId(TEAM_LAUNCH_ROOM_ID);
+  }, [focusLaunchRequest]);
+
   if (!bootstrap || !board || !catalog) {
-    return <main className="team-workspace team-workspace--loading"><div className="kanban-loading-orbit"><span /><span /><span /></div><h1>正在连接团队中继</h1><p>{state.error ?? "读取 Task Room 与 Agent Presence。"}</p></main>;
+    const failure = state.error ?? taskCapabilityError;
+    return <main className="team-workspace team-workspace--loading">
+      {failure ? <><X size={30} /><h1>团队中继暂不可用</h1><p role="alert">{failure}</p><div className="capability-workspace__actions"><button type="button" className="button-primary" disabled={taskCapabilityRetrying} onClick={onRetryTaskCapability}>{taskCapabilityRetrying ? "正在重试" : "重试 Task Control"}</button><button type="button" className="button-secondary" onClick={onOpenSidebar}>打开导航</button></div></> : <><div className="kanban-loading-orbit"><span /><span /><span /></div><h1>正在连接团队中继</h1><p>读取 Task Room 与 Agent Presence。</p></>}
+    </main>;
   }
 
-  const selectedTask = selectedChannelId === TEAM_LAUNCH_ROOM_ID ? undefined : board.tasks.find((task) => task.id === selectedChannelId);
+  const selectedTask = selectedChannelId === TEAM_LAUNCH_ROOM_ID ? undefined : projectTasks.find((task) => task.id === selectedChannelId);
   const taskRuns = selectedTask ? board.runs.filter((run) => run.taskId === selectedTask.id) : [];
   const taskActivities = selectedTask ? board.activities.filter((activity) => activity.taskId === selectedTask.id) : [];
   const taskAgentTasks = selectedTask ? board.agentTasks.filter((agentTask) => agentTask.taskId === selectedTask.id) : [];
@@ -83,11 +104,11 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
     }
   };
 
-  const launchFromRoom = async (body: string): Promise<void> => {
+  const launchFromRoom = async (body: string, acceptanceCriteria: string): Promise<void> => {
     const existingTaskIds = new Set(board.tasks.map((task) => task.id));
     setLocalError("");
     try {
-      const next = await controller.launchTeamTask(Object.freeze({ body }));
+      const next = await controller.launchTeamTask(Object.freeze({ body, acceptanceCriteria }));
       const created = next.board.tasks[0];
       if (!created || existingTaskIds.has(created.id)) throw new Error("团队启动事务没有返回新任务");
       setQuery("");
@@ -102,7 +123,7 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
     <main className="team-workspace">
       <header className="team-header">
         <div className="team-header__identity"><button type="button" className="icon-button" aria-label="打开侧栏" onClick={onOpenSidebar}><Menu size={18} /></button><span className="team-header__mark"><UsersRound size={19} /><i /></span><div><small>STELLA TEAM RELAY</small><h1>团队协作</h1></div><em>Stella</em></div>
-        <div className="team-header__status"><span><i className={executionEnabled ? "is-live" : ""} />{executionEnabled ? "PI RUNTIME ONLINE" : "BOARD ONLY"}</span><button type="button" className="button-primary" onClick={onNewTask}><Plus size={14} />新建任务</button></div>
+        <div className="team-header__status"><span className="current-model-chip" title="所有页面共享的当前 Pi 模型"><Bot size={12} />{modelLabel ?? "未选择模型"}</span><span><i className={executionEnabled ? "is-live" : ""} />{executionEnabled ? "PI RUNTIME ONLINE" : "BOARD ONLY"}</span><button type="button" className="button-secondary team-pulse-toggle" aria-expanded={pulseOpen} aria-controls="team-pulse-panel" onClick={() => setPulseOpen(true)}><UsersRound size={14} />Agent</button><button type="button" className="button-primary" onClick={onNewTask}><Plus size={14} />新建任务</button></div>
       </header>
 
       <div className="team-grid">
@@ -110,14 +131,14 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
           <header><div><small>TEAM ROOMS</small><h2>协作频道</h2></div><span>{tasks.length + 1}</span></header>
           <div className="team-channel-search"><Search size={13} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索已创建任务" aria-label="搜索已创建任务" /></div>
           <div className="team-channel-list">
-            <button type="button" className={`team-channel--launch ${selectedChannelId === TEAM_LAUNCH_ROOM_ID ? "is-active" : ""}`} onClick={() => setSelectedChannelId(TEAM_LAUNCH_ROOM_ID)}><span className="team-channel__hash team-channel__launch-mark"><Orbit size={13} /><i /></span><span><strong>项目启动室</strong><small>@LEAD 创建并接管新任务</small></span><time>常驻</time></button>
+            <button type="button" className={`team-channel--launch ${selectedChannelId === TEAM_LAUNCH_ROOM_ID ? "is-active" : ""}`} onClick={() => setSelectedChannelId(TEAM_LAUNCH_ROOM_ID)}><span className="team-channel__hash team-channel__launch-mark"><Orbit size={13} /><i /></span><span><strong>任务启动台</strong><small>@LEAD 创建并接管新任务</small></span><time>入口</time></button>
             <div className="team-channel-list__divider"><span>任务频道</span><b>{tasks.length}</b></div>
             {tasks.map((task) => {
               const messages = board.comments.filter((comment) => comment.taskId === task.id).length;
               const active = Boolean(task.activeRunId || task.activeAgentTaskId);
               return <button type="button" key={task.id} className={task.id === selectedChannelId ? "is-active" : ""} onClick={() => setSelectedChannelId(task.id)}><span className="team-channel__hash"><Hash size={13} />{active && <i />}</span><span><strong>{task.title}</strong><small>{STAGE_LABEL[task.stage]} · {messages} 条消息</small></span><time>{formatRelativeTime(task.updatedAt)}</time></button>;
             })}
-            {tasks.length === 0 && <div className="team-empty"><MessageSquarePlus size={20} /><strong>还没有任务频道</strong><p>在上方项目启动室向 @LEAD 说明目标，第一条消息会直接成为任务。</p></div>}
+            {tasks.length === 0 && <div className="team-empty"><MessageSquarePlus size={20} /><strong>还没有任务频道</strong><p>在上方任务启动台向 @LEAD 说明目标，第一条消息会直接成为任务。</p></div>}
           </div>
         </aside>
 
@@ -147,11 +168,14 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
             onContinueInPi={(sessionPath) => onContinueTaskSession(selectedTask.id, sessionPath)}
             agentPresences={presences}
             mentionRequest={mentionRequest}
+            availableSkillNames={availableSkillNames}
           /> : <TeamLaunchRoom
             project={project}
             lead={lead}
             presences={presences}
             mentionRequest={mentionRequest}
+            focusRequest={focusLaunchRequest}
+            availableSkillNames={availableSkillNames}
             busy={state.pending.includes("team:launch")}
             executionEnabled={executionEnabled}
             onLaunch={launchFromRoom}
@@ -159,24 +183,27 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
           {localError && <p className="team-workspace__error" role="alert">{localError}</p>}
         </section>
 
-        <aside className="team-pulse" aria-label="Agent Presence">
-          <header><div><small>TEAM PULSE</small><h2>星队状态</h2></div><span className="team-pulse__orbit"><i /><b /><Sparkles size={13} /></span></header>
+        {compactPulse && pulseOpen && <button type="button" className="team-pulse-scrim" aria-label="关闭 Agent 状态面板" onClick={() => setPulseOpen(false)} />}
+        <aside id="team-pulse-panel" className={`team-pulse ${pulseOpen ? "is-open" : ""}`} aria-label="Agent Presence" aria-hidden={compactPulse && !pulseOpen} inert={compactPulse && !pulseOpen}>
+          <header><div><small>TEAM PULSE</small><h2>星队状态</h2></div><button type="button" className="icon-button team-pulse__close" aria-label="关闭 Agent 状态面板" onClick={() => setPulseOpen(false)}><X size={15} /></button><span className="team-pulse__orbit"><i /><b /><Sparkles size={13} /></span></header>
           <div className="team-pulse__legend"><span><i className="running" />执行</span><span><i className="waiting" />等待</span><span><i className="available" />可用</span></div>
           <div className="team-pulse__list">
             {presences.map((presence, index) => {
               const scoped = presence.agent as Partial<ProjectAgentDefinition>;
+              const missingSkills = (presence.agent.requiredSkills ?? []).filter((skill) => !(availableSkillNames ?? []).includes(skill));
+              const skillBlock = missingSkills.length > 0 ? `缺少 Skill：${missingSkills.join("、")}` : undefined;
               const membershipBlock = selectedTask && !mentionableAgentIds.has(presence.agent.id) ? "不属于当前 Task Room 的可 @ 范围" : undefined;
               const mentionBlock = selectedTask
-                ? selectedTaskMentionBlock ?? membershipBlock
+                ? selectedTaskMentionBlock ?? membershipBlock ?? skillBlock
                 : !project
                   ? "请先打开一个项目"
                   : !executionEnabled
                     ? "Pi Runtime 尚未就绪"
                     : presence.agent.id === "lead"
                       ? undefined
-                      : "项目启动室只允许 @LEAD 创建任务";
+                      : "任务启动台只允许 @LEAD 创建任务";
               return <article key={presence.agent.id} className={`agent-presence agent-presence--${presence.state}`} style={{ "--orbit-index": index } as CSSProperties}>
-                <button type="button" className="agent-presence__mention" disabled={Boolean(mentionBlock)} title={mentionBlock} aria-label={`${selectedTask ? "在 Task Room" : "在项目启动室"} @${presence.agent.name}`} onClick={() => {
+                <button type="button" className="agent-presence__mention" disabled={Boolean(mentionBlock)} title={mentionBlock} aria-label={`${selectedTask ? "在 Task Room" : "在任务启动台"} @${presence.agent.name}`} onClick={() => {
                   setLocalError("");
                   mentionRequestSequence.current += 1;
                   setMentionRequest(Object.freeze({ requestId: mentionRequestSequence.current, agentId: presence.agent.id }));
@@ -204,7 +231,7 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
       />}
       {editingTask && selectedTask && <TaskEditorDialog
         task={selectedTask}
-        project={Object.freeze({ cwd: selectedTask.projectPath, name: selectedTask.projectName, trusted: selectedTask.trusted, requiresTrust: false })}
+        project={Object.freeze({ cwd: selectedTask.projectPath, name: selectedTask.projectName, trusted: selectedTask.trusted, requiresTrust: false, requiresSelection: false })}
         workflows={catalog.workflows}
         agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === selectedTask.projectPath)}
         squads={board.squads}

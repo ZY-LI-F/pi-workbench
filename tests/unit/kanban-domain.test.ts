@@ -20,6 +20,7 @@ const task: KanbanTask = Object.freeze({
   trusted: true,
   executionTarget: { kind: "workflow", workflowId: "feature-delivery" },
   stage: "planned",
+  specRevision: 1,
   createdAt: "2026-07-17T00:00:00.000Z",
   updatedAt: "2026-07-17T00:00:00.000Z",
 });
@@ -64,6 +65,7 @@ function customAgentWith(callsign: string): Record<string, unknown> {
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
     projectPath: "C:/project",
     createdAt: "2026-07-17T00:00:00.000Z",
     updatedAt: "2026-07-17T00:00:00.000Z",

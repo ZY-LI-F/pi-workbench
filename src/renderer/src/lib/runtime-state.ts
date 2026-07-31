@@ -61,6 +61,7 @@ export type RuntimeAction =
   | { readonly type: "BOOTSTRAP"; readonly payload: RuntimeBootstrap }
   | { readonly type: "INITIALIZE_FAILED"; readonly error: string }
   | { readonly type: "SYNC_FAILED"; readonly error: string }
+  | { readonly type: "SYNC_WARNING"; readonly error: string }
   | { readonly type: "BRIDGE_EVENT"; readonly event: BridgeEvent }
   | { readonly type: "EXTENSION_RESOLVED"; readonly response: PiExtensionResponse }
   | { readonly type: "EXTENSION_EXPIRED"; readonly id: string }
@@ -307,6 +308,16 @@ export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): Ru
       notices: Object.freeze([
         ...state.notices,
         Object.freeze({ id: crypto.randomUUID(), type: "error", message: action.error }),
+      ]),
+    };
+  }
+  if (action.type === "SYNC_WARNING") {
+    return {
+      ...state,
+      error: action.error,
+      notices: Object.freeze([
+        ...state.notices,
+        Object.freeze({ id: crypto.randomUUID(), type: "warning", message: action.error }),
       ]),
     };
   }

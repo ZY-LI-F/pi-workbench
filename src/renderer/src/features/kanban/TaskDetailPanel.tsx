@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   BadgeCheck,
   Ban,
@@ -43,6 +43,7 @@ import { ACCEPTANCE_LABEL, EXECUTION_STATUS_LABEL, PRIORITY_LABEL, STAGE_LABEL, 
 import { ArtifactDetails } from "./ArtifactDetails";
 import { AgentMentionInput, type AgentMentionRequest } from "./AgentMentionInput";
 import { WorkflowDag } from "./WorkflowDag";
+import { useMediaQuery } from "../../hooks/use-media-query";
 
 interface TaskDetailPanelProps {
   readonly task: KanbanTask;
@@ -67,6 +68,7 @@ interface TaskDetailPanelProps {
   readonly onContinueInPi: (sessionPath: string) => Promise<void>;
   readonly agentPresences?: readonly AgentPresence[];
   readonly mentionRequest?: AgentMentionRequest;
+  readonly availableSkillNames?: readonly string[];
   readonly variant?: "drawer" | "workspace";
 }
 
@@ -125,6 +127,7 @@ export function TaskDetailPanel({
   onContinueInPi,
   agentPresences = [],
   mentionRequest,
+  availableSkillNames,
   variant = "drawer",
 }: TaskDetailPanelProps) {
   const [gateComment, setGateComment] = useState("");
@@ -132,6 +135,11 @@ export function TaskDetailPanel({
   const [reviewComment, setReviewComment] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState("");
+  const panelRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const overlayDrawer = useMediaQuery("(max-width: 1260px)") && variant === "drawer";
   const [activeMentionQuery, setActiveMentionQuery] = useState<AgentMentionQuery>();
   const timeline = useMemo(
     () => projectTaskTimeline({ task, comments, activities, runs, agentTasks }),
@@ -170,10 +178,18 @@ export function TaskDetailPanel({
     ...(run ? [{ kind: "workflow" as const, execution: run }] : []),
     ...(rootAgentTask ? [{ kind: "agent-task" as const, execution: rootAgentTask }] : []),
   ].sort((left, right) => Date.parse(right.execution.updatedAt) - Date.parse(left.execution.updatedAt))[0];
-  const reviewTarget = [
-    ...runs.filter((candidate) => candidate.status === "reported" && candidate.acceptance === "pending").map((execution) => ({ kind: "workflow" as const, execution })),
-    ...agentTasks.filter((candidate) => !candidate.parentAgentTaskId && candidate.status === "reported" && candidate.acceptance === "pending").map((execution) => ({ kind: "agent-task" as const, execution })),
-  ].sort((left, right) => Date.parse(right.execution.updatedAt) - Date.parse(left.execution.updatedAt))[0];
+  const awaitingReview = task.awaitingReviewExecution;
+  const awaitingWorkflow = awaitingReview?.kind === "workflow"
+    ? runs.find((candidate) => candidate.id === awaitingReview.id && candidate.status === "reported" && candidate.acceptance === "pending")
+    : undefined;
+  const awaitingAgentTask = awaitingReview?.kind === "agent-task"
+    ? agentTasks.find((candidate) => candidate.id === awaitingReview.id && !candidate.parentAgentTaskId && candidate.status === "reported" && candidate.acceptance === "pending")
+    : undefined;
+  const reviewTarget = awaitingWorkflow
+    ? { kind: "workflow" as const, execution: awaitingWorkflow }
+    : awaitingAgentTask
+      ? { kind: "agent-task" as const, execution: awaitingAgentTask }
+      : undefined;
   const mentionPreview = useMemo<MentionPreview>(() => {
     if (!commentBody.trim()) return Object.freeze({ agents: Object.freeze([]) });
     try {
@@ -203,6 +219,23 @@ export function TaskDetailPanel({
     setActiveMentionQuery(undefined);
   }, [task.id]);
 
+  useEffect(() => {
+    if (!overlayDrawer) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      opener?.focus();
+    };
+  }, [overlayDrawer, task.id]);
+
   const perform = async (action: () => Promise<void>) => {
     setError("");
     try {
@@ -218,10 +251,10 @@ export function TaskDetailPanel({
     && entry.provenance.source === (reviewTarget?.kind === "workflow" ? "workflow-run" : "agent-task");
 
   return (
-    <aside className={`task-detail task-detail--${variant}`} aria-label={`任务详情：${task.title}`}>
+    <aside ref={panelRef} className={`task-detail task-detail--${variant}`} aria-label={`任务详情：${task.title}`} role={overlayDrawer ? "dialog" : "complementary"} aria-modal={overlayDrawer || undefined} tabIndex={overlayDrawer ? -1 : undefined}>
       <header className="task-detail__header">
         <div><small>TASK ROOM</small><h2>{task.title}</h2></div>
-        {variant === "drawer" && <button type="button" className="icon-button" aria-label="关闭任务详情" onClick={onClose}><X size={17} /></button>}
+        {variant === "drawer" && <button ref={closeButtonRef} type="button" className="icon-button" aria-label="关闭任务详情" onClick={onClose}><X size={17} /></button>}
       </header>
 
       <div className="task-detail__scroll">
@@ -322,10 +355,12 @@ export function TaskDetailPanel({
             <label htmlFor={`task-room-message-${task.id}`}>发送到 Task Room</label>
             <AgentMentionInput
               id={`task-room-message-${task.id}`}
+              ariaLabel="输入 Task Room 消息并 @ Agent"
               value={commentBody}
               agents={mentionAgents}
               presences={agentPresences}
               mentionRequest={mentionRequest}
+              availableSkillNames={availableSkillNames}
               mentionsDisabled={Boolean(mentionsDisabledReason)}
               mentionsDisabledReason={mentionsDisabledReason}
               rows={3}
@@ -355,7 +390,7 @@ export function TaskDetailPanel({
       <footer className="task-detail__actions">
         {!task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <button type="button" className="button-primary" disabled={busy || !executionEnabled} onClick={() => void perform(onDispatch)}>{isRedispatch ? <RotateCcw size={14} /> : <Play size={14} />}{isRedispatch ? "重新分发" : "开始执行"}</button>}
         {(task.activeRunId || task.activeAgentTaskId) && <button type="button" className="button-danger-soft" disabled={busy} onClick={() => void perform(onAbort)}><Ban size={14} />中止执行</button>}
-        {!task.activeRunId && !task.activeAgentTaskId && <button type="button" className="button-secondary" disabled={busy} onClick={onEdit}><Pencil size={14} />编辑</button>}
+        {!task.activeRunId && !task.activeAgentTaskId && <button type="button" className="button-secondary" disabled={busy || Boolean(task.awaitingReviewExecution)} title={task.awaitingReviewExecution ? "请先验收、退回或重新分发当前报告" : undefined} onClick={onEdit}><Pencil size={14} />编辑</button>}
         {!task.activeRunId && !task.activeAgentTaskId && (
           <select aria-label="手动移动任务" value="" disabled={busy} onChange={(event) => {
             const stage = event.target.value as ManualTaskStage;

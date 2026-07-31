@@ -16,6 +16,7 @@ const PROJECT = Object.freeze({
   branch: "main",
   trusted: true,
   requiresTrust: false,
+  requiresSelection: false,
 });
 
 const TASK: KanbanTask = Object.freeze({
@@ -29,6 +30,7 @@ const TASK: KanbanTask = Object.freeze({
   trusted: PROJECT.trusted,
   executionTarget: Object.freeze({ kind: "agent", agentId: "builder" }),
   stage: "planned",
+  specRevision: 1,
   createdAt: "2026-07-18T00:00:00.000Z",
   updatedAt: "2026-07-18T00:00:00.000Z",
 });
@@ -52,6 +54,8 @@ if (!BUILDER) throw new Error("测试目录缺少 builder");
 const REPORTED_AGENT_TASK: AgentTask = Object.freeze({
   id: "agent-reported",
   taskId: TASK.id,
+  executionAttempt: 1,
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
   agentSnapshot: BUILDER,
   kind: "direct",
   status: "reported",
@@ -364,7 +368,12 @@ describe("Kanban automation interactions", () => {
     const onReviewExecution = vi.fn(async () => undefined);
     render(
       <TaskDetailPanel
-        task={TASK}
+        task={Object.freeze({
+          ...TASK,
+          stage: "review",
+          executionAttempt: 1,
+          awaitingReviewExecution: Object.freeze({ kind: "agent-task", id: REPORTED_AGENT_TASK.id, attempt: 1 }),
+        })}
         catalog={BUILTIN_ORCHESTRATION_CATALOG}
         squads={[]}
         runs={[]}

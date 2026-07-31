@@ -25,6 +25,7 @@ const DRAFT: CreateProjectAgentInput = Object.freeze({
   disableExtensions: true,
   disableSkills: true,
   disablePromptTemplates: true,
+  disableContextFiles: true,
   projectPath: "C:/project",
 });
 
@@ -32,7 +33,7 @@ describe("project AgentDraft persistence", () => {
   it("creates a project-scoped Agent, exposes it in the catalog, and protects references", async () => {
     const repository = new MemoryRepository();
     let id = 0;
-    const service = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, now: () => "2026-07-18T04:00:00.000Z", id: () => `id-${++id}` });
+    const service = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), now: () => "2026-07-18T04:00:00.000Z", id: () => `id-${++id}` });
     const created = await service.createProjectAgent(DRAFT);
     expect(created.board.customAgents[0]).toMatchObject({ id: "custom-data", callsign: "DATA", projectPath: "C:/project", version: 1 });
     expect(created.catalog.agents.some((agent) => agent.id === "custom-data")).toBe(true);
@@ -43,7 +44,7 @@ describe("project AgentDraft persistence", () => {
   });
 
   it("rejects write-capable tools in a read-only AgentDraft", async () => {
-    const service = new BoardService({ repository: new MemoryRepository(), catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined });
+    const service = new BoardService({ repository: new MemoryRepository(), catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase() });
     await expect(service.createProjectAgent({ ...DRAFT, callsign: "UNSAFE", allowedTools: ["read", "bash"] })).rejects.toThrow("只读 Agent 不能启用");
   });
 });

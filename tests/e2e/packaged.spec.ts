@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { expect, test, _electron as electron } from "@playwright/test";
+import { enableTeamFeatures } from "./helpers/team-features";
 
 function packagedExecutable(): string | undefined {
   const explicit = process.env.STELLA_PACKAGED_EXECUTABLE;
@@ -37,11 +38,19 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
   }
 
   const emptyExecutableSearchPath = testInfo.outputPath("empty-path");
+  const userData = testInfo.outputPath("electron-user-data");
+  const projectPath = testInfo.outputPath("project");
   mkdirSync(emptyExecutableSearchPath, { recursive: true });
+  mkdirSync(userData, { recursive: true });
+  mkdirSync(projectPath, { recursive: true });
+  writeFileSync(join(userData, "stella-state.json"), `${JSON.stringify({
+    lastProject: projectPath,
+    recentProjects: [{ path: projectPath, trusted: false, lastOpened: "2026-07-26T00:00:00.000Z" }],
+  }, null, 2)}\n`, "utf8");
 
   const electronApp = await electron.launch({
     executablePath,
-    args: [`--user-data-dir=${testInfo.outputPath("electron-user-data")}`],
+    args: [`--user-data-dir=${userData}`],
     env: {
       ...withoutExecutableSearchPath(emptyExecutableSearchPath),
       PI_CODING_AGENT_DIR: testInfo.outputPath("pi-user-data"),
@@ -61,8 +70,6 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     }
 
     await expect(window.getByLabel(/Stella Pi Workbench/).first()).toBeVisible();
-    await expect(window.getByRole("button", { name: "新建看板任务" })).toBeVisible();
-    await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
     await expect.poll(
       () => window.evaluate(() => window.stella.capabilities().then((health) => health.pi.state)),
       { timeout: 45_000, message: "bundled Pi capability should finish its independent startup" },
@@ -71,6 +78,14 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
       () => window.evaluate(() => window.stella.capabilities().then((health) => health.task.state)),
       { timeout: 15_000, message: "Task Control capability should be ready" },
     ).toBe("ready");
+    await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
+    await expect(window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
+    await expect(window.locator(".capability-ledger .capability-dot")).toHaveCount(1);
+    await enableTeamFeatures(window);
+    await window.getByRole("button", { name: "任务看板", exact: true }).click();
+    await expect(window.getByRole("button", { name: "新建看板任务" })).toBeVisible();
+    await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
     expect(await window.evaluate(() => window.location.protocol)).toBe("file:");
 
     await window.evaluate(() => window.stella.modelConfigurationUpsertProvider({
@@ -122,7 +137,7 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     }
     await window.getByRole("button", { name: "偏好设置", exact: true }).click();
     const settings = window.getByRole("dialog", { name: "偏好设置" });
-    await expect(settings.getByText(/Pi Workbench · Pi v0\.80\.10/)).toBeVisible();
+    await expect(settings.getByText(/Pi Workbench · Pi v0\.82\.1/)).toBeVisible();
     await expect(window.locator(".sidebar")).not.toHaveClass(/is-open/);
     expect(pageErrors).toEqual([]);
   } finally {

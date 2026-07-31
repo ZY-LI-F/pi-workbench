@@ -26,6 +26,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "scout",
@@ -40,6 +41,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "planner",
@@ -54,6 +56,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "builder",
@@ -68,6 +71,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "tester",
@@ -82,6 +86,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "reviewer",
@@ -96,6 +101,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "target-biologist",
@@ -111,6 +117,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: false,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "clinical-intelligence",
@@ -126,6 +133,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: false,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "target-strategist",
@@ -141,6 +149,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: false,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
   agent({
     id: "evidence-auditor",
@@ -156,6 +165,7 @@ export const BUILTIN_AGENTS: readonly AgentDefinition[] = Object.freeze([
     disableExtensions: true,
     disableSkills: false,
     disablePromptTemplates: true,
+    disableContextFiles: true,
   }),
 ]);
 

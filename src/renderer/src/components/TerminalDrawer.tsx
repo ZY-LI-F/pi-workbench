@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronRight, CircleAlert, LoaderCircle, Square, TerminalSquare, X } from "lucide-react";
-
-export interface BashResult {
-  readonly output: string;
-  readonly exitCode: number | null;
-  readonly cancelled: boolean;
-  readonly truncated: boolean;
-  readonly fullOutputPath?: string;
-}
+import type { BashResult } from "../lib/pi-bash-result";
 
 interface TerminalEntry {
   readonly id: string;

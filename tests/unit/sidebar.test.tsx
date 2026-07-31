@@ -8,7 +8,7 @@ afterEach(() => cleanup());
 
 function bootstrap(): RuntimeBootstrap {
   return {
-    project: { cwd: "C:/project", name: "project", trusted: true, requiresTrust: false },
+    project: { cwd: "C:/project", name: "project", trusted: true, requiresTrust: false, requiresSelection: false },
     recentProjects: [],
     state: {
       sessionFile: "C:/sessions/running.jsonl",
@@ -26,6 +26,7 @@ function bootstrap(): RuntimeBootstrap {
     messages: [{ role: "user", content: "生成 CDK2 早研任务", timestamp: Date.now() }],
     sessions: [],
     models: [],
+    thinkingLevels: ["off"],
     commands: [],
     stats: {
       sessionFile: "C:/sessions/running.jsonl",
@@ -45,14 +46,15 @@ function bootstrap(): RuntimeBootstrap {
   } as unknown as RuntimeBootstrap;
 }
 
-function renderSidebar(source = bootstrap()) {
+function renderSidebar(source = bootstrap(), teamFeaturesEnabled = false, open = true) {
   return render(
     <Sidebar
       bootstrap={source}
       capabilities={{ pi: { state: "ready" }, task: { state: "ready" }, schedule: { state: "ready" }, webhook: { state: "ready" } }}
       skin="stella"
-      open
+      open={open}
       activeView="chat"
+      teamFeaturesEnabled={teamFeaturesEnabled}
       modelChanging={false}
       onClose={() => undefined}
       onNewSession={() => undefined}
@@ -71,6 +73,22 @@ function renderSidebar(source = bootstrap()) {
 }
 
 describe("Sidebar", () => {
+  it("shows only Pi-native navigation until team features are explicitly enabled", () => {
+    const { unmount } = renderSidebar();
+
+    expect(screen.getByText("PI 原生工作台")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "团队协作" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "任务看板" })).toBeNull();
+    expect(screen.getByLabelText("能力状态").children).toHaveLength(1);
+    expect(screen.getAllByRole("button", { name: "关闭侧栏" })).toHaveLength(1);
+
+    unmount();
+    renderSidebar(bootstrap(), true);
+    expect(screen.getByRole("button", { name: "团队协作" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "任务看板" })).toBeTruthy();
+    expect(screen.getByLabelText("能力状态").children).toHaveLength(4);
+  });
+
   it("shows the current running session before it appears in historical session summaries", () => {
     renderSidebar();
 
@@ -93,5 +111,14 @@ describe("Sidebar", () => {
     renderSidebar({ ...source, sessions: [session] } as RuntimeBootstrap);
 
     expect(screen.getAllByRole("button", { name: /生成 CDK2 早研任务|历史标题/ })).toHaveLength(1);
+  });
+
+  it("removes a collapsed sidebar from the accessibility and interaction path", () => {
+    const { container } = renderSidebar(bootstrap(), false, false);
+    const sidebar = container.querySelector(".sidebar");
+
+    expect(sidebar?.classList.contains("is-collapsed")).toBe(true);
+    expect(sidebar?.getAttribute("aria-hidden")).toBe("true");
+    expect(sidebar?.hasAttribute("inert")).toBe(true);
   });
 });

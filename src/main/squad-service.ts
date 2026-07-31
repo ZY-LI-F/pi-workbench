@@ -15,6 +15,7 @@ interface SquadServiceDependencies {
   readonly repository: BoardRepository;
   readonly catalog: OrchestrationCatalog;
   readonly emitChanged: (bootstrap: BoardBootstrap) => void;
+  readonly projectIdentity: (projectPath: string) => string;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -31,19 +32,21 @@ export class SquadService {
   readonly #emitChanged: (bootstrap: BoardBootstrap) => void;
   readonly #now: () => string;
   readonly #id: () => string;
+  readonly #projectIdentity: (projectPath: string) => string;
 
   constructor(dependencies: SquadServiceDependencies) {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#emitChanged = dependencies.emitChanged;
+    this.#projectIdentity = dependencies.projectIdentity;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
 
-  async create(input: CreateSquadInput): Promise<BoardBootstrap> {
+  async create(input: CreateSquadInput, currentProjectPath: string): Promise<BoardBootstrap> {
     const now = this.#now();
     return this.#commit((current) => {
-      const normalized = this.#validatedInput(current, input);
+      const normalized = this.#validatedInput(current, input, currentProjectPath);
       if (current.squads.some((squad) => squad.name.toLocaleLowerCase() === normalized.name.toLocaleLowerCase())) {
         throw new Error(`Squad 名称已存在: ${normalized.name}`);
       }
@@ -52,11 +55,19 @@ export class SquadService {
     });
   }
 
-  async update(input: UpdateSquadInput): Promise<BoardBootstrap> {
+  async update(input: UpdateSquadInput, currentProjectPath: string): Promise<BoardBootstrap> {
     const now = this.#now();
     return this.#commit((current) => {
       const existing = this.#squad(current, input.squadId);
-      const normalized = this.#validatedInput(current, input);
+      this.#assertSquadVisible(existing, currentProjectPath);
+      const normalized = this.#validatedInput(current, input, currentProjectPath, existing.version + 1);
+      if (normalized.scope === "project") {
+        const identity = this.#projectIdentity(normalized.projectPath!);
+        if (current.tasks.some((task) => task.executionTarget.kind === "squad" && task.executionTarget.squadId === existing.id
+          && this.#projectIdentity(task.projectPath) !== identity)) throw new Error("已有其他项目任务引用该 Squad，不能改变为当前项目作用域");
+        if (current.autopilots.some((autopilot) => autopilot.executionTarget.kind === "squad" && autopilot.executionTarget.squadId === existing.id
+          && this.#projectIdentity(autopilot.projectPath) !== identity)) throw new Error("已有其他项目 Autopilot 引用该 Squad，不能改变为当前项目作用域");
+      }
       if (current.squads.some((squad) => squad.id !== existing.id && squad.name.toLocaleLowerCase() === normalized.name.toLocaleLowerCase())) {
         throw new Error(`Squad 名称已存在: ${normalized.name}`);
       }
@@ -65,9 +76,10 @@ export class SquadService {
     });
   }
 
-  async delete(squadId: string): Promise<BoardBootstrap> {
+  async delete(squadId: string, currentProjectPath: string): Promise<BoardBootstrap> {
     return this.#commit((current) => {
       const squad = this.#squad(current, squadId);
+      this.#assertSquadVisible(squad, currentProjectPath);
       if (current.tasks.some((task) => task.executionTarget.kind === "squad" && task.executionTarget.squadId === squad.id)) {
         throw new Error("仍有任务引用该 Squad，不能删除");
       }
@@ -81,7 +93,12 @@ export class SquadService {
     });
   }
 
-  #validatedInput(state: BoardState, input: CreateSquadInput): Omit<Squad, "id" | "createdAt" | "updatedAt"> {
+  #validatedInput(
+    state: BoardState,
+    input: CreateSquadInput,
+    currentProjectPath: string,
+    version = 1,
+  ): Omit<Squad, "id" | "createdAt" | "updatedAt"> {
     const leaderAgentId = required(input.leaderAgentId, "Leader Agent");
     if (leaderAgentId === "lead") throw new Error("通用 LEAD 使用 Coordinator 协议；请在 Task Room 中 @lead，不要把它配置为旧式 Squad Leader");
     this.#agent(state, leaderAgentId);
@@ -97,13 +114,26 @@ export class SquadService {
       .map((agent) => agent?.projectPath)
       .filter((path): path is string => Boolean(path)));
     if (projectPaths.size > 1) throw new Error("Squad 不能混用不同项目的自定义 Agent");
+    const projectPath = [...projectPaths][0];
+    if (projectPath && this.#projectIdentity(projectPath) !== this.#projectIdentity(currentProjectPath)) {
+      throw new Error("Squad 中的自定义 Agent 不属于当前项目");
+    }
     return Object.freeze({
+      version,
+      scope: projectPath ? "project" : "global",
+      projectPath,
       name: required(input.name, "Squad 名称"),
       description: input.description.trim(),
       leaderAgentId,
       memberAgentIds,
       leaderInstructions: required(input.leaderInstructions, "Leader 指令"),
     });
+  }
+
+  #assertSquadVisible(squad: Squad, currentProjectPath: string): void {
+    if (squad.scope === "project" && this.#projectIdentity(squad.projectPath!) !== this.#projectIdentity(currentProjectPath)) {
+      throw new Error("只能管理当前项目的 Squad");
+    }
   }
 
   #agent(state: BoardState, agentId: string): void {

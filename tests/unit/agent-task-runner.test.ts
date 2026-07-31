@@ -9,6 +9,7 @@ import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import { SquadService } from "../../src/main/squad-service";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -37,7 +38,14 @@ class FakeAgentRuntime implements AgentTaskRuntime {
     if (command.type === "get_last_assistant_text") return { id: "1", type: "response", command: command.type, success: true, data: { text: this.output } };
     if (command.type === "get_state") return { id: "2", type: "response", command: command.type, success: true, data: { thinkingLevel: "off", isStreaming: false, isCompacting: false, steeringMode: "all", followUpMode: "all", sessionFile: "C:/agent-task.jsonl", sessionId: "session", autoCompactionEnabled: true, messageCount: 2, pendingMessageCount: 0 } };
     if (command.type === "get_session_stats") return { id: "3", type: "response", command: command.type, success: true, data: { sessionFile: "C:/agent-task.jsonl", sessionId: "session", userMessages: 1, assistantMessages: 1, toolCalls: 0, toolResults: 0, totalMessages: 2, tokens: { input: 12, output: 34, cacheRead: 0, cacheWrite: 0, total: 46 }, cost: 0.02 } };
-    if (command.type === "get_messages") return { id: "4", type: "response", command: command.type, success: true, data: { messages: [{ role: "assistant", stopReason: "stop", content: [], provider: "test", model: "test", timestamp: 1 }] } };
+    if (command.type === "get_messages") {
+      let details: unknown;
+      try { details = JSON.parse(this.output); } catch { details = undefined; }
+      const messages = details && typeof details === "object" && "action" in details
+        ? [{ role: "assistant", stopReason: "toolUse", content: [], provider: "test", model: "test", timestamp: 1 }, { role: "toolResult", toolName: "coordinator_action", isError: false, details }]
+        : [{ role: "assistant", stopReason: "stop", content: [], provider: "test", model: "test", timestamp: 1 }];
+      return { id: "4", type: "response", command: command.type, success: true, data: { messages } };
+    }
     if (command.type === "prompt") return { id: "5", type: "response", command: command.type, success: true };
     throw new Error(`FakeAgentRuntime 没有实现命令 ${command.type}`);
   }
@@ -70,13 +78,14 @@ async function setup(
   runtimeFactory = new FakeAgentRuntimeFactory(),
   globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
   resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string> = async (projectPath) => projectPath,
+  resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
 ) {
   const repository = new MemoryRepository();
   const id = idFactory();
   const now = () => "2026-07-18T00:00:00.000Z";
-  const boardService = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, id, now });
-  const agentTaskService = new AgentTaskService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, id, now });
-  const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, id, now });
+  const boardService = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
+  const agentTaskService = new AgentTaskService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, id, now });
+  const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
   const events: unknown[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
   const runner = new AgentTaskRunner({
@@ -85,7 +94,10 @@ async function setup(
     emitBoardEvent: (event) => events.push(event),
     admission,
     globalModel,
+    resolveProjectTrust,
     resolveProjectPath,
+    coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+    skills: READY_AGENT_SKILLS,
   });
 
   const createTask = async (title: string, executionTarget: ExecutionTarget = { kind: "agent", agentId: "builder" }) => {
@@ -131,8 +143,26 @@ describe("AgentTaskRunner", () => {
 
     await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.taskId === taskId)?.status).toBe("failed"));
     expect(resolveProjectPath).toHaveBeenCalledWith("C:/project", true);
-    expect(runtimeFactory.runtimes[0]?.start).not.toHaveBeenCalled();
+    expect(runtimeFactory.runtimes).toHaveLength(0);
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
+  });
+
+  it("uses live project trust and never reuses a stale trusted Task snapshot", async () => {
+    const runtimeFactory = new FakeAgentRuntimeFactory();
+    const resolveProjectPath = vi.fn(async (projectPath: string) => projectPath);
+    const { agentTaskService, runner, createTask } = await setup(
+      runtimeFactory,
+      () => undefined,
+      resolveProjectPath,
+      async () => false,
+    );
+    const taskId = await createTask("权限已撤销的任务");
+    await agentTaskService.dispatchDirect(taskId);
+
+    runner.start();
+
+    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.start).toHaveBeenCalledWith(expect.objectContaining({ trusted: false })));
+    expect(resolveProjectPath).toHaveBeenCalledWith("C:/project", false);
   });
 
   it("runs direct AgentTasks serially and persists output, stats, comments, and review state", async () => {
@@ -295,6 +325,7 @@ describe("AgentTaskRunner", () => {
     const { repository, agentTaskService } = await setup();
     const bootstrap = await agentTaskService.launchTeamTask({
       body: "@LEAD 评估 NLRP3 作为帕金森病早研靶点。覆盖临床竞品和关键风险。",
+      acceptanceCriteria: "给出带来源的支持、反对与未知证据，并提出可证伪实验",
       projectPath: "C:/project",
       projectName: "project",
       trusted: true,
@@ -310,12 +341,16 @@ describe("AgentTaskRunner", () => {
     });
     const root = bootstrap.board.agentTasks.find((agentTask) => agentTask.id === task?.activeAgentTaskId);
     expect(root).toMatchObject({ taskId: task?.id, kind: "coordinator", status: "queued", acceptance: "not-ready", agentSnapshot: { id: "lead" } });
+    expect(root?.executionPlan).toMatchObject({
+      kind: "coordinator",
+      delegates: expect.arrayContaining([expect.objectContaining({ id: "builder", version: 1 })]),
+    });
     expect(root?.prompt).toContain("用户请求：@LEAD 评估 NLRP3");
     expect(bootstrap.board.comments).toEqual([expect.objectContaining({ taskId: task?.id, author: "user", body: expect.stringContaining("@LEAD") })]);
     expect(bootstrap.board.activities.map((activity) => activity.summary)).toEqual(expect.arrayContaining([
-      "任务由项目启动室创建",
+      "任务由任务启动台创建",
       "用户向 LEAD 提交了启动指令",
-      "项目启动室已交给 LEAD",
+      "任务启动台已交给 LEAD",
     ]));
   });
 
@@ -324,6 +359,7 @@ describe("AgentTaskRunner", () => {
     const before = repository.state;
     await expect(agentTaskService.launchTeamTask({
       body: "@BUILD 直接开始实现",
+      acceptanceCriteria: "真实修改通过自动化验证",
       projectPath: "C:/project",
       projectName: "project",
       trusted: true,
@@ -392,9 +428,16 @@ describe("AgentTaskRunner", () => {
     runner.start();
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(1));
     runtimeFactory.runtimes[0]?.settle();
-    await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.kind === "coordinator")?.status).toBe("failed"));
+    await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.kind === "coordinator")?.status).toBe("protocol-invalid"));
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
-    expect(repository.state.agentTasks.find((task) => task.kind === "coordinator")?.error).toContain("不是有效的 Coordinator JSON");
+    expect(repository.state.agentTasks.find((task) => task.kind === "coordinator")).toMatchObject({
+      output: "请让 @builder 开始工作",
+      sessionPath: "C:/agent-task.jsonl",
+      inputTokens: 12,
+      outputTokens: 34,
+      error: expect.stringContaining("未调用必需的 coordinator_action 工具"),
+    });
+    expect(repository.state.comments.some((comment) => comment.body === "请让 @builder 开始工作")).toBe(true);
     expect(repository.state.agentTasks.some((task) => task.kind === "delegated")).toBe(false);
   });
 
@@ -407,11 +450,19 @@ describe("AgentTaskRunner", () => {
       leaderAgentId: "planner",
       memberAgentIds: ["builder", "tester"],
       leaderInstructions: "根据任务决定需要的成员并使用精确 mention。",
-    });
+    }, "C:/project");
     const squad = repository.state.squads[0];
     if (!squad) throw new Error("测试 Squad 未创建");
     const taskId = await createTask("Squad 任务", { kind: "squad", squadId: squad.id });
     await agentTaskService.dispatchSquad(taskId);
+    await squadService.update({
+      squadId: squad.id,
+      name: "运行期间已修改的小队",
+      description: "只影响下一次分发",
+      leaderAgentId: "planner",
+      memberAgentIds: ["reviewer"],
+      leaderInstructions: "只允许使用新的成员配置。",
+    }, "C:/project");
     runner.start();
     await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.commands.some((command) => command.type === "prompt")).toBe(true));
 
@@ -419,6 +470,13 @@ describe("AgentTaskRunner", () => {
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
     const leader = repository.state.agentTasks.find((task) => task.kind === "squad-leader");
     const children = repository.state.agentTasks.filter((task) => task.parentAgentTaskId === leader?.id);
+    expect(leader?.executionPlan).toMatchObject({
+      kind: "squad",
+      squadId: squad.id,
+      squadVersion: 1,
+      squadName: "动态交付组",
+      delegates: [expect.objectContaining({ id: "builder" }), expect.objectContaining({ id: "tester" })],
+    });
     expect(leader?.status).toBe("waiting_children");
     expect(children.map((child) => child.agentSnapshot.id)).toEqual(["builder", "tester"]);
     expect(repository.state.tasks.find((task) => task.id === taskId)?.activeAgentTaskId).toBe(leader?.id);
@@ -442,7 +500,7 @@ describe("AgentTaskRunner", () => {
       leaderAgentId: "planner",
       memberAgentIds: ["builder", "tester"],
       leaderInstructions: "委派两个成员。",
-    });
+    }, "C:/project");
     const squad = repository.state.squads[0];
     if (!squad) throw new Error("测试 Squad 未创建");
     const taskId = await createTask("失败传播", { kind: "squad", squadId: squad.id });
@@ -469,7 +527,7 @@ describe("AgentTaskRunner", () => {
       leaderAgentId: "planner",
       memberAgentIds: ["builder", "tester"],
       leaderInstructions: "委派两个成员。",
-    });
+    }, "C:/project");
     const squad = repository.state.squads[0];
     if (!squad) throw new Error("测试 Squad 未创建");
     const taskId = await createTask("恢复父任务", { kind: "squad", squadId: squad.id });
@@ -493,7 +551,10 @@ describe("AgentTaskRunner", () => {
       emitBoardEvent: () => undefined,
       admission,
       globalModel: () => undefined,
+      resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
+      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+      skills: READY_AGENT_SKILLS,
     });
     recoveredRunner.start();
     await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.kind === "squad-leader")?.status).toBe("failed"));

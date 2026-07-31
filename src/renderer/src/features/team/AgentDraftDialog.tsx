@@ -42,6 +42,7 @@ export function AgentDraftDialog({ project, agent, busy, onClose, onCreate, onUp
     disableExtensions: true,
     disableSkills: !skills.trim(),
     disablePromptTemplates: true,
+    disableContextFiles: true,
     projectPath: project.cwd,
   });
 

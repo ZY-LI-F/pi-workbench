@@ -12,7 +12,7 @@ import type {
   WorkflowRun,
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
-import { applyTaskLifecycle } from "../shared/task-lifecycle";
+import { finishExecutionLifecycle } from "../shared/execution-state";
 
 interface ExecutionReviewServiceDependencies {
   readonly repository: BoardRepository;
@@ -61,16 +61,20 @@ export class ExecutionReviewService {
       if (activeExecutionId && activeExecutionId !== input.executionId) {
         throw new Error("任务有正在进行的执行，请先中止或等待完成再验收");
       }
+      const awaiting = currentTask.awaitingReviewExecution;
+      if (!awaiting || awaiting.kind !== input.executionKind || awaiting.id !== input.executionId) {
+        throw new Error("只能验收任务当前明确等待验收的执行；历史执行已经被取代");
+      }
       const result = input.executionKind === "workflow"
         ? this.#reviewWorkflow(current, input, acceptance, comment, now)
         : this.#reviewAgentTask(current, input, acceptance, comment, now);
       const task = result.tasks.find((candidate) => candidate.id === input.taskId);
       if (!task) throw new Error(`找不到任务: ${input.taskId}`);
       const reviewedTask = input.decision === "accept"
-        ? applyTaskLifecycle(task, { type: "execution-accepted" }, now)
+        ? finishExecutionLifecycle(task, { type: "execution-accepted" }, now)
         : input.decision === "revision-requested"
-          ? applyTaskLifecycle(task, { type: "revision-requested" }, now)
-          : applyTaskLifecycle(task, { type: "execution-rejected", reason: comment }, now);
+          ? finishExecutionLifecycle(task, { type: "revision-requested" }, now)
+          : finishExecutionLifecycle(task, { type: "execution-rejected", reason: comment }, now);
       const label = decisionLabel(input.decision);
       const provenance = input.executionKind === "workflow"
         ? { runId: input.executionId }

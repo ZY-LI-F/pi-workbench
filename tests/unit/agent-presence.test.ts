@@ -22,6 +22,7 @@ function customAgent(id: string, projectPath: string): ProjectAgentDefinition {
     disableExtensions: true,
     disableSkills: true,
     disablePromptTemplates: true,
+    disableContextFiles: true,
     projectPath,
     createdAt: NOW,
     updatedAt: NOW,
@@ -33,15 +34,15 @@ describe("Agent Presence projection", () => {
     const state = parseBoardState({
       version: BOARD_SCHEMA_VERSION,
       tasks: [
-        { id: "task-running", title: "实现", description: "", acceptanceCriteria: "", priority: "high", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "builder" }, stage: "running", activeAgentTaskId: "builder-task", createdAt: NOW, updatedAt: NOW },
-        { id: "task-waiting", title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "lead" }, stage: "review", activeAgentTaskId: "lead-task", createdAt: NOW, updatedAt: NOW },
+        { id: "task-running", title: "实现", description: "", acceptanceCriteria: "", priority: "high", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "builder" }, stage: "running", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "builder-task", createdAt: NOW, updatedAt: NOW },
+        { id: "task-waiting", title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "lead" }, stage: "review", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "lead-task", createdAt: NOW, updatedAt: NOW },
       ],
       runs: [],
       activities: [],
       comments: [],
       agentTasks: [
-        { id: "builder-task", taskId: "task-running", agentSnapshot: builder, kind: "direct", status: "running", acceptance: "not-ready", prompt: "执行", runtimeToken: "runtime", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
-        { id: "lead-task", taskId: "task-waiting", agentSnapshot: lead, kind: "coordinator", status: "waiting_human", acceptance: "not-ready", prompt: "规划", output: "{}", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
+        { id: "builder-task", taskId: "task-running", executionAttempt: 1, taskSpec: { revision: 1, title: "实现", description: "", acceptanceCriteria: "", priority: "high", executionTarget: { kind: "agent", agentId: "builder" } }, agentSnapshot: builder, kind: "direct", status: "running", acceptance: "not-ready", prompt: "执行", runtimeToken: "runtime", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
+        { id: "lead-task", taskId: "task-waiting", executionAttempt: 1, taskSpec: { revision: 1, title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "lead" } }, agentSnapshot: lead, kind: "coordinator", status: "waiting_human", acceptance: "not-ready", prompt: "规划", output: "{}", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
       ],
       customAgents: [customAgent("custom-one", "C:/one"), customAgent("custom-two", "C:/two")],
       squads: [],

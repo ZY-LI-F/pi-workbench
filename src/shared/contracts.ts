@@ -35,12 +35,14 @@ import type {
   SavePiApiKeyInput,
   TestPiModelConnectionInput,
 } from "./model-configuration";
+import type { LocalPathInspection } from "./local-path";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
 export type PiCommand = WithoutRequestId<RpcCommand>;
 export type PiResponse = RpcResponse;
 export type PiExtensionResponse = RpcExtensionUIResponse;
+export type PiThinkingLevel = RpcSessionState["thinkingLevel"];
 
 export interface ModelSummary {
   readonly provider: string;
@@ -82,6 +84,8 @@ export interface ProjectMeta {
   readonly branch?: string;
   readonly trusted: boolean;
   readonly requiresTrust: boolean;
+  /** True only for the non-persisted placeholder workspace shown before first explicit project selection. */
+  readonly requiresSelection: boolean;
 }
 
 export interface ProjectSelection {
@@ -183,6 +187,7 @@ export interface RuntimeBootstrap {
   readonly state: RpcSessionState;
   readonly messages: readonly SerializableMessage[];
   readonly models: readonly ModelSummary[];
+  readonly thinkingLevels: readonly PiThinkingLevel[];
   readonly commands: readonly SlashCommandSummary[];
   readonly sessions: readonly SessionSummary[];
   readonly stats: SessionStats;
@@ -217,6 +222,8 @@ export interface StellaDesktopApi {
   chooseSkinArtwork(skin: SkinId): Promise<SkinArtworkDescriptor | null>;
   resetSkinArtwork(skin: SkinId): Promise<void>;
   openProject(path: string, trusted: boolean): Promise<RuntimeBootstrap | null>;
+  inspectLocalPath(path: string): Promise<LocalPathInspection>;
+  openPath(path: string): Promise<void>;
   revealPath(path: string): Promise<void>;
   openExternal(url: string): Promise<void>;
   copyText(value: string): Promise<void>;

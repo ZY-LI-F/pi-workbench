@@ -32,7 +32,7 @@ export function parseCoordinatorAction(output: string, availableAgents: readonly
     parsed = JSON.parse(output);
   } catch (cause) {
     const message = cause instanceof Error ? cause.message : String(cause);
-    throw new Error(`LEAD 输出不是有效的 Coordinator JSON：${message}`);
+    throw new Error(`coordinator_action 工具结果不是有效的结构化数据：${message}`);
   }
   const value = record(parsed, "Coordinator action");
   const allowedKeys = new Set(["action", "summary", "delegations", "question"]);

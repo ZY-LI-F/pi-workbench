@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   CirclePlus,
@@ -19,6 +19,7 @@ import type { ModelSummary, RecentProject, RuntimeBootstrap, SerializableContent
 import type { SkinPreference } from "../lib/skins";
 import { Brand } from "./Brand";
 import { GlobalModelControl } from "./GlobalModelControl";
+import { useMediaQuery } from "../hooks/use-media-query";
 
 interface SidebarProps {
   readonly bootstrap?: RuntimeBootstrap;
@@ -26,6 +27,7 @@ interface SidebarProps {
   readonly skin: SkinPreference;
   readonly open: boolean;
   readonly activeView: WorkspaceView;
+  readonly teamFeaturesEnabled: boolean;
   readonly modelChanging: boolean;
   readonly onClose: () => void;
   readonly onNewSession: () => void;
@@ -110,6 +112,7 @@ function SessionGroup({
           <button
             type="button"
             className={`session-item ${session.path === activePath ? "is-active" : ""}`}
+            aria-current={session.path === activePath ? "page" : undefined}
             key={session.path}
             onClick={() => onSwitch(session)}
             title={sessionTitle(session)}
@@ -131,6 +134,7 @@ export function Sidebar({
   skin,
   open,
   activeView,
+  teamFeaturesEnabled,
   modelChanging,
   onClose,
   onNewSession,
@@ -147,6 +151,10 @@ export function Sidebar({
 }: SidebarProps) {
   const [query, setQuery] = useState("");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const priorFocusRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
+  const compact = useMediaQuery("(max-width: 1060px)");
   const sessions = useMemo(() => visibleSidebarSessions(bootstrap), [bootstrap]);
   const groups = useMemo(() => {
     const filtered = sessions.filter((session) =>
@@ -162,13 +170,28 @@ export function Sidebar({
   const piReady = capabilities?.pi.state === "ready" && Boolean(bootstrap);
   const taskSurface = activeView === "kanban" || activeView === "team";
   const primaryActionDisabled = taskSurface ? !taskReady || !bootstrap : !piReady;
+  const visibleCapabilities: readonly CapabilityName[] = teamFeaturesEnabled
+    ? Object.keys(CAPABILITY_LABEL) as CapabilityName[]
+    : Object.freeze(["pi"] as const);
+
+  useEffect(() => {
+    if (!compact) return;
+    if (open && !wasOpenRef.current) {
+      priorFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      requestAnimationFrame(() => closeRef.current?.focus());
+    } else if (!open && wasOpenRef.current) {
+      priorFocusRef.current?.focus();
+      priorFocusRef.current = null;
+    }
+    wasOpenRef.current = open;
+  }, [compact, open]);
 
   return (
     <>
-      <aside className={`sidebar ${open ? "is-open" : ""}`}>
+      <aside className={`sidebar ${open ? "is-open" : "is-collapsed"}`} aria-hidden={!open} inert={!open}>
         <div className="sidebar__brand-row">
           <Brand skin={skin} />
-          <button type="button" className="icon-button sidebar__close" aria-label="关闭侧栏" onClick={onClose}>
+          <button ref={closeRef} type="button" className="icon-button sidebar__close" aria-label="关闭侧栏" onClick={onClose}>
             <PanelLeftClose size={17} />
           </button>
         </div>
@@ -179,20 +202,13 @@ export function Sidebar({
           <kbd>Ctrl N</kbd>
         </button>
 
-        <nav className="quick-nav" aria-label="工作区工具">
-          <button type="button" className={activeView === "team" ? "is-active" : ""} onClick={() => onSwitchView("team")}>
-            <UsersRound size={16} />
-            <span>团队协作</span>
-          </button>
-          <button type="button" className={activeView === "kanban" ? "is-active" : ""} onClick={() => onSwitchView("kanban")}>
-            <LayoutDashboard size={16} />
-            <span>任务看板</span>
-          </button>
-          <button type="button" className={activeView === "chat" ? "is-active" : ""} onClick={() => onSwitchView("chat")}>
+        <nav className="quick-nav" aria-label="页面与工具">
+          <span className="quick-nav__section-label">PI 原生工作台</span>
+          <button type="button" aria-current={activeView === "chat" ? "page" : undefined} className={activeView === "chat" ? "is-active" : ""} onClick={() => onSwitchView("chat")}>
             <MessagesSquare size={16} />
             <span>当前会话</span>
           </button>
-          <button type="button" className={activeView === "models" ? "is-active" : ""} onClick={() => onSwitchView("models")}>
+          <button type="button" aria-current={activeView === "models" ? "page" : undefined} className={activeView === "models" ? "is-active" : ""} onClick={() => onSwitchView("models")}>
             <SlidersHorizontal size={16} />
             <span>模型配置</span>
           </button>
@@ -209,11 +225,23 @@ export function Sidebar({
             <GitFork size={16} />
             <span>会话图谱</span>
           </button>
+          {teamFeaturesEnabled && <>
+            <span className="quick-nav__section-label quick-nav__section-label--team">团队功能 · 实验</span>
+            <button type="button" aria-current={activeView === "team" ? "page" : undefined} className={activeView === "team" ? "is-active" : ""} onClick={() => onSwitchView("team")}>
+              <UsersRound size={16} />
+              <span>团队协作</span>
+            </button>
+            <button type="button" aria-current={activeView === "kanban" ? "page" : undefined} className={activeView === "kanban" ? "is-active" : ""} onClick={() => onSwitchView("kanban")}>
+              <LayoutDashboard size={16} />
+              <span>任务看板</span>
+            </button>
+          </>}
         </nav>
 
         <GlobalModelControl
           models={bootstrap?.models ?? []}
           selectedModel={bootstrap?.state.model}
+          teamFeaturesEnabled={teamFeaturesEnabled}
           online={piReady}
           busy={modelChanging}
           onChange={onModelChange}
@@ -267,7 +295,7 @@ export function Sidebar({
         {bootstrap ? <>
           <div className="session-search">
             <Search size={14} />
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="筛选会话" />
+            <input aria-label="筛选历史会话" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="筛选会话" />
             {query && <button type="button" onClick={() => setQuery("")}>清除</button>}
           </div>
 
@@ -280,20 +308,20 @@ export function Sidebar({
             )}
           </div>
         </> : (
-          <div className="sidebar-empty sidebar-empty--capability"><Command size={19} /><p>Pi 会话暂不可用。任务看板保持独立运行。</p></div>
+          <div className="sidebar-empty sidebar-empty--capability"><Command size={19} /><p>{teamFeaturesEnabled ? "Pi 会话暂不可用。团队任务历史仍可独立查看。" : "Pi 会话暂不可用。请查看诊断信息或选择其他项目。"}</p></div>
         )}
 
         <div className="sidebar__footer">
           <button type="button" onClick={onOpenSettings} disabled={!bootstrap}><Settings2 size={16} /><span>偏好设置</span></button>
           <div className="capability-ledger" aria-label="能力状态">
-            {(Object.keys(CAPABILITY_LABEL) as CapabilityName[]).map((name) => {
+            {visibleCapabilities.map((name) => {
               const health = capabilities?.[name];
               return <span key={name} className={`capability-dot capability-dot--${health?.state ?? "loading"}`} title={`${CAPABILITY_LABEL[name]} · ${health?.state ?? "loading"}${health?.error ? ` · ${health.error}` : ""}`} />;
             })}
           </div>
         </div>
       </aside>
-      {open && <button type="button" className="sidebar-scrim" aria-label="关闭侧栏" onClick={onClose} />}
+      {open && <div className="sidebar-scrim" aria-hidden="true" onClick={onClose} />}
     </>
   );
 }

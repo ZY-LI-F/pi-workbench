@@ -16,6 +16,8 @@ interface RuntimeDependencies {
   readonly spawnProcess: SpawnProcess;
   readonly emitPiEvent: (event: unknown) => void;
   readonly emitRuntimeSignal: (event: RuntimeSignal) => void;
+  /** Set to 0 to disable. Defaults to 120 seconds. */
+  readonly requestTimeoutMs?: number;
 }
 
 export interface PiRuntimeStartOptions {
@@ -32,11 +34,14 @@ export interface PiRuntimeStartOptions {
   readonly disableSkills?: boolean;
   readonly disablePromptTemplates?: boolean;
   readonly disableContextFiles?: boolean;
+  /** Explicit trusted extensions; these still load when ambient extension discovery is disabled. */
+  readonly extensions?: readonly string[];
 }
 
 interface PendingRequest {
   readonly resolve: (response: PiResponse) => void;
   readonly reject: (error: Error) => void;
+  readonly timeout?: ReturnType<typeof setTimeout>;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -47,16 +52,27 @@ function isPiResponse(value: unknown): value is PiResponse {
   return isRecord(value) && value.type === "response" && typeof value.command === "string";
 }
 
+export function piRpcRequestTimeoutFromEnvironment(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") return 120_000;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error("STELLA_PI_RPC_TIMEOUT_MS 必须是非负数字，0 表示禁用超时");
+  return parsed;
+}
+
 export class PiRpcRuntime {
   readonly #dependencies: RuntimeDependencies;
   readonly #pending = new Map<string, PendingRequest>();
   readonly #intentionalStops = new WeakSet<ChildProcessWithoutNullStreams>();
+  readonly #requestTimeoutMs: number;
   #process: ChildProcessWithoutNullStreams | null = null;
   #stdoutBuffer = "";
   #stderrBuffer = "";
 
   constructor(dependencies: RuntimeDependencies) {
+    const timeout = dependencies.requestTimeoutMs ?? 120_000;
+    if (!Number.isFinite(timeout) || timeout < 0) throw new Error("Pi RPC requestTimeoutMs 必须是非负有限数字");
     this.#dependencies = dependencies;
+    this.#requestTimeoutMs = timeout;
   }
 
   get running(): boolean {
@@ -84,6 +100,7 @@ export class PiRpcRuntime {
     if (options.disableSkills) args.push("--no-skills");
     if (options.disablePromptTemplates) args.push("--no-prompt-templates");
     if (options.disableContextFiles) args.push("--no-context-files");
+    for (const extension of options.extensions ?? []) args.push("--extension", extension);
     const child = this.#dependencies.spawnProcess(this.#dependencies.executablePath, args, {
       cwd: options.cwd,
       env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
@@ -117,7 +134,12 @@ export class PiRpcRuntime {
       child.once("spawn", resolve);
       child.once("error", reject);
     });
-    await this.send({ type: "get_state" });
+    try {
+      await this.send({ type: "get_state" });
+    } catch (cause) {
+      await this.stop();
+      throw cause;
+    }
     this.#dependencies.emitRuntimeSignal({ type: "runtime_ready", cwd: options.cwd });
   }
 
@@ -161,10 +183,26 @@ export class PiRpcRuntime {
     const id = randomUUID();
     const record = { ...command, id };
     return new Promise<PiResponse>((resolve, reject) => {
-      this.#pending.set(id, { resolve, reject });
+      const timeout = this.#requestTimeoutMs > 0
+        ? setTimeout(() => {
+            if (!this.#pending.delete(id)) return;
+            const error = new Error(
+              `Pi RPC 命令 ${command.type} 在 ${this.#requestTimeoutMs}ms 内没有返回响应；执行结果未知，Runtime 已停止`,
+            );
+            this.#dependencies.emitRuntimeSignal({ type: "protocol_error", message: error.message, record: JSON.stringify(record) });
+            void this.stop().then(
+              () => reject(error),
+              (stopCause: unknown) => reject(new AggregateError([error, stopCause], "Pi RPC 超时且 Runtime 停止失败")),
+            );
+          }, this.#requestTimeoutMs)
+        : undefined;
+      timeout?.unref();
+      this.#pending.set(id, { resolve, reject, timeout });
       child.stdin.write(`${JSON.stringify(record)}\n`, "utf8", (error) => {
         if (!error) return;
+        const pending = this.#pending.get(id);
         this.#pending.delete(id);
+        if (pending?.timeout) clearTimeout(pending.timeout);
         reject(error);
       });
     });
@@ -201,6 +239,7 @@ export class PiRpcRuntime {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.#dependencies.emitRuntimeSignal({ type: "protocol_error", message, record });
+      this.#rejectPending(new Error(`Pi RPC 返回了无法解析的协议记录：${message}`));
       return;
     }
 
@@ -208,6 +247,7 @@ export class PiRpcRuntime {
       const pending = this.#pending.get(parsed.id);
       if (!pending) return;
       this.#pending.delete(parsed.id);
+      if (pending.timeout) clearTimeout(pending.timeout);
       if (parsed.success) pending.resolve(parsed);
       else pending.reject(new Error(parsed.error));
       return;
@@ -224,7 +264,10 @@ export class PiRpcRuntime {
   }
 
   #rejectPending(error: Error): void {
-    for (const pending of this.#pending.values()) pending.reject(error);
+    for (const pending of this.#pending.values()) {
+      if (pending.timeout) clearTimeout(pending.timeout);
+      pending.reject(error);
+    }
     this.#pending.clear();
   }
 }

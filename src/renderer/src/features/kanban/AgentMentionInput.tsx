@@ -18,6 +18,7 @@ export interface AgentMentionRequest {
 
 interface AgentMentionInputProps {
   readonly id: string;
+  readonly ariaLabel: string;
   readonly value: string;
   readonly agents: readonly AgentDefinition[];
   readonly presences?: readonly AgentPresence[];
@@ -26,12 +27,18 @@ interface AgentMentionInputProps {
   readonly mentionsDisabled?: boolean;
   readonly mentionsDisabledReason?: string;
   readonly mentionRequest?: AgentMentionRequest;
+  readonly focusRequest?: number;
+  readonly availableSkillNames?: readonly string[];
   readonly onChange: (value: string) => void;
   readonly onQueryChange?: (query?: AgentMentionQuery) => void;
   readonly onRequestError?: (message: string) => void;
 }
 
-function optionRestriction(agent: AgentDefinition, selectedIds: ReadonlySet<string>): string | undefined {
+function optionRestriction(agent: AgentDefinition, selectedIds: ReadonlySet<string>, availableSkills?: ReadonlySet<string>): string | undefined {
+  const missingSkills = availableSkills
+    ? (agent.requiredSkills ?? []).filter((skill) => !availableSkills.has(skill))
+    : [];
+  if (missingSkills.length > 0) return `缺少 Skill：${missingSkills.join("、")}`;
   if (selectedIds.has(agent.id)) return "已选择";
   const hasLead = selectedIds.has("lead");
   if (hasLead && agent.id !== "lead") return "已进入 LEAD 协调模式";
@@ -41,6 +48,7 @@ function optionRestriction(agent: AgentDefinition, selectedIds: ReadonlySet<stri
 
 export function AgentMentionInput({
   id,
+  ariaLabel,
   value,
   agents,
   presences = [],
@@ -49,6 +57,8 @@ export function AgentMentionInput({
   mentionsDisabled = false,
   mentionsDisabledReason,
   mentionRequest,
+  focusRequest,
+  availableSkillNames,
   onChange,
   onQueryChange,
   onRequestError,
@@ -62,6 +72,7 @@ export function AgentMentionInput({
   const [dismissedQuery, setDismissedQuery] = useState("");
   const [composing, setComposing] = useState(false);
   const presenceByAgent = useMemo(() => new Map(presences.map((presence) => [presence.agent.id, presence])), [presences]);
+  const availableSkills = useMemo(() => availableSkillNames ? new Set(availableSkillNames) : undefined, [availableSkillNames]);
   const normalizedCaret = Math.min(caret, value.length);
   const activeQuery = useMemo(() => agentMentionQueryAtCaret(value, normalizedCaret), [normalizedCaret, value]);
   const queryKey = activeQuery ? `${activeQuery.start}:${activeQuery.end}:${activeQuery.query}` : "";
@@ -75,8 +86,8 @@ export function AgentMentionInput({
     : value;
   const selectedIds = useMemo(() => mentionedAgentIds(textWithoutActiveQuery, agents), [agents, textWithoutActiveQuery]);
   const selectableIndices = useMemo(
-    () => candidates.flatMap((agent, index) => optionRestriction(agent, selectedIds) ? [] : [index]),
-    [candidates, selectedIds],
+    () => candidates.flatMap((agent, index) => optionRestriction(agent, selectedIds, availableSkills) ? [] : [index]),
+    [availableSkills, candidates, selectedIds],
   );
 
   useEffect(() => {
@@ -96,6 +107,11 @@ export function AgentMentionInput({
     setCaret(value.length);
   }, [value.length]);
 
+  useEffect(() => {
+    if (!focusRequest) return;
+    textareaRef.current?.focus();
+  }, [focusRequest]);
+
   const focusAt = (position: number): void => {
     caretRef.current = position;
     setCaret(position);
@@ -106,7 +122,7 @@ export function AgentMentionInput({
   };
 
   const insert = (agent: AgentDefinition): void => {
-    const restriction = optionRestriction(agent, selectedIds);
+    const restriction = optionRestriction(agent, selectedIds, availableSkills);
     if (restriction) return;
     const range = activeQuery ?? Object.freeze({ start: caretRef.current, end: caretRef.current });
     const next = insertAgentMention(value, range, agent);
@@ -127,7 +143,7 @@ export function AgentMentionInput({
       onRequestError?.(mentionsDisabledReason ?? "当前任务不能创建新的 Agent mention");
       return;
     }
-    const restriction = optionRestriction(agent, selectedIds);
+    const restriction = optionRestriction(agent, selectedIds, availableSkills);
     if (restriction) {
       onRequestError?.(`${agent.name}：${restriction}`);
       return;
@@ -158,7 +174,7 @@ export function AgentMentionInput({
     }
     if (event.key === "Enter" || event.key === "Tab") {
       const agent = candidates[activeIndex];
-      if (!agent || optionRestriction(agent, selectedIds)) return;
+      if (!agent || optionRestriction(agent, selectedIds, availableSkills)) return;
       event.preventDefault();
       insert(agent);
       return;
@@ -181,7 +197,7 @@ export function AgentMentionInput({
         <span><AtSign size={11} />可 @</span>
         <div>
           {agents.map((agent) => {
-            const restriction = optionRestriction(agent, selectedIds);
+            const restriction = optionRestriction(agent, selectedIds, availableSkills);
             const disabled = mentionsDisabled || Boolean(restriction);
             const title = mentionsDisabled ? mentionsDisabledReason : restriction;
             return <button type="button" key={agent.id} className={`${agent.id === "lead" ? "is-lead" : ""} ${selectedIds.has(agent.id) ? "is-selected" : ""}`} disabled={disabled} title={title} aria-label={`@ ${agent.name}`} onClick={() => insert(agent)}><span>@{agent.callsign}</span></button>;
@@ -192,6 +208,7 @@ export function AgentMentionInput({
       <textarea
         ref={textareaRef}
         id={id}
+        aria-label={ariaLabel}
         value={value}
         rows={rows}
         placeholder={placeholder}
@@ -222,7 +239,7 @@ export function AgentMentionInput({
           <div className="agent-mention-picker__list">
             {candidates.map((agent, index) => {
               const presence = presenceByAgent.get(agent.id);
-              const restriction = optionRestriction(agent, selectedIds);
+              const restriction = optionRestriction(agent, selectedIds, availableSkills);
               return (
                 <button
                   type="button"

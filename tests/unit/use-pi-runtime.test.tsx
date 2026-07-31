@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { RuntimeBootstrap, StellaDesktopApi } from "../../src/shared/contracts";
+import type { PiResponse, RuntimeBootstrap, StellaDesktopApi } from "../../src/shared/contracts";
 import {
   isReportedRuntimeError,
   usePiRuntime,
@@ -51,5 +51,24 @@ describe("usePiRuntime error reporting", () => {
     expect(opened).toBeNull();
     expect(result.current.state.notices).toEqual([]);
     expect(result.current.state.bootstrap).toBeUndefined();
+  });
+
+  it("does not turn a successful prompt into a send failure when only the refresh fails", async () => {
+    const response: PiResponse = { id: "prompt-1", type: "response", command: "prompt", success: true };
+    const api = runtimeApi({
+      command: vi.fn(async () => response),
+      refresh: vi.fn(async () => { throw new Error("refresh transport failed"); }),
+    });
+    const { result } = renderHook(() => usePiRuntime(api));
+    let received: PiResponse | undefined;
+
+    await act(async () => {
+      received = await result.current.command({ type: "prompt", message: "只发送一次" }, true);
+    });
+
+    expect(received).toBe(response);
+    expect(api.command).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(result.current.state.notices.at(-1)?.message)
+      .toBe("消息已发送，但状态刷新失败：refresh transport failed"));
   });
 });

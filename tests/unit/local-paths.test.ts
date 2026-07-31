@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import { extractLocalPaths, normalizeLocalPathCandidate } from "../../src/renderer/src/lib/local-paths";
+
+describe("local path extraction", () => {
+  it("recognizes the Windows output directory shown by Pi", () => {
+    const path = "C:\\Users\\qq108\\Documents\\PI-GUI\\test-results\\pi-gui-pptx\\";
+    expect(extractLocalPaths(`中间文件位置\n\n\`${path}\``)).toEqual([path]);
+  });
+
+  it("keeps Chinese names and spaces in complete code or quoted paths", () => {
+    const presentation = "C:\\Users\\Stella\\Documents\\研究 输出\\PI-GUI_产品能力与交互说明.pptx";
+    expect(extractLocalPaths(`输出文件：\`${presentation}\`\n\"${presentation}\"`)).toEqual([presentation]);
+  });
+
+  it("extracts fenced and labelled absolute paths without duplicating Windows casing", () => {
+    const output = extractLocalPaths([
+      "```text",
+      "C:\\Work\\Result.pptx",
+      "C:\\work\\result.pptx",
+      "```",
+      "目录：/Users/stella/work/results",
+    ].join("\n"));
+    expect(output).toEqual(["C:\\Work\\Result.pptx", "/Users/stella/work/results"]);
+  });
+
+  it("ignores URLs, relative paths and code fragments", () => {
+    expect(extractLocalPaths("https://example.com/report\n./report.pptx\n`@oai/artifact-tool`\n`npm run build`")).toEqual([]);
+    expect(normalizeLocalPathCandidate("路径：C:\\Work\\report.pptx。"))
+      .toBe("C:\\Work\\report.pptx");
+  });
+});

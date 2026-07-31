@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -18,18 +18,29 @@ const FOCUSABLE_SELECTOR = [
   "a[href]",
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
+const MODAL_STACK: string[] = [];
 
 export function Modal({ title, eyebrow, children, onClose, className = "", hideClose = false }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+  const modalId = useId();
+  const titleId = `${modalId}-title`;
+  closeRef.current = onClose;
 
   useEffect(() => {
     const panel = panelRef.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const appRoot = document.getElementById("root");
+    const rootWasInert = appRoot?.inert ?? false;
+    if (appRoot) appRoot.inert = true;
+    MODAL_STACK.push(modalId);
     const focusable = panel?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-    focusable?.[0]?.focus();
+    (panel?.querySelector<HTMLElement>("[autofocus]") ?? focusable?.[0] ?? panel)?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (MODAL_STACK.at(-1) !== modalId) return;
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        closeRef.current();
         return;
       }
       if (event.key !== "Tab" || !panel) return;
@@ -47,16 +58,22 @@ export function Modal({ title, eyebrow, children, onClose, className = "", hideC
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      const index = MODAL_STACK.lastIndexOf(modalId);
+      if (index >= 0) MODAL_STACK.splice(index, 1);
+      if (appRoot) appRoot.inert = rootWasInert;
+      opener?.focus();
+    };
+  }, [modalId]);
 
   return createPortal(
     <div className="modal-layer" role="presentation" onMouseDown={(event) => {
-      if (event.target === event.currentTarget) onClose();
+      if (event.target === event.currentTarget && MODAL_STACK.at(-1) === modalId) onClose();
     }}>
-      <div className={`modal-panel ${className}`} role="dialog" aria-modal="true" aria-labelledby="modal-title" ref={panelRef}>
+      <div className={`modal-panel ${className}`} role="dialog" aria-modal="true" aria-labelledby={titleId} ref={panelRef} tabIndex={-1}>
         <div className="modal-panel__header">
-          <div>{eyebrow && <small>{eyebrow}</small>}<h2 id="modal-title">{title}</h2></div>
+          <div>{eyebrow && <small>{eyebrow}</small>}<h2 id={titleId}>{title}</h2></div>
           {!hideClose && <button type="button" className="icon-button" aria-label="关闭" onClick={onClose}><X size={17} /></button>}
         </div>
         {children}

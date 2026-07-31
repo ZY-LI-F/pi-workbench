@@ -216,6 +216,8 @@ export class AutopilotService {
         trusted: autopilot.trusted,
         executionTarget: Object.freeze({ ...autopilot.executionTarget }),
         stage: "planned",
+        specRevision: 1,
+        executionAttempt: 0,
         createdAt: now,
         updatedAt: now,
       });

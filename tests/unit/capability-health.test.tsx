@@ -3,11 +3,12 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CapabilityHealthSnapshot } from "@shared/capabilities";
-import type { StellaDesktopApi } from "@shared/contracts";
+import type { RuntimeBootstrap, StellaDesktopApi } from "@shared/contracts";
 import { EMPTY_BOARD_STATE, type KanbanTask } from "@shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "@shared/orchestration-catalog";
 import { CapabilityHealthStore } from "../../src/main/capability-health";
 import { App } from "../../src/renderer/src/App";
+import { DEFAULT_PREFERENCES, PREFERENCES_STORAGE_KEY } from "../../src/renderer/src/hooks/use-preferences";
 
 const UPDATED_AT = "2026-07-18T00:00:00.000Z";
 
@@ -31,9 +32,36 @@ const TASK: KanbanTask = Object.freeze({
   trusted: true,
   executionTarget: Object.freeze({ kind: "agent", agentId: "builder" }),
   stage: "planned",
+  specRevision: 1,
   createdAt: UPDATED_AT,
   updatedAt: UPDATED_AT,
 });
+
+const PI_BOOTSTRAP = {
+  project: { cwd: "C:/project", name: "project", trusted: false, requiresTrust: false, requiresSelection: false },
+  recentProjects: [],
+  state: {
+    thinkingLevel: "off",
+    isStreaming: false,
+    isCompacting: false,
+    steeringMode: "one-at-a-time",
+    followUpMode: "one-at-a-time",
+    sessionId: "session-offline-draft",
+    autoCompactionEnabled: true,
+    messageCount: 0,
+    pendingMessageCount: 0,
+  },
+  messages: [],
+  models: [],
+  thinkingLevels: ["off"],
+  commands: [],
+  sessions: [],
+  stats: { tokens: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 }, cost: 0 },
+  entries: [],
+  tree: [],
+  leafId: null,
+  piVersion: "0.82.1",
+} as unknown as RuntimeBootstrap;
 
 beforeEach(() => {
   localStorage.clear();
@@ -83,6 +111,7 @@ describe("Capability Health", () => {
   });
 
   it("shows Task history while Pi failed and disables execution", async () => {
+    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify({ ...DEFAULT_PREFERENCES, teamFeaturesEnabled: true }));
     const snapshot = healthSnapshot("error", "Pi startup injection");
     const api = {
       capabilities: vi.fn(async () => snapshot),
@@ -101,6 +130,7 @@ describe("Capability Health", () => {
     const user = userEvent.setup();
     render(<App api={api} />);
 
+    await user.click(await screen.findByRole("button", { name: "任务看板" }));
     expect(await screen.findByRole("heading", { name: "任务星图" })).toBeTruthy();
     expect(screen.getByText("保留的任务历史")).toBeTruthy();
     expect((screen.getByRole("button", { name: "分发任务 保留的任务历史" }) as HTMLButtonElement).disabled).toBe(true);
@@ -111,5 +141,33 @@ describe("Capability Health", () => {
     expect(screen.getByRole("button", { name: "查看任务看板" })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "重试 Pi" }));
     await waitFor(() => expect(api.retryCapability).toHaveBeenCalledWith("pi"));
+  });
+
+  it("keeps the real chat composer mounted when Pi health is temporarily unavailable", async () => {
+    const snapshot = healthSnapshot("error", "provider connection interrupted");
+    const api = {
+      capabilities: vi.fn(async () => snapshot),
+      retryCapability: vi.fn(async () => snapshot),
+      initialize: vi.fn(async () => PI_BOOTSTRAP),
+      refresh: vi.fn(async () => PI_BOOTSTRAP),
+      command: vi.fn(async () => ({ success: true, command: "set_auto_retry", data: {} })),
+      boardInitialize: vi.fn(async () => ({
+        board: EMPTY_BOARD_STATE,
+        catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      })),
+      onEvent: vi.fn(() => () => undefined),
+      chooseProject: vi.fn(async () => null),
+      skinArtworkInitialize: vi.fn(async () => Object.freeze([])),
+      windowAction: vi.fn(async () => undefined),
+    } as unknown as StellaDesktopApi;
+
+    const user = userEvent.setup();
+    render(<App api={api} />);
+    const composer = await screen.findByLabelText("给 Pi 的消息");
+
+    expect(screen.getByText("Pi 暂不可用，当前草稿已保留")).toBeTruthy();
+    await user.type(composer, "连接恢复前继续整理附件说明");
+    expect((composer as HTMLTextAreaElement).value).toBe("连接恢复前继续整理附件说明");
+    expect((screen.getByRole("button", { name: "发送" }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

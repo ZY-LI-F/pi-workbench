@@ -18,11 +18,13 @@ import {
   type UpdateTaskInput,
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
+import { supersedePendingExecutions } from "../shared/execution-state";
 
 interface BoardServiceDependencies {
   readonly repository: BoardRepository;
   readonly catalog: OrchestrationCatalog;
   readonly emitChanged: (bootstrap: BoardBootstrap) => void;
+  readonly projectIdentity: (projectPath: string) => string;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -37,6 +39,7 @@ export class BoardService {
   readonly #repository: BoardRepository;
   readonly #catalog: OrchestrationCatalog;
   readonly #emitChanged: (bootstrap: BoardBootstrap) => void;
+  readonly #projectIdentity: (projectPath: string) => string;
   readonly #now: () => string;
   readonly #id: () => string;
 
@@ -44,6 +47,7 @@ export class BoardService {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#emitChanged = dependencies.emitChanged;
+    this.#projectIdentity = dependencies.projectIdentity;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -51,6 +55,40 @@ export class BoardService {
   async bootstrap(): Promise<BoardBootstrap> {
     const board = await this.#repository.read();
     return Object.freeze({ board, catalog: catalogForBoard(this.#catalog, board) });
+  }
+
+  async updateProjectTrust(projectPath: string, trusted: boolean): Promise<BoardBootstrap> {
+    const identity = this.#projectIdentity(projectPath);
+    const now = this.#now();
+    return this.#commit((current) => {
+      const changedTasks = current.tasks.filter(
+        (task) => this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted,
+      );
+      const changedAutopilots = current.autopilots.filter(
+        (autopilot) => this.#projectIdentity(autopilot.projectPath) === identity && autopilot.trusted !== trusted,
+      );
+      const tasks = current.tasks.map((task) =>
+        this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted
+          ? Object.freeze({ ...task, trusted, updatedAt: now })
+          : task,
+      );
+      const autopilots = current.autopilots.map((autopilot) =>
+        this.#projectIdentity(autopilot.projectPath) === identity && autopilot.trusted !== trusted
+          ? Object.freeze({ ...autopilot, trusted, updatedAt: now })
+          : autopilot,
+      );
+      if (changedTasks.length === 0 && changedAutopilots.length === 0) return current;
+      const label = trusted ? "项目已授予信任执行权限" : "项目已撤销信任执行权限";
+      return {
+        ...current,
+        tasks,
+        autopilots,
+        activities: [
+          ...current.activities,
+          ...changedTasks.map((task) => this.#activity(task.id, "status", label, projectPath, now)),
+        ],
+      };
+    });
   }
 
   async createTask(input: CreateTaskInput): Promise<BoardBootstrap> {
@@ -69,6 +107,8 @@ export class BoardService {
         trusted: input.trusted,
         executionTarget: Object.freeze({ ...input.executionTarget }),
         stage: "planned",
+        specRevision: 1,
+        executionAttempt: 0,
         sourcePiSessionPath: input.sourcePiSessionPath,
         sourcePiSessionId: input.sourcePiSessionId,
         createdAt: now,
@@ -88,14 +128,25 @@ export class BoardService {
     return this.#commit((current) => {
       const task = this.#task(current, input.taskId);
       if (task.activeRunId || task.activeAgentTaskId) throw new Error("运行中的任务不能编辑；请先中止执行");
+      if (task.awaitingReviewExecution) throw new Error("任务正在等待验收；请先验收或退回本次执行，再修改任务规格");
       this.#assertExecutionTarget(current, input.executionTarget, task.projectPath);
+      const title = normalizedText(input.title, "任务标题", true);
+      const description = normalizedText(input.description, "任务说明", false);
+      const acceptanceCriteria = normalizedText(input.acceptanceCriteria, "验收标准", false);
+      const targetChanged = JSON.stringify(task.executionTarget) !== JSON.stringify(input.executionTarget);
+      const specChanged = task.title !== title
+        || task.description !== description
+        || task.acceptanceCriteria !== acceptanceCriteria
+        || task.priority !== input.priority
+        || targetChanged;
       const nextTask: KanbanTask = Object.freeze({
         ...task,
-        title: normalizedText(input.title, "任务标题", true),
-        description: normalizedText(input.description, "任务说明", false),
-        acceptanceCriteria: normalizedText(input.acceptanceCriteria, "验收标准", false),
+        title,
+        description,
+        acceptanceCriteria,
         priority: input.priority,
         executionTarget: Object.freeze({ ...input.executionTarget }),
+        specRevision: specChanged ? task.specRevision + 1 : task.specRevision,
         updatedAt: now,
       });
       return {
@@ -113,16 +164,18 @@ export class BoardService {
       if (!canMoveTaskManually(task, stage)) {
         throw new Error("只能把未运行的任务手动移到待规划、受阻或已完成列");
       }
+      const superseded = supersedePendingExecutions(current, task.id, "任务已由用户手动移动，原执行不再等待验收");
       const nextTask: KanbanTask = Object.freeze({
         ...task,
         stage,
+        awaitingReviewExecution: undefined,
         blockedReason: stage === "blocked" ? "由用户手动标记为受阻" : undefined,
         updatedAt: now,
       });
       return {
-        ...current,
-        tasks: current.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
-        activities: [...current.activities, this.#activity(task.id, "status", `任务已移到${stage === "planned" ? "待规划" : stage === "blocked" ? "受阻" : "已完成"}`, undefined, now)],
+        ...superseded,
+        tasks: superseded.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
+        activities: [...superseded.activities, this.#activity(task.id, "status", `任务已移到${stage === "planned" ? "待规划" : stage === "blocked" ? "受阻" : "已完成"}`, undefined, now)],
       };
     });
   }
@@ -198,6 +251,9 @@ export class BoardService {
     if (target.kind === "squad") {
       const squad = state.squads.find((candidate) => candidate.id === target.squadId);
       if (!squad) throw new Error(`未知 Squad: ${target.squadId}`);
+      if (squad.scope === "project" && this.#projectIdentity(squad.projectPath!) !== this.#projectIdentity(projectPath)) {
+        throw new Error(`Squad ${squad.id} 属于其他项目`);
+      }
       const scopedAgents = [squad.leaderAgentId, ...squad.memberAgentIds]
         .map((agentId) => catalog.agents.find((agent) => agent.id === agentId) as Partial<ProjectAgentDefinition> | undefined)
         .filter((agent): agent is Partial<ProjectAgentDefinition> => Boolean(agent?.projectPath));
@@ -235,6 +291,7 @@ export class BoardService {
       disableExtensions: input.disableExtensions,
       disableSkills: input.disableSkills,
       disablePromptTemplates: input.disablePromptTemplates,
+      disableContextFiles: input.disableContextFiles,
       projectPath: normalizedText(input.projectPath, "项目路径", true),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,

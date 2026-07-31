@@ -1,5 +1,6 @@
 :root {
   color-scheme: dark;
+  font-size: 16px;
   --font-body: "Manrope Variable", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
   --font-signature: "Marck Script", "Segoe Script", "Snell Roundhand", cursive;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
@@ -371,7 +372,7 @@
   --shadow-soft: 0 13px 32px rgba(47, 63, 101, 0.1);
 }
 
-/* 黑执事：黑曜石面板、深红契约与古银边线。 */
+/* 黑曜夜契：黑曜石面板、深红契约与古银边线。 */
 :root[data-skin="kuroshitsuji"] {
   --night-950: #050609;
   --night-900: #08090d;
@@ -442,7 +443,7 @@
   --shadow-soft: 0 12px 30px rgba(57, 43, 40, 0.12);
 }
 
-/* JOJO：粉紫郊町与黄金意式装饰，共用高对比漫画色阶。 */
+/* 绮旅黄金：粉紫街町与黄金意式装饰，共用高对比漫画色阶。 */
 :root[data-skin="jojo"] {
   --night-950: #10051e;
   --night-900: #180a2a;
@@ -513,7 +514,7 @@
   --shadow-soft: 4px 7px 0 rgba(73, 29, 83, 0.07);
 }
 
-/* 棋魂：墨蓝棋室、旧金棋枰与黑白秩序。 */
+/* 棋境：墨蓝棋室、旧金棋枰与黑白秩序。 */
 :root[data-skin="qihun"] {
   --night-950: #071017;
   --night-900: #0b1720;
@@ -608,14 +609,25 @@ body {
   background: var(--app-bg);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-:root[data-font-size="small"] body { font-size: 13px; }
-:root[data-font-size="large"] body { font-size: 16px; }
+:root[data-font-size="small"] { font-size: 14px; }
+:root[data-font-size="large"] { font-size: 19px; }
+
+/* Semantic copy must remain readable across decorative skins. */
+:root:not([data-theme="light"]) {
+  --text-muted: #b0b4c6;
+  --text-faint: #969bad;
+}
+
+:root[data-theme="light"] {
+  --text-muted: #5f5b6b;
+  --text-faint: #6c6777;
+}
 
 button,
 input,
@@ -696,7 +708,7 @@ kbd {
   background: var(--surface);
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1;
 }
 

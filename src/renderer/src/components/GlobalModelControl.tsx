@@ -10,6 +10,7 @@ interface SelectedModelIdentity {
 interface GlobalModelControlProps {
   readonly models: readonly ModelSummary[];
   readonly selectedModel: SelectedModelIdentity | undefined;
+  readonly teamFeaturesEnabled: boolean;
   readonly online: boolean;
   readonly busy: boolean;
   readonly onChange: (model: ModelSummary) => void;
@@ -22,6 +23,7 @@ function modelKey(model: Pick<ModelSummary, "provider" | "id">): string {
 export function GlobalModelControl({
   models,
   selectedModel,
+  teamFeaturesEnabled,
   online,
   busy,
   onChange,
@@ -65,7 +67,7 @@ export function GlobalModelControl({
         </select>
         <ChevronDown size={13} />
       </label>
-      <p>会话、团队与看板共用；Agent 的显式设置优先。</p>
+      <p>{teamFeaturesEnabled ? "会话、团队与看板共用；Agent 的显式设置优先。" : "当前 Pi 会话使用；Provider 与模型在配置页统一管理。"}</p>
     </section>
   );
 }
