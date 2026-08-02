@@ -1,269 +1,271 @@
+[**English**](README.md) | [简体中文](README.zh-CN.md)
+
 # Stella · Pi Workbench
 
-这是一个为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造的 Electron 桌面工作台。它直接启动安装包内置的 Pi JSONL RPC 进程，不模拟回复、不绕开 Pi 的会话系统；完整 Pi 工作台与 Task Control 是两个可独立启动、独立报错的一等能力面。应用默认进入 Pi 原生会话工作台，并隐藏团队协作、任务看板、自动化、任务桥和相关命令；需要这些实验能力时，可在“偏好设置 → 功能页面”显式开启，关闭不会删除已有任务。除聊天、会话、模型、扩展和终端外，项目还提供任务看板、三栏 Team Chat、Task Room、LEAD Coordinator、固定与项目级 Agent、动态 Squad、版本化 Workflow、人工验收、Autopilot 和只读可视化 DAG。界面提供 Stella、晨曦、定阳、旭日、月华、黑曜夜契、绮旅黄金、棋境八套可持久化原创皮肤；每套皮肤都可替换或恢复自己的本地背景图片，并以贯穿界面的 **Stella 签名**保持统一识别度。
+[![Version](https://img.shields.io/badge/version-0.3.0-7466d8)](package.json)
+[![Pi](https://img.shields.io/badge/Pi-0.83.0-2d9d78)](https://github.com/earendil-works/pi)
+[![Platforms](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-596175)](#windows-and-macos-installers)
+[![License](https://img.shields.io/badge/license-MIT-3d73b9)](LICENSE)
 
-![Stella 任务星图](docs/kanban-stella.png)
+Stella is an Electron desktop workbench for [earendil-works/pi](https://github.com/earendil-works/pi). It launches the bundled Pi JSONL RPC process directly: no simulated model responses, no replacement session store, and no dependency on where a recipient installed the Pi CLI.
 
-## Pi 模型路由与配置
+The application opens in the native Pi workspace by default. Team Chat, Kanban, automation, the Pi-to-task bridge, and related commands are experimental surfaces that remain hidden until the user explicitly enables them under **Preferences → Feature pages**. Disabling those surfaces does not delete existing tasks. This keeps the complete native Pi experience independently usable while making local multi-agent coordination available when it is wanted.
 
-左侧“模型配置”提供一套独立的 Pi Model Router，不要求先进入聊天页，也不另外维护一份模型数据库。页面直接读取安装包内置 Pi 的 Provider catalog、`get_available_models` 结果以及接收者自己的标准 Pi 配置目录：
+Beyond chat, sessions, models, extensions, skills, and a local terminal, Stella includes a deterministic task board, a three-column Team Chat, Task Rooms, a typed LEAD coordinator, fixed and project-scoped agents, dynamic squads, versioned workflows, human acceptance gates, Autopilot triggers, and a read-only visual DAG. Eight persistent original skins share one recognizable **Stella signature**, and every skin can use a user-supplied local background.
 
-- **全局模型信号链**：始终显示 `Provider → Model → Context → 会话 / 团队 / 看板`；只允许选择 Pi 当前真实返回的可用模型。左侧 `MODEL RELAY` 仍在全部页面显示同一个当前模型，Agent 的显式模型设置优先。
-- **Provider 配置状态**：区分 `auth.json`、环境变量、`models.json` 内联配置与 OAuth，并明确把“本地凭据已配置”和“远端请求已验证”分开，避免把找到 Key 误报成已经连通。
-- **API Key 查看与管理**：初始化和刷新快照永不携带密钥；只有用户点击“查看当前 API Key”后，主进程才通过仅允许主窗口调用的独立窄 IPC 临时返回一次，并在隐藏、切换 Provider、保存或 30 秒后从页面清除。OAuth 访问令牌不回显；为避免一次“查看”产生本机命令副作用，`auth.json` / `models.json` 中以 `!command` 配置的动态凭据只允许测试、不会被查看操作执行或显示。新 Key 可先在内存中测试，再写入 Pi 标准 `auth.json`；替换时保留 Provider 专属 `env` 配置，也可以显式清除已保存凭据。
-- **真实连通测试**：可为 Provider 选择具体模型，发送一条独立的极短模型请求并显示成功/失败、实际模型、耗时和测试时间。测试不进入聊天历史、不改变全局模型、不重启当前 Pi RPC；输入框中的新 Key 仅作为本次请求的临时覆盖，空白时使用 Pi 当前凭据。兼容端点返回的错误正文可能回显认证信息，因此主进程只返回脱敏后的结构化诊断，不把原始正文送入页面。测试可能产生极少量 Token 费用。
-- **URL / Key 发现模型**：新建或编辑 Provider 时，可由主进程按协议请求远端模型目录；支持 OpenAI / Responses 的 `data[]`、Anthropic 兼容目录，以及 Gemini `models[]` 多页结果。新 Key 只在内存中用于发现，留空可使用 Pi 已保存的 API Key；结果支持搜索、逐项或批量加入与移除，并把远端明确返回的上下文、输出上限和图像能力带入表单。目录成功不等于模型可推理，保存后仍需执行上面的真实连通测试；未开放 `/models` 的端点会明确返回 404，并保留手工添加 Model ID 的路径。
-- **自定义端点与模型**：受约束表单支持 `openai-completions`、`openai-responses`、`anthropic-messages` 与 `google-generative-ai`，可维护 Base URL、Bearer Header、模型 ID、Context、最大输出、推理和图像输入。已有 `headers`、`compat`、`modelOverrides`、内联密钥及其它高级字段原样保留。
-- **明确应用语义**：保存后重载真实 Pi RPC，并通过当前 `sessionFile` 恢复同一会话；“已保存”“本地已配置”“连通已验证”是三个独立状态，配置、重载或测试失败都会明确显示。OAuth/订阅登录仍由 Pi 的交互式 `/login <provider>` 流程负责。
+![Stella task constellation](docs/kanban-stella.png)
 
-![Stella Pi 模型配置与 Provider 路由台](docs/model-configuration-stella.png)
+## Design principles
 
-## 当前会话文件预览
+- **Pi remains Pi.** Native sessions, messages, model routing, tools, extensions, skills, compaction, steering, follow-ups, and cancellation continue to run through the real Pi RPC runtime.
+- **Native first.** The default product is the Pi desktop workspace. Team and task-control features are opt-in and have independent health states.
+- **One local control plane.** Stella does not reproduce Multica, HiClaw, or an external chat platform, and it does not require PostgreSQL, Redis, a remote backend, or a resident daemon.
+- **Failures stay visible.** Invalid configuration, unavailable skills, queue failures, trust changes, model errors, interrupted runs, and preview errors surface explicitly instead of being converted into fake success.
+- **Models report; Stella transitions.** Agent text cannot move a task card. Persisted runtime events, typed coordinator actions, and human decisions drive the state machine.
+- **User data stays local.** Project files and previews are not uploaded by the preview subsystem. Provider credentials remain in Pi's standard configuration directory.
 
-Pi 在回复中给出绝对本地文件路径后，“输出文件与路径”卡片会显示“预览”。点击后不离开聊天，也不覆盖输入器，而是在应用右侧打开只读文件栏；原有会话检查器会暂时收起。右栏左侧汇总当前 session 中 Assistant 明确交付的全部路径，Windows 路径不区分大小写去重，并按最后一次提及时间倒序排列，可直接切换文件。切换 session 会关闭旧 session 的预览，不会把产物列表串到新会话。
+## Pi model routing and provider configuration
 
-支持范围：
+The **Model Configuration** page is a direct Pi Model Router. It does not maintain a second model database and does not require opening a chat first. It reads the bundled Pi provider catalog, the real `get_available_models` result, and the recipient's standard Pi configuration directory.
 
-- 图片：PNG、JPEG、GIF、WebP、AVIF、BMP、SVG；SVG 会先移除脚本、事件处理器与外部引用。
-- 网页与文本：HTML、Markdown、JSON、CSV、TSV、XML、YAML 和普通文本；HTML 在无脚本 sandbox 中显示，表单、网络请求、外部资源和嵌入对象被隔离，Markdown 链接仍由 Stella 的受控外链入口打开。
-- PDF：使用 Electron / Chromium 内置的本地 PDF 阅读器，不引入 PDF.js 或 Office 插件。
-- Word：DOCX 使用 [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) 按页呈现文字、表格和常见样式；不执行 AltChunk、批注、修订或嵌入程序。
-- PowerPoint：PPTX 使用 [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html) 转为隔离 HTML 幻灯片，并在解析前规范化合法的 OOXML 包根关系路径；支持逐页切换，不执行动画、宏和嵌入式程序。
-- Excel：XLSX / XLSM 使用 [@office-kit/xlsx](https://github.com/office-kit/xlsx) 读取工作表、合并单元格、行列尺寸、隐藏行列和常见单元格样式；支持工作表与大范围分页切换，不执行宏。旧二进制 `DOC / PPT / XLS` 不伪装为可预览，仍可通过“所在位置”交给用户选择系统应用。
+- **Global model signal chain:** every page exposes the same `Provider → Model → Context → Session / Team / Kanban` selection. Only models currently returned by Pi can be selected. An agent's explicit model override still takes precedence.
+- **Provider state:** the UI distinguishes credentials from `auth.json`, environment variables, inline `models.json` configuration, and OAuth. “Configured locally” and “verified remotely” are intentionally separate states.
+- **API key reveal and management:** initial and refreshed snapshots never include secrets. A key is returned through a narrow main-window-only IPC only after the user presses **Reveal current API key**, and is removed from the renderer when hidden, when the provider changes, after save, or after 30 seconds. OAuth access tokens are never revealed. Dynamic `!command` credentials may be used for a connectivity test but are not executed by the reveal operation.
+- **Real connectivity tests:** select a concrete model and send an isolated minimal inference request. The result includes success or failure, the actual model, elapsed time, and test time. It does not enter chat history, change the global model, or restart the active Pi RPC process.
+- **Model discovery from URL and key:** the main process can query OpenAI/Responses `data[]`, Anthropic-compatible catalogs, and paginated Gemini `models[]`. Results can be searched, added, or removed individually or in bulk. Catalog discovery is not reported as inference success; the selected model still has to pass the real connectivity test.
+- **Custom endpoints:** constrained forms support `openai-completions`, `openai-responses`, `anthropic-messages`, and `google-generative-ai`, including base URL, bearer-header behavior, model ID, context window, maximum output, reasoning, and image input. Existing advanced Pi fields are preserved.
+- **Explicit apply semantics:** saving reloads the real Pi RPC process and restores the same `sessionFile`. Saved, locally configured, and connectivity verified remain independent states. OAuth/subscription login continues to use Pi's interactive `/login <provider>` flow.
 
-Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
+![Stella Pi model configuration and provider router](docs/model-configuration-stella.png)
 
-## v0.3.0 的简单架构
+## Session artifact preview
 
-Stella 不复制 Multica、HiClaw 或外部聊天平台，也不引入 PostgreSQL、Redis、远程后端和常驻 Daemon。整个本地控制面仍是一个 Electron 应用、一份 `board.json` 和真实 Pi 子进程，但把最容易混淆的事实拆开：
+When Pi returns an absolute local path, the **Outputs and paths** card exposes a **Preview** action. The preview opens in the Inspector's **Files** tab without leaving the conversation or covering the composer.
 
-- **独立 Capability Health**：Pi、Task、Schedule、Webhook 分别处于 `loading / ready / degraded / error`；Board 损坏不会挡住 Pi，Pi 启动失败也不会挡住任务历史，Webhook 端口冲突只停 Webhook。
-- **确定性 Task 状态机**：Task 阶段只由 Stella 的持久化事件推进：分发为 `queued`，真实执行为 `running`，人工关卡或 Agent 报告为 `review`，失败/中断/驳回为 `blocked`，请求修订回到 `planned`，用户接受报告后才进入 `completed`。模型文本本身没有移动卡片的权限。
-- **派生 Agent Presence**：Agent 定义仍是不可变角色配置；Team Pulse 从 Workflow Run、StepRun 与 AgentTask 计算“可用 / 排队 / 执行中 / 等待 / 需处理”，不会保存一份可能与真实运行漂移的 Agent 状态。
-- **明确验收**：Agent 返回结果只会成为 `reported + pending acceptance`。用户可以接受、请求修订或拒绝；决定、说明、时间与对应 Task 状态转换会进入同一条事实记录。
-- **唯一执行尝试**：Task 每次重新分发都会递增 `executionAttempt`，并只允许 `awaitingReviewExecution` 指向的一次 Workflow Run 或根 AgentTask 改变验收状态。更早的 pending 报告会明确成为 `superseded`，不能在新一轮执行后把卡片错误改回完成。
-- **不可变任务规格**：用户每次实际修改目标、说明、优先级、验收标准或执行目标时递增 `specRevision`；每个根执行保存 `TaskSpecSnapshot`。旧 Runtime 即使迟到，也不能用旧规格覆盖当前任务。
-- **冻结团队计划**：Coordinator 和 Squad 在分发时保存名称、版本、Leader 指令及成员 Agent 快照；运行期间修改 Squad 或 Agent 只影响下一次分发，不会追溯改变正在执行的委派范围。
-- **共享 Workspace Admission**：Interactive Pi、Workflow 和 AgentTask 共用按 canonical real path 识别的写 Lease。后台写任务 FIFO 等待；Interactive Pi 遇到后台写者会显示具体占用者；取消任务会取消尚未获得 Lease 的等待。
-- **实时项目权限**：后台 Runner 每次启动真实 Pi 前重新读取项目当前 trust，永不复用 Task 中陈旧的授权快照。切换为受限模式会同步 Task/Autopilot 并中止该项目仍在运行或排队的执行；主进程也拒绝从隐藏的旧项目 Task Room 修改任务。
-- **显式 Pi↔Task 桥接**：只有开启团队功能后，Pi 顶栏才显示“固化为任务”；它只打开可编辑草稿，用户保存后才创建 `planned` Task。Task 中的“在 Pi 中继续”只打开用户选定且经主进程校验属于该 Task 的 session。普通 Pi 操作不会生成任务。
-- **无第二套消息系统**：Task Room 是 Task、Message、Activity、Run、Step、AgentTask 和 Artifact 的纯时间线投影。所有条目保留 Run / Step / AgentTask 来源 ID。
-- **一个 Team Chat 入口**：左侧“团队协作”不是另一套聊天数据库；左栏永久保留“任务启动台”，填写可验证的验收标准并发送 `@LEAD + 目标`，即可原子创建 Task、首条消息和 Coordinator，再自动进入新 Task Room。其他 Task Channel 仍在中栏展开同一事实流，右栏显示从执行记录派生的 Team Pulse。
-- **无第二套执行引擎**：可视化 DAG 是历史 Workflow snapshot 与 StepRun 的只读投影；选点可查看 Agent、目标、错误、Artifact 和 session，不会反向修改执行状态。
+A compact picker at the top lists every artifact explicitly delivered by the assistant in the current session. Windows paths are deduplicated case-insensitively and ordered by the most recent mention. Each option shows the file name, preview type, and time. Switching sessions closes the old session preview, so artifacts never leak into another session's list.
 
-![Stella Task Room、DAG 与 mention 影响预览](docs/task-room-stella.png)
+Supported formats:
 
-![Stella Agent 名册与中文 mention 检索](docs/agent-mention-picker-stella.png)
+- **Images:** PNG, JPEG, GIF, WebP, AVIF, BMP, and SVG. SVG scripts, event handlers, and external references are removed first.
+- **Web and text:** HTML, Markdown, JSON, CSV, TSV, XML, YAML, and plain text. HTML runs in a scriptless sandbox with forms, network requests, external resources, and embedded objects isolated.
+- **PDF:** rendered with Electron/Chromium's built-in local PDF viewer; no PDF.js or Office plug-in is bundled.
+- **Word:** DOCX is rendered page by page with [docx-preview](https://github.com/VolodymyrBaydalka/docxjs), including text, tables, and common styles. AltChunk, comments, tracked changes, and embedded programs are not executed.
+- **PowerPoint:** PPTX is converted to isolated HTML slides with [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html). Slides can be switched in place; animations, macros, and embedded programs are not executed.
+- **Excel:** XLSX and XLSM are read with [@office-kit/xlsx](https://github.com/office-kit/xlsx), including sheets, merged cells, row and column dimensions, hidden rows and columns, and common cell styles. Worksheets and large ranges can be paged. Macros are never executed.
 
-![Stella 任务启动台：通过 @LEAD 创建任务](docs/team-launch-room-stella.png)
+Legacy binary `DOC`, `PPT`, and `XLS` files are not misrepresented as supported previews; users can reveal them in the operating system instead.
 
-![Stella Team Chat、LEAD mention 与 Team Pulse](docs/team-chat-stella.png)
+Office preview modules are loaded dynamically, so ordinary chat startup does not load their code. Before each read, the main process resolves and revalidates the canonical path and only accepts regular files under the current project, Pi data directory, or Stella application data directory. The document stage fills all remaining Inspector height and scrolls independently. Zoom, refresh, and maximize stay visible; system open, reveal in folder, and copy full path live in a responsive **More** menu.
 
-团队协作默认进入常驻的“任务启动台”，不要求先打开看板建卡：点击右侧通用调度负责人，或在输入器中输入 `@` 选择 `@LEAD`，写明目标和必填验收标准，确认影响预览后点击“创建任务并交给 LEAD”。成功后页面自动切换到刚创建的 Task Room；后续可在其中直接 `@Worker`、回答 LEAD 的澄清问题并验收报告。团队页顶部、侧栏和 `Ctrl/Cmd + N` 都回到同一启动台；需要预先选择优先级、固定 Workflow 或 Squad 时，从“任务看板”使用结构化新建任务。
+## The intentionally simple v0.3.0 architecture
 
-## 任务看板与固定 Agent 团队
+Stella uses one Electron application, one local `board.json`, and real Pi child processes. The architecture separates facts that are easy to conflate:
 
-看板不是对其他项目的复刻，也不是把聊天记录换成卡片。Stella 持有可恢复的流程状态，Pi 负责执行每个独立步骤：创建任务并选择流程后，应用会按模板启动隔离的 Pi RPC 会话，把真实 Agent 事件、工具活动、最终产物、失败和人工决定写回任务星图。
+- **Independent capability health:** Pi, Task, Schedule, and Webhook each report `loading`, `ready`, `degraded`, or `error`. A corrupt board does not block Pi, a Pi startup failure does not hide task history, and a webhook port conflict only stops Webhook.
+- **Deterministic task state machine:** dispatch creates `queued`, real execution creates `running`, human gates or agent reports create `review`, failure/interruption/rejection creates `blocked`, revision returns to `planned`, and a task reaches `completed` only after the user accepts the report.
+- **Derived agent presence:** agent definitions are immutable role configuration. Team Pulse derives available, queued, running, waiting, and attention-required presence from Workflow Runs, StepRuns, and AgentTasks.
+- **Explicit acceptance:** an agent result becomes `reported + pending acceptance`. Accept, request revision, and reject decisions are persisted with their reason, time, and task transition.
+- **One active execution attempt:** redistribution increments `executionAttempt`. Only the Workflow Run or root AgentTask referenced by `awaitingReviewExecution` may affect acceptance. Older pending reports become explicitly superseded.
+- **Immutable task specifications:** meaningful edits increment `specRevision`, and every root execution stores a `TaskSpecSnapshot`. A late result from an older runtime cannot overwrite the current specification.
+- **Frozen team plans:** coordinator and squad dispatches persist the team name, version, leader instructions, and member-agent snapshots. Catalog edits affect the next dispatch, never a run already in progress.
+- **Shared workspace admission:** interactive Pi, workflows, and AgentTasks share a canonical-path write lease. Background writers wait FIFO; interactive Pi names the background owner when blocked; cancellation removes pending lease requests.
+- **Live project trust:** every background launch rereads current trust. Switching to restricted mode updates tasks and Autopilot, and stops queued or running execution for that project.
+- **Explicit Pi ↔ Task bridge:** when team features are enabled, **Pin as task** opens an editable draft. Nothing is created until the user saves. **Continue in Pi** accepts only a session that the main process verifies belongs to that task.
+- **No second message system:** a Task Room is a chronological projection of Task, Message, Activity, Run, Step, AgentTask, and Artifact records. Every item retains its Run/Step/AgentTask source identity.
+- **One Team Chat entry:** the permanent Launchpad accepts `@LEAD + goal` with verifiable acceptance criteria, atomically creates the task, first message, and coordinator execution, then opens the new Task Room.
+- **No second execution engine:** the visual DAG is a read-only projection of historical workflow snapshots and StepRuns. Selecting a node reveals the agent, goal, error, artifacts, and session without mutating execution.
 
-内置六个通用的带版本执行角色；医药早研场景另有四个领域角色：
+![Stella Task Room, DAG, and mention impact preview](docs/task-room-stella.png)
 
-| Agent | 权限 | 固定职责 |
+![Stella agent directory and localized mention search](docs/agent-mention-picker-stella.png)
+
+![Stella Launchpad: create a task through LEAD](docs/team-launch-room-stella.png)
+
+![Stella Team Chat, LEAD mention, and Team Pulse](docs/team-chat-stella.png)
+
+## Kanban and fixed agent teams
+
+The board is not a chat log with cards layered over it. Stella owns recoverable workflow state, while Pi executes each isolated step. Real agent events, tool activity, final artifacts, failures, and human decisions flow back into the same task constellation.
+
+Six general-purpose versioned roles are built in, with four additional roles for early pharmaceutical research:
+
+| Agent | Access | Stable responsibility |
 | --- | --- | --- |
-| **通用调度负责人 / LEAD** | 只读 | 澄清目标、拆解任务、委派 Worker，并在成员报告后验收、修订、重新规划或追问用户 |
-| **项目侦察员 / SCOUT** | 只读 | 调查代码、约束、影响面和验证入口 |
-| **方案规划师 / PLAN** | 只读 | 把侦察事实转化为可执行方案 |
-| **实现工程师 / BUILD** | 可写 | 依据批准方案修改真实项目 |
-| **验证工程师 / VERIFY** | 可写 | 运行测试、类型检查或构建并暴露失败 |
-| **代码审阅者 / REVIEW** | 只读 | 独立检查正确性、回归、安全和验收标准 |
+| **General Coordinator / LEAD** | Read only | Clarify the goal, decompose work, delegate workers, and review, revise, replan, or escalate after reports |
+| **Project Scout / SCOUT** | Read only | Investigate code, constraints, impact surface, and verification entry points |
+| **Solution Planner / PLAN** | Read only | Convert scouting evidence into an executable plan |
+| **Implementation Engineer / BUILD** | Write | Modify the real project according to an approved plan |
+| **Verification Engineer / VERIFY** | Write | Run tests, type checks, or builds and expose failures |
+| **Code Reviewer / REVIEW** | Read only | Independently review correctness, regression risk, security, and acceptance criteria |
 
-这些角色组合成“交付小队”“故障修复组”“审阅双人组”，并提供三条固定流程：
+Built-in squads include a Delivery Squad, Bug-Fix Squad, and Review Pair. Three fixed workflows are available:
 
-- **功能交付**：侦察 → 规划 → 方案人工确认 → 实现 → 验证 → 审阅 → 最终人工验收。
-- **缺陷修复**：复现 → 根因诊断 → 修复人工确认 → 实施修复 → 回归验证 → 审阅 → 修复验收。
-- **只读审阅**：上下文侦察 → 独立审阅 → 人工确认，全程不向项目写入文件。
+- **Feature delivery:** scout → plan → plan approval → build → verify → review → final acceptance.
+- **Bug fix:** reproduce → diagnose root cause → fix approval → implement → regression verification → review → acceptance.
+- **Read-only review:** context scouting → independent review → human confirmation, with no project writes.
 
-每次分发都会保存流程和 Agent 的版本快照；后续修改模板不会改变历史记录。同一 canonical 工作区的所有可写 Pi/Agent 通道共享排他 Lease，避免 Interactive Pi、Workflow 与 AgentTask 同时修改相同目录。只有工具策略经验证为不可写的角色才按只读处理。应用在流程执行中退出时，重启后会把未完成运行明确标记为“已中断”，不会伪造成功。
+Every dispatch stores workflow and agent version snapshots. Writable Pi/Agent channels in the same canonical workspace share an exclusive lease. Only roles whose tool policy is verified as non-writing are treated as read-only. If the application exits during execution, unfinished work is restored as explicitly interrupted rather than reported as successful.
 
-看板交互包括：创建与编辑任务、项目/流程筛选、搜索、原生拖放、分发与重新分发、Task Room、只读 DAG、实时星轨进度、Agent 与工具事件、Markdown 产物、会话文件定位、人工批准/驳回、执行报告验收、中止流程、手动归档、删除，以及 Agent/团队/流程目录。看板列由上述确定性状态机推进；用户仍可在没有活动执行时显式移到“待规划、受阻、已完成”，而模型输出不能越过状态机直接改卡片。
+## Pharmaceutical early-research example
 
-## 医药早研靶点评估示例与 E2E
+The repository includes a repeatable NLRP3 competitive-landscape and target-assessment scenario. It evaluates whether to begin a formal oral, brain-penetrant, selective NLRP3 small-molecule discovery program for an inflammation-enriched early Parkinson's disease population.
 
-仓库包含一个可直接复跑的 NLRP3 早研竞品分析场景，用于回答“是否启动口服、脑穿透、选择性 NLRP3 小分子抑制剂用于早期帕金森病炎症富集人群的正式发现项目”。示例把三个项目级医药 Skill 固化在 [`examples/pharma-early-research/.pi/skills`](examples/pharma-early-research/.pi/skills) 中：
+Three project-scoped Pi Skills are included under [`examples/pharma-early-research/.pi/skills`](examples/pharma-early-research/.pi/skills):
 
-- `target-evidence`：采集并保存 Open Targets、Human Protein Atlas 和 ChEMBL 靶点证据。
-- `clinical-landscape`：检索 ClinicalTrials.gov，按资产去重，并保留终止、撤回与状态更新时间。
-- `target-assessment-report`：按固定评分卡生成决策报告并执行独立证据审计。
+- `target-evidence`: collects and saves Open Targets, Human Protein Atlas, and ChEMBL target evidence.
+- `clinical-landscape`: searches ClinicalTrials.gov, deduplicates assets, and retains termination, withdrawal, and status-update evidence.
+- `target-assessment-report`: generates a decision report from a fixed scorecard and performs an independent evidence audit.
 
-内置“早研靶评小队”由靶点生物学研究员、临床竞品分析师、靶点策略负责人和证据审计员组成；“早研靶点评估流程”依次执行靶点证据、竞品扫描、证据范围人工确认、决策报告、独立审计和组合评审。每个领域 Agent 都声明 `requiredSkills`。主进程先使用 Pi 的真实 Resource Loader 做分发前预检，再在 Runtime 启动后核对精确的 `skill:<name>` 命令；Skill 缺失、被禁用或不在当前 trust 边界内都会显式失败，不会先建孤儿队列，也不会退回模板报告。
+The Early Target Assessment Squad combines a target-biology researcher, clinical competitive-intelligence analyst, target-strategy lead, and evidence auditor. The workflow runs target evidence, competitive scan, evidence-scope approval, decision report, independent audit, and portfolio review.
 
-开发仓库中的示例项目已经自带这些 Skills，不要求全局安装。Windows/macOS 安装包不会擅自修改接收者的 Pi 用户目录；在其他医药项目复用时，把三个 Skill 目录随项目放入 `<项目>/.pi/skills/`，或显式安装到 Windows 的 `%USERPROFILE%\.pi\agent\skills\` / macOS 的 `~/.pi/agent/skills/`。应用内置的 Workflow 在预检失败时会列出确切的缺失 Skill。
+Every domain agent declares `requiredSkills`. The main process performs a real Pi Resource Loader preflight before dispatch, and the runtime verifies the exact `skill:<name>` command after startup. A missing, disabled, or out-of-trust skill fails explicitly before an orphaned queue item can be created.
 
-页面使用方式：
+The example project already includes its skills. Installers never modify the recipient's Pi user directory. To reuse them elsewhere, place the three skill directories under `<project>/.pi/skills/`, or explicitly install them under `%USERPROFILE%\.pi\agent\skills\` on Windows or `~/.pi/agent/skills/` on macOS.
 
-1. 启动 Stella，选择 `examples/pharma-early-research`，并在项目权限提示中选择“信任加载”。
-2. 进入“任务看板 → 编排目录”，确认四个医药 Agent、早研靶评小队和早研靶点评估流程可见。
-3. 新建任务，选择“固定流程 → 早研靶评”，填写靶点、适应症、模态、竞品边界和验收标准，然后开始执行。
-4. 在 Task Room 阅读两个证据产物，在“证据范围确认”批准后等待报告与审计；在可视化 DAG 中检查节点状态和来源，再完成“组合评审”和“接受报告”。
+Typical UI path:
 
-![NLRP3 证据范围人工关卡](docs/pharma-e2e-nlrp3-evidence-gate.png)
+1. Open `examples/pharma-early-research` and choose **Trust and load**.
+2. Open **Task board → Orchestration catalog** and verify the four pharmaceutical agents, squad, and workflow.
+3. Create a task, select the fixed Early Target Assessment workflow, and provide the target, indication, modality, competitive boundary, and acceptance criteria.
+4. Review the two evidence artifacts in the Task Room, approve the evidence-scope gate, inspect the resulting report and audit through the DAG, then complete portfolio review and accept the report.
 
-![NLRP3 报告最终验收](docs/pharma-e2e-nlrp3-live.png)
+![NLRP3 evidence-scope gate](docs/pharma-e2e-nlrp3-evidence-gate.png)
 
-完整测试输入、失败路径和通过标准见 [`examples/pharma-early-research/TEST_PLAN.md`](examples/pharma-early-research/TEST_PLAN.md)，固定证据快照与正式报告位于 [`examples/pharma-early-research/evidence/raw`](examples/pharma-early-research/evidence/raw) 和 [`examples/pharma-early-research/reports/nlrp3-target-assessment.md`](examples/pharma-early-research/reports/nlrp3-target-assessment.md)。快速页面测试不调用模型；真实测试会调用已配置的 Pi 模型和外部官方数据源：
+![NLRP3 final report acceptance](docs/pharma-e2e-nlrp3-live.png)
+
+The complete inputs, failure paths, and pass criteria live in [`examples/pharma-early-research/TEST_PLAN.md`](examples/pharma-early-research/TEST_PLAN.md). Frozen evidence and the formal report live under [`examples/pharma-early-research/evidence/raw`](examples/pharma-early-research/evidence/raw) and [`examples/pharma-early-research/reports/nlrp3-target-assessment.md`](examples/pharma-early-research/reports/nlrp3-target-assessment.md).
 
 ```bash
-# Skill 预检、编排目录、页面建任务与待执行 DAG
+# Skill preflight, orchestration catalog, UI task creation, and pending DAG
 npm run test:e2e:pharma
 
-# 四个真实 Agent、两个人工关卡、证据文件、报告、审计与最终验收
+# Four real agents, two human gates, evidence, report, audit, and acceptance
 npm run test:e2e:pharma:live
 ```
 
-## AgentTaskQueue、动态 Squad 与 Autopilot
+## AgentTaskQueue, dynamic squads, and Autopilot
 
-Stella 在固定看板之上增加了一层刻意保持简单的本地自动化，不引入 PostgreSQL、外部 Daemon 或第二套后端服务：
+Stella adds a deliberately small local automation layer without PostgreSQL, an external daemon, or another backend:
 
-- **持久 AgentTaskQueue**：任务可直接交给单个 Agent；排队、运行、会话路径、最终输出、token、费用、失败和中断都会写入 `board.json`。正常返回成为 `reported`，仍需独立验收；应用异常退出后，运行项会明确恢复为 `interrupted`。
-- **任务启动台**：团队协作首页始终存在一个项目级 Launchpad。填写必填验收标准并发送一个 `@LEAD + 目标` 后，主进程在同一事务中创建普通优先级 Task、确定性标题、首条用户消息和 Coordinator AgentTask；任一校验失败都不会留下孤儿 Task。启动成功后消息只存在于新 Task Room，不维护第二份大厅聊天记录。
-- **评论与 `@mention` 委派**：Task Room 输入 `@` 会展开当前任务真正可用的 Agent 名册，可按中文名称、职责、呼号或 id 检索，也可用方向键与 Enter / Tab 完成选择；输入框上方的快捷呼号与 Team Pulse 成员卡都能直接插入稳定的 `@CALLSIGN`。候选项同时显示实时 Presence、读写权限和必需 Skills。精确 `@builder` / `@BUILD` 仍可直接输入并生成真实 AgentTask；提交前会显示将创建的任务数量和委派顺序。未知、歧义或超出当前项目 / Squad 范围的 mention 会整体拒绝，不留下半条消息或半组队列。
-- **`@lead` Coordinator**：`@lead` 启动通用调度负责人，并与直接 Worker 委派保持互斥；一条消息不能同时选择 LEAD 和 Worker。LEAD 必须把内置的终止型 `coordinator_action` 工具作为该回合最后动作，并提交 `delegate / request_revision / replan / complete / ask_human` 之一；Stella 校验 TypeBox schema、执行计划快照、Agent 范围和所需 Skills 后才创建真实子任务。成员报告后会再启动一个 LEAD 验收回合，而不是直接把父任务判为完成；`ask_human` 会停在 Task Room，普通用户回复会唤醒下一回合。自然语言、手写 JSON 或自然语言里的 `@mention` 都不会被当成已委派。
-- **项目级 AgentDraft**：Team Pulse 的“创建 Agent”可为当前项目保存自定义角色、呼号、职责、固定指令、Skills、thinking 与工具权限。只读 Agent 禁用 `bash/edit/write`；可写 Agent 必须由用户明确勾选确认。创建后可直接 `@CALLSIGN`，也可由 LEAD 选择，其他项目不可调用。
-- **动态 Squad**：保留固定 Leader + 成员目录能力，以兼容显式 Squad 工作流。Squad 带版本和明确的 `global / project` 作用域；包含项目 Agent 的 Squad 只能被同一项目的 Task/Autopilot 使用。开放式团队协作优先使用可复核的 `@lead` Coordinator；Squad 的产物 mention 路径仍保留真实子任务、失败传播和审计记录。
-- **Autopilot**：把“任务模板 + 当前项目 + 执行目标”固化成 Manual、Schedule 或 Webhook 规则。每次触发都会新建独立 Task 和审计记录，然后进入同一套真实分发路径，不复用旧任务状态。
+- **Persistent AgentTaskQueue:** a task can be assigned directly to one agent. Queue state, execution, session path, final output, tokens, cost, errors, and interruptions are stored in `board.json`. A normal result becomes `reported` and still requires acceptance.
+- **Launchpad:** one required acceptance-criteria field plus `@LEAD + goal` atomically creates a normal-priority task, deterministic title, first user message, and coordinator AgentTask. Failed validation leaves no partial task or queue item.
+- **Comments and `@mention` delegation:** typing `@` opens the agents actually available to the current task. Search works by localized name, responsibility, call sign, or ID; arrow keys plus Enter/Tab select a candidate. Presence, read/write access, and required skills are visible before dispatch. Unknown, ambiguous, and out-of-scope mentions reject the whole submission.
+- **Typed `@lead` coordinator:** LEAD must finish each coordinator turn by calling the built-in terminal `coordinator_action` tool with `delegate`, `request_revision`, `replan`, `complete`, or `ask_human`. Stella validates the TypeBox schema, plan snapshot, agent scope, and skills before creating child work. Natural-language mentions and hand-written JSON do not count as delegation.
+- **Project AgentDrafts:** Team Pulse can save a project-scoped role, call sign, responsibility, instructions, skills, thinking level, and tool permissions. Read-only agents cannot use `bash`, `edit`, or `write`; write access requires explicit user confirmation.
+- **Dynamic squads:** fixed leader/member catalogs remain available for explicit squad workflows, with versioned `global` or `project` scope. A squad containing a project agent cannot run in another project.
+- **Autopilot:** a task template, current project, and execution target can be bound to Manual, Schedule, or Webhook triggers. Every trigger creates a fresh task and audit record, then enters the same real dispatch path.
 
-![Stella 自动化工作室](docs/automation-stella.png)
+![Stella automation studio](docs/automation-stella.png)
 
-Schedule 仅在 Stella 应用打开期间运行。`nextRunAt` 会持久化；若启动时发现停机期间已有计划到期，Stella 只写入一条 `missed` 审计并推进到第一个未来时间，不批量补跑，也不声称自己在后台在线。
+Schedules run only while Stella is open. If a schedule elapsed while the application was closed, Stella records one `missed` event and advances to the first future time; it does not pretend to have run offline or create a catch-up storm.
 
-Webhook Server 只绑定 `127.0.0.1`，默认端口为 `43127`。创建 Webhook 规则时会生成随机 token，自动化工作室会显示监听状态并提供完整 URL 的复制按钮。本机脚本可直接发送 JSON object：
+The webhook server binds only to `127.0.0.1` and defaults to port `43127`. Each webhook rule receives a random token. Local scripts can send a JSON object to the exact URL copied from Automation Studio:
 
 ```bash
-curl -X POST "http://127.0.0.1:43127/api/webhooks/<从自动化工作室复制的随机 token>" \
+curl -X POST "http://127.0.0.1:43127/api/webhooks/<random-token>" \
   -H "Content-Type: application/json" \
   -d '{"ref":"refs/heads/main","action":"verify"}'
 ```
 
-成功响应为 HTTP `202`，包含真实 `autopilotId`、`runId` 和 `taskId`；无效 method、route、token、Content-Type、UTF-8、JSON 或超限请求会返回结构化 JSON 错误。若任务分发失败，HTTP 不会返回成功，失败原因仍会保存在对应审计中。payload 同时保存在审计上下文并附加到新任务说明。
+A successful request returns HTTP `202` with the actual `autopilotId`, `runId`, and `taskId`. Invalid methods, routes, tokens, content types, UTF-8, JSON, or oversized bodies return structured errors. A dispatch failure never returns false success.
 
-可用环境变量：
-
-| 变量 | 默认值 | 说明 |
+| Environment variable | Default | Meaning |
 | --- | --- | --- |
-| `STELLA_WEBHOOK_PORT` | `43127` | 固定监听端口，必须是 `1..65535`；冲突会在界面显示 `BIND ERROR`，不会随机换端口。 |
-| `STELLA_WEBHOOK_MAX_BYTES` | `1048576` | JSON 请求体上限（bytes）；设为 `0` 可显式取消大小限制。 |
+| `STELLA_WEBHOOK_PORT` | `43127` | Fixed local port in `1..65535`; a conflict is reported as `BIND ERROR` |
+| `STELLA_WEBHOOK_MAX_BYTES` | `1048576` | JSON body limit in bytes; set explicitly to `0` for no size limit |
 
-Webhook 与 Schedule 都随桌面应用启动和关闭；它们不是公网服务，也不会在 Stella 退出后继续运行。
+## Eight complete skins
 
-## 八套完整皮肤
+Skins change more than accent colors: artwork, tokens, panel material, borders, radius, brand marks, empty states, suggestion cards, and the composer all change together. Light, dark, and system appearance remain independent preferences.
 
-皮肤切换不只是换主色：每套视觉都会同步改变背景主视觉、色彩令牌、面板材质、边框与圆角、品牌符号、空状态图形、建议卡片和输入器；明色、暗色与系统模式仍可独立组合。
-
-| 皮肤 | 视觉方向 | 开源参考 |
+| Skin | Visual direction | Open-source design reference |
 | --- | --- | --- |
-| **Stella · 夜航星图** | 鸢尾星轨、柔光玻璃、暖色手写签名 | [Codex-Dream-Skin](https://github.com/Fei-Away/Codex-Dream-Skin)、Codex 的信息层级 |
-| **晨曦 · 纸上初光** | 雾面纸艺、山岚层叠、杏色晨光 | [Rosé Pine Dawn](https://github.com/rose-pine/rose-pine-theme) 的柔和色阶 |
-| **定阳 · 日晷制图** | 矿物版画、太阳刻度、几何秩序 | [Solarized](https://github.com/altercation/solarized) 的明暗关系、[Trianglify](https://github.com/qrohlf/trianglify) 的算法几何构成 |
-| **旭日 · 海上金轮** | 朱砂日轮、矿物山海、克制金箔 | 浮世绘构图与矿物金色阶的公开视觉传统 |
-| **月华 · 银蓝月湖** | 月路、流云、冰晶花影 | 水墨留白与月光玻璃材质 |
-| **黑曜夜契 · 雨夜契约** | 维多利亚银器、雨夜庄园、深红玫瑰 | Victorian Gothic 与 Dark Academia 视觉语言 |
-| **绮旅黄金 · 彩町漫游** | 粉紫街町、意式金饰、高对比漫画色 | Chromatic Pop 与 Italian Gold 色彩研究 |
-| **棋境 · 月下手谈** | 黑白棋子、银杏墨雾、古老棋枰 | 围棋棋枰、银杏与水墨构成 |
+| **Stella · Night Navigation** | Iris star trails, soft glass, warm handwritten signature | [Codex-Dream-Skin](https://github.com/Fei-Away/Codex-Dream-Skin) and Codex information hierarchy |
+| **Chenxi · First Light on Paper** | Matte paper, layered mountain mist, apricot dawn | [Rosé Pine Dawn](https://github.com/rose-pine/rose-pine-theme) color softness |
+| **Dingyang · Sundial Blueprint** | Mineral print, solar scale, geometric order | [Solarized](https://github.com/altercation/solarized) luminance and [Trianglify](https://github.com/qrohlf/trianglify) geometry |
+| **Xuri · Golden Sun over Sea** | Vermilion sun, mineral mountains and sea, restrained gold leaf | Public ukiyo-e composition and mineral-gold traditions |
+| **Yuehua · Silver-Blue Moon Lake** | Moon path, drifting cloud, crystalline floral shadow | Ink-painting negative space and moonlit glass |
+| **Obsidian Night Pact** | Victorian silver, rainy manor, deep-red rose | Victorian Gothic and Dark Academia visual language |
+| **Chromatic Golden Journey** | Pink-violet streets, Italian gold, high-contrast comic color | Chromatic Pop and Italian Gold color studies |
+| **Moonlit Go** | Black and white stones, ginkgo ink mist, aged Go board | Go-board geometry, ginkgo, and ink composition |
 
-![晨曦皮肤](docs/chenxi-home.png)
+![Chenxi skin](docs/chenxi-home.png)
 
-![定阳皮肤](docs/dingyang-home.png)
+![Dingyang skin](docs/dingyang-home.png)
 
-所有皮肤保留相同信息结构，同时采用不同视觉语言。以下截图展示晨曦与定阳的看板适配：
+![Chenxi task board](docs/kanban-chenxi.png)
 
-![晨曦任务看板](docs/kanban-chenxi.png)
+![Dingyang task board](docs/kanban-dingyang.png)
 
-![定阳任务看板](docs/kanban-dingyang.png)
+![Chenxi automation studio](docs/automation-chenxi.png)
 
-自动化工作室同样适配全部视觉，而不是独立的管理后台：
+![Dingyang automation studio](docs/automation-dingyang.png)
 
-![晨曦自动化工作室](docs/automation-chenxi.png)
+The seven replaceable background images are original AI-assisted assets generated for this project; Chenxi and Dingyang include their own Chinese title artwork. Referenced open-source projects were used for design study only—their images and runtime code are not packaged. See [`ASSET-LICENSES.md`](ASSET-LICENSES.md) for file-level provenance, compatibility IDs, and licensing boundaries.
 
-![定阳自动化工作室](docs/automation-dingyang.png)
+## Interaction coverage
 
-七张可替换背景图均为本项目生成的原创、AI 辅助视觉资源；晨曦与定阳分别带有专属中文题字。开源项目只用于设计研究，没有复制其图片资产或打包其运行代码。逐文件来源与授权见 [`ASSET-LICENSES.md`](ASSET-LICENSES.md)；三个早期内部皮肤 ID 为兼容已保存偏好而保留，不代表第三方联名或官方授权。
+- Native Pi chat with text and image input, streaming messages, tool calls, steering/follow-up queues, cancellation, retry, and context compaction.
+- New, switch, search, rename, clone, fork, branch-tree inspection, and HTML export for sessions.
+- One globally visible model route, complete thinking-level selection, provider/auth inspection, explicit API-key reveal, real connectivity testing, and remote model discovery.
+- Local command drawer in the active project, including cancellation, history navigation, and truncated-output location.
+- Session artifacts with newest-first switching and image, HTML, Markdown, text, PDF, DOCX, PPTX, XLSX, and XLSM previews.
+- Six-stage task constellation with project/workflow filters, search, drag-and-drop, details, edits, distribution, redistribution, archive, and deletion.
+- Team Launchpad, Task Channels, Task Room timeline, searchable mentions, direct workers, LEAD clarification/resume, project AgentDrafts, and derived Team Pulse.
+- Read-only DAG with historical run selection, dependencies, six node states, keyboard navigation, source identity, errors, artifacts, and sessions.
+- Versioned agents, squads, workflows, isolated Pi sessions, workspace write leases, human plan/report gates, and explicit interrupted-run recovery.
+- Manual, in-app Schedule, and loopback Webhook Autopilot with fresh tasks and trigger audits.
+- Eight skins, light/dark/system modes, 14/16/19px global font sizes, compact density, collapsible/responsive sidebars, focus trapping, and reduced motion.
 
-## 已覆盖的交互
+## Development
 
-- 任务看板：六阶段任务星图、跨项目筛选、搜索、流程过滤、拖放、详情、编辑、删除和状态归档。
-- 团队协作：左侧永久任务启动台与 Task Channel、中间启动输入器或完整 Task Room、右侧可收起 Team Pulse；支持从零发送 `@LEAD` 创建任务、可检索 Agent 名册、键盘 mention 选择、Team Pulse 一键 @、直接 `@worker`、LEAD 追问恢复和项目 AgentDraft。
-- Task Room：目标、用户消息、系统回执、Agent 输出、Run/Step/AgentTask 状态、Artifact 与验收决定的单一时间线投影。
-- 可视化 DAG：历史 Run 切换、步骤依赖、六种节点状态、键盘选点，以及 Agent、目标、错误、Artifact 与 session 详情。
-- Pi↔Task：当前会话固化为可编辑任务草稿、来源 identity、执行 session 显式续接和后台 session 历史隔离。
-- Capability Health：Pi、Task、Schedule、Webhook 独立状态、原始错误和单独重试。
-- 本地任务队列：直接 Agent 分发、任务评论、精确 `@mention`、串行持久队列、真实产物与运行统计。
-- LEAD Coordinator：终止型 `coordinator_action` 工具协议、真实委派、成员报告后的复核回合、请求修订/重新规划/追问用户，以及无自然语言或手写 JSON 隐式分发。
-- 动态 Squad：Leader 提示词、成员目录、兼容的产物 mention 委派、父子执行轨迹与整组失败传播。
-- Autopilot：Manual、应用打开期间的 Schedule、loopback Webhook、启停、绑定项目、fresh Task 和触发审计。
-- 固定编排：六个通用 Agent、四个医药 Agent、内置团队与流程、版本快照、隔离 Pi 会话、项目写入互斥与真实运行事件。
-- 人工关卡：方案批准/驳回、最终验收、决定说明、流程中止、失败原因与可重新分发的历史实例。
-- 流程产物：保留每个 Agent 的最终 Markdown、Pi 会话路径、输入/输出 token 与费用统计。
-- 真实 Pi RPC：提示词、图片、流式消息、steer / follow-up 队列、停止生成、可中止的自动重试与上下文压缩。
-- 全局模型、Provider 配置与思考级别：左侧 `MODEL RELAY` 在全部页面始终显示同一个 Pi 当前模型；独立“模型配置”页可检查鉴权来源、按需临时查看 API Key、用指定模型真实测试连通、安全写入/清除 `auth.json` 凭据、维护 `models.json` 自定义 Provider/模型并从 Pi 真实可用目录切换全局路由。未声明模型覆盖的 Agent、LEAD、Squad 和 Workflow 步骤继承该选择，项目 Agent 的显式 Provider/Model 设置优先；会话页支持 `off` 到 `max` 的完整思考级别。
-- 会话：新建、切换、搜索、重命名、克隆、从历史消息分叉、树状分支查看、HTML 导出。
-- 工具过程：流式展示 tool call、参数、实时结果、错误和活动时间线。
-- 本地命令：在当前工作目录执行 Pi `bash` 命令，支持取消、历史导航、截断输出定位。
-- 编辑器：Enter 发送、Shift+Enter 换行、图片添加/预览/移除、斜杠命令、建议卡片与快捷键。
-- 会话文件：Assistant 交付路径识别、右侧只读预览、session 内多文件按时间倒序切换、图片 / HTML / Markdown / 文本 / PDF / DOCX / PPTX / XLSX / XLSM 内容与常见样式，以及系统打开、所在位置和复制路径。
-- 扩展 UI：`select`、`confirm`、`input`、`editor`、请求超时、通知、状态、编辑器上下组件、窗口标题与草稿注入。
-- 项目权限：检测项目级 `.pi` 资源，在“信任加载”和“受限打开”之间明确选择。
-- 桌面体验：首次项目选择、无边框窗口控制、命令面板、检查器、终端抽屉、八套可选皮肤、深色/浅色/跟随系统、14/16/19px 全局字号、紧凑密度、响应式侧栏与 Team Pulse、焦点闭环和减少动态效果。
+Requirements: Node.js `>= 22.19.0`.
 
-## 运行
-
-要求 Node.js `>= 22.19.0`。Pi 的模型、认证、扩展、技能和用户设置沿用其标准用户目录；“模型配置”页写入的也是该目录下 Pi 原生的 `auth.json` / `models.json`，不会生成 Stella 专属凭据副本。
+Pi models, authentication, extensions, skills, sessions, and user settings continue to use Pi's standard user directory. Stella's Model Configuration page writes Pi's native `auth.json` and `models.json`; it does not create a private credential database.
 
 ```bash
 npm install
 npm run dev
 ```
 
-生产构建与本地预览：
+Production build and local preview:
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Windows / macOS 安装包
+## Windows and macOS installers
 
-安装包采用“内置 Pi 运行时、复用用户配置”的结构。`@earendil-works/pi-coding-agent` 及其生产依赖会随 Stella 一起进入安装包，主进程使用 Electron 自带的 Node 运行内置 RPC 入口，因此接收者的全局 `pi` 命令安装在哪里、有没有加入 `PATH`，都不会影响 GUI 启动。
+Installers bundle the Pi runtime but reuse the recipient's Pi configuration. `@earendil-works/pi-coding-agent` and its production dependencies are packaged with Stella, and the main process launches the bundled RPC entry with Electron's Node runtime. A recipient does not need a global `pi` command or a particular Pi installation path.
 
-接收者自己的配置、认证、会话、扩展和技能仍从 Pi 的标准用户目录读取：
+Recipient configuration remains under:
 
-- Windows：`%USERPROFILE%\.pi\agent`
-- macOS：`~/.pi/agent`
-- 若设置了 `PI_CODING_AGENT_DIR`，Pi 会改用该目录。
+- Windows: `%USERPROFILE%\.pi\agent`
+- macOS: `~/.pi/agent`
+- If `PI_CODING_AGENT_DIR` is set, Pi uses that directory instead.
 
-不要把开发者自己的 API Key、OAuth 凭据或 `.pi/agent` 目录放进安装包。没有单独安装 Pi CLI 的用户也能启动 Stella，但首次调用模型前仍需配置自己的提供方凭据。
+Do not package a developer's API keys, OAuth credentials, or `.pi/agent` directory. Users without a separate Pi CLI can start Stella, but must configure their own provider before the first inference.
 
-看板状态存放在 Electron 的用户数据目录下 `board/board.json`，与被打开的代码仓库分离，因此不会向他人的项目写入 Stella 配置。旧 schema 升级时会先在同目录创建时间戳备份，再按 v1→v6 的确定性迁移链完整保留历史。v6 为 Task、Workflow Run 与 AgentTask 增加规格修订、执行尝试和不可变 `TaskSpecSnapshot`，为运行步骤增加 Runtime token，并为 Squad 增加版本与项目作用域；无法安全恢复的旧 Coordinator 会明确终止并写入迁移活动，而不是伪装继续执行。Agent 步骤使用接收者自己的 Pi 模型和认证；内置角色不硬编码 API Key、模型或本机 Pi 安装路径。
+Board state is stored under Electron's user-data directory in `board/board.json`, outside the opened project. Schema upgrades create a timestamped backup before the deterministic v1→v6 migration chain runs. Agent steps use the recipient's own model and authentication; built-in roles contain no API key, fixed model, or machine-specific Pi path.
 
-### 本机打包
+Build locally:
 
 ```bash
-# 只生成当前系统的未安装目录，适合做打包后冒烟测试
+# Unpacked application for the current platform
 npm run package:dir
 npm run test:packaged
 
-# Windows x64 NSIS 安装程序
+# Windows x64 or Windows ARM64 NSIS
 npm run dist:win
-
-# Windows ARM64 安装程序
 npm run dist:win:arm64
 
-# Intel Mac：DMG + ZIP
+# Intel Mac or Apple Silicon Mac: DMG + ZIP
 npm run dist:mac:x64
-
-# Apple Silicon Mac：DMG + ZIP
 npm run dist:mac:arm64
 ```
 
-产物统一写入 `release/`，文件名包含版本、系统与架构，例如：
+Artifacts are written to `release/` and include the product version, operating system, and architecture:
 
 ```text
 Stella Pi Workbench-0.3.0-win-x64.exe
@@ -271,41 +273,31 @@ Stella Pi Workbench-0.3.0-mac-x64.dmg
 Stella Pi Workbench-0.3.0-mac-arm64.dmg
 ```
 
-当前工作区生成的 Windows x64 安装器可用仓库根目录的 [`SHA256SUMS.txt`](SHA256SUMS.txt) 校验；v0.3.0 的 SHA-256 为：
+The Windows x64 installer built from this workspace is recorded in [`SHA256SUMS.txt`](SHA256SUMS.txt):
 
 ```text
-F29AA268BB81B38A70D0BA4EDF29E4DFB4BF11F4C67FC0F0EBB3D59B487E7762  Stella Pi Workbench-0.3.0-win-x64.exe
+8A330D10A4412B118737C639DF4AAA8A643BDC505C1DF43C489943B8CDCEAEB2  Stella Pi Workbench-0.3.0-win-x64.exe
 ```
 
-macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成正式 Mac 发布包。项目包含 [GitHub Actions 发布流程](.github/workflows/release.yml)，会分别在 Windows x64、macOS Apple Silicon 和 macOS Intel 主机上安装目标架构依赖并打包。
+The packaged-app smoke test launches with the executable search path emptied and requires the bundled Pi and Task capabilities to reach `ready`. The current NSIS installer is unsigned, so Windows may display **Unknown publisher**. The checksum verifies file integrity but is not a substitute for Authenticode publisher identity.
 
-### 签名、公证与 Release
+### Signing, notarization, and releases
 
-手动运行 `Build installers` 工作流会生成可供内部验证的构建产物；如果没有证书，产物会明确保持未签名。Windows 会显示“未知发布者”，未签名的 macOS 应用会被 Gatekeeper 拦截，因此不应把未签名的 Mac 包当作正式公共发行版。
+Formal macOS packages must be built on macOS, not cross-built from Windows. [The GitHub Actions release workflow](.github/workflows/release.yml) builds Windows x64, Apple Silicon macOS, and Intel macOS artifacts on their corresponding runners.
 
-推送与 `package.json` 版本一致的标签（例如 `v0.3.0`）时，工作流会强制要求签名；Mac 任务还会强制要求 Apple 公证。全部平台成功后才会创建 GitHub Release。仓库 Secrets 使用：
+A manually dispatched **Build installers** workflow may produce unsigned artifacts for internal validation. Pushing a version tag matching `package.json`, such as `v0.3.0`, requires signing; macOS additionally requires Apple notarization. A GitHub Release is created only after all platform jobs succeed.
 
-| Secret | 用途 |
+| Repository secret | Purpose |
 | --- | --- |
-| `WIN_CSC_LINK` | Windows 代码签名证书文件路径、URL 或 Base64 内容 |
-| `WIN_CSC_KEY_PASSWORD` | Windows 证书密码 |
-| `MAC_CSC_LINK` | `Developer ID Application` 的 `.p12` 文件或 Base64 内容 |
-| `MAC_CSC_KEY_PASSWORD` | Mac 证书密码 |
-| `APPLE_ID` | Apple Developer 账号 |
-| `APPLE_APP_SPECIFIC_PASSWORD` | Apple 专用密码，不是 Apple ID 登录密码 |
+| `WIN_CSC_LINK` | Windows code-signing certificate path, URL, or Base64 content |
+| `WIN_CSC_KEY_PASSWORD` | Windows certificate password |
+| `MAC_CSC_LINK` | `Developer ID Application` `.p12` path or Base64 content |
+| `MAC_CSC_KEY_PASSWORD` | macOS certificate password |
+| `APPLE_ID` | Apple Developer account |
+| `APPLE_APP_SPECIFIC_PASSWORD` | Apple app-specific password |
 | `APPLE_TEAM_ID` | Apple Developer Team ID |
 
-正式发布示例：
-
-```bash
-npm version 0.3.0 --no-git-tag-version
-git add package.json package-lock.json
-git commit -m "release: v0.3.0"
-git tag v0.3.0
-git push origin main --tags
-```
-
-## 验证
+## Validation
 
 ```bash
 npm run check
@@ -314,54 +306,58 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 64 个 Vitest 文件、263 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、DAG 投影与键盘交互，以及 AgentTaskQueue、Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、输入器行为、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
+The current Vitest suite contains **67 files and 278 tests**. It covers team-feature gating, v1/v2/v3/v4/v5→v6 migration and backup, immutable task specifications, execution-attempt isolation, live trust, the typed coordinator tool, skill preflight, coordinator/squad snapshots, RPC timeout shutdown, independent capability failures, workspace-lease FIFO and cancellation, report/acceptance separation, stable Task Room projections, explicit session bridges, background-history filtering, DAG keyboard interaction, AgentTaskQueue, Autopilot, Webhook, extension UI, global font sizes, Pi Bash cancellation, composer behavior, newest-first artifact projection, the compact file picker, full-height previews, local preview IPC, and a real ten-slide PPTX relationship-path regression.
 
-阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
+Electron E2E cold-starts the real Pi RPC runtime and exercises the default native workspace, persisted team-feature gating, return from Team to Pi, Launchpad, Task Room, mention impact preview, Pi session pinning, task creation, drag-and-drop, orchestration catalog, Automation Studio, eight skins, session creation and rename, chat, command palette, Inspector, real terminal success/failure/cancel, image attachments, the preview byte bridge, font switching, keyboard focus, and responsive sidebars.
+
+The packaged smoke test clears the executable search path and starts the new application from `release/`; it passes only when the bundled Pi and Task capabilities genuinely reach `ready`.
+
+Real Alibaba Cloud Model Studio Qwen validation is explicitly paid and networked, so it is not part of the default regression command:
 
 ```bash
 npm run test:e2e:qwen:live
 ```
 
-它要求 Pi 模型目录中存在 `aliyun-maas` Provider 和 `Qwen 3.6 Flash (Aliyun MaaS)`，会从页面切换全局模型、通过真实 Pi 会话发送随机校验串，并核对 provider/model、正文、错误状态、token、耗时和 session stats。可用 `STELLA_QWEN_MODEL_LABEL` 明确指定同一 Provider 下的其他 Qwen 显示名；找不到指定模型、认证失败、网络超时或返回内容不符都会直接失败，不会改用别的模型。
+It requires the `aliyun-maas` provider and a matching Qwen model in Pi's actual model catalog, switches the model through the UI, sends a randomized verification string through a real Pi session, and verifies provider/model identity, body, error state, token statistics, duration, and session statistics. Missing models, authentication failures, timeouts, and output mismatches fail directly; the test never substitutes another model.
 
-## 结构
+## Repository structure
 
 ```text
 src/
-├─ main/                 Electron 主进程、Capability Health、Workspace Admission、Runner 与 Pi RPC 生命周期
-├─ preload/              contextBridge 白名单 API
+├─ main/                 Electron main process, capability health, workspace admission, runners, Pi RPC lifecycle
+├─ preload/              Narrow contextBridge API allowlist
 ├─ renderer/src/
-│  ├─ components/        会话、输入器、检查器、终端、弹窗和导航
-│  ├─ features/kanban/   看板、Task Room、只读 DAG、Pi 桥接、Squad 与 Autopilot 工作室
-│  ├─ hooks/             Pi/看板状态同步与本地偏好
-│  ├─ assets/skins/      七张原创、可由用户替换的皮肤主视觉
-│  ├─ lib/               不可变运行态 reducer 与皮肤定义
-│  └─ styles/            多皮肤设计令牌、布局与响应式样式
-└─ shared/               共享协议、v6 领域模型、timeline/DAG/session 纯投影与内置编排目录
+│  ├─ components/        Sessions, composer, Inspector, terminal, dialogs, and navigation
+│  ├─ features/kanban/   Board, Task Room, read-only DAG, Pi bridge, squads, and Autopilot studio
+│  ├─ hooks/             Pi/board synchronization and local preferences
+│  ├─ assets/skins/      Seven original user-replaceable background artworks
+│  ├─ lib/               Immutable runtime reducers and skin definitions
+│  └─ styles/            Multi-skin design tokens, layout, and responsive behavior
+└─ shared/               Protocols, v6 domain model, timeline/DAG/session projections, and built-in catalog
 ```
 
-主进程以 Electron 自带的 Node 运行时启动 Pi RPC，并设置 `ELECTRON_RUN_AS_NODE=1`。渲染器开启 `contextIsolation` 与 `sandbox`，只通过 preload 暴露的窄接口访问本地能力；外部链接仅允许 HTTP(S)，项目路径和 IPC 命令在主进程边界验证。
+The main process runs Pi RPC with Electron's Node runtime and `ELECTRON_RUN_AS_NODE=1`. The renderer uses `contextIsolation` and `sandbox`, and reaches local capabilities only through the preload allowlist. External links are limited to HTTP(S); project paths and IPC commands are validated at the main-process boundary.
 
-## 快捷键
+## Keyboard shortcuts
 
-| 快捷键 | 操作 |
+| Shortcut | Action |
 | --- | --- |
-| `Ctrl/Cmd + N` | 团队页聚焦任务启动台；看板打开结构化任务；聊天新建会话 |
-| `Ctrl/Cmd + K` | 搜索与命令 |
-| `Ctrl/Cmd + L` | 聚焦输入框 |
-| <code>Ctrl/Cmd + `</code> | 切换本地命令抽屉 |
-| `Ctrl/Cmd + I` | 切换会话检查器 |
-| `Esc` | 停止生成或关闭当前弹窗 |
+| `Ctrl/Cmd + N` | Focus the Team Launchpad, open structured task creation on the board, or create a native Pi session |
+| `Ctrl/Cmd + K` | Search and command palette |
+| `Ctrl/Cmd + L` | Focus the active composer |
+| <code>Ctrl/Cmd + `</code> | Toggle the local command drawer |
+| `Ctrl/Cmd + I` | Toggle the session Inspector |
+| `Esc` | Stop generation or close the active dialog/menu |
 
-## 项目信任
+## Project trust
 
-当工作目录包含项目级设置、扩展、技能、提示词或主题时，Stella 会先显示权限对话框：
+When a working directory contains project-scoped settings, extensions, skills, prompts, or themes, Stella opens a permission dialog before starting Pi:
 
-- “信任并加载”会以 Pi 的 `--approve` 模式启动当前工作区。
-- “受限打开”会以 `--no-approve` 模式忽略项目级可执行资源，仅使用用户级配置。
+- **Trust and load** starts the workspace with Pi's `--approve` mode.
+- **Open restricted** starts with `--no-approve`, ignoring project-scoped executable resources and using user-level configuration only.
 
-这个选择会随最近项目记录保存在 Electron 的用户数据目录中；不会写入被打开的代码仓库。
+The decision is stored with the recent-project record in Electron's user-data directory. It is never written into the opened repository.
 
-## 许可证与素材
+## License and assets
 
-源代码采用 [MIT License](LICENSE)。原创皮肤背景和产品截图的逐文件来源、兼容 ID 说明及第三方依赖边界见 [ASSET-LICENSES.md](ASSET-LICENSES.md)。Pi、字体、图标与 npm 依赖继续适用各自上游许可证。
+Source code is available under the [MIT License](LICENSE). File-level provenance for original skin artwork and product screenshots, compatibility-ID notes, and third-party dependency boundaries are documented in [`ASSET-LICENSES.md`](ASSET-LICENSES.md). Pi, fonts, icons, and npm dependencies remain under their respective upstream licenses.
