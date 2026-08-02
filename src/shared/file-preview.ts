@@ -1,0 +1,72 @@
+export type LocalFilePreviewKind =
+  | "image"
+  | "html"
+  | "markdown"
+  | "text"
+  | "pdf"
+  | "docx"
+  | "pptx"
+  | "spreadsheet";
+
+export interface LocalFilePreviewDescriptor {
+  readonly kind: LocalFilePreviewKind;
+  readonly mimeType: string;
+}
+
+export interface LocalFilePreviewData extends LocalFilePreviewDescriptor {
+  readonly canonicalPath: string;
+  readonly name: string;
+  readonly sizeBytes: number;
+  readonly bytes: Uint8Array;
+}
+
+const PREVIEW_BY_EXTENSION: Readonly<Record<string, LocalFilePreviewDescriptor>> = Object.freeze({
+  ".avif": Object.freeze({ kind: "image", mimeType: "image/avif" }),
+  ".bmp": Object.freeze({ kind: "image", mimeType: "image/bmp" }),
+  ".gif": Object.freeze({ kind: "image", mimeType: "image/gif" }),
+  ".jpeg": Object.freeze({ kind: "image", mimeType: "image/jpeg" }),
+  ".jpg": Object.freeze({ kind: "image", mimeType: "image/jpeg" }),
+  ".png": Object.freeze({ kind: "image", mimeType: "image/png" }),
+  ".svg": Object.freeze({ kind: "image", mimeType: "image/svg+xml" }),
+  ".webp": Object.freeze({ kind: "image", mimeType: "image/webp" }),
+  ".htm": Object.freeze({ kind: "html", mimeType: "text/html" }),
+  ".html": Object.freeze({ kind: "html", mimeType: "text/html" }),
+  ".markdown": Object.freeze({ kind: "markdown", mimeType: "text/markdown" }),
+  ".md": Object.freeze({ kind: "markdown", mimeType: "text/markdown" }),
+  ".csv": Object.freeze({ kind: "text", mimeType: "text/csv" }),
+  ".json": Object.freeze({ kind: "text", mimeType: "application/json" }),
+  ".log": Object.freeze({ kind: "text", mimeType: "text/plain" }),
+  ".text": Object.freeze({ kind: "text", mimeType: "text/plain" }),
+  ".tsv": Object.freeze({ kind: "text", mimeType: "text/tab-separated-values" }),
+  ".txt": Object.freeze({ kind: "text", mimeType: "text/plain" }),
+  ".xml": Object.freeze({ kind: "text", mimeType: "application/xml" }),
+  ".yaml": Object.freeze({ kind: "text", mimeType: "application/yaml" }),
+  ".yml": Object.freeze({ kind: "text", mimeType: "application/yaml" }),
+  ".pdf": Object.freeze({ kind: "pdf", mimeType: "application/pdf" }),
+  ".docx": Object.freeze({
+    kind: "docx",
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  }),
+  ".pptx": Object.freeze({
+    kind: "pptx",
+    mimeType: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  }),
+  ".xlsm": Object.freeze({
+    kind: "spreadsheet",
+    mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12",
+  }),
+  ".xlsx": Object.freeze({
+    kind: "spreadsheet",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  }),
+});
+
+function fileExtension(value: string): string {
+  const slash = Math.max(value.lastIndexOf("/"), value.lastIndexOf("\\"));
+  const dot = value.lastIndexOf(".");
+  return dot > slash ? value.slice(dot).toLocaleLowerCase("en-US") : "";
+}
+
+export function localFilePreviewDescriptor(path: string): LocalFilePreviewDescriptor | undefined {
+  return PREVIEW_BY_EXTENSION[fileExtension(path)];
+}

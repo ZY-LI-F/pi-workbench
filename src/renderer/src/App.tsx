@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Archive,
   FileOutput,
@@ -26,6 +26,7 @@ import type {
   SlashCommandSummary,
   StellaDesktopApi,
 } from "@shared/contracts";
+import type { LocalPathInspection } from "@shared/local-path";
 import type { SkinArtworkDescriptor, SkinId } from "@shared/skin-artwork";
 import { isReportedRuntimeError, usePiRuntime } from "./hooks/use-pi-runtime";
 import { useKanban } from "./hooks/use-kanban";
@@ -47,7 +48,13 @@ import { CommandPalette, type PaletteAction } from "./components/CommandPalette"
 import { Composer, type ComposerImage } from "./components/Composer";
 import { Conversation } from "./components/Conversation";
 import { ExtensionDialog } from "./components/ExtensionDialog";
-import { Inspector } from "./components/Inspector";
+import {
+  constrainInspectorWidth,
+  DEFAULT_INSPECTOR_WIDTH,
+  FILE_INSPECTOR_WIDTH,
+  Inspector,
+  type InspectorTab,
+} from "./components/Inspector";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar, type WorkspaceView } from "./components/Sidebar";
 import { TerminalDrawer } from "./components/TerminalDrawer";
@@ -60,6 +67,7 @@ import { createPiTaskDraft, type PiTaskDraft } from "./features/kanban/pi-task-d
 import { TeamWorkspace } from "./features/team/TeamWorkspace";
 import { ModelConfigurationWorkspace } from "./features/models/ModelConfigurationWorkspace";
 import { parseBashResult } from "./lib/pi-bash-result";
+import { sessionFileReferences } from "./lib/session-files";
 
 interface AppProps {
   readonly api: StellaDesktopApi;
@@ -133,6 +141,9 @@ export function App({ api }: AppProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth >= 1280);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("context");
+  const [inspectorWidth, setInspectorWidth] = useState(() => constrainInspectorWidth(DEFAULT_INSPECTOR_WIDTH, window.innerWidth));
+  const [filePreview, setFilePreview] = useState<LocalPathInspection>();
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -150,7 +161,7 @@ export function App({ api }: AppProps) {
   const piHealth = capabilitySnapshot?.pi;
   const taskHealth = capabilitySnapshot?.task;
   const bootstrap = state.bootstrap;
-  const composerDraft = useSessionComposerDraft(bootstrap);
+  const composerDraft = useSessionComposerDraft(bootstrap, api);
   const compactSidebar = useMediaQuery("(max-width: 1060px)");
   const sidebarVisible = compactSidebar ? sidebarOpen : !sidebarCollapsed;
   const piReady = piHealth?.state === "ready" && Boolean(bootstrap);
@@ -158,6 +169,7 @@ export function App({ api }: AppProps) {
   const activeView: WorkspaceView = !teamFeaturesEnabled && (workspaceView === "team" || workspaceView === "kanban")
     ? "chat"
     : workspaceView;
+  const sessionFiles = useMemo(() => sessionFileReferences(state.messages), [state.messages]);
 
   const reportActionError = (action: string, cause: unknown) => {
     if (isReportedRuntimeError(cause)) return;
@@ -208,17 +220,48 @@ export function App({ api }: AppProps) {
     window.setTimeout(() => document.querySelector<HTMLTextAreaElement>('textarea[aria-label="给 Pi 的消息"]')?.focus(), 0);
   };
 
+  const openFilePreview = (inspection: LocalPathInspection) => {
+    setFilePreview(inspection);
+    setInspectorTab("files");
+    setInspectorWidth((current) => Math.max(current, constrainInspectorWidth(FILE_INSPECTOR_WIDTH, window.innerWidth)));
+    setInspectorOpen(true);
+  };
+
+  const openInspector = (tab: InspectorTab = "context") => {
+    setInspectorTab(tab);
+    setInspectorOpen(true);
+  };
+
+  useEffect(() => {
+    setFilePreview(undefined);
+    setInspectorTab((current) => current === "files" ? "context" : current);
+  }, [bootstrap?.state.sessionId]);
+
+  useEffect(() => {
+    const constrainCurrentWidth = () => setInspectorWidth((current) => constrainInspectorWidth(current, window.innerWidth));
+    window.addEventListener("resize", constrainCurrentWidth);
+    return () => window.removeEventListener("resize", constrainCurrentWidth);
+  }, []);
+
   const openSidebar = () => {
-    if (compactSidebar) setSidebarOpen(true);
-    else {
+    if (compactSidebar) {
+      setSidebarOpen(true);
+      window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
+    } else {
       setSidebarCollapsed(false);
       window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
     }
   };
 
   const closeSidebar = () => {
-    if (compactSidebar) setSidebarOpen(false);
-    else {
+    if (compactSidebar) {
+      setSidebarOpen(false);
+      window.requestAnimationFrame(() => {
+        const trigger = Array.from(document.querySelectorAll<HTMLButtonElement>('button[aria-label="打开侧栏"]'))
+          .find((button) => button.getClientRects().length > 0 && !button.disabled);
+        trigger?.focus();
+      });
+    } else {
       const activeElement = document.activeElement;
       if (activeElement instanceof HTMLElement && activeElement.closest(".sidebar")) activeElement.blur();
       setSidebarCollapsed(true);
@@ -240,6 +283,7 @@ export function App({ api }: AppProps) {
       controller.notify("Pi Runtime 尚未就绪", "warning");
       return;
     }
+    await composerDraft.flush();
     const response = await controller.command({ type: "new_session" }, true);
     if (wasCancelled(responseData(response), "new_session")) {
       controller.notify("新建会话已由 Pi 扩展取消", "warning");
@@ -302,6 +346,7 @@ export function App({ api }: AppProps) {
   };
 
   const continueTaskSession = async (taskId: string, sessionPath: string) => {
+    await composerDraft.flush();
     await controller.openTaskSession({ taskId, sessionPath });
     setWorkspaceView("chat");
     setSidebarOpen(false);
@@ -311,6 +356,7 @@ export function App({ api }: AppProps) {
   const chooseProject = async () => {
     const selection = await controller.chooseProject();
     if (!selection) return;
+    await composerDraft.flush();
     const opened = await controller.openProject(selection.path, selection.requiresTrust);
     if (!opened) return;
     setWorkspaceView("chat");
@@ -319,6 +365,7 @@ export function App({ api }: AppProps) {
   };
 
   const openRecentProject = async (project: RecentProject) => {
+    await composerDraft.flush();
     const opened = await controller.openProject(project.path, project.trusted);
     if (!opened) return;
     setWorkspaceView("chat");
@@ -328,6 +375,7 @@ export function App({ api }: AppProps) {
 
   const switchSession = async (session: SessionSummary) => {
     if (session.path === state.bootstrap?.state.sessionFile) return;
+    await composerDraft.flush();
     const response = await controller.command({ type: "switch_session", sessionPath: session.path }, true);
     if (wasCancelled(responseData(response), "switch_session")) {
       controller.notify("切换会话已由 Pi 扩展取消", "warning");
@@ -440,7 +488,7 @@ export function App({ api }: AppProps) {
         { id: "chat", label: "返回当前会话", detail: "与 Pi 直接对话", icon: MessagesSquare, run: () => setWorkspaceView("chat") },
         { id: "new", label: "新建会话", detail: "开始一个干净的 Pi 会话", icon: Plus, run: () => runAction("新建会话", newSession) },
         { id: "terminal", label: "运行命令", detail: "打开本地命令抽屉", icon: TerminalSquare, run: () => setTerminalOpen(true) },
-        { id: "tree", label: "查看会话图谱", detail: "检查工具活动与分支结构", icon: GitFork, run: () => { setWorkspaceView("chat"); setInspectorOpen(true); } },
+        { id: "tree", label: "查看会话图谱", detail: "检查工具活动与分支结构", icon: GitFork, run: () => { setWorkspaceView("chat"); openInspector("tree"); } },
         { id: "compact", label: "压缩上下文", detail: "生成摘要并释放模型窗口", icon: Archive, run: () => runAction("压缩上下文", compact) },
         { id: "export", label: "导出 HTML", detail: "保存当前会话记录", icon: FileOutput, run: () => runAction("导出会话", exportSession) },
         { id: "settings", label: "偏好设置", detail: "外观、队列和 Pi 行为", icon: Settings2, run: openSettings },
@@ -478,7 +526,7 @@ export function App({ api }: AppProps) {
         event.preventDefault();
         if (workspaceView !== "chat") {
           setWorkspaceView("chat");
-          setInspectorOpen(true);
+          openInspector();
         } else {
           setInspectorOpen((value) => !value);
         }
@@ -491,7 +539,10 @@ export function App({ api }: AppProps) {
   }, [workspaceView, bootstrap]);
 
   return (
-    <div className={`app-shell app-shell--${activeView} ${activeView === "chat" && inspectorOpen ? "has-inspector" : ""} ${terminalOpen ? "has-terminal" : ""} ${sidebarVisible ? "" : "sidebar-collapsed"}`}>
+    <div
+      className={`app-shell app-shell--${activeView} ${activeView === "chat" && inspectorOpen ? "has-inspector" : ""} ${terminalOpen ? "has-terminal" : ""} ${sidebarVisible ? "" : "sidebar-collapsed"}`}
+      style={{ "--inspector-width": `${inspectorWidth}px` } as CSSProperties}
+    >
       <SkinBackdrop skin={preferences.skin} customArtwork={skinArtwork.bySkin[preferences.skin]} />
       <div className="titlebar-drag" />
       <WindowControls api={api} />
@@ -513,6 +564,7 @@ export function App({ api }: AppProps) {
             return;
           }
           setWorkspaceView(view);
+          if (view !== "chat") setFilePreview(undefined);
           setSidebarOpen(false);
           if (view === "chat") focusComposer();
         }}
@@ -521,7 +573,7 @@ export function App({ api }: AppProps) {
         onSwitchSession={(session) => runAction("切换会话", () => switchSession(session))}
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenTerminal={() => setTerminalOpen(true)}
-        onOpenInspector={() => { setWorkspaceView("chat"); setInspectorOpen(true); setSidebarOpen(false); focusComposer(); }}
+        onOpenInspector={() => { setWorkspaceView("chat"); openInspector("context"); setSidebarOpen(false); focusComposer(); }}
         onOpenSettings={openSettings}
         onModelChange={(model) => void setModel(model)}
       />
@@ -549,6 +601,7 @@ export function App({ api }: AppProps) {
           onFocusSession={focusComposer}
           onNewSession={() => runAction("新建会话", newSession)}
           onToggleInspector={() => setInspectorOpen((value) => !value)}
+          onOpenModels={() => setWorkspaceView("models")}
           onOpenSettings={openSettings}
           onThinkingChange={(level) => runAction("切换思考级别", () => setThinking(level))}
           onAbortRetry={() => runAction("停止自动重试", () => controller.command({ type: "abort_retry" }))}
@@ -575,6 +628,7 @@ export function App({ api }: AppProps) {
             streaming={piReady && state.streaming}
             onPrefill={(text) => { composerDraft.setText(text); focusComposer(); }}
             onFork={(entryId) => runAction("创建会话分支", () => fork(entryId))}
+            onPreviewFile={openFilePreview}
           />
         </div>
         <Composer
@@ -598,6 +652,7 @@ export function App({ api }: AppProps) {
           onError={(message) => controller.notify(message, "error")}
           sendDisabled={!piReady}
           sendDisabledReason={!piReady ? (piHealth?.state === "loading" || state.phase === "loading" ? "Pi 正在连接，草稿不会丢失" : "Pi 恢复后即可发送") : undefined}
+          draftPersistence={composerDraft.persistence}
         />
       </main> : activeView === "chat" ? (
         <main className="workspace capability-workspace">
@@ -673,12 +728,20 @@ export function App({ api }: AppProps) {
       ) : null}
 
       {activeView === "chat" && bootstrap && piReady && <Inspector
+        api={api}
         bootstrap={bootstrap}
         open={inspectorOpen}
+        tab={inspectorTab}
+        width={inspectorWidth}
         tools={state.tools}
         queue={state.queue}
         extensionStatuses={state.extensionStatuses}
         extensionWidgets={state.extensionWidgets}
+        filePreview={filePreview}
+        fileReferences={sessionFiles}
+        onTabChange={setInspectorTab}
+        onWidthChange={setInspectorWidth}
+        onSelectFile={setFilePreview}
         onClose={() => setInspectorOpen(false)}
         onCompact={() => runAction("压缩上下文", compact)}
         onExport={() => runAction("导出会话", exportSession)}

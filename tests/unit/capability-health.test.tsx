@@ -145,6 +145,7 @@ describe("Capability Health", () => {
 
   it("keeps the real chat composer mounted when Pi health is temporarily unavailable", async () => {
     const snapshot = healthSnapshot("error", "provider connection interrupted");
+    const drafts = new Map<string, { readonly key: string; readonly text: string; readonly images: readonly never[]; readonly updatedAt: number }>();
     const api = {
       capabilities: vi.fn(async () => snapshot),
       retryCapability: vi.fn(async () => snapshot),
@@ -158,6 +159,11 @@ describe("Capability Health", () => {
       onEvent: vi.fn(() => () => undefined),
       chooseProject: vi.fn(async () => null),
       skinArtworkInitialize: vi.fn(async () => Object.freeze([])),
+      composerDraftLoad: vi.fn(async (key: string) => drafts.get(key)),
+      composerDraftSave: vi.fn(async (input: { readonly key: string; readonly text: string; readonly images: readonly never[] }) => {
+        if (input.text.length === 0 && input.images.length === 0) drafts.delete(input.key);
+        else drafts.set(input.key, Object.freeze({ ...input, updatedAt: Date.now() }));
+      }),
       windowAction: vi.fn(async () => undefined),
     } as unknown as StellaDesktopApi;
 

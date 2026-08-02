@@ -4,6 +4,7 @@ import type {
   RuntimeBootstrap,
   SerializableMessage,
 } from "@shared/contracts";
+import { appendDiagnosticText } from "@shared/diagnostics";
 
 export interface ToolExecutionState {
   readonly id: string;
@@ -116,6 +117,36 @@ function noticeFromExtension(payload: Record<string, unknown>): Notice {
   });
 }
 
+function extensionErrorValue(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function handleExtensionError(state: RuntimeUiState, payload: Record<string, unknown>): RuntimeUiState {
+  const extensionPath = extensionErrorValue(payload.extensionPath, "未知扩展");
+  const event = extensionErrorValue(payload.event, "未知事件");
+  const error = extensionErrorValue(payload.error, "扩展没有提供错误原因");
+  const stack = typeof payload.stack === "string" && payload.stack.trim().length > 0
+    ? payload.stack
+    : undefined;
+  const noticeMessage = `Pi 扩展 ${extensionPath} 处理 ${event} 时失败：${error.replace(/\s+/gu, " ").trim()}`;
+  const diagnostic = [
+    "[Pi extension_error]",
+    `extension=${extensionPath}`,
+    `event=${event}`,
+    `error=${error}`,
+    ...(stack ? [`stack=${stack}`] : []),
+    "",
+  ].join("\n");
+  return {
+    ...state,
+    notices: Object.freeze([
+      ...state.notices,
+      Object.freeze({ id: crypto.randomUUID(), type: "error" as const, message: noticeMessage }),
+    ]),
+    stderr: appendDiagnosticText(state.stderr, diagnostic),
+  };
+}
+
 function extensionDialog(payload: Record<string, unknown>): ExtensionRequest {
   const method = payload.method;
   if (method !== "select" && method !== "confirm" && method !== "input" && method !== "editor") {
@@ -178,6 +209,7 @@ function handleExtensionRequest(state: RuntimeUiState, payload: Record<string, u
 
 function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>): RuntimeUiState {
   if (payload.type === "extension_ui_request") return handleExtensionRequest(state, payload);
+  if (payload.type === "extension_error") return handleExtensionError(state, payload);
   if (payload.type === "agent_start") return { ...state, streaming: true, retrying: false };
   if (payload.type === "agent_settled") return { ...state, streaming: false, retrying: false };
   if (payload.type === "compaction_start") return { ...state, compacting: true };
@@ -272,7 +304,7 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
   if (event.source === "pi") return handlePiEvent(state, event.payload as unknown as Record<string, unknown>);
   if (event.source === "board") return state;
   const payload = event.payload;
-  if (payload.type === "runtime_stderr") return { ...state, stderr: `${state.stderr}${payload.message}` };
+  if (payload.type === "runtime_stderr") return { ...state, stderr: appendDiagnosticText(state.stderr, payload.message) };
   // 运行时重启成功后清除上一次 runtime_exit / protocol_error 留下的错误横幅。
   if (payload.type === "runtime_ready") return { ...state, error: undefined };
   if (payload.type === "runtime_exit") {

@@ -1,40 +1,22 @@
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import type { TSchema } from "typebox";
+import { Type } from "typebox";
 
-interface CoordinatorActionParams {
-  readonly action: "delegate" | "request_revision" | "replan" | "complete" | "ask_human";
-  readonly summary: string;
-  readonly delegations: readonly {
-    readonly agentId: string;
-    readonly objective: string;
-    readonly acceptanceCriteria: string;
-  }[];
-  readonly question?: string;
-}
-
-const parameters = {
-  type: "object",
-  additionalProperties: false,
-  required: ["action", "summary", "delegations"],
-  properties: {
-    action: { enum: ["delegate", "request_revision", "replan", "complete", "ask_human"] },
-    summary: { type: "string", minLength: 1, description: "Concise explanation shown in the Task Room" },
-    delegations: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["agentId", "objective", "acceptanceCriteria"],
-        properties: {
-          agentId: { type: "string", minLength: 1 },
-          objective: { type: "string", minLength: 1 },
-          acceptanceCriteria: { type: "string", minLength: 1 },
-        },
-      },
-    },
-    question: { type: "string", minLength: 1 },
-  },
-} as unknown as TSchema;
+const parameters = Type.Object({
+  action: Type.Union([
+    Type.Literal("delegate"),
+    Type.Literal("request_revision"),
+    Type.Literal("replan"),
+    Type.Literal("complete"),
+    Type.Literal("ask_human"),
+  ]),
+  summary: Type.String({ minLength: 1, description: "Concise explanation shown in the Task Room" }),
+  delegations: Type.Array(Type.Object({
+    agentId: Type.String({ minLength: 1 }),
+    objective: Type.String({ minLength: 1 }),
+    acceptanceCriteria: Type.String({ minLength: 1 }),
+  }, { additionalProperties: false })),
+  question: Type.Optional(Type.String({ minLength: 1 })),
+}, { additionalProperties: false });
 
 const coordinatorActionTool = defineTool({
   name: "coordinator_action",
@@ -48,14 +30,13 @@ const coordinatorActionTool = defineTool({
   ],
   parameters,
   async execute(_toolCallId, params) {
-    const action = params as unknown as CoordinatorActionParams;
     return {
-      content: [{ type: "text" as const, text: `Coordinator action accepted: ${action.action}` }],
+      content: [{ type: "text" as const, text: `Coordinator action accepted: ${params.action}` }],
       details: Object.freeze({
-        action: action.action,
-        summary: action.summary,
-        delegations: Object.freeze(action.delegations.map((delegation) => Object.freeze({ ...delegation }))),
-        question: action.question,
+        action: params.action,
+        summary: params.summary,
+        delegations: Object.freeze(params.delegations.map((delegation) => Object.freeze({ ...delegation }))),
+        question: params.question,
       }),
       terminate: true,
     };

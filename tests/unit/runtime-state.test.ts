@@ -151,6 +151,27 @@ describe("runtimeReducer", () => {
     expect(state.extensionRequest).toBeUndefined();
   });
 
+  it("surfaces Pi extension errors as persistent notices and diagnostics", () => {
+    const result = piEvent(readyState(), {
+      type: "extension_error",
+      extensionPath: "C:/workspace/.pi/extensions/remote-bash.ts",
+      event: "user_bash",
+      error: "SSH connection failed\nremote host unavailable",
+      stack: "Error: SSH connection failed\n    at remote-bash.ts:42",
+    });
+
+    expect(result.phase).toBe("ready");
+    expect(result.error).toBeUndefined();
+    expect(result.notices.at(-1)).toMatchObject({
+      type: "error",
+      message: expect.stringContaining("remote-bash.ts 处理 user_bash 时失败：SSH connection failed remote host unavailable"),
+    });
+    expect(result.stderr).toContain("[Pi extension_error]");
+    expect(result.stderr).toContain("extension=C:/workspace/.pi/extensions/remote-bash.ts");
+    expect(result.stderr).toContain("event=user_bash");
+    expect(result.stderr).toContain("stack=Error: SSH connection failed");
+  });
+
   it("clears the runtime error banner once the runtime reports ready again", () => {
     let state = runtimeReducer(readyState(), {
       type: "BRIDGE_EVENT",

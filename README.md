@@ -12,10 +12,26 @@
 - **Provider 配置状态**：区分 `auth.json`、环境变量、`models.json` 内联配置与 OAuth，并明确把“本地凭据已配置”和“远端请求已验证”分开，避免把找到 Key 误报成已经连通。
 - **API Key 查看与管理**：初始化和刷新快照永不携带密钥；只有用户点击“查看当前 API Key”后，主进程才通过仅允许主窗口调用的独立窄 IPC 临时返回一次，并在隐藏、切换 Provider、保存或 30 秒后从页面清除。OAuth 访问令牌不回显；为避免一次“查看”产生本机命令副作用，`auth.json` / `models.json` 中以 `!command` 配置的动态凭据只允许测试、不会被查看操作执行或显示。新 Key 可先在内存中测试，再写入 Pi 标准 `auth.json`；替换时保留 Provider 专属 `env` 配置，也可以显式清除已保存凭据。
 - **真实连通测试**：可为 Provider 选择具体模型，发送一条独立的极短模型请求并显示成功/失败、实际模型、耗时和测试时间。测试不进入聊天历史、不改变全局模型、不重启当前 Pi RPC；输入框中的新 Key 仅作为本次请求的临时覆盖，空白时使用 Pi 当前凭据。兼容端点返回的错误正文可能回显认证信息，因此主进程只返回脱敏后的结构化诊断，不把原始正文送入页面。测试可能产生极少量 Token 费用。
+- **URL / Key 发现模型**：新建或编辑 Provider 时，可由主进程按协议请求远端模型目录；支持 OpenAI / Responses 的 `data[]`、Anthropic 兼容目录，以及 Gemini `models[]` 多页结果。新 Key 只在内存中用于发现，留空可使用 Pi 已保存的 API Key；结果支持搜索、逐项或批量加入与移除，并把远端明确返回的上下文、输出上限和图像能力带入表单。目录成功不等于模型可推理，保存后仍需执行上面的真实连通测试；未开放 `/models` 的端点会明确返回 404，并保留手工添加 Model ID 的路径。
 - **自定义端点与模型**：受约束表单支持 `openai-completions`、`openai-responses`、`anthropic-messages` 与 `google-generative-ai`，可维护 Base URL、Bearer Header、模型 ID、Context、最大输出、推理和图像输入。已有 `headers`、`compat`、`modelOverrides`、内联密钥及其它高级字段原样保留。
 - **明确应用语义**：保存后重载真实 Pi RPC，并通过当前 `sessionFile` 恢复同一会话；“已保存”“本地已配置”“连通已验证”是三个独立状态，配置、重载或测试失败都会明确显示。OAuth/订阅登录仍由 Pi 的交互式 `/login <provider>` 流程负责。
 
 ![Stella Pi 模型配置与 Provider 路由台](docs/model-configuration-stella.png)
+
+## 当前会话文件预览
+
+Pi 在回复中给出绝对本地文件路径后，“输出文件与路径”卡片会显示“预览”。点击后不离开聊天，也不覆盖输入器，而是在应用右侧打开只读文件栏；原有会话检查器会暂时收起。右栏左侧汇总当前 session 中 Assistant 明确交付的全部路径，Windows 路径不区分大小写去重，并按最后一次提及时间倒序排列，可直接切换文件。切换 session 会关闭旧 session 的预览，不会把产物列表串到新会话。
+
+支持范围：
+
+- 图片：PNG、JPEG、GIF、WebP、AVIF、BMP、SVG；SVG 会先移除脚本、事件处理器与外部引用。
+- 网页与文本：HTML、Markdown、JSON、CSV、TSV、XML、YAML 和普通文本；HTML 在无脚本 sandbox 中显示，表单、网络请求、外部资源和嵌入对象被隔离，Markdown 链接仍由 Stella 的受控外链入口打开。
+- PDF：使用 Electron / Chromium 内置的本地 PDF 阅读器，不引入 PDF.js 或 Office 插件。
+- Word：DOCX 使用 [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) 按页呈现文字、表格和常见样式；不执行 AltChunk、批注、修订或嵌入程序。
+- PowerPoint：PPTX 使用 [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html) 转为隔离 HTML 幻灯片，并在解析前规范化合法的 OOXML 包根关系路径；支持逐页切换，不执行动画、宏和嵌入式程序。
+- Excel：XLSX / XLSM 使用 [@office-kit/xlsx](https://github.com/office-kit/xlsx) 读取工作表、合并单元格、行列尺寸、隐藏行列和常见单元格样式；支持工作表与大范围分页切换，不执行宏。旧二进制 `DOC / PPT / XLS` 不伪装为可预览，仍可通过“所在位置”交给用户选择系统应用。
+
+Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
 
 ## v0.3.0 的简单架构
 
@@ -192,6 +208,7 @@ Webhook 与 Schedule 都随桌面应用启动和关闭；它们不是公网服�
 - 工具过程：流式展示 tool call、参数、实时结果、错误和活动时间线。
 - 本地命令：在当前工作目录执行 Pi `bash` 命令，支持取消、历史导航、截断输出定位。
 - 编辑器：Enter 发送、Shift+Enter 换行、图片添加/预览/移除、斜杠命令、建议卡片与快捷键。
+- 会话文件：Assistant 交付路径识别、右侧只读预览、session 内多文件按时间倒序切换、图片 / HTML / Markdown / 文本 / PDF / DOCX / PPTX / XLSX / XLSM 内容与常见样式，以及系统打开、所在位置和复制路径。
 - 扩展 UI：`select`、`confirm`、`input`、`editor`、请求超时、通知、状态、编辑器上下组件、窗口标题与草稿注入。
 - 项目权限：检测项目级 `.pi` 资源，在“信任加载”和“受限打开”之间明确选择。
 - 桌面体验：首次项目选择、无边框窗口控制、命令面板、检查器、终端抽屉、八套可选皮肤、深色/浅色/跟随系统、14/16/19px 全局字号、紧凑密度、响应式侧栏与 Team Pulse、焦点闭环和减少动态效果。
@@ -297,7 +314,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 47 个 Vitest 文件、209 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、DAG 投影与键盘交互，以及 AgentTaskQueue、Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议和输入器行为。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
+当前全量套件为 64 个 Vitest 文件、263 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、DAG 投影与键盘交互，以及 AgentTaskQueue、Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、输入器行为、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 

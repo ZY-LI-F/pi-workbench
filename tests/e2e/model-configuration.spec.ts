@@ -19,17 +19,32 @@ async function availableLoopbackPort(): Promise<number> {
 }
 
 test("reveals the configured API key on demand and runs a real isolated model probe", async ({}, testInfo) => {
-  let receivedAuthorization = "";
+  let receivedDiscoveryAuthorization = "";
+  let receivedModelAuthorization = "";
   const providerServer = createServer(async (request, response) => {
-    receivedAuthorization = request.headers.authorization ?? "";
-    for await (const _chunk of request) {
-      // Drain the request before writing the deterministic local SSE response.
+    if (request.method === "GET" && request.url?.startsWith("/v1/models")) {
+      receivedDiscoveryAuthorization = request.headers.authorization ?? "";
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({
+        object: "list",
+        data: [
+          { id: "stella-e2e-model", name: "Local Validation Model", owned_by: "stella-e2e" },
+          { id: "stella-e2e-model-2", name: "Discovered Validation Model", owned_by: "stella-e2e" },
+        ],
+      }));
+      return;
     }
+    receivedModelAuthorization = request.headers.authorization ?? "";
+    let requestBody = "";
+    for await (const _chunk of request) {
+      requestBody += _chunk.toString();
+    }
+    const requestedModel = (JSON.parse(requestBody) as { model?: string }).model ?? "stella-e2e-model";
     response.writeHead(200, { "content-type": "text/event-stream" });
     response.end([
-      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: "stella-e2e-model", choices: [{ index: 0, delta: { role: "assistant", content: "OK" }, finish_reason: null }] })}`,
+      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: requestedModel, choices: [{ index: 0, delta: { role: "assistant", content: "OK" }, finish_reason: null }] })}`,
       "",
-      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: "stella-e2e-model", choices: [{ index: 0, delta: {}, finish_reason: "stop" }] })}`,
+      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: requestedModel, choices: [{ index: 0, delta: {}, finish_reason: "stop" }] })}`,
       "",
       "data: [DONE]",
       "",
@@ -97,13 +112,27 @@ test("reveals the configured API key on demand and runs a real isolated model pr
     await window.getByRole("button", { name: "隐藏当前 API key" }).click();
     await expect(currentKey).toHaveValue("");
 
+    await window.getByRole("button", { name: "编辑配置" }).click();
+    const providerDialog = window.getByRole("dialog", { name: "配置 OpenAI-Compatible Local" });
+    await expect(providerDialog).toBeVisible();
+    await providerDialog.getByRole("button", { name: "发现远端模型" }).click();
+    await expect(providerDialog.getByText("Discovered Validation Model")).toBeVisible();
+    await providerDialog.screenshot({ path: testInfo.outputPath("model-discovery-dialog.png"), animations: "disabled" });
+    await providerDialog.getByLabel("移除模型 stella-e2e-model").click();
+    await providerDialog.getByLabel("添加模型 stella-e2e-model-2").click();
+    await providerDialog.getByRole("button", { name: "保存并应用" }).click();
+    await expect(providerDialog).toBeHidden({ timeout: 30_000 });
+    expect(receivedDiscoveryAuthorization).toBe("Bearer stella-e2e-secret");
+
+    await expect(window.getByLabel("连接测试模型")).toHaveValue("stella-e2e-model-2", { timeout: 30_000 });
     await window.getByRole("button", { name: "测试 OpenAI-Compatible Local 连通性" }).click();
     await expect(window.getByText("连通已验证")).toBeVisible({ timeout: 30_000 });
-    await expect(window.getByLabel("OpenAI-Compatible Local 连通测试")).toContainText("stella-e2e-model");
-    expect(receivedAuthorization).toBe("Bearer stella-e2e-secret");
+    await expect(window.getByLabel("OpenAI-Compatible Local 连通测试")).toContainText("stella-e2e-model-2");
+    expect(receivedModelAuthorization).toBe("Bearer stella-e2e-secret");
 
-    const closeNotice = window.getByRole("button", { name: "关闭通知" });
-    if (await closeNotice.isVisible()) await closeNotice.click();
+    for (const closeNotice of await window.getByRole("button", { name: "关闭通知" }).all()) {
+      if (await closeNotice.isVisible()) await closeNotice.click();
+    }
     await window.setViewportSize({ width: 1_850, height: 1_178 });
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "model-configuration-stella.png"), fullPage: true, animations: "disabled" });
     await window.setViewportSize({ width: 600, height: 900 });

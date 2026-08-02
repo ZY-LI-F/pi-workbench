@@ -52,19 +52,26 @@ describe("LocalPathService", () => {
     expect(file.openWithSystem).not.toHaveBeenCalled();
   });
 
-  it("refuses to launch executable content but still permits revealing it", async () => {
+  it("directly opens only allowlisted document/media types and still permits revealing other files", async () => {
     const fixture = serviceFixture("file");
     const scriptPath = resolve("workspace", "run-analysis.ps1");
 
     await expect(fixture.service.inspect(scriptPath)).resolves.toMatchObject({
       directOpenAllowed: false,
-      directOpenBlockedReason: expect.stringContaining("可执行内容"),
+      directOpenBlockedReason: expect.stringContaining("安全清单"),
     });
     await expect(fixture.service.open(scriptPath)).rejects.toThrow("请先打开所在位置");
     expect(fixture.openWithSystem).not.toHaveBeenCalled();
 
     await fixture.service.reveal(scriptPath);
     expect(fixture.revealWithSystem).toHaveBeenCalledWith(scriptPath);
+
+    await expect(fixture.service.inspect(resolve("workspace", "design.py"))).resolves.toMatchObject({
+      directOpenAllowed: false,
+    });
+    await expect(fixture.service.inspect(resolve("workspace", "unknown.bin"))).resolves.toMatchObject({
+      directOpenAllowed: false,
+    });
   });
 
   it("exposes invalid, network and out-of-scope paths as explicit failures", async () => {

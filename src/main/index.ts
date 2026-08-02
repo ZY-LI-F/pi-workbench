@@ -16,12 +16,12 @@ import {
   ipcMain,
   net,
   protocol,
+  screen,
   shell,
 } from "electron";
 import type { IpcMainInvokeEvent } from "electron";
 import type {
   ModelSummary,
-  PiCommand,
   PiExtensionResponse,
   PiResponse,
   ProjectMeta,
@@ -66,7 +66,9 @@ import { BoardStore } from "./board-store";
 import { CapabilityHealthStore } from "./capability-health";
 import { ExecutionReviewService } from "./execution-review-service";
 import { InteractiveCommandRouter } from "./interactive-command-router";
-import { PiRpcRuntime, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
+import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
+import { validatedPiCommand } from "./pi-command-validation";
+import { mainWindowBounds } from "./window-bounds";
 import { ScheduleRunner } from "./schedule-runner";
 import { StateStore } from "./state-store";
 import { SquadService } from "./squad-service";
@@ -82,6 +84,8 @@ import {
   ModelConfigurationService,
   type ModelCatalogInspection,
 } from "./model-configuration-service";
+import { createRemoteModelCatalogDiscovery } from "./model-catalog-discovery";
+import { executeModelConfigurationTransaction } from "./model-configuration-transaction";
 import {
   canonicalExecutionProjectPath,
   canonicalExistingPath,
@@ -89,9 +93,12 @@ import {
   pathComparisonKey,
 } from "./path-security";
 import { LocalPathService } from "./local-path-service";
+import { LocalFilePreviewService } from "./local-file-preview-service";
+import { ComposerDraftStore } from "./composer-draft-store";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
+const piRpcMaxRecordBytes = piRpcMaxRecordBytesFromEnvironment(process.env.STELLA_PI_RPC_MAX_RECORD_BYTES);
 const preloadPath = fileURLToPath(new URL("../preload/index.cjs", import.meta.url));
 const SKIN_ARTWORK_SCHEME = "stella-artwork";
 
@@ -134,16 +141,6 @@ interface RpcTreeData {
   readonly leafId: string | null;
 }
 
-const PI_COMMAND_TYPES = new Set<string>([
-  "prompt", "steer", "follow_up", "abort", "new_session", "get_state", "set_model",
-  "cycle_model", "get_available_models", "set_thinking_level", "cycle_thinking_level",
-  "get_available_thinking_levels",
-  "set_steering_mode", "set_follow_up_mode", "compact", "set_auto_compaction",
-  "set_auto_retry", "abort_retry", "bash", "abort_bash", "get_session_stats", "export_html",
-  "switch_session", "fork", "clone", "get_fork_messages", "get_entries", "get_tree",
-  "get_last_assistant_text", "set_session_name", "get_messages", "get_commands",
-]);
-
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim().length === 0) throw new Error(`${label} 必须是非空字符串`);
   return value;
@@ -158,17 +155,6 @@ function assertMainWindowFrame(event: IpcMainInvokeEvent): void {
   ) {
     throw new Error("该敏感操作只能由 Stella 主窗口发起");
   }
-}
-
-function validatedCommand(value: unknown): PiCommand {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("Pi RPC 命令必须是对象");
-  }
-  const type = (value as Record<string, unknown>).type;
-  if (typeof type !== "string" || !PI_COMMAND_TYPES.has(type)) {
-    throw new Error(`不支持的 Pi RPC 命令: ${String(type)}`);
-  }
-  return value as PiCommand;
 }
 
 function validatedExtensionResponse(value: unknown): PiExtensionResponse {
@@ -204,6 +190,8 @@ let webhookServer: WebhookServer;
 let skinArtworkService: SkinArtworkService;
 let modelConfigurationService: ModelConfigurationService;
 let localPathService: LocalPathService;
+let localFilePreviewService: LocalFilePreviewService;
+let composerDraftStore: ComposerDraftStore;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
 function broadcast(source: "pi" | "runtime" | "board" | "capability", payload: unknown): void {
@@ -257,6 +245,7 @@ const runtime = new PiRpcRuntime({
     broadcast("runtime", signal);
   },
   requestTimeoutMs: piRpcRequestTimeoutMs,
+  maxProtocolRecordBytes: piRpcMaxRecordBytes,
 });
 
 interactiveCommandRouter = new InteractiveCommandRouter({ runtime, admission: workspaceAdmission });
@@ -269,6 +258,7 @@ const workflowRuntimeFactory: WorkflowRuntimeFactory = Object.freeze({
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
     requestTimeoutMs: piRpcRequestTimeoutMs,
+    maxProtocolRecordBytes: piRpcMaxRecordBytes,
   }),
 });
 
@@ -280,6 +270,7 @@ const agentTaskRuntimeFactory: AgentTaskRuntimeFactory = Object.freeze({
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
     requestTimeoutMs: piRpcRequestTimeoutMs,
+    maxProtocolRecordBytes: piRpcMaxRecordBytes,
   }),
 });
 
@@ -1040,13 +1031,18 @@ async function inspectModelCatalog(): Promise<ModelCatalogInspection> {
   });
 }
 
-async function reloadRuntimeAfterModelConfigurationChange(): Promise<void> {
+async function captureCurrentSessionPath(): Promise<string | undefined> {
+  if (!currentProject || !runtime.running) return undefined;
+  return dataFromResponse<RuntimeBootstrap["state"]>(
+    await runtime.send({ type: "get_state" }),
+    "get_state",
+  ).sessionFile;
+}
+
+async function restartRuntimeAfterModelConfigurationChange(sessionPath: string | undefined): Promise<void> {
   if (!currentProject) return;
   capabilityHealth.set("pi", "loading");
   try {
-    const sessionPath = runtime.running
-      ? dataFromResponse<RuntimeBootstrap["state"]>(await runtime.send({ type: "get_state" }), "get_state").sessionFile
-      : undefined;
     await runtime.stop();
     interactiveCommandRouter?.release();
     await runtime.start({ ...currentProject, sessionPath: sessionPath ?? undefined });
@@ -1059,9 +1055,17 @@ async function reloadRuntimeAfterModelConfigurationChange(): Promise<void> {
 }
 
 async function mutateModelConfiguration(mutation: () => Promise<void>) {
-  await mutation();
-  await reloadRuntimeAfterModelConfigurationChange();
-  return modelConfigurationService.snapshot();
+  return executeModelConfigurationTransaction(
+    {
+      createCheckpoint: () => modelConfigurationService.createCheckpoint(),
+      restoreCheckpoint: (checkpoint, expectedCurrent) =>
+        modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
+      captureSessionPath: captureCurrentSessionPath,
+      restartRuntime: restartRuntimeAfterModelConfigurationChange,
+      snapshot: () => modelConfigurationService.snapshot(),
+    },
+    mutation,
+  );
 }
 
 function allowedRevealRoots(): readonly string[] {
@@ -1248,7 +1252,7 @@ function registerIpcHandlers(): void {
     assertPiExecutionCapability();
     if (!currentProject) throw new Error("尚未选择项目");
     if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
-    return interactiveCommandRouter.send(validatedCommand(command), currentProject.cwd);
+    return interactiveCommandRouter.send(validatedPiCommand(command), currentProject.cwd);
   });
   ipcMain.handle("stella:extension-response", (_event, response: unknown) => {
     assertPiExecutionCapability();
@@ -1272,6 +1276,10 @@ function registerIpcHandlers(): void {
     assertMainWindowFrame(event);
     return localPathService.inspect(path);
   });
+  ipcMain.handle("stella:local-file:preview", (event, path: unknown) => {
+    assertMainWindowFrame(event);
+    return localFilePreviewService.read(path);
+  });
   ipcMain.handle("stella:open-path", (event, path: unknown) => {
     assertMainWindowFrame(event);
     return localPathService.open(path);
@@ -1290,6 +1298,14 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:copy-text", (_event, value: unknown) => {
     clipboard.writeText(textValue(value, "待复制文本"));
   });
+  ipcMain.handle("stella:composer-draft:load", (event, key: unknown) => {
+    assertMainWindowFrame(event);
+    return composerDraftStore.load(key);
+  });
+  ipcMain.handle("stella:composer-draft:save", (event, input: unknown) => {
+    assertMainWindowFrame(event);
+    return composerDraftStore.save(input);
+  });
   ipcMain.handle("stella:model-configuration:initialize", () => modelConfigurationService.snapshot());
   ipcMain.handle("stella:model-configuration:reveal-api-key", (event, providerId: unknown) => {
     assertMainWindowFrame(event);
@@ -1298,6 +1314,10 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:model-configuration:test-connection", (event, input: unknown) => {
     assertMainWindowFrame(event);
     return modelConfigurationService.testConnection(input as Parameters<ModelConfigurationService["testConnection"]>[0]);
+  });
+  ipcMain.handle("stella:model-configuration:discover-models", (event, input: unknown) => {
+    assertMainWindowFrame(event);
+    return modelConfigurationService.discoverAvailableModels(input as Parameters<ModelConfigurationService["discoverAvailableModels"]>[0]);
   });
   ipcMain.handle("stella:model-configuration:save-api-key", (_event, input: unknown) =>
     mutateModelConfiguration(() => modelConfigurationService.saveApiKey(input as Parameters<ModelConfigurationService["saveApiKey"]>[0])),
@@ -1308,6 +1328,10 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:model-configuration:upsert-provider", (_event, input: unknown) =>
     mutateModelConfiguration(() => modelConfigurationService.upsertProvider(input as Parameters<ModelConfigurationService["upsertProvider"]>[0])),
   );
+  ipcMain.handle("stella:model-configuration:save-provider-setup", (event, input: unknown) => {
+    assertMainWindowFrame(event);
+    return mutateModelConfiguration(() => modelConfigurationService.saveProviderSetup(input as Parameters<ModelConfigurationService["saveProviderSetup"]>[0]));
+  });
   ipcMain.handle("stella:model-configuration:delete-provider", (_event, providerId: unknown) =>
     mutateModelConfiguration(() => modelConfigurationService.deleteProvider(providerId)),
   );
@@ -1436,11 +1460,9 @@ function isAllowedAppNavigation(url: string): boolean {
 }
 
 function createWindow(): void {
+  const bounds = mainWindowBounds(screen.getPrimaryDisplay().workAreaSize);
   mainWindow = new BrowserWindow({
-    width: 1480,
-    height: 940,
-    minWidth: 980,
-    minHeight: 680,
+    ...bounds,
     show: false,
     backgroundColor: "#0c1021",
     title: "Stella · Pi Workbench",
@@ -1503,6 +1525,7 @@ if (!singleInstanceLock) {
       agentDir: piAgentDir(),
       storage: new FileModelConfigurationStorage(),
       inspect: inspectModelCatalog,
+      discoverModels: createRemoteModelCatalogDiscovery((url, init) => net.fetch(url, init)),
     });
     localPathService = new LocalPathService({
       allowedRoots: allowedRevealRoots,
@@ -1511,6 +1534,11 @@ if (!singleInstanceLock) {
       openWithSystem: (path) => shell.openPath(path),
       revealWithSystem: (path) => shell.showItemInFolder(path),
     });
+    localFilePreviewService = new LocalFilePreviewService({
+      inspectLocalPath: (path) => localPathService.inspect(path),
+      readFile,
+    });
+    composerDraftStore = new ComposerDraftStore(join(app.getPath("userData"), "composer-drafts"));
     registerSkinArtworkProtocol();
     registerIpcHandlers();
     createWindow();
@@ -1536,7 +1564,7 @@ app.on("before-quit", (event) => {
   event.preventDefault();
   if (shutdownStarted) return;
   shutdownStarted = true;
-  void Promise.all([runtime.stop(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop()])
+  void Promise.all([runtime.stop(), composerDraftStore?.drain(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop()])
     .then(() => {
       interactiveCommandRouter?.release();
       workspaceAdmission.shutdown();

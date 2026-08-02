@@ -1,9 +1,11 @@
 import { basename, extname, isAbsolute, resolve } from "node:path";
+import { localFilePreviewDescriptor } from "../shared/file-preview";
 import type { LocalPathInspection, LocalPathKind } from "../shared/local-path";
 
 interface PathMetadata {
   isFile(): boolean;
   isDirectory(): boolean;
+  readonly size?: number;
 }
 
 export interface LocalPathServiceDependencies {
@@ -17,50 +19,43 @@ export interface LocalPathServiceDependencies {
   readonly revealWithSystem: (canonicalPath: string) => void;
 }
 
-const DIRECT_OPEN_BLOCKED_EXTENSIONS = new Set([
-  ".app",
-  ".appref-ms",
-  ".appx",
-  ".bat",
-  ".bash",
-  ".cjs",
-  ".cmd",
-  ".com",
-  ".command",
-  ".deb",
-  ".desktop",
-  ".dmg",
-  ".docm",
-  ".exe",
-  ".fish",
-  ".hta",
-  ".jar",
-  ".js",
-  ".jse",
-  ".lnk",
-  ".mjs",
-  ".msi",
-  ".msix",
-  ".msp",
-  ".pkg",
-  ".ppam",
-  ".pptm",
-  ".ps1",
-  ".psd1",
-  ".psm1",
-  ".reg",
-  ".rpm",
-  ".scf",
-  ".scr",
-  ".sh",
-  ".url",
-  ".vbe",
-  ".vbs",
-  ".wsf",
-  ".wsh",
-  ".xlam",
-  ".xlsm",
-  ".zsh",
+const DIRECT_OPEN_FILE_EXTENSIONS = new Set([
+  ".avif",
+  ".bmp",
+  ".csv",
+  ".doc",
+  ".docx",
+  ".gif",
+  ".heic",
+  ".jpeg",
+  ".jpg",
+  ".json",
+  ".log",
+  ".m4a",
+  ".markdown",
+  ".md",
+  ".mov",
+  ".mp3",
+  ".mp4",
+  ".ods",
+  ".odp",
+  ".odt",
+  ".ogg",
+  ".pdf",
+  ".png",
+  ".ppt",
+  ".pptx",
+  ".rtf",
+  ".text",
+  ".tsv",
+  ".txt",
+  ".wav",
+  ".webp",
+  ".xls",
+  ".xlsx",
+  ".xml",
+  ".yaml",
+  ".yml",
 ]);
 
 function requiredAbsolutePath(value: unknown): string {
@@ -85,8 +80,9 @@ function pathKind(metadata: PathMetadata): LocalPathKind {
 
 function directOpenBlockReason(canonicalPath: string, kind: LocalPathKind): string | undefined {
   if (kind === "other") return "该路径不是普通文件或文件夹，只能在系统文件管理器中定位";
-  if (!DIRECT_OPEN_BLOCKED_EXTENSIONS.has(extname(canonicalPath).toLocaleLowerCase("en-US"))) return undefined;
-  return "为避免直接启动脚本、安装包或可执行内容，请先打开所在位置后手动检查";
+  if (kind === "directory") return undefined;
+  if (DIRECT_OPEN_FILE_EXTENSIONS.has(extname(canonicalPath).toLocaleLowerCase("en-US"))) return undefined;
+  return "该文件类型不在可直接打开的安全清单中；请先打开所在位置后手动检查";
 }
 
 export class LocalPathService {
@@ -105,12 +101,19 @@ export class LocalPathService {
     if (!canonicalPath) {
       throw new Error(`只允许访问当前项目、Pi 数据或应用数据目录内的路径: ${requestedPath}`);
     }
-    const kind = pathKind(await this.#dependencies.inspectPath(canonicalPath));
+    const metadata = await this.#dependencies.inspectPath(canonicalPath);
+    const kind = pathKind(metadata);
     const directOpenBlockedReason = directOpenBlockReason(canonicalPath, kind);
+    const preview = kind === "file" ? localFilePreviewDescriptor(canonicalPath) : undefined;
+    const sizeBytes = kind === "file" && typeof metadata.size === "number" && Number.isFinite(metadata.size)
+      ? metadata.size
+      : undefined;
     return Object.freeze({
       canonicalPath,
       name: basename(canonicalPath),
       kind,
+      ...(sizeBytes !== undefined ? { sizeBytes } : {}),
+      ...(preview ? { preview } : {}),
       directOpenAllowed: directOpenBlockedReason === undefined,
       ...(directOpenBlockedReason ? { directOpenBlockedReason } : {}),
     });

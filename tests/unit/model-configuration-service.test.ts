@@ -12,6 +12,7 @@ import {
   type ModelConfigurationRuntime,
   type ModelConfigurationStorage,
 } from "../../src/main/model-configuration-service";
+import type { RemoteModelCatalogDiscovery } from "../../src/main/model-catalog-discovery";
 
 class MemoryModelConfigurationStorage implements ModelConfigurationStorage {
   readonly values = new Map<string, string>();
@@ -93,15 +94,26 @@ function fakeRuntime(overrides: Partial<ModelConfigurationRuntime> = {}): ModelC
   } as unknown as ModelConfigurationRuntime;
 }
 
+function emptyDiscovery(): RemoteModelCatalogDiscovery {
+  return vi.fn(async (input) => Object.freeze({
+    endpoint: `${input.baseUrl}/models`,
+    models: Object.freeze([]),
+    latencyMs: 1,
+    checkedAt: Date.now(),
+  }));
+}
+
 function service(
   storage: MemoryModelConfigurationStorage,
   inspection = INSPECTION,
   runtime: ModelConfigurationRuntime = fakeRuntime(),
+  discoverModels: RemoteModelCatalogDiscovery = emptyDiscovery(),
 ) {
   return new ModelConfigurationService({
     agentDir: "C:/pi-agent",
     storage,
     inspect: vi.fn(async () => inspection),
+    discoverModels,
     runtimeFactory: vi.fn(async () => runtime),
   });
 }
@@ -188,6 +200,7 @@ describe("ModelConfigurationService", () => {
         agentDir: directory,
         storage: new FileModelConfigurationStorage(),
         inspect: vi.fn(async () => ({ providers: [] })),
+        discoverModels: emptyDiscovery(),
       });
 
       const result = await target.testConnection({ providerId: "local-stub", modelId: "stub-model" });
@@ -268,9 +281,101 @@ describe("ModelConfigurationService", () => {
       "C:/pi-agent/auth.json": JSON.stringify({ openai: { type: "api_key", key: "!password-manager read openai" } }),
     });
 
-    await expect(service(storage, INSPECTION, runtime).revealApiKey("openai"))
+    const runtimeFactory = vi.fn(async () => runtime);
+    const target = new ModelConfigurationService({
+      agentDir: "C:/pi-agent",
+      storage,
+      inspect: vi.fn(async () => INSPECTION),
+      discoverModels: emptyDiscovery(),
+      runtimeFactory,
+    });
+
+    await expect(target.revealApiKey("openai"))
       .rejects.toThrow("不会执行");
+    expect(runtimeFactory).not.toHaveBeenCalled();
+    expect(runtime.checkAuth).not.toHaveBeenCalled();
+    expect(runtime.listCredentials).not.toHaveBeenCalled();
     expect(getAuth).not.toHaveBeenCalled();
+  });
+
+  it("discovers models with a draft key without saving or returning the credential", async () => {
+    const discoverModels: RemoteModelCatalogDiscovery = vi.fn(async (input) => Object.freeze({
+      endpoint: `${input.baseUrl}/models`,
+      models: Object.freeze([Object.freeze({ id: "qwen-plus", name: "Qwen Plus" })]),
+      latencyMs: 24,
+      checkedAt: 123,
+    }));
+    const target = service(new MemoryModelConfigurationStorage(), INSPECTION, fakeRuntime(), discoverModels);
+
+    const result = await target.discoverAvailableModels({
+      providerId: "aliyun",
+      baseUrl: "https://dashscope.example/compatible-mode/v1",
+      api: "openai-completions",
+      apiKey: "draft-catalog-secret",
+      authHeader: false,
+    });
+
+    expect(discoverModels).toHaveBeenCalledWith(expect.objectContaining({ apiKey: "draft-catalog-secret" }));
+    expect(result).toMatchObject({
+      providerId: "aliyun",
+      credentialSource: "draft",
+      models: [{ id: "qwen-plus", name: "Qwen Plus" }],
+    });
+    expect(JSON.stringify(result)).not.toContain("draft-catalog-secret");
+  });
+
+  it("resolves an existing Pi API key for discovery without revealing it to the renderer", async () => {
+    const discoverModels: RemoteModelCatalogDiscovery = vi.fn(async (input) => Object.freeze({
+      endpoint: `${input.baseUrl}/models`,
+      models: Object.freeze([Object.freeze({ id: "local-model" })]),
+      latencyMs: 3,
+      checkedAt: 456,
+    }));
+    const runtime = fakeRuntime();
+    const target = service(new MemoryModelConfigurationStorage(), INSPECTION, runtime, discoverModels);
+
+    const result = await target.discoverAvailableModels({
+      providerId: "ollama",
+      baseUrl: "http://127.0.0.1:11434/v1",
+      api: "openai-completions",
+      authHeader: false,
+    });
+
+    expect(runtime.getAuth).toHaveBeenCalledWith("ollama");
+    expect(discoverModels).toHaveBeenCalledWith(expect.objectContaining({ apiKey: "resolved-secret" }));
+    expect(result.credentialSource).toBe("configured");
+    expect(JSON.stringify(result)).not.toContain("resolved-secret");
+  });
+
+  it("rejects query parameters in discovery Base URLs so keys cannot leak through result URLs", async () => {
+    await expect(service(new MemoryModelConfigurationStorage()).discoverAvailableModels({
+      providerId: "openai",
+      baseUrl: "https://api.example/v1?key=secret-in-url",
+      api: "openai-completions",
+      authHeader: false,
+    })).rejects.toThrow("不能包含查询参数");
+  });
+
+  it("restores only the exact model configuration version written by the transaction", async () => {
+    const storage = new MemoryModelConfigurationStorage({
+      "C:/pi-agent/auth.json": JSON.stringify({ openai: { type: "api_key", key: "old-key" } }),
+      "C:/pi-agent/models.json": JSON.stringify({ providers: {} }),
+    });
+    const target = service(storage);
+    const checkpoint = await target.createCheckpoint();
+    await target.saveApiKey({ providerId: "openai", apiKey: "new-key" });
+    const applied = await target.createCheckpoint();
+
+    await target.restoreCheckpoint(checkpoint, applied);
+    expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}")).toEqual({
+      openai: { type: "api_key", key: "old-key" },
+    });
+
+    await target.saveApiKey({ providerId: "openai", apiKey: "transaction-key" });
+    const staleExpected = await target.createCheckpoint();
+    storage.values.set("C:/pi-agent/auth.json", JSON.stringify({ openai: { type: "api_key", key: "external-edit" } }));
+    await expect(target.restoreCheckpoint(checkpoint, staleExpected)).rejects.toThrow("回滚冲突");
+    expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}").openai.key).toBe("external-edit");
   });
 
   it("tests a selected model with an unsaved key without persisting or returning the secret", async () => {
@@ -312,6 +417,24 @@ describe("ModelConfigurationService", () => {
     expect(result).toMatchObject({ ok: false, code: "authentication", modelId: "gpt-test" });
     expect(JSON.stringify(result)).not.toContain("temporary-secret");
     expect(JSON.stringify(result)).not.toContain("server-token");
+  });
+
+  it("rejects a non-terminal pending response instead of reporting a false connection success", async () => {
+    const runtime = fakeRuntime({
+      completeSimple: vi.fn(async () => ({
+        stopReason: "pending",
+        rawStopReason: "still_streaming",
+      })) as unknown as ModelConfigurationRuntime["completeSimple"],
+    });
+
+    const result = await service(new MemoryModelConfigurationStorage(), INSPECTION, runtime).testConnection({
+      providerId: "openai",
+      modelId: "gpt-test",
+    });
+
+    expect(result).toMatchObject({ ok: false, code: "unknown", modelId: "gpt-test" });
+    expect(result.message).toContain("模型请求失败");
+    expect(JSON.stringify(result)).not.toContain("still_streaming");
   });
 
   it("never returns untrusted Provider error text that echoes the current resolved credential", async () => {
@@ -362,6 +485,26 @@ describe("ModelConfigurationService", () => {
     expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}")).toEqual({
       openai: { type: "api_key", key: "new-key", env: { HTTPS_PROXY: "http://proxy.local" } },
     });
+  });
+
+  it("saves a new custom Provider, selected models, and its API key as one setup operation", async () => {
+    const storage = new MemoryModelConfigurationStorage();
+    const target = service(storage);
+
+    await target.saveProviderSetup({
+      provider: providerInput({ id: "aliyun-qwen", name: "阿里百炼" }),
+      apiKey: "aliyun-secret",
+    });
+
+    const models = JSON.parse(storage.values.get("C:/pi-agent/models.json") ?? "{}") as Record<string, any>;
+    const auth = JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}") as Record<string, any>;
+    expect(models.providers["aliyun-qwen"]).toMatchObject({
+      name: "阿里百炼",
+      baseUrl: "http://localhost:11434/v1",
+      api: "openai-completions",
+      models: [{ id: "qwen2.5-coder:7b" }],
+    });
+    expect(auth["aliyun-qwen"]).toEqual({ type: "api_key", key: "aliyun-secret" });
   });
 
   it("rejects keys for unknown providers instead of creating unaudited auth entries", async () => {

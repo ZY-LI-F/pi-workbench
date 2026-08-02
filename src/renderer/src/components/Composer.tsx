@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import type { SlashCommandSummary } from "@shared/contracts";
 import type { RuntimeUiState } from "../lib/runtime-state";
-import type { ComposerImage } from "../hooks/use-session-composer-draft";
+import type { ComposerDraftPersistence, ComposerImage } from "../hooks/use-session-composer-draft";
 
 export type { ComposerImage } from "../hooks/use-session-composer-draft";
 
@@ -32,6 +32,7 @@ interface ComposerProps {
   readonly onError: (message: string) => void;
   readonly sendDisabled?: boolean;
   readonly sendDisabledReason?: string;
+  readonly draftPersistence?: ComposerDraftPersistence;
 }
 
 function fileToImage(file: File): Promise<ComposerImage> {
@@ -73,6 +74,7 @@ export function Composer({
   onError,
   sendDisabled = false,
   sendDisabledReason,
+  draftPersistence = Object.freeze({ status: "saved" }),
 }: ComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -210,7 +212,21 @@ export function Composer({
             )}
           </div>
         </div>
-        <div className="composer__attachment-note" aria-live="polite"><span><FileImage size={11} />{images.length > 0 ? `${images.length} 个附件已保留在当前会话草稿中` : "附件会随当前会话草稿保留，发送成功后进入消息记录"}</span>{sendDisabledReason && <strong>{sendDisabledReason}</strong>}</div>
+        <div className="composer__attachment-note" aria-live="polite">
+          <span><FileImage size={11} />{images.length > 0 ? `${images.length} 个附件已保留在当前会话草稿中` : "附件会随当前会话草稿保留，发送成功后进入消息记录"}</span>
+          <small className={`composer__draft-state is-${draftPersistence.status}`} title={draftPersistence.status === "error" ? draftPersistence.message : undefined}>
+            {draftPersistence.status === "loading"
+              ? "正在恢复本机草稿…"
+              : draftPersistence.status === "saving"
+                ? "正在保存草稿…"
+                : draftPersistence.status === "saved"
+                  ? "草稿已保存至本机"
+                  : draftPersistence.status === "recovered"
+                    ? "已恢复上次未发送草稿"
+                    : `草稿保存失败：${draftPersistence.message}`}
+          </small>
+          {sendDisabledReason && <strong>{sendDisabledReason}</strong>}
+        </div>
       </div>
     </div>
   );

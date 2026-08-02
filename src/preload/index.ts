@@ -10,11 +10,14 @@ import type {
 import type { CapabilityHealthSnapshot, CapabilityName } from "../shared/capabilities";
 import type { SkinArtworkDescriptor, SkinId } from "../shared/skin-artwork";
 import type {
+  DiscoverPiModelsInput,
   PiModelConfigurationProviderInput,
   PiModelConfigurationSnapshot,
   PiApiKeyRevealResult,
+  PiModelDiscoveryResult,
   PiModelConnectionTestResult,
   SavePiApiKeyInput,
+  SavePiProviderSetupInput,
   TestPiModelConnectionInput,
 } from "../shared/model-configuration";
 import type {
@@ -34,6 +37,7 @@ import type {
   UpdateProjectAgentInput,
   UpdateSquadInput,
 } from "../shared/kanban";
+import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "../shared/composer-draft";
 
 const api: StellaDesktopApi = Object.freeze({
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
@@ -54,22 +58,32 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:open-project", path, trusted) as Promise<RuntimeBootstrap | null>,
   inspectLocalPath: (path: string) =>
     ipcRenderer.invoke("stella:local-path:inspect", path) as ReturnType<StellaDesktopApi["inspectLocalPath"]>,
+  readLocalFilePreview: (path: string) =>
+    ipcRenderer.invoke("stella:local-file:preview", path) as ReturnType<StellaDesktopApi["readLocalFilePreview"]>,
   openPath: (path: string) => ipcRenderer.invoke("stella:open-path", path) as Promise<void>,
   revealPath: (path: string) => ipcRenderer.invoke("stella:reveal-path", path) as Promise<void>,
   openExternal: (url: string) => ipcRenderer.invoke("stella:open-external", url) as Promise<void>,
   copyText: (value: string) => ipcRenderer.invoke("stella:copy-text", value) as Promise<void>,
+  composerDraftLoad: (key: string) =>
+    ipcRenderer.invoke("stella:composer-draft:load", key) as Promise<ComposerDraftSnapshot | undefined>,
+  composerDraftSave: (input: SaveComposerDraftInput) =>
+    ipcRenderer.invoke("stella:composer-draft:save", input) as Promise<void>,
   modelConfigurationInitialize: () =>
     ipcRenderer.invoke("stella:model-configuration:initialize") as Promise<PiModelConfigurationSnapshot>,
   modelConfigurationRevealApiKey: (providerId: string) =>
     ipcRenderer.invoke("stella:model-configuration:reveal-api-key", providerId) as Promise<PiApiKeyRevealResult>,
   modelConfigurationTestConnection: (input: TestPiModelConnectionInput) =>
     ipcRenderer.invoke("stella:model-configuration:test-connection", input) as Promise<PiModelConnectionTestResult>,
+  modelConfigurationDiscoverModels: (input: DiscoverPiModelsInput) =>
+    ipcRenderer.invoke("stella:model-configuration:discover-models", input) as Promise<PiModelDiscoveryResult>,
   modelConfigurationSaveApiKey: (input: SavePiApiKeyInput) =>
     ipcRenderer.invoke("stella:model-configuration:save-api-key", input) as Promise<PiModelConfigurationSnapshot>,
   modelConfigurationDeleteCredential: (providerId: string) =>
     ipcRenderer.invoke("stella:model-configuration:delete-credential", providerId) as Promise<PiModelConfigurationSnapshot>,
   modelConfigurationUpsertProvider: (input: PiModelConfigurationProviderInput) =>
     ipcRenderer.invoke("stella:model-configuration:upsert-provider", input) as Promise<PiModelConfigurationSnapshot>,
+  modelConfigurationSaveProviderSetup: (input: SavePiProviderSetupInput) =>
+    ipcRenderer.invoke("stella:model-configuration:save-provider-setup", input) as Promise<PiModelConfigurationSnapshot>,
   modelConfigurationDeleteProvider: (providerId: string) =>
     ipcRenderer.invoke("stella:model-configuration:delete-provider", providerId) as Promise<PiModelConfigurationSnapshot>,
   boardInitialize: () => ipcRenderer.invoke("stella:board:initialize") as Promise<BoardBootstrap>,

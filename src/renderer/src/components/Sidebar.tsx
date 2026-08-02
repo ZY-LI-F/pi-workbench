@@ -19,7 +19,6 @@ import type { ModelSummary, RecentProject, RuntimeBootstrap, SerializableContent
 import type { SkinPreference } from "../lib/skins";
 import { Brand } from "./Brand";
 import { GlobalModelControl } from "./GlobalModelControl";
-import { useMediaQuery } from "../hooks/use-media-query";
 
 interface SidebarProps {
   readonly bootstrap?: RuntimeBootstrap;
@@ -152,9 +151,7 @@ export function Sidebar({
   const [query, setQuery] = useState("");
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const priorFocusRef = useRef<HTMLElement | null>(null);
-  const wasOpenRef = useRef(false);
-  const compact = useMediaQuery("(max-width: 1060px)");
+  const wasOpenRef = useRef(open);
   const sessions = useMemo(() => visibleSidebarSessions(bootstrap), [bootstrap]);
   const groups = useMemo(() => {
     const filtered = sessions.filter((session) =>
@@ -175,16 +172,12 @@ export function Sidebar({
     : Object.freeze(["pi"] as const);
 
   useEffect(() => {
-    if (!compact) return;
-    if (open && !wasOpenRef.current) {
-      priorFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      requestAnimationFrame(() => closeRef.current?.focus());
-    } else if (!open && wasOpenRef.current) {
-      priorFocusRef.current?.focus();
-      priorFocusRef.current = null;
-    }
+    const opening = open && !wasOpenRef.current;
     wasOpenRef.current = open;
-  }, [compact, open]);
+    if (!opening) return;
+    const timeout = window.setTimeout(() => closeRef.current?.focus({ preventScroll: true }), 240);
+    return () => window.clearTimeout(timeout);
+  }, [open]);
 
   return (
     <>

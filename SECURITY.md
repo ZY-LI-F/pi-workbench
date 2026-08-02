@@ -18,13 +18,13 @@ files, or Pi session contents in a public issue.
 - Workspace access is an application policy and serialization boundary, not an
   operating-system sandbox.
 
-## Dependency audit status (2026-07-26)
+## Dependency audit status (2026-08-01)
 
 The repository pins the latest verified Pi release
-`@earendil-works/pi-coding-agent@0.82.1`. Its published
+`@earendil-works/pi-coding-agent@0.83.0`. Its published
 `npm-shrinkwrap.json` still pins `brace-expansion@5.0.7`, which npm reports for
-GHSA-3jxr-9vmj-r5cp and GHSA-mh99-v99m-4gvg; the first upstream patched release
-is `5.0.8`. Root npm overrides cannot replace a dependency locked by a
+GHSA-mh99-v99m-4gvg; the patched release is `5.0.8`. Root npm overrides cannot
+replace a dependency locked by a
 published child shrinkwrap. The remaining audit item is therefore exposed
 here explicitly instead of being hidden with `npm audit --force`, a Pi fork,
 or an install-time mutation of `node_modules`.

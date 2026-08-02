@@ -6,6 +6,7 @@ import type {
   SerializableMessage,
   StellaDesktopApi,
 } from "@shared/contracts";
+import type { LocalPathInspection } from "@shared/local-path";
 import type { ToolExecutionState } from "../lib/runtime-state";
 import { MessageCard } from "./MessageCard";
 
@@ -17,6 +18,7 @@ interface ConversationProps {
   readonly streaming: boolean;
   readonly onPrefill: (text: string) => void;
   readonly onFork: (entryId: string) => void;
+  readonly onPreviewFile: (inspection: LocalPathInspection) => void;
 }
 
 const SUGGESTIONS = Object.freeze([
@@ -54,7 +56,7 @@ function EmptyConversation({ projectName, onPrefill }: { readonly projectName: s
       <p>已连接到 <strong>{projectName}</strong>。你可以直接描述目标，Pi 会读取、修改并验证本地代码。</p>
       <div className="suggestion-grid">
         {SUGGESTIONS.map(({ icon: Icon, label, prompt }) => (
-          <button type="button" key={label} onClick={() => onPrefill(prompt)}>
+          <button type="button" key={label} aria-label={label} onClick={() => onPrefill(prompt)}>
             <Icon size={17} />
             <span><strong>{label}</strong><small>{prompt.trim()}</small></span>
             <ArrowUpRight size={14} />
@@ -76,13 +78,16 @@ export function Conversation({
   streaming,
   onPrefill,
   onFork,
+  onPreviewFile,
 }: ConversationProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const pinnedToBottom = useRef(true);
   const lastMessage = messages.at(-1);
   const streamLength = contentLength(lastMessage);
   const visibleMessages = useMemo(
-    () => messages.filter((message) => message.role !== "bashExecution"),
+    () => messages.filter((message) =>
+      message.role !== "bashExecution" && !(message.role === "custom" && !message.display),
+    ),
     [messages],
   );
 
@@ -117,6 +122,7 @@ export function Conversation({
                 toolExecutions={tools}
                 entryId={message.role === "user" ? findEntryId(bootstrap, message) : undefined}
                 onFork={onFork}
+                onPreviewFile={onPreviewFile}
               />
             );
           })

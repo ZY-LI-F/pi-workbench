@@ -2,11 +2,11 @@
 
 ## 结论
 
-当前 GUI 的 **Pi RPC 核心工作流正常**，并且团队层关闭时可以独立使用。项目安装并打包的是 `@earendil-works/pi-coding-agent@0.82.1`；审查时上游 [`packages/coding-agent/package.json`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/package.json) 也是 `0.82.1`。能力对照以同版本的 [RPC 文档](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/rpc.md) 与 [Coding Agent README](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md) 为准。
+当前 GUI 的 **Pi RPC 核心工作流正常**，并且团队层关闭时可以独立使用。项目已于 2026-08-01 升级并精确锁定 `@earendil-works/pi-coding-agent@0.83.0`；本表最初按 `0.82.1` 审查，升级后已重新通过公开 RPC 合同、生产构建和原生 Electron E2E。能力对照以官方 [RPC 文档](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/rpc.md) 与 [Coding Agent README](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/README.md) 为准。
 
 “全面”需要区分两个口径：
 
-- 以 Pi 0.82.1 的 **RPC 嵌入协议**为口径，GUI 已覆盖日常工作所需的核心能力；少数 RPC 变体由更直观的选择器替代，少数高级参数尚无独立表单。
+- 以 Pi 0.83.0 的 **RPC 嵌入协议**为口径，GUI 已覆盖日常工作所需的核心能力；少数 RPC 变体由更直观的选择器替代，少数高级参数尚无独立表单。
 - 以 Pi 的 **完整交互式 TUI**为口径，当前 GUI 不是 100% 等价复刻；OAuth 登录、包管理、scoped models、导入/分享、文件模糊补全等仍属于 Pi CLI/TUI 能力。
 
 因此，准确表述应是：**原生执行主链正常，RPC 核心覆盖较完整，但不应宣称完整复刻 Pi TUI 的所有管理与编辑器能力。**
@@ -21,7 +21,7 @@
 | 团队协作、任务看板、自动化 | 隐藏 | 在“偏好设置 → 功能页面 → 显示团队功能（实验）”显式开启 |
 | “固化为任务”与团队命令 | 隐藏 | 只在团队功能开启后出现；关闭不删除 `board.json` 中的已有事实 |
 
-## Pi 0.82.1 RPC 对照
+## Pi 0.83.0 RPC 对照
 
 | 协议能力 | GUI 状态 | 说明 |
 | --- | --- | --- |

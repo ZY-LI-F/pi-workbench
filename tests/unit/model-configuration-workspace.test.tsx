@@ -72,9 +72,18 @@ function renderWorkspace(apiOverrides: Partial<StellaDesktopApi> = {}) {
       checkedAt: Date.now(),
       message: "最小模型请求已成功返回。",
     })),
+    modelConfigurationDiscoverModels: vi.fn(async (input) => ({
+      providerId: input.providerId,
+      endpoint: `${input.baseUrl}/models`,
+      credentialSource: input.apiKey ? "draft" as const : "configured" as const,
+      models: Object.freeze([]),
+      latencyMs: 1,
+      checkedAt: Date.now(),
+    })),
     modelConfigurationSaveApiKey: vi.fn(async () => SNAPSHOT),
     modelConfigurationDeleteCredential: vi.fn(async () => SNAPSHOT),
     modelConfigurationUpsertProvider: vi.fn(async () => SNAPSHOT),
+    modelConfigurationSaveProviderSetup: vi.fn(async () => SNAPSHOT),
     modelConfigurationDeleteProvider: vi.fn(async () => SNAPSHOT),
     revealPath: vi.fn(async () => undefined),
     ...apiOverrides,
@@ -257,5 +266,66 @@ describe("ModelConfigurationWorkspace", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("鉴权失败：API Key 无效。");
     expect(screen.getByText("测试未通过")).toBeTruthy();
     expect(screen.getByText("CHECK FAILED")).toBeTruthy();
+  });
+
+  it("discovers remote models, lets the user add and remove selections, and saves the Key with the Provider", async () => {
+    const user = userEvent.setup();
+    const discoverModels = vi.fn(async (input) => ({
+      providerId: input.providerId,
+      endpoint: `${input.baseUrl}/models`,
+      credentialSource: "draft" as const,
+      models: Object.freeze([
+        Object.freeze({ id: "qwen-plus", name: "Qwen Plus", owner: "aliyun" }),
+        Object.freeze({ id: "qwen-max", name: "Qwen Max", contextWindow: 131_072, maxTokens: 16_384 }),
+      ]),
+      latencyMs: 23,
+      checkedAt: Date.now(),
+    }));
+    const saveSetup = vi.fn(async () => SNAPSHOT);
+    const { onRuntimeRefresh } = renderWorkspace({
+      modelConfigurationDiscoverModels: discoverModels,
+      modelConfigurationSaveProviderSetup: saveSetup,
+    });
+    await within(screen.getByLabelText("Provider 列表")).findByRole("button", { name: /OpenAI/ });
+
+    await user.click(screen.getByRole("button", { name: "自定义 Provider" }));
+    const dialog = screen.getByRole("dialog", { name: "接入自定义 Provider" });
+    await user.type(within(dialog).getByLabelText(/Provider ID/), "aliyun-qwen");
+    await user.type(within(dialog).getByLabelText(/Base URL/), "https://dashscope.example/compatible-mode/v1");
+    await user.type(within(dialog).getByLabelText("模型发现 API key"), "draft-secret");
+    await user.click(within(dialog).getByRole("button", { name: "发现远端模型" }));
+
+    await waitFor(() => expect(discoverModels).toHaveBeenCalledWith({
+      providerId: "aliyun-qwen",
+      baseUrl: "https://dashscope.example/compatible-mode/v1",
+      api: "openai-completions",
+      apiKey: "draft-secret",
+      authHeader: false,
+    }));
+    expect(await within(dialog).findByText("Qwen Plus")).toBeTruthy();
+    await user.click(within(dialog).getByLabelText("添加模型 qwen-plus"));
+    await user.click(within(dialog).getByLabelText("添加模型 qwen-max"));
+    await user.click(within(dialog).getByLabelText("移除模型 qwen-plus"));
+    await user.click(within(dialog).getByRole("button", { name: "保存 Provider 与 Key" }));
+
+    await waitFor(() => expect(saveSetup).toHaveBeenCalledWith({
+      provider: {
+        id: "aliyun-qwen",
+        name: undefined,
+        baseUrl: "https://dashscope.example/compatible-mode/v1",
+        api: "openai-completions",
+        authHeader: false,
+        models: [{
+          id: "qwen-max",
+          name: "Qwen Max",
+          reasoning: false,
+          imageInput: false,
+          contextWindow: 131_072,
+          maxTokens: 16_384,
+        }],
+      },
+      apiKey: "draft-secret",
+    }));
+    expect(onRuntimeRefresh).toHaveBeenCalledTimes(1);
   });
 });

@@ -9,13 +9,14 @@ afterEach(cleanup);
 
 const BOOTSTRAP = {
   project: { name: "PI-GUI", branch: "main" },
-  state: { thinkingLevel: "off" },
+  state: { thinkingLevel: "off", model: { provider: "aliyun-maas", id: "qwen3.6-flash", name: "Qwen 3.6 Flash" } },
   thinkingLevels: ["off"],
 } as unknown as RuntimeBootstrap;
 
 function renderTopbar(online: boolean) {
   const onFocusSession = vi.fn();
   const onNewSession = vi.fn();
+  const onOpenModels = vi.fn();
   render(
     <Topbar
       bootstrap={BOOTSTRAP}
@@ -27,12 +28,13 @@ function renderTopbar(online: boolean) {
       onFocusSession={onFocusSession}
       onNewSession={onNewSession}
       onToggleInspector={vi.fn()}
+      onOpenModels={onOpenModels}
       onOpenSettings={vi.fn()}
       onThinkingChange={vi.fn()}
       onAbortRetry={vi.fn()}
     />,
   );
-  return Object.freeze({ onFocusSession, onNewSession });
+  return Object.freeze({ onFocusSession, onNewSession, onOpenModels });
 }
 
 describe("Topbar", () => {
@@ -53,5 +55,15 @@ describe("Topbar", () => {
     expect(screen.getByRole("button", { name: "聚焦当前会话" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "新建会话" }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole("button", { name: "会话检查器" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("keeps the active model visible and opens the shared model configuration", async () => {
+    const user = userEvent.setup();
+    const actions = renderTopbar(true);
+
+    const model = screen.getByRole("button", { name: "当前模型：aliyun-maas / Qwen 3.6 Flash，打开模型配置" });
+    expect(model.textContent).toContain("aliyun-maas / Qwen 3.6 Flash");
+    await user.click(model);
+    expect(actions.onOpenModels).toHaveBeenCalledOnce();
   });
 });

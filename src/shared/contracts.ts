@@ -28,14 +28,19 @@ import type {
 import type { CapabilityHealthSnapshot, CapabilityName } from "./capabilities";
 import type { SkinArtworkDescriptor, SkinId } from "./skin-artwork";
 import type {
+  DiscoverPiModelsInput,
   PiModelConfigurationProviderInput,
   PiModelConfigurationSnapshot,
   PiApiKeyRevealResult,
+  PiModelDiscoveryResult,
   PiModelConnectionTestResult,
   SavePiApiKeyInput,
+  SavePiProviderSetupInput,
   TestPiModelConnectionInput,
 } from "./model-configuration";
 import type { LocalPathInspection } from "./local-path";
+import type { LocalFilePreviewData } from "./file-preview";
+import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "./composer-draft";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
@@ -131,6 +136,7 @@ export type SerializableMessage =
       readonly provider: string;
       readonly model: string;
       readonly stopReason: string;
+      readonly rawStopReason?: string;
       readonly errorMessage?: string;
       readonly timestamp: number;
       readonly usage?: {
@@ -223,16 +229,21 @@ export interface StellaDesktopApi {
   resetSkinArtwork(skin: SkinId): Promise<void>;
   openProject(path: string, trusted: boolean): Promise<RuntimeBootstrap | null>;
   inspectLocalPath(path: string): Promise<LocalPathInspection>;
+  readLocalFilePreview(path: string): Promise<LocalFilePreviewData>;
   openPath(path: string): Promise<void>;
   revealPath(path: string): Promise<void>;
   openExternal(url: string): Promise<void>;
   copyText(value: string): Promise<void>;
+  composerDraftLoad(key: string): Promise<ComposerDraftSnapshot | undefined>;
+  composerDraftSave(input: SaveComposerDraftInput): Promise<void>;
   modelConfigurationInitialize(): Promise<PiModelConfigurationSnapshot>;
   modelConfigurationRevealApiKey(providerId: string): Promise<PiApiKeyRevealResult>;
   modelConfigurationTestConnection(input: TestPiModelConnectionInput): Promise<PiModelConnectionTestResult>;
+  modelConfigurationDiscoverModels(input: DiscoverPiModelsInput): Promise<PiModelDiscoveryResult>;
   modelConfigurationSaveApiKey(input: SavePiApiKeyInput): Promise<PiModelConfigurationSnapshot>;
   modelConfigurationDeleteCredential(providerId: string): Promise<PiModelConfigurationSnapshot>;
   modelConfigurationUpsertProvider(input: PiModelConfigurationProviderInput): Promise<PiModelConfigurationSnapshot>;
+  modelConfigurationSaveProviderSetup(input: SavePiProviderSetupInput): Promise<PiModelConfigurationSnapshot>;
   modelConfigurationDeleteProvider(providerId: string): Promise<PiModelConfigurationSnapshot>;
   boardInitialize(): Promise<BoardBootstrap>;
   boardCreateTask(input: CreateTaskInput): Promise<BoardBootstrap>;

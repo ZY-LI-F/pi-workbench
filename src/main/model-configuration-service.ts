@@ -5,8 +5,10 @@ import { dirname, join, resolve } from "node:path";
 import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 import {
   isCustomModelApi,
+  type DiscoverPiModelsInput,
   type PiApiKeyRevealResult,
   type PiCustomProviderConfiguration,
+  type PiModelDiscoveryResult,
   type PiModelConfigurationModel,
   type PiModelConfigurationProviderInput,
   type PiModelConfigurationSnapshot,
@@ -14,8 +16,10 @@ import {
   type PiModelConnectionTestResult,
   type PiModelProviderSummary,
   type SavePiApiKeyInput,
+  type SavePiProviderSetupInput,
   type TestPiModelConnectionInput,
 } from "../shared/model-configuration";
+import type { RemoteModelCatalogDiscovery } from "./model-catalog-discovery";
 
 interface ProperLockfile {
   lock(
@@ -34,6 +38,7 @@ const DIRECTORY_MODE = 0o700;
 const CONNECTION_TEST_TIMEOUT_MS = 15_000;
 const CONNECTION_TEST_MAX_TOKENS = 8;
 const CONNECTION_ERROR_MAX_LENGTH = 360;
+const CONNECTION_SUCCESS_STOP_REASONS = Object.freeze(["stop", "length", "toolUse"] as const);
 
 type JsonObject = Record<string, unknown>;
 
@@ -60,6 +65,11 @@ export interface ModelConfigurationStorage {
   update(path: string, transform: (current: string) => string): Promise<void>;
 }
 
+export interface ModelConfigurationCheckpoint {
+  readonly authContents?: string;
+  readonly modelsContents?: string;
+}
+
 export type ModelConfigurationRuntime = Pick<
   ModelRuntime,
   "getProvider" | "getModels" | "getModel" | "checkAuth" | "getAuth" | "listCredentials" | "completeSimple"
@@ -69,6 +79,7 @@ interface ModelConfigurationServiceDependencies {
   readonly agentDir: string;
   readonly storage: ModelConfigurationStorage;
   readonly inspect: () => Promise<ModelCatalogInspection>;
+  readonly discoverModels: RemoteModelCatalogDiscovery;
   readonly runtimeFactory?: () => Promise<ModelConfigurationRuntime>;
 }
 
@@ -117,6 +128,42 @@ function normalizedConnectionTestInput(value: TestPiModelConnectionInput): TestP
     providerId: requiredIdentifier(value.providerId, "Provider ID"),
     modelId: optionalTrimmed(value.modelId, "模型 ID"),
     apiKey,
+  });
+}
+
+function normalizedModelDiscoveryInput(value: DiscoverPiModelsInput): DiscoverPiModelsInput {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("模型发现配置必须是对象");
+  }
+  if (!isCustomModelApi(value.api)) throw new Error(`不支持的模型 API: ${String(value.api)}`);
+  if (value.apiKey !== undefined && typeof value.apiKey !== "string") {
+    throw new Error("API key 必须是字符串");
+  }
+  const baseUrl = optionalUrl(value.baseUrl, "Base URL");
+  if (!baseUrl) throw new Error("Base URL 不能为空");
+  const parsed = new URL(baseUrl);
+  if (parsed.search || parsed.hash) throw new Error("Base URL 不能包含查询参数或片段");
+  const apiKey = typeof value.apiKey === "string" && value.apiKey.trim() ? value.apiKey : undefined;
+  return Object.freeze({
+    providerId: requiredIdentifier(value.providerId, "Provider ID"),
+    baseUrl,
+    api: value.api,
+    ...(apiKey ? { apiKey } : {}),
+    authHeader: Boolean(value.authHeader),
+  });
+}
+
+function normalizedProviderSetupInput(value: SavePiProviderSetupInput): SavePiProviderSetupInput {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Provider 接入配置必须是对象");
+  }
+  if (value.apiKey !== undefined && typeof value.apiKey !== "string") {
+    throw new Error("API key 必须是字符串");
+  }
+  const apiKey = typeof value.apiKey === "string" && value.apiKey.trim() ? value.apiKey : undefined;
+  return Object.freeze({
+    provider: normalizedProviderInput(value.provider),
+    ...(apiKey ? { apiKey } : {}),
   });
 }
 
@@ -377,6 +424,7 @@ export class ModelConfigurationService {
   readonly #authPath: string;
   readonly #storage: ModelConfigurationStorage;
   readonly #inspect: () => Promise<ModelCatalogInspection>;
+  readonly #discoverModels: RemoteModelCatalogDiscovery;
   readonly #runtimeFactory: () => Promise<ModelConfigurationRuntime>;
 
   constructor(dependencies: ModelConfigurationServiceDependencies) {
@@ -385,6 +433,7 @@ export class ModelConfigurationService {
     this.#authPath = join(this.#agentDir, "auth.json");
     this.#storage = dependencies.storage;
     this.#inspect = dependencies.inspect;
+    this.#discoverModels = dependencies.discoverModels;
     this.#runtimeFactory = dependencies.runtimeFactory ?? (() => ModelRuntime.create({
       authPath: this.#authPath,
       modelsPath: this.#modelsPath,
@@ -415,6 +464,39 @@ export class ModelConfigurationService {
       if (typeof model !== "object" || model === null || Array.isArray(model)) return false;
       return containsCredentialCommand((model as JsonObject).headers);
     });
+  }
+
+  async createCheckpoint(): Promise<ModelConfigurationCheckpoint> {
+    const [authContents, modelsContents] = await Promise.all([
+      this.#storage.read(this.#authPath),
+      this.#storage.read(this.#modelsPath),
+    ]);
+    return Object.freeze({
+      ...(authContents === undefined ? {} : { authContents }),
+      ...(modelsContents === undefined ? {} : { modelsContents }),
+    });
+  }
+
+  async restoreCheckpoint(
+    checkpoint: ModelConfigurationCheckpoint,
+    expectedCurrent: ModelConfigurationCheckpoint,
+  ): Promise<void> {
+    const restore = async (
+      path: string,
+      previous: string | undefined,
+      expected: string | undefined,
+    ): Promise<void> => {
+      if (previous === expected) return;
+      await this.#storage.update(path, (current) => {
+        if (current !== (expected ?? "")) {
+          throw new Error(`模型配置回滚冲突：${path} 已被其他进程修改`);
+        }
+        return previous ?? "";
+      });
+    };
+
+    await restore(this.#authPath, checkpoint.authContents, expectedCurrent.authContents);
+    await restore(this.#modelsPath, checkpoint.modelsContents, expectedCurrent.modelsContents);
   }
 
   async snapshot(): Promise<PiModelConfigurationSnapshot> {
@@ -455,7 +537,12 @@ export class ModelConfigurationService {
     const providerId = requiredIdentifier(value.providerId, "Provider ID");
     if (typeof value.apiKey !== "string" || value.apiKey.trim().length === 0) throw new Error("API key 不能为空");
     const inspection = await this.#inspect();
-    if (!inspection.providers.some((provider) => provider.id === providerId && provider.supportsApiKey)) {
+    const inspectedProvider = inspection.providers.find((provider) => provider.id === providerId);
+    const configuredProviders = configuredProvidersFromJson(
+      parseJsonObject(await this.#storage.read(this.#modelsPath), this.#modelsPath, { providers: {} }),
+      this.#modelsPath,
+    );
+    if (!(inspectedProvider?.supportsApiKey || configuredProviders.has(providerId))) {
       throw new Error(`Provider 不存在或不支持 API key: ${providerId}`);
     }
     await this.#storage.update(this.#authPath, (contents) => {
@@ -473,6 +560,16 @@ export class ModelConfigurationService {
 
   async revealApiKey(providerIdValue: unknown): Promise<PiApiKeyRevealResult> {
     const providerId = requiredIdentifier(providerIdValue, "Provider ID");
+    let hasCredentialCommand: boolean;
+    try {
+      hasCredentialCommand = await this.#hasCredentialCommand(providerId);
+    } catch {
+      throw new Error(`无法检查 ${providerId} 的动态凭据配置；请检查 models.json 或 auth.json`);
+    }
+    if (hasCredentialCommand) {
+      throw new Error(`动态命令凭据不能在本页显示；“查看”不会执行 ${providerId} 配置中的 !command，可使用连接测试验证该凭据`);
+    }
+
     let runtime: ModelConfigurationRuntime;
     try {
       runtime = await this.#runtimeFactory();
@@ -497,16 +594,6 @@ export class ModelConfigurationService {
     if (storedCredential?.type === "oauth" || (!storedCredential && authCheck?.type === "oauth")) {
       throw new Error(`${provider.name} 当前使用 OAuth；为保护账户安全，不显示访问令牌`);
     }
-    let hasCredentialCommand: boolean;
-    try {
-      hasCredentialCommand = await this.#hasCredentialCommand(providerId);
-    } catch {
-      throw new Error(`无法检查 ${provider.name} 的动态凭据配置；请检查 models.json 或 auth.json`);
-    }
-    if (hasCredentialCommand) {
-      throw new Error(`动态命令凭据不能在本页显示；“查看”不会执行 ${provider.name} 配置中的 !command，可使用连接测试验证该凭据`);
-    }
-
     let resolution: Awaited<ReturnType<ModelConfigurationRuntime["getAuth"]>>;
     try {
       resolution = await runtime.getAuth(providerId);
@@ -521,6 +608,46 @@ export class ModelConfigurationService {
       providerId,
       apiKey,
       source: resolution?.source,
+    });
+  }
+
+  async discoverAvailableModels(value: DiscoverPiModelsInput): Promise<PiModelDiscoveryResult> {
+    const input = normalizedModelDiscoveryInput(value);
+    let apiKey = input.apiKey;
+    let credentialSource: PiModelDiscoveryResult["credentialSource"] = apiKey ? "draft" : "none";
+
+    if (!apiKey) {
+      const inspection = await this.#inspect();
+      const provider = inspection.providers.find((candidate) => candidate.id === input.providerId);
+      if (provider?.credentialType === "oauth") {
+        throw new Error("OAuth 访问令牌不会用于模型目录发现；请在此处输入 API Key。");
+      }
+      if (provider?.configured) {
+        let runtime: ModelConfigurationRuntime;
+        try {
+          runtime = await this.#runtimeFactory();
+          const resolution = await runtime.getAuth(input.providerId);
+          apiKey = resolution?.auth.apiKey;
+        } catch {
+          throw new Error(`无法解析 ${provider.name} 的已保存 API Key；请输入新的 Key 后重试。`);
+        }
+        if (apiKey) credentialSource = "configured";
+      }
+    }
+
+    const discovered = await this.#discoverModels(Object.freeze({
+      baseUrl: input.baseUrl,
+      api: input.api,
+      ...(apiKey ? { apiKey } : {}),
+      authHeader: input.authHeader,
+    }));
+    return Object.freeze({
+      providerId: input.providerId,
+      endpoint: discovered.endpoint,
+      models: discovered.models,
+      credentialSource,
+      latencyMs: discovered.latencyMs,
+      checkedAt: discovered.checkedAt,
     });
   }
 
@@ -581,9 +708,14 @@ export class ModelConfigurationService {
           signal: controller.signal,
         },
       );
-      if (response.stopReason === "error" || response.stopReason === "aborted") {
+      if (!CONNECTION_SUCCESS_STOP_REASONS.some((candidate) => candidate === response.stopReason)) {
+        const diagnostic = [
+          response.errorMessage,
+          `模型请求以 ${response.stopReason} 结束`,
+          response.rawStopReason ? `原始停止原因：${response.rawStopReason}` : undefined,
+        ].filter((part): part is string => typeof part === "string" && part.length > 0).join("；");
         const result = connectionFailure(
-          new Error(response.errorMessage || `模型请求以 ${response.stopReason} 结束`),
+          new Error(diagnostic),
           input.apiKey ? [input.apiKey] : [],
           controller.signal.aborted,
         );
@@ -657,6 +789,17 @@ export class ModelConfigurationService {
       root.providers = providers;
       return serialized(root);
     });
+  }
+
+  async saveProviderSetup(value: SavePiProviderSetupInput): Promise<void> {
+    const input = normalizedProviderSetupInput(value);
+    await this.upsertProvider(input.provider);
+    if (input.apiKey) {
+      await this.saveApiKey(Object.freeze({
+        providerId: input.provider.id,
+        apiKey: input.apiKey,
+      }));
+    }
   }
 
   async deleteProvider(providerIdValue: unknown): Promise<void> {

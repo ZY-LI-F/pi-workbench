@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import { PassThrough, Writable } from "node:stream";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
-import { PiRpcRuntime, piRpcRequestTimeoutFromEnvironment } from "../../src/main/pi-rpc-runtime";
+import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "../../src/main/pi-rpc-runtime";
 
 class FakeRpcProcess extends EventEmitter {
   readonly stdout = new PassThrough();
@@ -46,7 +46,7 @@ afterEach(async () => {
   await Promise.all(runtimes.splice(0).map((runtime) => runtime.stop()));
 });
 
-async function startedRuntime(timeout: number) {
+async function startedRuntime(timeout: number, maxProtocolRecordBytes?: number) {
   const child = new FakeRpcProcess();
   const signals: unknown[] = [];
   const runtime = new PiRpcRuntime({
@@ -59,6 +59,7 @@ async function startedRuntime(timeout: number) {
     emitPiEvent: () => undefined,
     emitRuntimeSignal: (signal) => signals.push(signal),
     requestTimeoutMs: timeout,
+    maxProtocolRecordBytes,
   });
   runtimes.push(runtime);
   await runtime.start({ cwd: process.cwd(), trusted: false });
@@ -90,5 +91,26 @@ describe("PiRpcRuntime request boundaries", () => {
     expect(piRpcRequestTimeoutFromEnvironment("0")).toBe(0);
     expect(() => piRpcRequestTimeoutFromEnvironment("-1")).toThrow("非负数字");
     expect(() => piRpcRequestTimeoutFromEnvironment("NaN")).toThrow("非负数字");
+  });
+
+  it("stops on an explicitly oversized newline-delimited protocol record", async () => {
+    const { child, runtime, signals } = await startedRuntime(5_000, 256);
+    const pending = runtime.send({ type: "abort" });
+    child.stdout.write(`${JSON.stringify({ type: "event", payload: "x".repeat(1_000) })}\n`);
+
+    await expect(pending).rejects.toThrow("协议记录超过 256 bytes");
+    await expect.poll(() => runtime.running).toBe(false);
+    expect(signals).toContainEqual(expect.objectContaining({
+      type: "protocol_error",
+      message: expect.stringContaining("STELLA_PI_RPC_MAX_RECORD_BYTES"),
+    }));
+  });
+
+  it("validates the protocol record environment boundary", () => {
+    expect(piRpcMaxRecordBytesFromEnvironment(undefined)).toBe(64 * 1024 * 1024);
+    expect(piRpcMaxRecordBytesFromEnvironment("1048576")).toBe(1_048_576);
+    expect(piRpcMaxRecordBytesFromEnvironment("0")).toBe(0);
+    expect(() => piRpcMaxRecordBytesFromEnvironment("1.5")).toThrow("安全整数");
+    expect(() => piRpcMaxRecordBytesFromEnvironment("-1")).toThrow("非负安全整数");
   });
 });

@@ -1,4 +1,5 @@
 import {
+  BrainCircuit,
   ChevronDown,
   GitBranch,
   Menu,
@@ -22,6 +23,7 @@ interface TopbarProps {
   readonly onFocusSession: () => void;
   readonly onNewSession: () => void;
   readonly onToggleInspector: () => void;
+  readonly onOpenModels: () => void;
   readonly onOpenSettings: () => void;
   readonly onThinkingChange: (level: string) => void;
   readonly onAbortRetry: () => void;
@@ -46,11 +48,17 @@ export function Topbar({
   onFocusSession,
   onNewSession,
   onToggleInspector,
+  onOpenModels,
   onOpenSettings,
   onThinkingChange,
   onAbortRetry,
   onSolidifyTask,
 }: TopbarProps) {
+  const currentModel = bootstrap.state.model;
+  const currentModelLabel = currentModel
+    ? `${currentModel.provider} / ${currentModel.name || currentModel.id}`
+    : "未选择模型";
+
   return (
     <header className="topbar">
       <div className="topbar__project">
@@ -68,6 +76,16 @@ export function Topbar({
       </div>
 
       <div className="topbar__controls">
+        <button
+          type="button"
+          className="topbar__model"
+          aria-label={`当前模型：${currentModelLabel}，打开模型配置`}
+          title={`${currentModel?.provider ?? "Pi Runtime"} / ${currentModel?.id ?? "未选择"}`}
+          onClick={onOpenModels}
+        >
+          <BrainCircuit size={14} />
+          <span>{currentModelLabel}</span>
+        </button>
         {onSolidifyTask && (
           <button type="button" className="button-secondary topbar__task-bridge" onClick={onSolidifyTask}>
             <ListPlus size={14} /><span>固化为任务</span>

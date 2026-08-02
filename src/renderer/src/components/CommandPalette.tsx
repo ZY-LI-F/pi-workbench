@@ -53,9 +53,14 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
     [actions, normalized],
   );
   const filteredCommands = useMemo(
-    () => commands.filter((command) => `${command.name} ${command.description ?? ""}`.toLocaleLowerCase().includes(normalized)).slice(0, 12),
+    () => commands
+      .filter((command) => `${command.name} ${command.description ?? ""}`.toLocaleLowerCase().includes(normalized))
+      .sort((left, right) => Number(left.source === "skill") - Number(right.source === "skill"))
+      .slice(0, 12),
     [commands, normalized],
   );
+  const filteredPiCommands = filteredCommands.filter((command) => command.source !== "skill");
+  const filteredSkills = filteredCommands.filter((command) => command.source === "skill");
   const itemCount = filteredActions.length + filteredCommands.length;
 
   useEffect(() => {
@@ -137,14 +142,25 @@ export function CommandPalette({ commands, actions, onInsertCommand, onClose }: 
               </button>
             );
           })}
-          {filteredCommands.length > 0 && <p className="popover-label">Pi 命令</p>}
-          {filteredCommands.map((command, index) => {
+          {filteredPiCommands.length > 0 && <p className="popover-label">Pi 命令与提示词</p>}
+          {filteredPiCommands.map((command, index) => {
             const absoluteIndex = filteredActions.length + index;
             return (
               <button type="button" role="option" id={`${listId}-${absoluteIndex}`} aria-selected={activeIndex === absoluteIndex} tabIndex={-1} className={activeIndex === absoluteIndex ? "is-active" : ""} key={`${command.source}:${command.name}`} onMouseEnter={() => setActiveIndex(absoluteIndex)} onClick={() => runAt(absoluteIndex)}>
                 <span className={`palette-icon palette-icon--${command.source}`}><Command size={15} /></span>
                 <span><strong>/{command.name}</strong><small>{command.description || command.source}</small></span>
                 <em>{command.source}</em>
+              </button>
+            );
+          })}
+          {filteredSkills.length > 0 && <p className="popover-label">Pi Skills</p>}
+          {filteredSkills.map((command, index) => {
+            const absoluteIndex = filteredActions.length + filteredPiCommands.length + index;
+            return (
+              <button type="button" role="option" id={`${listId}-${absoluteIndex}`} aria-selected={activeIndex === absoluteIndex} tabIndex={-1} className={activeIndex === absoluteIndex ? "is-active" : ""} key={`${command.source}:${command.name}`} onMouseEnter={() => setActiveIndex(absoluteIndex)} onClick={() => runAt(absoluteIndex)}>
+                <span className="palette-icon palette-icon--skill"><Command size={15} /></span>
+                <span><strong>/{command.name}</strong><small>{command.description || "skill"}</small></span>
+                <em>skill</em>
               </button>
             );
           })}

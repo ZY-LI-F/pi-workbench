@@ -3,6 +3,7 @@ import { stat } from "node:fs/promises";
 import type { ChildProcessWithoutNullStreams, SpawnOptionsWithoutStdio } from "node:child_process";
 import type { PiCommand, PiExtensionResponse, PiResponse, RuntimeSignal } from "../shared/contracts";
 import type { AgentThinkingLevel } from "../shared/kanban";
+import { appendDiagnosticText } from "../shared/diagnostics";
 
 type SpawnProcess = (
   command: string,
@@ -18,6 +19,8 @@ interface RuntimeDependencies {
   readonly emitRuntimeSignal: (event: RuntimeSignal) => void;
   /** Set to 0 to disable. Defaults to 120 seconds. */
   readonly requestTimeoutMs?: number;
+  /** Maximum size of one newline-delimited Pi RPC record. Set to 0 to disable. Defaults to 64 MiB. */
+  readonly maxProtocolRecordBytes?: number;
 }
 
 export interface PiRuntimeStartOptions {
@@ -64,6 +67,7 @@ export class PiRpcRuntime {
   readonly #pending = new Map<string, PendingRequest>();
   readonly #intentionalStops = new WeakSet<ChildProcessWithoutNullStreams>();
   readonly #requestTimeoutMs: number;
+  readonly #maxProtocolRecordBytes: number;
   #process: ChildProcessWithoutNullStreams | null = null;
   #stdoutBuffer = "";
   #stderrBuffer = "";
@@ -71,8 +75,13 @@ export class PiRpcRuntime {
   constructor(dependencies: RuntimeDependencies) {
     const timeout = dependencies.requestTimeoutMs ?? 120_000;
     if (!Number.isFinite(timeout) || timeout < 0) throw new Error("Pi RPC requestTimeoutMs 必须是非负有限数字");
+    const maxProtocolRecordBytes = dependencies.maxProtocolRecordBytes ?? 64 * 1024 * 1024;
+    if (!Number.isSafeInteger(maxProtocolRecordBytes) || maxProtocolRecordBytes < 0) {
+      throw new Error("Pi RPC maxProtocolRecordBytes 必须是非负安全整数");
+    }
     this.#dependencies = dependencies;
     this.#requestTimeoutMs = timeout;
+    this.#maxProtocolRecordBytes = maxProtocolRecordBytes;
   }
 
   get running(): boolean {
@@ -113,8 +122,8 @@ export class PiRpcRuntime {
     child.stdout.on("data", (chunk: Buffer) => this.#consumeStdout(chunk.toString("utf8")));
     child.stderr.on("data", (chunk: Buffer) => {
       const message = chunk.toString("utf8");
-      this.#stderrBuffer += message;
-      this.#dependencies.emitRuntimeSignal({ type: "runtime_stderr", message });
+      this.#stderrBuffer = appendDiagnosticText(this.#stderrBuffer, message);
+      this.#dependencies.emitRuntimeSignal({ type: "runtime_stderr", message: appendDiagnosticText("", message) });
     });
     child.once("error", (error) => this.#handleProcessFailure(error));
     child.once("exit", (code, signal) => {
@@ -227,9 +236,26 @@ export class PiRpcRuntime {
     while (newline >= 0) {
       const record = this.#stdoutBuffer.slice(0, newline).replace(/\r$/, "");
       this.#stdoutBuffer = this.#stdoutBuffer.slice(newline + 1);
-      if (record.length > 0) this.#handleRecord(record);
+      if (record.length > 0) {
+        if (this.#recordTooLarge(record)) return;
+        this.#handleRecord(record);
+      }
       newline = this.#stdoutBuffer.indexOf("\n");
     }
+    if (this.#recordTooLarge(this.#stdoutBuffer)) this.#stdoutBuffer = "";
+  }
+
+  #recordTooLarge(record: string): boolean {
+    if (this.#maxProtocolRecordBytes === 0 || Buffer.byteLength(record, "utf8") <= this.#maxProtocolRecordBytes) return false;
+    const message = `Pi RPC 协议记录超过 ${this.#maxProtocolRecordBytes} bytes；Runtime 已停止。可通过 STELLA_PI_RPC_MAX_RECORD_BYTES 调整显式边界`;
+    this.#dependencies.emitRuntimeSignal({
+      type: "protocol_error",
+      message,
+      record: appendDiagnosticText("", record, 4096),
+    });
+    this.#rejectPending(new Error(message));
+    void this.stop();
+    return true;
   }
 
   #handleRecord(record: string): void {
@@ -270,4 +296,13 @@ export class PiRpcRuntime {
     }
     this.#pending.clear();
   }
+}
+
+export function piRpcMaxRecordBytesFromEnvironment(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") return 64 * 1024 * 1024;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error("STELLA_PI_RPC_MAX_RECORD_BYTES 必须是非负安全整数，0 表示禁用边界");
+  }
+  return parsed;
 }

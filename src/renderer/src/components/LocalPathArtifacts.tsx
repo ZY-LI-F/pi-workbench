@@ -3,6 +3,7 @@ import {
   CircleAlert,
   Copy,
   ExternalLink,
+  Eye,
   FileText,
   FolderOpen,
   LoaderCircle,
@@ -24,7 +25,15 @@ function errorMessage(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
 }
 
-function LocalPathItem({ api, path }: { readonly api: StellaDesktopApi; readonly path: string }) {
+function LocalPathItem({
+  api,
+  path,
+  onPreview,
+}: {
+  readonly api: StellaDesktopApi;
+  readonly path: string;
+  readonly onPreview: (inspection: LocalPathInspection) => void;
+}) {
   const [inspectionState, setInspectionState] = useState<InspectionState>({ status: "loading" });
   const [busyAction, setBusyAction] = useState<PathAction | null>(null);
   const [actionMessage, setActionMessage] = useState<{ readonly kind: "success" | "error"; readonly text: string } | null>(null);
@@ -80,6 +89,16 @@ function LocalPathItem({ api, path }: { readonly api: StellaDesktopApi; readonly
         )}
       </span>
       <span className="output-path__actions">
+        {inspection?.preview && (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onPreview(inspection)}
+            aria-label={`预览文件 ${path}`}
+          >
+            <Eye size={13} />预览
+          </button>
+        )}
         {inspection?.directOpenAllowed && (
           <button
             type="button"
@@ -117,7 +136,15 @@ function LocalPathItem({ api, path }: { readonly api: StellaDesktopApi; readonly
   );
 }
 
-export function LocalPathArtifacts({ api, text }: { readonly api: StellaDesktopApi; readonly text: string }) {
+export function LocalPathArtifacts({
+  api,
+  text,
+  onPreviewFile,
+}: {
+  readonly api: StellaDesktopApi;
+  readonly text: string;
+  readonly onPreviewFile: (inspection: LocalPathInspection) => void;
+}) {
   const paths = useMemo(() => extractLocalPaths(text), [text]);
   if (paths.length === 0) return null;
   return (
@@ -128,7 +155,7 @@ export function LocalPathArtifacts({ api, text }: { readonly api: StellaDesktopA
         <small>{paths.length} 项</small>
       </header>
       <div className="output-paths__list">
-        {paths.map((path) => <LocalPathItem key={path} api={api} path={path} />)}
+        {paths.map((path) => <LocalPathItem key={path} api={api} path={path} onPreview={onPreviewFile} />)}
       </div>
     </section>
   );

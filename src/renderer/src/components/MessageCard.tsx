@@ -18,6 +18,7 @@ import type {
   SerializableMessage,
   StellaDesktopApi,
 } from "@shared/contracts";
+import type { LocalPathInspection } from "@shared/local-path";
 import type { ToolExecutionState } from "../lib/runtime-state";
 import { LocalPathArtifacts } from "./LocalPathArtifacts";
 
@@ -27,6 +28,7 @@ interface MessageCardProps {
   readonly toolExecutions: Readonly<Record<string, ToolExecutionState>>;
   readonly entryId?: string;
   readonly onFork: (entryId: string) => void;
+  readonly onPreviewFile: (inspection: LocalPathInspection) => void;
 }
 
 function formatTime(timestamp: number | undefined): string {
@@ -128,7 +130,7 @@ function MarkdownBody({ api, text }: { readonly api: StellaDesktopApi; readonly 
   );
 }
 
-export function MessageCard({ api, message, toolExecutions, entryId, onFork }: MessageCardProps) {
+export function MessageCard({ api, message, toolExecutions, entryId, onFork, onPreviewFile }: MessageCardProps) {
   const [copied, setCopied] = useState(false);
   if (message.role === "bashExecution") return null;
   if (message.role === "branchSummary" || message.role === "compactionSummary") {
@@ -215,7 +217,7 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork }: M
         {textOnly && (
           <>
             <div className="markdown-body"><MarkdownBody api={api} text={textOnly} /></div>
-            <LocalPathArtifacts api={api} text={textOnly} />
+            <LocalPathArtifacts api={api} text={textOnly} onPreviewFile={onPreviewFile} />
           </>
         )}
         {toolCalls.length > 0 && (

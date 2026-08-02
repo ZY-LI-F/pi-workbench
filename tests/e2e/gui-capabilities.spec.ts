@@ -42,6 +42,8 @@ async function createIsolatedAppPaths(testInfo: TestInfo): Promise<IsolatedAppPa
     mkdir(comparisonProject, { recursive: true }),
   ]);
   await writeFile(join(project, "README.md"), "# Isolated Stella GUI E2E\n", "utf8");
+  await writeFile(join(project, "preview.html"), "<!doctype html><h1>Isolated HTML preview</h1>", "utf8");
+  await writeFile(join(project, "unsupported.ps1"), "Write-Output 'inspection only'\n", "utf8");
   await writeFile(join(comparisonProject, "README.md"), "# Comparison project\n", "utf8");
   await writeFile(join(userData, "stella-state.json"), `${JSON.stringify({
     lastProject: project,
@@ -88,6 +90,22 @@ async function sessionState(window: Page): Promise<{ readonly sessionId: string;
 
 async function closeApp(app: ElectronApplication | undefined): Promise<void> {
   if (app) await app.close();
+}
+
+async function expectComposerInsideViewport(window: Page): Promise<void> {
+  const composer = window.locator(".composer-wrap");
+  await expect(composer).toBeVisible();
+  await expect.poll(async () => window.evaluate(() => {
+    const element = document.querySelector<HTMLElement>(".composer-wrap");
+    if (!element) return false;
+    const bounds = element.getBoundingClientRect();
+    return bounds.width > 0
+      && bounds.height > 0
+      && bounds.top >= 0
+      && bounds.left >= 0
+      && bounds.right <= window.innerWidth
+      && bounds.bottom <= window.innerHeight;
+  }), { message: "聊天输入框必须完整位于当前窗口可视区域内" }).toBe(true);
 }
 
 test("persists the optional team surface and returns to native Pi when it is disabled", async ({}, testInfo) => {
@@ -152,6 +170,31 @@ test("executes native session, modal, command palette, and terminal interactions
   const paths = await createIsolatedAppPaths(testInfo);
   const { electronApp, window, pageErrors } = await launchIsolatedApp(paths);
   try {
+    await expectComposerInsideViewport(window);
+    const markdownPreview = await window.evaluate(async (path) => {
+      const preview = await window.stella.readLocalFilePreview(path);
+      return {
+        kind: preview.kind,
+        mimeType: preview.mimeType,
+        sizeBytes: preview.sizeBytes,
+        text: new TextDecoder().decode(preview.bytes),
+        byteContainer: preview.bytes.constructor.name,
+      };
+    }, join(paths.project, "README.md"));
+    expect(markdownPreview).toMatchObject({
+      kind: "markdown",
+      mimeType: "text/markdown",
+      text: "# Isolated Stella GUI E2E\n",
+      byteContainer: "Uint8Array",
+    });
+    expect(markdownPreview.sizeBytes).toBeGreaterThan(0);
+    const htmlInspection = await window.evaluate((path) => window.stella.inspectLocalPath(path), join(paths.project, "preview.html"));
+    expect(htmlInspection.preview).toMatchObject({ kind: "html", mimeType: "text/html" });
+    const unsupportedInspection = await window.evaluate((path) => window.stella.inspectLocalPath(path), join(paths.project, "unsupported.ps1"));
+    expect(unsupportedInspection.preview).toBeUndefined();
+    await expect(window.evaluate((path) => window.stella.readLocalFilePreview(path), join(paths.project, "unsupported.ps1")))
+      .rejects.toThrow("暂不支持预览该文件类型");
+
     const thinking = window.getByLabel("思考级别");
     await expect(thinking).toHaveValue("off");
     await expect(thinking.locator("option")).toHaveCount(1);
@@ -161,6 +204,18 @@ test("executes native session, modal, command palette, and terminal interactions
     await expect.poll(() => sessionState(window).then((state) => state.sessionId)).not.toBe(before.sessionId);
 
     const inspector = window.locator(".inspector.is-open");
+    const resizeHandle = inspector.getByRole("separator", { name: "调整检查器宽度" });
+    const initialInspectorWidth = await inspector.evaluate((element) => element.getBoundingClientRect().width);
+    const resizeBox = await resizeHandle.boundingBox();
+    if (!resizeBox) throw new Error("检查器宽度拖拽柄不可见");
+    await window.mouse.move(resizeBox.x + resizeBox.width / 2, resizeBox.y + 120);
+    await window.mouse.down();
+    await window.mouse.move(resizeBox.x - 88, resizeBox.y + 120, { steps: 4 });
+    await window.mouse.up();
+    await expect.poll(() => inspector.evaluate((element) => element.getBoundingClientRect().width)).toBeGreaterThan(initialInspectorWidth + 60);
+    await inspector.getByRole("tab", { name: "文件", exact: true }).click();
+    await expect(inspector.getByText("选择一个会话文件", { exact: true })).toBeVisible();
+    await inspector.getByRole("tab", { name: "上下文", exact: true }).click();
     await expect(inspector.getByRole("button", { name: /导出 HTML/ })).toBeVisible();
     await inspector.getByRole("button", { name: /重命名/ }).click();
     const rename = window.getByRole("dialog", { name: "重命名会话" });
@@ -214,6 +269,7 @@ test("executes native session, modal, command palette, and terminal interactions
     await window.keyboard.press("Escape");
 
     await window.setViewportSize({ width: 760, height: 720 });
+    await expectComposerInsideViewport(window);
     const sidebar = window.locator(".sidebar");
     await expect.poll(() => sidebar.evaluate((element) => element.getBoundingClientRect().right)).toBeLessThanOrEqual(1);
     await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
@@ -232,10 +288,19 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
   const paths = await createIsolatedAppPaths(testInfo);
   const { electronApp, window, pageErrors } = await launchIsolatedApp(paths);
   try {
+    await window.setViewportSize({ width: 980, height: 680 });
+    await expectComposerInsideViewport(window);
     await window.setViewportSize({ width: 1440, height: 900 });
     const sessionTrack = window.locator(".topbar__session-track");
     await expect(sessionTrack.getByRole("button", { name: "聚焦当前会话" })).toBeVisible();
     await expect(sessionTrack.getByRole("button", { name: "新建会话" })).toBeVisible();
+    const composerWrap = window.locator(".composer-wrap");
+    await expect(composerWrap).toBeVisible();
+    await expect.poll(async () => {
+      const box = await composerWrap.boundingBox();
+      return box ? Math.ceil(box.y + box.height) : Number.POSITIVE_INFINITY;
+    }).toBeLessThanOrEqual(900);
+    await expect(window.getByRole("button", { name: /当前模型：.+打开模型配置/ })).toBeVisible();
 
     await window.getByRole("button", { name: "实现功能", exact: true }).click();
     const composer = window.getByLabel("给 Pi 的消息");
@@ -249,6 +314,7 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     });
     await expect(window.getByAltText("target-context.png")).toBeVisible();
     await expect(window.getByText("1 个附件已保留在当前会话草稿中")).toBeVisible();
+    await expect(window.getByText("草稿已保存至本机")).toBeVisible({ timeout: 15_000 });
 
     await window.locator(".sidebar").getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置" })).toBeVisible();
@@ -260,6 +326,10 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     await sidebar.getByRole("button", { name: "关闭侧栏" }).click();
     await expect(window.locator(".app-shell")).toHaveClass(/sidebar-collapsed/);
     await expect(sidebar).toHaveAttribute("aria-hidden", "true");
+    await expect.poll(async () => {
+      const box = await composerWrap.boundingBox();
+      return box ? Math.ceil(box.y + box.height) : Number.POSITIVE_INFINITY;
+    }).toBeLessThanOrEqual(900);
     const openSidebar = window.getByRole("button", { name: "打开侧栏", exact: true });
     await expect(openSidebar).toBeVisible();
     await expect(openSidebar).toBeFocused();
@@ -269,10 +339,7 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
 
     await window.locator(".project-switcher__trigger").click();
     await window.locator(".project-menu").getByRole("button").filter({ hasText: "comparison-project" }).click();
-    await expect.poll(
-      () => window.evaluate(() => window.stella.refresh().then((bootstrap) => bootstrap.project.cwd)),
-      { timeout: 30_000 },
-    ).toBe(paths.comparisonProject);
+    await expect(window.locator(".project-switcher__trigger")).toContainText("comparison-project", { timeout: 30_000 });
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await expect(window.locator(".topbar__session-track")).toContainText("当前会话");
     await expect(window.locator(".topbar__session-track")).toContainText("新建会话");
@@ -281,5 +348,33 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     expect(pageErrors).toEqual([]);
   } finally {
     await electronApp.close();
+  }
+});
+
+test("restores a session-scoped text and attachment draft after restarting the desktop app", async ({}, testInfo) => {
+  const paths = await createIsolatedAppPaths(testInfo);
+  let running: ElectronApplication | undefined;
+  try {
+    const first = await launchIsolatedApp(paths);
+    running = first.electronApp;
+    const composer = first.window.getByLabel("给 Pi 的消息");
+    await composer.fill("关闭应用后继续保留这段任务上下文");
+    await first.window.locator('.composer input[type="file"]').setInputFiles({
+      name: "restart-evidence.png",
+      mimeType: "image/png",
+      buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+    });
+    await expect(first.window.getByText("草稿已保存至本机")).toBeVisible({ timeout: 15_000 });
+    await closeApp(running);
+    running = undefined;
+
+    const second = await launchIsolatedApp(paths);
+    running = second.electronApp;
+    await expect(second.window.getByLabel("给 Pi 的消息")).toHaveValue("关闭应用后继续保留这段任务上下文");
+    await expect(second.window.getByAltText("restart-evidence.png")).toBeVisible();
+    await expect(second.window.getByText("已恢复上次未发送草稿")).toBeVisible();
+    expect(second.pageErrors).toEqual([]);
+  } finally {
+    await closeApp(running);
   }
 });

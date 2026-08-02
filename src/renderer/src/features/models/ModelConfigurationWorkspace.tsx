@@ -305,11 +305,14 @@ export function ModelConfigurationWorkspace({
     clearProviderDiagnostics();
   };
 
-  const saveProvider = async (input: PiModelConfigurationProviderInput) => {
+  const saveProvider = async (input: PiModelConfigurationProviderInput, setupApiKey?: string) => {
     await mutate(
       "保存 Provider",
-      () => api.modelConfigurationUpsertProvider(input),
-      `${input.name ?? input.id} 配置已应用`,
+      () => api.modelConfigurationSaveProviderSetup(Object.freeze({
+        provider: input,
+        ...(setupApiKey ? { apiKey: setupApiKey } : {}),
+      })),
+      `${input.name ?? input.id} 的端点、模型${setupApiKey ? "与凭据" : ""}已应用`,
     );
     clearProviderDiagnostics();
     selectedProviderIdRef.current = input.id;
@@ -451,6 +454,7 @@ export function ModelConfigurationWorkspace({
           builtIn={editorState.builtIn}
           busy={Boolean(busyAction)}
           onClose={() => setEditorState(undefined)}
+          onDiscover={(input) => api.modelConfigurationDiscoverModels(input)}
           onSave={saveProvider}
           onDelete={deleteProvider}
         />

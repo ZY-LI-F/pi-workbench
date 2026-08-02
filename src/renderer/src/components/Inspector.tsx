@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import {
   Archive,
   Check,
@@ -15,16 +15,38 @@ import {
   Wrench,
   X,
 } from "lucide-react";
-import type { RuntimeBootstrap, SessionTreeSummary } from "@shared/contracts";
+import type { RuntimeBootstrap, SessionTreeSummary, StellaDesktopApi } from "@shared/contracts";
+import type { LocalPathInspection } from "@shared/local-path";
 import type { RuntimeUiState, ToolExecutionState } from "../lib/runtime-state";
+import type { SessionFileReference } from "../lib/session-files";
+import { FilePreviewPanel } from "./FilePreviewPanel";
+
+export const DEFAULT_INSPECTOR_WIDTH = 360;
+export const FILE_INSPECTOR_WIDTH = 720;
+
+export function constrainInspectorWidth(width: number, viewportWidth: number): number {
+  const viewportMaximum = Math.max(240, viewportWidth - 24);
+  const minimum = Math.min(320, viewportMaximum);
+  const availableOnDesktop = viewportWidth > 1260 ? viewportWidth - 640 : viewportMaximum;
+  const maximum = Math.max(minimum, Math.min(960, availableOnDesktop));
+  return Math.round(Math.min(maximum, Math.max(minimum, width)));
+}
 
 interface InspectorProps {
+  readonly api: StellaDesktopApi;
   readonly bootstrap: RuntimeBootstrap;
   readonly open: boolean;
+  readonly tab: InspectorTab;
+  readonly width: number;
   readonly tools: Readonly<Record<string, ToolExecutionState>>;
   readonly queue: RuntimeUiState["queue"];
   readonly extensionStatuses: RuntimeUiState["extensionStatuses"];
   readonly extensionWidgets: RuntimeUiState["extensionWidgets"];
+  readonly filePreview?: LocalPathInspection;
+  readonly fileReferences: readonly SessionFileReference[];
+  readonly onTabChange: (tab: InspectorTab) => void;
+  readonly onWidthChange: (width: number) => void;
+  readonly onSelectFile: (inspection: LocalPathInspection) => void;
   readonly onClose: () => void;
   readonly onCompact: () => void;
   readonly onExport: () => void;
@@ -33,7 +55,7 @@ interface InspectorProps {
   readonly onFork: (entryId: string) => void;
 }
 
-type InspectorTab = "context" | "activity" | "tree";
+export type InspectorTab = "context" | "activity" | "tree" | "files";
 
 function compactNumber(value: number | null | undefined): string {
   if (value === null || value === undefined) return "—";
@@ -105,7 +127,7 @@ function ContextPanel({
   const stats = bootstrap.stats;
   const percent = stats.contextUsage?.percent ?? 0;
   return (
-    <div className="inspector-panel context-panel">
+    <div className="inspector-panel context-panel" id="inspector-panel-context" role="tabpanel" aria-labelledby="inspector-tab-context">
       <div className="context-meter" style={{ "--context-percent": `${Math.max(0, Math.min(100, percent)) * 3.6}deg` } as CSSProperties}>
         <div><strong>{stats.contextUsage?.percent === null || stats.contextUsage?.percent === undefined ? "—" : `${Math.round(stats.contextUsage.percent)}%`}</strong><span>上下文</span></div>
       </div>
@@ -142,7 +164,7 @@ function ActivityPanel({
 }: Pick<InspectorProps, "tools" | "queue" | "extensionStatuses" | "extensionWidgets">) {
   const toolList = useMemo(() => Object.values(tools).sort((a, b) => b.startedAt - a.startedAt), [tools]);
   return (
-    <div className="inspector-panel activity-panel">
+    <div className="inspector-panel activity-panel" id="inspector-panel-activity" role="tabpanel" aria-labelledby="inspector-tab-activity">
       <section className="inspector-section">
         <div className="inspector-section__title"><span>活动轨迹</span><small>{toolList.length} 次工具调用</small></div>
         <div className="activity-timeline">
@@ -180,12 +202,20 @@ function ActivityPanel({
 }
 
 export function Inspector({
+  api,
   bootstrap,
   open,
+  tab,
+  width,
   tools,
   queue,
   extensionStatuses,
   extensionWidgets,
+  filePreview,
+  fileReferences,
+  onTabChange,
+  onWidthChange,
+  onSelectFile,
   onClose,
   onCompact,
   onExport,
@@ -193,27 +223,95 @@ export function Inspector({
   onRename,
   onFork,
 }: InspectorProps) {
-  const [tab, setTab] = useState<InspectorTab>("context");
+  const resizeStart = useRef<Readonly<{ clientX: number; width: number }> | null>(null);
+  const [resizing, setResizing] = useState(false);
+
+  useEffect(() => {
+    if (!resizing) return;
+    const handlePointerMove = (event: PointerEvent) => {
+      const start = resizeStart.current;
+      if (!start) return;
+      onWidthChange(constrainInspectorWidth(start.width + start.clientX - event.clientX, window.innerWidth));
+    };
+    const stopResizing = () => {
+      resizeStart.current = null;
+      setResizing(false);
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopResizing);
+    window.addEventListener("pointercancel", stopResizing);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResizing);
+      window.removeEventListener("pointercancel", stopResizing);
+    };
+  }, [onWidthChange, resizing]);
+
+  const startResizing = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    resizeStart.current = Object.freeze({ clientX: event.clientX, width });
+    setResizing(true);
+  };
+
+  const resizeWithKeyboard = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 48 : 16;
+    const next = event.key === "ArrowLeft"
+      ? width + step
+      : event.key === "ArrowRight"
+        ? width - step
+        : event.key === "Home"
+          ? 0
+          : event.key === "End"
+            ? Number.MAX_SAFE_INTEGER
+            : undefined;
+    if (next === undefined) return;
+    event.preventDefault();
+    onWidthChange(constrainInspectorWidth(next, window.innerWidth));
+  };
+
+  const widthMinimum = constrainInspectorWidth(0, window.innerWidth);
+  const widthMaximum = constrainInspectorWidth(Number.MAX_SAFE_INTEGER, window.innerWidth);
   return (
-    <aside className={`inspector ${open ? "is-open" : ""}`} aria-hidden={!open} inert={!open}>
+    <aside className={`inspector ${open ? "is-open" : ""}${resizing ? " is-resizing" : ""}${tab === "files" ? " inspector--files" : ""}`} aria-hidden={!open} inert={!open}>
+      <div
+        className="inspector__resize-handle"
+        role="separator"
+        tabIndex={open ? 0 : -1}
+        aria-label="调整检查器宽度"
+        aria-orientation="vertical"
+        aria-valuemin={widthMinimum}
+        aria-valuemax={widthMaximum}
+        aria-valuenow={width}
+        title="左右拖动调整宽度；双击恢复推荐宽度"
+        onPointerDown={startResizing}
+        onKeyDown={resizeWithKeyboard}
+        onDoubleClick={() => onWidthChange(constrainInspectorWidth(tab === "files" ? FILE_INSPECTOR_WIDTH : DEFAULT_INSPECTOR_WIDTH, window.innerWidth))}
+      />
       <div className="inspector__header">
-        <div><small>SESSION LENS</small><strong>检查器</strong></div>
+        <div><small>{tab === "files" ? "LOCAL ARTIFACTS" : "SESSION LENS"}</small><strong>检查器</strong></div>
         <button type="button" className="icon-button" aria-label="关闭检查器" onClick={onClose}><X size={16} /></button>
       </div>
       <div className="inspector-tabs" role="tablist">
-        <button type="button" className={tab === "context" ? "is-active" : ""} onClick={() => setTab("context")}>上下文</button>
-        <button type="button" className={tab === "activity" ? "is-active" : ""} onClick={() => setTab("activity")}>活动</button>
-        <button type="button" className={tab === "tree" ? "is-active" : ""} onClick={() => setTab("tree")}>分支</button>
+        <button type="button" role="tab" id="inspector-tab-context" aria-controls="inspector-panel-context" aria-selected={tab === "context"} className={tab === "context" ? "is-active" : ""} onClick={() => onTabChange("context")}>上下文</button>
+        <button type="button" role="tab" id="inspector-tab-activity" aria-controls="inspector-panel-activity" aria-selected={tab === "activity"} className={tab === "activity" ? "is-active" : ""} onClick={() => onTabChange("activity")}>活动</button>
+        <button type="button" role="tab" id="inspector-tab-tree" aria-controls="inspector-panel-tree" aria-selected={tab === "tree"} className={tab === "tree" ? "is-active" : ""} onClick={() => onTabChange("tree")}>分支</button>
+        <button type="button" role="tab" id="inspector-tab-files" aria-controls="inspector-panel-files" aria-selected={tab === "files"} className={tab === "files" ? "is-active" : ""} onClick={() => onTabChange("files")}><span>文件</span>{fileReferences.length > 0 && <small aria-hidden="true">{fileReferences.length}</small>}</button>
       </div>
       {tab === "context" && <ContextPanel bootstrap={bootstrap} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} />}
       {tab === "activity" && <ActivityPanel tools={tools} queue={queue} extensionStatuses={extensionStatuses} extensionWidgets={extensionWidgets} />}
       {tab === "tree" && (
-        <div className="inspector-panel tree-panel">
+        <div className="inspector-panel tree-panel" id="inspector-panel-tree" role="tabpanel" aria-labelledby="inspector-tab-tree">
           <div className="tree-panel__intro"><GitFork size={15} /><p>会话是追加式树结构。可从任一用户消息创建新的独立分支。</p></div>
           <div className="session-tree">
             {bootstrap.tree.map((node) => <TreeNode key={node.entry.id} node={node} leafId={bootstrap.leafId} depth={0} onFork={onFork} />)}
             {bootstrap.tree.length === 0 && <div className="activity-empty"><GitFork size={18} /><p>发送第一条消息后，会话树会出现在这里。</p></div>}
           </div>
+        </div>
+      )}
+      {tab === "files" && (
+        <div className="inspector-file-panel" id="inspector-panel-files" role="tabpanel" aria-labelledby="inspector-tab-files">
+          <FilePreviewPanel api={api} inspection={filePreview} references={fileReferences} onSelect={onSelectFile} />
         </div>
       )}
     </aside>

@@ -68,6 +68,36 @@ export interface TestPiModelConnectionInput {
   readonly apiKey?: string;
 }
 
+export interface DiscoverPiModelsInput {
+  readonly providerId: string;
+  readonly baseUrl: string;
+  readonly api: CustomModelApi;
+  /** Uses this key in memory without saving it. Empty/omitted resolves the current Pi credential. */
+  readonly apiKey?: string;
+  readonly authHeader: boolean;
+}
+
+export interface PiDiscoveredModel {
+  readonly id: string;
+  readonly name?: string;
+  readonly owner?: string;
+  readonly contextWindow?: number;
+  readonly maxTokens?: number;
+  readonly reasoning?: boolean;
+  readonly imageInput?: boolean;
+}
+
+export type PiModelDiscoveryCredentialSource = "draft" | "configured" | "none";
+
+export interface PiModelDiscoveryResult {
+  readonly providerId: string;
+  readonly endpoint: string;
+  readonly models: readonly PiDiscoveredModel[];
+  readonly credentialSource: PiModelDiscoveryCredentialSource;
+  readonly latencyMs: number;
+  readonly checkedAt: number;
+}
+
 export type PiModelConnectionTestCode =
   | "success"
   | "authentication"
@@ -98,6 +128,12 @@ export interface PiModelConfigurationProviderInput {
   readonly api?: CustomModelApi;
   readonly authHeader: boolean;
   readonly models: readonly PiModelConfigurationModel[];
+}
+
+export interface SavePiProviderSetupInput {
+  readonly provider: PiModelConfigurationProviderInput;
+  /** Saves this key to auth.json together with the Provider update. Empty/omitted preserves existing auth. */
+  readonly apiKey?: string;
 }
 
 export function isCustomModelApi(value: unknown): value is CustomModelApi {

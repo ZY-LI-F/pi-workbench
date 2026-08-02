@@ -224,7 +224,8 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "automation-chenxi.png"), fullPage: true, animations: "disabled" });
     await window.keyboard.press("Escape");
 
-    await window.getByRole("button", { name: "偏好设置", exact: true }).click();
+    await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "偏好设置", exact: true }).click();
     settings = window.getByRole("dialog", { name: "偏好设置" });
     await settings.getByRole("radio", { name: /^定阳/ }).click();
     await expect(window.locator("html")).toHaveAttribute("data-skin", "dingyang");
@@ -237,14 +238,16 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "automation-dingyang.png"), fullPage: true, animations: "disabled" });
     await window.keyboard.press("Escape");
 
-    await window.getByRole("button", { name: "偏好设置", exact: true }).click();
+    await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "偏好设置", exact: true }).click();
     settings = window.getByRole("dialog", { name: "偏好设置" });
     await settings.getByRole("radio", { name: /^Stella/ }).click();
     await expect(window.locator("html")).toHaveAttribute("data-skin", "stella");
     await window.keyboard.press("Escape");
     await expect(settings).toBeHidden();
 
-    await window.getByRole("button", { name: "当前会话" }).click();
+    await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "当前会话", exact: true }).click();
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await expect(globalModel).toHaveValue(selectedGlobalModel);
     await expect(window.getByLabel("思考级别")).toBeVisible();
@@ -253,15 +256,20 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await expect(piTaskDraft.getByText("来自当前 Pi 会话的可编辑草稿", { exact: true })).toBeVisible();
     await expect(piTaskDraft.getByText(/不会自动分发/)).toBeVisible();
     await piTaskDraft.getByRole("button", { name: "取消", exact: true }).click();
-    await window.getByRole("button", { name: "当前会话" }).click();
+    await window.getByRole("button", { name: "当前会话", exact: true }).click();
+    const inspectorPanel = window.locator(".inspector");
+    if (!(await inspectorPanel.evaluate((element) => element.classList.contains("is-open")))) {
+      await window.getByRole("button", { name: "会话检查器", exact: true }).click();
+    }
+    await expect(inspectorPanel).toHaveClass(/is-open/);
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "stella-home.png"), fullPage: true, animations: "disabled" });
 
     const inspector = window.locator(".inspector.is-open");
-    await inspector.getByRole("button", { name: "活动", exact: true }).click();
+    await inspector.getByRole("tab", { name: "活动", exact: true }).click();
     await expect(inspector.getByText("活动轨迹", { exact: true })).toBeVisible();
-    await inspector.getByRole("button", { name: "分支", exact: true }).click();
+    await inspector.getByRole("tab", { name: "分支", exact: true }).click();
     await expect(inspector.getByText(/会话是追加式树结构/)).toBeVisible();
-    await inspector.getByRole("button", { name: "上下文", exact: true }).click();
+    await inspector.getByRole("tab", { name: "上下文", exact: true }).click();
     await inspector.getByRole("button", { name: /重命名/ }).click();
     const renameDialog = window.getByRole("dialog", { name: "重命名会话" });
     await expect(renameDialog).toBeVisible();
