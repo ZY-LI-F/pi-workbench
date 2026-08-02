@@ -5,11 +5,12 @@ import type { AgentPresence } from "@shared/agent-presence";
 import type { AgentDefinition } from "@shared/kanban";
 import { deriveTeamLaunchDraft, type TeamLaunchDraft } from "@shared/team-launch";
 import { AgentMentionInput, type AgentMentionRequest } from "../kanban/AgentMentionInput";
-import type { AgentMentionQuery } from "@shared/agent-mentions";
+import { parseAgentMentions, type AgentMentionQuery } from "@shared/agent-mentions";
 
 interface TeamLaunchRoomProps {
   readonly project?: ProjectMeta;
   readonly lead?: AgentDefinition;
+  readonly agents: readonly AgentDefinition[];
   readonly presences: readonly AgentPresence[];
   readonly mentionRequest?: AgentMentionRequest;
   readonly focusRequest?: number;
@@ -21,12 +22,14 @@ interface TeamLaunchRoomProps {
 
 interface LaunchPreview {
   readonly draft?: TeamLaunchDraft;
+  readonly target?: AgentDefinition;
   readonly error?: string;
 }
 
 export function TeamLaunchRoom({
   project,
   lead,
+  agents,
   presences,
   mentionRequest,
   focusRequest,
@@ -41,19 +44,23 @@ export function TeamLaunchRoom({
   const [error, setError] = useState("");
   const disabledReason = !project
     ? "请先打开一个项目"
-    : !lead
-      ? "编排目录缺少通用调度负责人 LEAD"
+    : agents.length === 0
+      ? "当前项目没有可用 Agent"
       : !executionEnabled
-        ? "Pi Runtime 尚未就绪，不能启动 LEAD"
+        ? "Pi Runtime 尚未就绪，不能启动 Agent"
         : undefined;
   const preview = useMemo<LaunchPreview>(() => {
     if (!body.trim() || activeQuery) return Object.freeze({});
     try {
-      return Object.freeze({ draft: deriveTeamLaunchDraft(body, acceptanceCriteria) });
+      const draft = deriveTeamLaunchDraft(body, acceptanceCriteria);
+      const parsed = parseAgentMentions(body, agents);
+      const target = parsed.agents[0];
+      if (parsed.tokens.length !== 1 || parsed.agents.length !== 1 || !target) throw new Error("请选择一个无歧义的负责人");
+      return Object.freeze({ draft, target });
     } catch (cause) {
       return Object.freeze({ error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [acceptanceCriteria, activeQuery, body]);
+  }, [acceptanceCriteria, activeQuery, agents, body]);
 
   const submit = async (): Promise<void> => {
     setError("");
@@ -79,32 +86,32 @@ export function TeamLaunchRoom({
         <div className="team-launch-room__seed" aria-hidden="true"><i /><b /><span><AtSign size={20} /></span></div>
         <small>MISSION SEED · STELLA RELAY</small>
         <h3>先说目标，再形成任务</h3>
-        <p>在这里向 <strong>@LEAD</strong> 描述你想完成的事情。Stella 会把这条消息、任务和 Coordinator 一次写入同一条事实流，然后带你进入新的 Task Room。</p>
+        <p>范围复杂或归属不清时交给 <strong>@LEAD</strong>；目标清楚时可直接选择一个 Worker。Stella 会把消息、任务与首个 AgentTask 原子写入同一条事实流。</p>
         <div className="team-launch-room__relay" aria-label="任务启动顺序">
           <span><b>1</b><small>你说明目标</small></span><i />
-          <span><b>2</b><small>LEAD 创建计划</small></span><i />
-          <span><b>3</b><small>Worker 接受委派</small></span>
+          <span><b>2</b><small>指定唯一负责人</small></span><i />
+          <span><b>3</b><small>协调或直接执行</small></span>
         </div>
         <article className="team-launch-room__lead">
           <span><Bot size={15} /><i /></span>
-          <div><strong>通用调度负责人</strong><small>@LEAD · 项目任务入口</small><p>告诉我目标、边界和希望得到的结果。我会先判断是否需要澄清，再拆解、委派并验收真实报告。</p></div>
+          <div><strong>{lead?.name ?? "通用调度负责人"}</strong><small>@LEAD · 复杂任务协调入口</small><p>{lead?.responsibility ?? "判断是否需要澄清，再拆解、委派并验收真实报告。"}</p></div>
         </article>
       </div>
 
       <form className="team-launch-room__composer" aria-label="任务启动台输入器" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
-        <div className="team-launch-room__composer-label"><span><Orbit size={11} />发送启动指令</span><small>只接受一个 @LEAD；直接 Worker 请进入已有 Task Room</small></div>
+        <div className="team-launch-room__composer-label"><span><Orbit size={11} />发送启动指令</span><small>只指定一个负责人；复杂任务优先 @LEAD</small></div>
         <AgentMentionInput
           id="team-launch-message"
-          ariaLabel="向 LEAD 输入团队任务"
+          ariaLabel="选择负责人并输入团队任务"
           value={body}
-          agents={lead ? Object.freeze([lead]) : Object.freeze([])}
+          agents={agents}
           presences={presences}
           mentionRequest={mentionRequest}
           focusRequest={focusRequest}
           availableSkillNames={availableSkillNames}
           mentionsDisabled={Boolean(disabledReason)}
           mentionsDisabledReason={disabledReason}
-          placeholder="@LEAD 说明目标、边界和希望得到的结果…"
+          placeholder="@LEAD 处理复杂任务，或 @指定Worker 直接执行清晰任务…"
           rows={4}
           onChange={(value) => { setBody(value); setError(""); }}
           onQueryChange={setActiveQuery}
@@ -123,12 +130,12 @@ export function TeamLaunchRoom({
           {error || preview.error
             ? <><AtSign size={12} /><span>{error || preview.error}</span></>
             : activeQuery
-              ? <><AtSign size={12} /><span>选择 @LEAD，然后继续写明任务目标。</span></>
+              ? <><AtSign size={12} /><span>选择一个负责人，然后继续写明任务目标。</span></>
               : preview.draft
-                ? <><GitBranch size={12} /><span>将创建任务“{preview.draft.title}”，普通优先级，并立即启动 LEAD Coordinator。</span></>
+                ? <><GitBranch size={12} /><span>将创建任务“{preview.draft.title}”，并{preview.target?.id === "lead" ? "启动 LEAD Coordinator" : `直接交给 ${preview.target?.name ?? "所选 Worker"}`}。</span></>
                 : <><Sparkles size={12} /><span>消息发送成功后会进入新 Task Room；启动台不保存第二份聊天历史。</span></>}
         </div>
-        <footer><span><i />原子写入 Task · Message · Coordinator</span><button type="submit" className="button-primary" disabled={busy || Boolean(disabledReason) || !preview.draft || Boolean(activeQuery)}><Send size={13} />{busy ? "正在建立任务…" : "创建任务并交给 LEAD"}</button></footer>
+        <footer><span><i />原子写入 Task · Message · AgentTask</span><button type="submit" className="button-primary" disabled={busy || Boolean(disabledReason) || !preview.draft || !preview.target || Boolean(activeQuery)}><Send size={13} />{busy ? "正在建立任务…" : preview.target?.id === "lead" ? "创建任务并交给 LEAD" : "创建并直接执行"}</button></footer>
       </form>
     </section>
   );

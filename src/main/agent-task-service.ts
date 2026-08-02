@@ -13,6 +13,7 @@ import {
   supersedePendingExecutions,
 } from "../shared/execution-state";
 import { deriveTeamLaunchDraft } from "../shared/team-launch";
+import { deriveAgentTaskQueue, nextRunnableAgentTask } from "../shared/agent-task-scheduler";
 import {
   isTerminalAgentTaskStatus,
   type AgentDefinition,
@@ -103,7 +104,7 @@ function coordinatorPlan(availableAgents: readonly AgentDefinition[]): AgentExec
   });
 }
 
-function squadPlan(squad: Squad, members: readonly AgentDefinition[]): AgentExecutionPlanSnapshot {
+function squadPlan(squad: Squad, members: readonly AgentDefinition[]): Extract<AgentExecutionPlanSnapshot, { readonly kind: "squad" }> {
   return Object.freeze({
     kind: "squad",
     squadId: squad.id,
@@ -119,6 +120,28 @@ function normalizedRequired(value: unknown, label: string): string {
   const normalized = value.trim();
   if (normalized.length === 0) throw new Error(`${label}不能为空`);
   return normalized;
+}
+
+function isCoordinatorRoot(agentTask: AgentTask): boolean {
+  return agentTask.kind === "coordinator" || agentTask.kind === "squad-leader";
+}
+
+function agentTaskRound(agentTask: AgentTask): number {
+  return agentTask.delegationRound ?? 1;
+}
+
+function coordinatorRole(agentTask: AgentTask): string {
+  return agentTask.executionPlan?.kind === "squad" ? "Squad Leader" : "LEAD";
+}
+
+function coordinatorProtocolInstructions(): readonly string[] {
+  return Object.freeze([
+    "必须把 coordinator_action 工具作为本回合最后且唯一的终止动作；不要手写 JSON，也不要用自然语言或 @mention 代替工具调用。",
+    "action 必须是 delegate、request_revision、replan、complete、ask_human 之一。",
+    "delegate/request_revision/replan 必须提供非空 delegations；每项精确包含 agentId、objective、acceptanceCriteria。",
+    "ask_human 必须提供 question 且 delegations 为空。complete 的 delegations 必须为空。",
+    "Stella 只接受 coordinator_action 的已校验 details，然后才会创建真实 AgentTask；不得声称尚未返回报告的 Agent 已完成工作。",
+  ]);
 }
 
 export class AgentTaskService {
@@ -162,7 +185,8 @@ export class AgentTaskService {
       const comment: TaskComment = Object.freeze({ id: this.#id(), taskId: task.id, author: "user", messageKind: "comment", body, createdAt: now });
       const activities: TaskActivity[] = [this.#activity(task.id, "comment", "用户添加了评论", body, now)];
       if (resumingCoordinator && activeRoot) {
-        const review = this.#coordinatorReviewTask(current, task, activeRoot, now, body);
+        const reviewRound = Math.max(1, this.#nextCoordinatorRound(current, activeRoot) - 1);
+        const review = this.#coordinatorReviewTask(current, task, activeRoot, now, body, reviewRound);
         const waitingRoot: AgentTask = Object.freeze({ ...activeRoot, status: "waiting_children", updatedAt: now });
         const queuedTask = applyTaskLifecycle(task, { type: "execution-queued" }, now);
         return {
@@ -241,14 +265,28 @@ export class AgentTaskService {
     const projectPath = normalizedRequired(input.projectPath, "项目路径");
     const projectName = normalizedRequired(input.projectName, "项目名称");
     const preview = await this.#repository.read();
-    const previewLead = this.#catalogFor(preview).agents.find((agent) => agent.id === "lead");
-    if (!previewLead) throw new Error("编排目录缺少通用调度负责人 LEAD");
-    await this.#skills.assertAgentsReady(projectPath, input.trusted, Object.freeze([previewLead]));
+    const previewAvailable = availableMentionAgentsForTask(
+      { projectPath, executionTarget: Object.freeze({ kind: "agent", agentId: "lead" }) },
+      this.#catalogFor(preview),
+      preview.squads,
+    );
+    const previewParsed = parseAgentMentions(body, previewAvailable);
+    if (previewParsed.tokens.length !== 1 || previewParsed.agents.length !== 1) throw new Error("任务启动台必须指定一个无歧义的负责人");
+    const previewTarget = previewParsed.agents[0];
+    if (!previewTarget) throw new Error(`找不到任务负责人：@${draft.targetToken}`);
+    await this.#skills.assertAgentsReady(projectPath, input.trusted, Object.freeze([previewTarget]));
     const now = this.#now();
     return this.#commit((current) => {
       const catalog = this.#catalogFor(current);
-      const lead = catalog.agents.find((agent) => agent.id === "lead");
-      if (!lead) throw new Error("编排目录缺少通用调度负责人 LEAD");
+      const availableForProject = availableMentionAgentsForTask(
+        { projectPath, executionTarget: Object.freeze({ kind: "agent", agentId: "lead" }) },
+        catalog,
+        current.squads,
+      );
+      const parsed = parseAgentMentions(body, availableForProject);
+      if (parsed.tokens.length !== 1 || parsed.agents.length !== 1) throw new Error("任务启动台必须指定一个无歧义的负责人");
+      const target = parsed.agents[0];
+      if (!target) throw new Error(`找不到任务负责人：@${draft.targetToken}`);
 
       const task: KanbanTask = Object.freeze({
         id: this.#id(),
@@ -259,7 +297,7 @@ export class AgentTaskService {
         projectPath,
         projectName,
         trusted: input.trusted,
-        executionTarget: Object.freeze({ kind: "agent", agentId: lead.id }),
+        executionTarget: Object.freeze({ kind: "agent", agentId: target.id }),
         stage: "planned",
         specRevision: 1,
         executionAttempt: 0,
@@ -267,10 +305,6 @@ export class AgentTaskService {
         updatedAt: now,
       });
       const availableAgents = availableMentionAgentsForTask(task, catalog, current.squads);
-      const parsed = parseAgentMentions(body, availableAgents);
-      if (parsed.tokens.length !== 1 || parsed.agents.length !== 1 || parsed.agents[0]?.id !== lead.id) {
-        throw new Error("任务启动台只能通过一个 @LEAD 创建任务");
-      }
 
       const comment: TaskComment = Object.freeze({
         id: this.#id(),
@@ -287,19 +321,28 @@ export class AgentTaskService {
         activities: [
           ...current.activities,
           this.#activity(task.id, "task", "任务由任务启动台创建", draft.objective, now),
-          this.#activity(task.id, "comment", "用户向 LEAD 提交了启动指令", body, now),
+          this.#activity(task.id, "comment", `用户向 ${target.name} 提交了启动指令`, body, now),
         ],
       };
-      const coordinator = this.#rootAgentTask(
+      const root = this.#rootAgentTask(
         task,
-        lead,
-        "coordinator",
-        this.#coordinatorPrompt(task, body, availableAgents, [comment]),
+        target,
+        target.id === "lead" ? "coordinator" : "direct",
+        target.id === "lead"
+          ? this.#coordinatorPrompt(task, body, availableAgents, [comment])
+          : this.#promptFor(task, target, [comment]),
         now,
         undefined,
-        coordinatorPlan(availableAgents),
+        target.id === "lead" ? coordinatorPlan(availableAgents) : undefined,
       );
-      return this.#withDispatchedRoot(seeded, task, coordinator, "任务启动台已交给 LEAD", `@${lead.callsign}`, now);
+      return this.#withDispatchedRoot(
+        seeded,
+        task,
+        root,
+        target.id === "lead" ? "任务启动台已交给 LEAD 协调" : `任务启动台已直接交给 ${target.name}`,
+        `@${target.callsign}`,
+        now,
+      );
     });
   }
 
@@ -336,9 +379,8 @@ export class AgentTaskService {
     const previewTask = this.#dispatchableTask(preview, taskId);
     if (previewTask.executionTarget.kind !== "squad") throw new Error("任务的执行目标不是 Squad");
     const previewSquad = this.#squad(preview, previewTask.executionTarget.squadId);
-    const previewAgents = [previewSquad.leaderAgentId, ...previewSquad.memberAgentIds]
-      .map((agentId) => this.#agent(preview, agentId, previewTask.projectPath));
-    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze(previewAgents));
+    const previewLeader = this.#agent(preview, previewSquad.leaderAgentId, previewTask.projectPath);
+    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze([previewLeader]));
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#dispatchableTask(current, taskId);
@@ -346,13 +388,13 @@ export class AgentTaskService {
       const squad = this.#squad(current, task.executionTarget.squadId);
       const leader = this.#agent(current, squad.leaderAgentId, task.projectPath);
       const members = squad.memberAgentIds.map((agentId) => this.#agent(current, agentId, task.projectPath));
-      const agentTask = this.#rootAgentTask(task, leader, "squad-leader", this.#squadLeaderPrompt(
+      const plan = squadPlan(squad, members);
+      const agentTask = this.#rootAgentTask(task, leader, "coordinator", this.#squadCoordinatorPrompt(
         task,
-        squad,
+        plan,
         leader,
-        members,
         current.comments.filter((comment) => comment.taskId === task.id),
-      ), now, squad.id, squadPlan(squad, members));
+      ), now, squad.id, plan);
       return this.#withDispatchedRoot(current, task, agentTask, `Squad「${squad.name}」已启动`, `${leader.name} 担任 Leader`, now);
     });
   }
@@ -361,14 +403,16 @@ export class AgentTaskService {
     for (;;) {
       const current = await this.#repository.read();
       if (current.agentTasks.some((agentTask) => agentTask.status === "running")) return undefined;
-      const next = [...current.agentTasks]
-        .filter((agentTask) => agentTask.status === "queued")
-        .sort((left, right) => Date.parse(left.createdAt) - Date.parse(right.createdAt) || left.id.localeCompare(right.id))[0];
+      const queue = deriveAgentTaskQueue(current, this.#now());
+      const invalid = queue.find((entry) => entry.disposition === "invalid");
+      if (invalid) {
+        await this.rejectQueued(invalid.agentTask.id, new Error(`AgentTask 队列状态无效：${invalid.reason}`));
+        continue;
+      }
+      const next = queue.find((entry) => entry.queuePosition === 1)?.agentTask;
       if (!next) return undefined;
       try {
         const task = this.#task(current, next.taskId);
-        const rootId = this.#rootAgentTaskId(current, next);
-        if (task.activeAgentTaskId !== rootId) throw new Error(`AgentTask ${next.id} 与任务的 activeAgentTaskId 不一致`);
         return Object.freeze({ task, agentTask: next });
       } catch (cause) {
         await this.rejectQueued(next.id, cause);
@@ -384,11 +428,23 @@ export class AgentTaskService {
       if (current.agentTasks.some((agentTask) => agentTask.status === "running")) return current;
       const next = current.agentTasks.find((agentTask) => agentTask.id === agentTaskId);
       if (!next || next.status !== "queued") return current;
+      const queue = deriveAgentTaskQueue(current, now);
+      if (queue.some((entry) => entry.disposition === "invalid")) return current;
+      if (nextRunnableAgentTask(current, now)?.agentTask.id !== agentTaskId) return current;
       const task = this.#task(current, next.taskId);
-      const rootId = this.#rootAgentTaskId(current, next);
-      if (task.activeAgentTaskId !== rootId) throw new Error(`AgentTask ${next.id} 与任务的 activeAgentTaskId 不一致`);
       claimed = true;
-      const running: AgentTask = Object.freeze({ ...next, status: "running", runtimeToken, startedAt: now, updatedAt: now });
+      const normalized = next.kind === "squad-leader" && next.executionPlan?.kind === "squad"
+        ? Object.freeze({
+            ...next,
+            prompt: this.#squadCoordinatorPrompt(
+              task,
+              next.executionPlan,
+              next.agentSnapshot,
+              current.comments.filter((comment) => comment.taskId === task.id),
+            ),
+          })
+        : next;
+      const running: AgentTask = Object.freeze({ ...normalized, status: "running", runtimeToken, startedAt: now, updatedAt: now });
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
@@ -432,8 +488,30 @@ export class AgentTaskService {
       const agentTask = this.#agentTask(current, agentTaskId);
       if (agentTask.status !== "queued") throw new Error(`AgentTask ${agentTaskId} 不在 queued 状态`);
       const task = this.#task(current, agentTask.taskId);
+      const recovered = this.#recoverCoordinatorChildFailure(current, task, agentTask, message, now);
+      if (recovered) return recovered;
       const rootId = this.#rootAgentTaskId(current, agentTask);
       const groupIds = this.#agentTaskGroupIds(current, rootId);
+      if (task.activeAgentTaskId !== rootId) {
+        return {
+          ...current,
+          agentTasks: current.agentTasks.map((candidate) => {
+            if (!groupIds.has(candidate.id) || isTerminalAgentTaskStatus(candidate.status)) return candidate;
+            return Object.freeze({
+              ...candidate,
+              status: candidate.id === agentTask.id || candidate.id === rootId ? "failed" as const : "cancelled" as const,
+              runtimeToken: undefined,
+              error: candidate.id === agentTask.id || candidate.id === rootId ? message : "过期执行组已取消",
+              updatedAt: now,
+              completedAt: now,
+            });
+          }),
+          activities: [
+            ...current.activities,
+            this.#activity(task.id, "error", "已拒绝不属于当前执行的 AgentTask", message, now, agentTask.id),
+          ],
+        };
+      }
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id
@@ -452,15 +530,42 @@ export class AgentTaskService {
 
   async reconcileWaitingParents(): Promise<BoardBootstrap | undefined> {
     const current = await this.#repository.read();
-    const brokenParents = current.agentTasks.filter((candidate) => {
-      if (candidate.status !== "waiting_children") return false;
-      const children = current.agentTasks.filter((child) => child.parentAgentTaskId === candidate.id);
-      return children.some((child) => child.status === "failed" || child.status === "interrupted" || child.status === "cancelled");
+    const failedStatus = (candidate: AgentTask): boolean => candidate.status === "failed" || candidate.status === "interrupted" || candidate.status === "cancelled" || candidate.status === "protocol-invalid";
+    const waitingParents = current.agentTasks.filter((candidate) => candidate.status === "waiting_children");
+    const recoverableParents = waitingParents.filter((parent) => {
+      if (!isCoordinatorRoot(parent)) return false;
+      const delegated = current.agentTasks.filter((child) => child.parentAgentTaskId === parent.id && child.kind === "delegated");
+      if (delegated.length === 0) return false;
+      const latestRound = Math.max(...delegated.map(agentTaskRound));
+      const roundChildren = delegated.filter((child) => agentTaskRound(child) === latestRound);
+      const reviewExists = current.agentTasks.some((child) => child.parentAgentTaskId === parent.id
+        && child.kind === "coordinator-review"
+        && agentTaskRound(child) === latestRound);
+      return !reviewExists && roundChildren.every((child) => isTerminalAgentTaskStatus(child.status));
     });
-    if (brokenParents.length === 0) return undefined;
+    const brokenParents = waitingParents.filter((parent) => {
+      const children = current.agentTasks.filter((child) => child.parentAgentTaskId === parent.id);
+      if (!isCoordinatorRoot(parent)) return children.some(failedStatus);
+      return children.some((child) => child.kind === "coordinator-review" && failedStatus(child));
+    });
+    if (recoverableParents.length === 0 && brokenParents.length === 0) return undefined;
     const now = this.#now();
     const brokenIds = new Set(brokenParents.map((parent) => parent.id));
     return this.#commit((state) => {
+      const reviews = recoverableParents.flatMap((snapshot) => {
+        const parent = state.agentTasks.find((candidate) => candidate.id === snapshot.id);
+        const task = state.tasks.find((candidate) => candidate.id === snapshot.taskId);
+        if (!parent || !task || parent.status !== "waiting_children" || !isCoordinatorRoot(parent)) return [];
+        const delegated = state.agentTasks.filter((child) => child.parentAgentTaskId === parent.id && child.kind === "delegated");
+        if (delegated.length === 0) return [];
+        const latestRound = Math.max(...delegated.map(agentTaskRound));
+        const roundChildren = delegated.filter((child) => agentTaskRound(child) === latestRound);
+        const reviewExists = state.agentTasks.some((child) => child.parentAgentTaskId === parent.id
+          && child.kind === "coordinator-review"
+          && agentTaskRound(child) === latestRound);
+        if (reviewExists || !roundChildren.every((child) => isTerminalAgentTaskStatus(child.status))) return [];
+        return [this.#coordinatorReviewTask(state, task, parent, now, undefined, latestRound)];
+      });
       const activities = brokenParents.map((parent) => this.#activity(
         parent.taskId,
         "error",
@@ -469,12 +574,20 @@ export class AgentTaskService {
         now,
         parent.id,
       ));
+      const recoveryActivities = reviews.map((review) => this.#activity(
+        review.taskId,
+        "dispatch",
+        `恢复第 ${agentTaskRound(review)} 轮 Coordinator 验收回合`,
+        "应用启动时发现成员均已返回终态，但验收回合尚未入队。",
+        now,
+        review.id,
+      ));
       return {
         ...state,
         tasks: state.tasks.map((task) => task.activeAgentTaskId && brokenIds.has(task.activeAgentTaskId)
           ? finishExecutionLifecycle(task, { type: "execution-failed", reason: "子 AgentTask 未成功完成" }, now)
           : task),
-        agentTasks: state.agentTasks.map((agentTask) => {
+        agentTasks: [...state.agentTasks.map((agentTask) => {
           if (brokenIds.has(agentTask.id)) {
             return Object.freeze({ ...agentTask, status: "failed" as const, error: "子 AgentTask 未成功完成", updatedAt: now, completedAt: now });
           }
@@ -482,36 +595,14 @@ export class AgentTaskService {
             return Object.freeze({ ...agentTask, status: "cancelled" as const, runtimeToken: undefined, error: "父 AgentTask 已失败", updatedAt: now, completedAt: now });
           }
           return agentTask;
-        }),
-        activities: [...state.activities, ...activities],
+        }), ...reviews],
+        activities: [...state.activities, ...activities, ...recoveryActivities],
       };
     });
   }
 
   async complete(agentTaskId: string, runtimeToken: string, result: AgentTaskResult): Promise<BoardBootstrap> {
     const output = normalizedRequired(result.output, "Agent 最终输出");
-    const preview = await this.#repository.read();
-    const previewAttempt = this.#runningAgentTask(preview, agentTaskId, runtimeToken);
-    const previewTask = this.#task(preview, previewAttempt.taskId);
-    if (!result.protocolError && (previewAttempt.kind === "coordinator" || previewAttempt.kind === "coordinator-review")) {
-      const plan = previewAttempt.executionPlan;
-      if (plan?.kind === "coordinator") {
-        let action: CoordinatorAction | undefined;
-        try {
-          action = parseCoordinatorAction(output, plan.delegates);
-        } catch {
-          // The transactional path persists the exact protocol error and raw output.
-        }
-        if (action) {
-          const delegates = action.delegations.map((delegation) => plan.delegates.find((agent) => agent.id === delegation.agentId)!)
-            .filter(Boolean);
-          await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze(delegates));
-        }
-      }
-    } else if (previewAttempt.kind === "squad-leader" && previewAttempt.executionPlan?.kind === "squad") {
-      const delegates = parseAgentMentions(output, previewAttempt.executionPlan.delegates).agents;
-      await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, delegates);
-    }
     const now = this.#now();
     return this.#commit((current) => {
       const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
@@ -531,9 +622,9 @@ export class AgentTaskService {
       });
       const baseActivities = [...current.activities, this.#activity(task.id, "artifact", `${agentTask.agentSnapshot.name}已产出结果`, result.sessionPath, now, agentTask.id)];
 
-      if (agentTask.kind === "coordinator" || agentTask.kind === "coordinator-review") {
+      if (agentTask.kind === "coordinator" || agentTask.kind === "coordinator-review" || agentTask.kind === "squad-leader") {
         const plan = agentTask.executionPlan;
-        if (plan?.kind !== "coordinator") throw new Error(`Coordinator AgentTask ${agentTask.id} 缺少分发时执行计划快照`);
+        if (!plan) throw new Error(`Coordinator AgentTask ${agentTask.id} 缺少分发时执行计划快照`);
         if (result.protocolError) {
           return this.#applyCoordinatorProtocolFailure(current, task, agentTask, resultFields, comment, baseActivities, new Error(result.protocolError), now);
         }
@@ -545,39 +636,6 @@ export class AgentTaskService {
         }
         const coordinatorComment: TaskComment = Object.freeze({ ...comment, body: coordinatorActionMessage(action) });
         return this.#applyCoordinatorAction(current, task, agentTask, resultFields, action, coordinatorComment, baseActivities, now);
-      }
-
-      if (agentTask.kind === "squad-leader") {
-        const plan = agentTask.executionPlan;
-        if (plan?.kind !== "squad") throw new Error(`Squad Leader AgentTask ${agentTask.id} 缺少分发时执行计划快照`);
-        const delegatedAgents = parseAgentMentions(output, plan.delegates).agents;
-        if (delegatedAgents.length > 0) {
-          const children = delegatedAgents.map((agent) => Object.freeze({
-            id: this.#id(),
-            taskId: task.id,
-            executionAttempt: agentTask.executionAttempt,
-            taskSpec: agentTask.taskSpec,
-            agentSnapshot: cloneAgent(agent),
-            kind: "delegated" as const,
-            status: "queued" as const,
-            acceptance: "not-ready" as const,
-            prompt: this.#delegatedPrompt(task, plan.squadName, agent, output),
-            parentAgentTaskId: agentTask.id,
-            squadId: plan.squadId,
-            createdAt: now,
-            updatedAt: now,
-          }));
-          const waitingLeader: AgentTask = Object.freeze({ ...agentTask, ...resultFields, status: "waiting_children" });
-          return {
-            ...current,
-            tasks: current.tasks.map((candidate) => candidate.id === task.id
-              ? applyTaskLifecycle(candidate, { type: "execution-queued" }, now)
-              : candidate),
-            agentTasks: [...current.agentTasks.map((candidate) => candidate.id === agentTask.id ? waitingLeader : candidate), ...children],
-            comments: [...current.comments, comment],
-            activities: [...baseActivities, this.#activity(task.id, "dispatch", `Leader 委派给 ${delegatedAgents.map((agent) => agent.name).join("、")}`, output, now, agentTask.id)],
-          };
-        }
       }
 
       if (agentTask.kind === "mention-root") {
@@ -605,12 +663,15 @@ export class AgentTaskService {
       if (agentTask.kind === "delegated") {
         const parent = this.#agentTask(current, agentTask.parentAgentTaskId ?? "");
         if (parent.status !== "waiting_children") throw new Error(`父 AgentTask ${parent.id} 未在等待子任务`);
-        if (parent.kind === "coordinator") {
+        if (isCoordinatorRoot(parent)) {
+          const round = agentTaskRound(agentTask);
           const workers = current.agentTasks
-            .filter((candidate) => candidate.parentAgentTaskId === parent.id && candidate.kind === "delegated")
+            .filter((candidate) => candidate.parentAgentTaskId === parent.id
+              && candidate.kind === "delegated"
+              && agentTaskRound(candidate) === round)
             .map((candidate) => candidate.id === agentTask.id ? reported : candidate);
-          const allReported = workers.length > 0 && workers.every((candidate) => candidate.status === "reported");
-          const review = allReported ? this.#coordinatorReviewTask(current, task, parent, now, reported) : undefined;
+          const allTerminal = workers.length > 0 && workers.every((candidate) => isTerminalAgentTaskStatus(candidate.status));
+          const review = allTerminal ? this.#coordinatorReviewTask(current, task, parent, now, reported, round) : undefined;
           return {
             ...current,
             tasks: current.tasks.map((candidate) => candidate.id === task.id
@@ -622,7 +683,7 @@ export class AgentTaskService {
             ],
             comments: [...current.comments, comment],
             activities: review
-              ? [...baseActivities, this.#activity(task.id, "dispatch", "成员报告已汇总，LEAD 进入验收回合", undefined, now, review.id)]
+              ? [...baseActivities, this.#activity(task.id, "dispatch", `第 ${round} 轮成员已全部返回终态，${coordinatorRole(parent)} 进入验收回合`, undefined, now, review.id)]
               : baseActivities,
           };
         }
@@ -670,6 +731,8 @@ export class AgentTaskService {
     return this.#commit((current) => {
       const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
       const task = this.#task(current, agentTask.taskId);
+      const recovered = this.#recoverCoordinatorChildFailure(current, task, agentTask, message, now);
+      if (recovered) return recovered;
       const rootId = this.#rootAgentTaskId(current, agentTask);
       const groupIds = this.#agentTaskGroupIds(current, rootId);
       return {
@@ -841,6 +904,62 @@ export class AgentTaskService {
     return ids;
   }
 
+  #nextCoordinatorRound(state: BoardState, root: AgentTask): number {
+    const latest = state.agentTasks
+      .filter((candidate) => candidate.parentAgentTaskId === root.id && candidate.kind === "delegated")
+      .reduce((maximum, candidate) => Math.max(maximum, agentTaskRound(candidate)), 0);
+    return latest + 1;
+  }
+
+  #recoverCoordinatorChildFailure(
+    state: BoardState,
+    task: KanbanTask,
+    agentTask: AgentTask,
+    message: string,
+    now: string,
+  ): BoardState | undefined {
+    if (agentTask.kind !== "delegated" || !agentTask.parentAgentTaskId) return undefined;
+    const parent = state.agentTasks.find((candidate) => candidate.id === agentTask.parentAgentTaskId);
+    if (!parent || !isCoordinatorRoot(parent) || parent.status !== "waiting_children" || task.activeAgentTaskId !== parent.id) return undefined;
+
+    const failed: AgentTask = Object.freeze({
+      ...agentTask,
+      status: "failed",
+      runtimeToken: undefined,
+      error: message,
+      updatedAt: now,
+      completedAt: now,
+    });
+    const round = agentTaskRound(agentTask);
+    const roundChildren = state.agentTasks
+      .filter((candidate) => candidate.parentAgentTaskId === parent.id
+        && candidate.kind === "delegated"
+        && agentTaskRound(candidate) === round)
+      .map((candidate) => candidate.id === failed.id ? failed : candidate);
+    const allTerminal = roundChildren.length > 0 && roundChildren.every((candidate) => isTerminalAgentTaskStatus(candidate.status));
+    const reviewExists = state.agentTasks.some((candidate) => candidate.parentAgentTaskId === parent.id
+      && candidate.kind === "coordinator-review"
+      && agentTaskRound(candidate) === round);
+    const review = allTerminal && !reviewExists
+      ? this.#coordinatorReviewTask(state, task, parent, now, failed, round)
+      : undefined;
+    return {
+      ...state,
+      tasks: state.tasks.map((candidate) => candidate.id === task.id
+        ? applyTaskLifecycle(Object.freeze({ ...candidate, activeAgentTaskId: parent.id }), { type: "execution-queued" }, now)
+        : candidate),
+      agentTasks: [
+        ...state.agentTasks.map((candidate) => candidate.id === failed.id ? failed : candidate),
+        ...(review ? [review] : []),
+      ],
+      activities: [
+        ...state.activities,
+        this.#activity(task.id, "error", `${agentTask.agentSnapshot.name}执行失败，等待 ${coordinatorRole(parent)} 决策`, message, now, agentTask.id),
+        ...(review ? [this.#activity(task.id, "dispatch", `第 ${round} 轮成员已全部返回终态，${coordinatorRole(parent)} 进入恢复决策`, undefined, now, review.id)] : []),
+      ],
+    };
+  }
+
   #task(state: BoardState, taskId: string): KanbanTask {
     const task = state.tasks.find((candidate) => candidate.id === taskId);
     if (!task) throw new Error(`找不到任务: ${taskId}`);
@@ -881,8 +1000,8 @@ export class AgentTaskService {
     activities: readonly TaskActivity[],
     now: string,
   ): BoardState {
-    const root = attempt.kind === "coordinator" ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
-    if (root.kind !== "coordinator") throw new Error(`Coordinator review ${attempt.id} 的父任务不是 Coordinator`);
+    const root = isCoordinatorRoot(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
+    if (!isCoordinatorRoot(root)) throw new Error(`Coordinator review ${attempt.id} 的父任务不是 Coordinator`);
     const completedAttempt: AgentTask | undefined = attempt.id === root.id ? undefined : Object.freeze({
       ...attempt,
       ...resultFields,
@@ -895,7 +1014,8 @@ export class AgentTaskService {
       : Object.freeze({ output: resultFields.output, updatedAt: now });
 
     if (action.action === "delegate" || action.action === "request_revision" || action.action === "replan") {
-      const children = action.delegations.map((delegation) => this.#coordinatorDelegatedTask(task, root, action, delegation, now));
+      const round = this.#nextCoordinatorRound(state, root);
+      const children = action.delegations.map((delegation) => this.#coordinatorDelegatedTask(task, root, action, delegation, round, now));
       const waitingRoot: AgentTask = Object.freeze({
         ...root,
         ...resultOnRoot,
@@ -918,7 +1038,7 @@ export class AgentTaskService {
           ...children,
         ],
         comments: [...state.comments, comment],
-        activities: [...activities, this.#activity(task.id, "dispatch", `LEAD ${action.action === "request_revision" ? "要求修订" : action.action === "replan" ? "重新规划并委派" : "完成委派"}`, action.delegations.map((item) => `@${item.agentId}`).join("、"), now, root.id)],
+        activities: [...activities, this.#activity(task.id, "dispatch", `${coordinatorRole(root)} ${action.action === "request_revision" ? "要求修订" : action.action === "replan" ? "重新规划并委派" : "完成委派"}`, `第 ${round} 轮 · ${action.delegations.map((item) => `@${item.agentId}`).join("、")}`, now, root.id)],
       };
     }
 
@@ -942,7 +1062,7 @@ export class AgentTaskService {
           return candidate;
         }),
         comments: [...state.comments, comment],
-        activities: [...activities, this.#activity(task.id, "gate", "LEAD 请求用户决定", action.question, now, root.id)],
+        activities: [...activities, this.#activity(task.id, "gate", `${coordinatorRole(root)} 请求用户决定`, action.question, now, root.id)],
       };
     }
 
@@ -965,7 +1085,7 @@ export class AgentTaskService {
         return candidate;
       }),
       comments: [...state.comments, comment],
-      activities: [...activities, this.#activity(task.id, "status", "LEAD 已完成团队验收，等待用户接受报告", action.summary, now, root.id)],
+      activities: [...activities, this.#activity(task.id, "status", `${coordinatorRole(root)} 已完成团队验收，等待用户接受报告`, action.summary, now, root.id)],
     };
   }
 
@@ -979,9 +1099,9 @@ export class AgentTaskService {
     cause: unknown,
     now: string,
   ): BoardState {
-    const root = attempt.kind === "coordinator" ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
+    const root = isCoordinatorRoot(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
     const validationError = cause instanceof Error ? cause.message : String(cause);
-    const message = `LEAD 协议无效：${validationError}`;
+    const message = `${coordinatorRole(root)} 协议无效：${validationError}`;
     const groupIds = this.#agentTaskGroupIds(state, root.id);
     return {
       ...state,
@@ -1023,7 +1143,7 @@ export class AgentTaskService {
         return candidate;
       }),
       comments: [...state.comments, rawComment],
-      activities: [...activities, this.#activity(task.id, "error", "LEAD 输出未通过 Coordinator 协议校验", validationError, now, attempt.id)],
+      activities: [...activities, this.#activity(task.id, "error", `${coordinatorRole(root)} 输出未通过 Coordinator 协议校验`, validationError, now, attempt.id)],
     };
   }
 
@@ -1032,10 +1152,11 @@ export class AgentTaskService {
     root: AgentTask,
     action: CoordinatorAction,
     delegation: CoordinatorDelegation,
+    round: number,
     now: string,
   ): AgentTask {
     const plan = root.executionPlan;
-    if (plan?.kind !== "coordinator") throw new Error(`Coordinator AgentTask ${root.id} 缺少分发时执行计划快照`);
+    if (!plan) throw new Error(`Coordinator AgentTask ${root.id} 缺少分发时执行计划快照`);
     const agent = plan.delegates.find((candidate) => candidate.id === delegation.agentId);
     if (!agent) throw new Error(`Coordinator 本轮执行计划不允许委派 Agent: ${delegation.agentId}`);
     return Object.freeze({
@@ -1047,8 +1168,10 @@ export class AgentTaskService {
       kind: "delegated",
       status: "queued",
       acceptance: "not-ready",
-      prompt: this.#coordinatorDelegatedPrompt(task, agent, action, delegation),
+      prompt: this.#coordinatorDelegatedPrompt(task, agent, action, delegation, plan, round),
       parentAgentTaskId: root.id,
+      delegationRound: round,
+      squadId: plan.kind === "squad" ? plan.squadId : undefined,
       createdAt: now,
       updatedAt: now,
     });
@@ -1060,6 +1183,7 @@ export class AgentTaskService {
     root: AgentTask,
     now: string,
     extraReport?: AgentTask | string,
+    round?: number,
   ): AgentTask {
     return Object.freeze({
       id: this.#id(),
@@ -1072,6 +1196,8 @@ export class AgentTaskService {
       acceptance: "not-ready",
       prompt: this.#coordinatorReviewPrompt(state, task, root, extraReport),
       parentAgentTaskId: root.id,
+      delegationRound: round,
+      squadId: root.squadId,
       executionPlan: root.executionPlan,
       createdAt: now,
       updatedAt: now,
@@ -1105,11 +1231,7 @@ export class AgentTaskService {
       "", "## Task Room", discussion || "（暂无其他消息）",
       "", "## 可委派 Agent", workers || "（没有可委派 Agent；只能 complete 或 ask_human）",
       "", "## 严格行动协议",
-      "必须把 coordinator_action 工具作为本回合最后且唯一的终止动作；不要手写 JSON，也不要用自然语言或 @mention 代替工具调用。",
-      "action 必须是 delegate、request_revision、replan、complete、ask_human 之一。",
-      "delegate/request_revision/replan 必须提供非空 delegations；每项精确包含 agentId、objective、acceptanceCriteria。",
-      "ask_human 必须提供 question 且 delegations 为空。complete 的 delegations 必须为空。",
-      "Stella 只接受 coordinator_action 的已校验 details，然后才会创建真实 AgentTask；不得声称尚未返回报告的 Agent 已完成工作。",
+      ...coordinatorProtocolInstructions(),
     ].join("\n");
   }
 
@@ -1123,16 +1245,26 @@ export class AgentTaskService {
     const reports = state.agentTasks
       .filter((candidate) => candidate.parentAgentTaskId === root.id && candidate.kind === "delegated")
       .map((candidate) => candidate.id === reportOverride?.id ? reportOverride : candidate)
-      .filter((candidate) => candidate.output)
-      .map((candidate) => `### ${candidate.agentSnapshot.name} (@${candidate.agentSnapshot.id})\n${candidate.output}`);
+      .map((candidate) => {
+        const result = candidate.output
+          ? candidate.output
+          : candidate.error
+            ? `执行失败：${candidate.error}`
+            : `未返回报告；当前状态：${candidate.status}`;
+        return `### 第 ${agentTaskRound(candidate)} 轮 · ${candidate.agentSnapshot.name} (@${candidate.agentSnapshot.id}) · ${candidate.status}\n${result}`;
+      });
     const reply = typeof extraReport === "string" ? extraReport : undefined;
     const discussion = state.comments.filter((comment) => comment.taskId === task.id).map((comment) => `- ${comment.author === "user" ? "用户" : comment.authorAgentId ?? comment.author}：${comment.body}`).join("\n");
+    const plan = root.executionPlan;
+    const delegates = plan?.delegates.map((agent) => `- ${agent.id} / @${agent.callsign}：${agent.responsibility}；workspace=${agent.workspaceAccess}`).join("\n");
     return [
       "# Stella Coordinator 验收回合", "", `任务：${task.title}`,
+      ...(plan?.kind === "squad" ? ["", "## Squad 范围", `Squad：${plan.squadName}`, `Leader 固定指令：${plan.leaderInstructions}`] : []),
       "", "## 任务验收标准", task.acceptanceCriteria || "（未提供补充标准）",
-      "", "## 成员真实报告", reports.join("\n\n") || "（本回合没有成员报告）",
+      "", "## 成员真实报告与失败", reports.join("\n\n") || "（本回合没有成员报告）",
       ...(reply ? ["", "## 用户刚刚的回复", reply] : []),
       "", "## Task Room", discussion || "（暂无消息）",
+      "", "## 可继续委派 Agent", delegates || "（没有可委派 Agent；只能 complete 或 ask_human）",
       "", "核对报告是否满足验收标准。信息充分时 complete；需要成员补做时 request_revision；任务拆解需要变化时 replan；缺少用户决定时 ask_human。",
       "必须调用 coordinator_action 作为本回合最后动作；不要输出 JSON、自然语言前后缀或 @mention 来冒充行动。",
     ].join("\n");
@@ -1143,10 +1275,13 @@ export class AgentTaskService {
     agent: AgentDefinition,
     action: CoordinatorAction,
     delegation: CoordinatorDelegation,
+    plan: AgentExecutionPlanSnapshot,
+    round: number,
   ): string {
     return [
-      "# Stella Coordinator 委派", "", `任务：${task.title}`, `执行角色：${agent.name}（@${agent.id}）`,
-      "", "## LEAD 决策", action.summary,
+      "# Stella Coordinator 委派", "", `任务：${task.title}`, `委派轮次：第 ${round} 轮`, `执行角色：${agent.name}（@${agent.id}）`,
+      ...(plan.kind === "squad" ? [`Squad：${plan.squadName}`] : []),
+      "", `## ${plan.kind === "squad" ? "Squad Leader" : "LEAD"} 决策`, action.summary,
       "", "## 你的目标", delegation.objective,
       "", "## 本次委派验收标准", delegation.acceptanceCriteria,
       "", "## 任务总体验收标准", task.acceptanceCriteria || "（未提供补充标准）",
@@ -1155,32 +1290,21 @@ export class AgentTaskService {
     ].join("\n");
   }
 
-  #squadLeaderPrompt(
+  #squadCoordinatorPrompt(
     task: KanbanTask,
-    squad: Squad,
+    plan: Extract<AgentExecutionPlanSnapshot, { readonly kind: "squad" }>,
     leader: AgentDefinition,
-    members: readonly AgentDefinition[],
     comments: readonly TaskComment[],
   ): string {
-    const memberList = members.map((agent) => `- @${agent.id}（${agent.callsign}）：${agent.responsibility}`).join("\n");
+    const memberList = plan.delegates.map((agent) => `- ${agent.id} / @${agent.callsign}：${agent.responsibility}；workspace=${agent.workspaceAccess}`).join("\n");
     const discussion = comments.map((comment) => `- ${comment.author === "user" ? "用户" : comment.authorAgentId ?? comment.author}：${comment.body}`).join("\n");
     return [
-      "# Stella Squad Leader 任务", "", `Squad：${squad.name}`, `Leader：${leader.name}`, `任务：${task.title}`,
+      "# Stella Squad Coordinator 回合", "", `Squad：${plan.squadName}`, `Leader：${leader.name}`, `任务：${task.title}`,
       "", "## 任务说明", task.description || "（未提供补充说明）", "", "## 验收标准",
       task.acceptanceCriteria || "（未提供补充标准）", "", "## 任务讨论", discussion || "（暂无评论）",
-      "", "## 可委派成员", memberList, "", "## Leader 指令", squad.leaderInstructions,
+      "", "## 可委派成员（严格限定）", memberList || "（没有可委派成员；只能 complete 或 ask_human）", "", "## Leader 指令", plan.leaderInstructions,
       "", "## Leader 角色固定指令", leader.instructions,
-      "", "先完成 Leader 的分析或工作。若确实需要成员继续执行，只在最终回复中使用上述精确别名 @mention；Stella 会为每个被提及成员创建真实子 AgentTask。不要声称成员已经执行。未提及任何成员表示无需委派。",
-    ].join("\n");
-  }
-
-  #delegatedPrompt(task: KanbanTask, squadName: string, agent: AgentDefinition, leaderOutput: string): string {
-    return [
-      "# Stella Squad 子任务", "", `Squad：${squadName}`, `任务：${task.title}`, `执行成员：${agent.name}（@${agent.id}）`,
-      "", "## 任务说明", task.description || "（未提供补充说明）", "", "## 验收标准",
-      task.acceptanceCriteria || "（未提供补充标准）", "", "## Leader 产物与委派上下文", leaderOutput,
-      "", "## 成员角色固定指令", agent.instructions,
-      "", "只执行你的成员职责。真实操作并验证，最终明确报告结果、失败和未验证项。",
+      "", "## 严格行动协议", ...coordinatorProtocolInstructions(),
     ].join("\n");
   }
 

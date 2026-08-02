@@ -1,5 +1,7 @@
 # Stella v4 · Team Relay Implementation Specification
 
+> 状态：历史增量 Spec。当前 Team 调度与 Coordinator 语义以 [`stella-team-reliability-v1.md`](stella-team-reliability-v1.md)、ADR 0005 和 ADR 0006 为准；本文件保留 v4 的产品演进背景。
+
 ## Outcome
 
 v4 keeps every existing Pi workspace, Kanban, Task Room, Workflow DAG, medical workflow and Autopilot surface, and adds one chat-first team control surface over the same durable Task facts. It does not add a remote backend, PostgreSQL, Redis, a second message store or a second Agent runtime.
@@ -33,7 +35,7 @@ Team Chat uses three columns:
 2. Collaboration Timeline: the launch room before a Task exists, or the existing `TaskDetailPanel` in full-workspace mode after selecting a Task, including DAG, gates, reports, acceptance and composer.
 3. Team Pulse: derived Agent state, current Task and workload, plus project Agent creation.
 
-The project launch room is a virtual pre-Task surface, not a second durable message store. It accepts exactly one `@LEAD` plus a non-empty objective. The main process atomically writes a medium-priority Task, deterministic title, explicit acceptance rule, first user message, activities and queued Coordinator AgentTask. On success the UI selects the new Task Room; on any validation or capability failure it writes nothing.
+The project launch room is a virtual pre-Task surface, not a second durable message store. It accepts exactly one unambiguous `@Agent` plus a non-empty objective and explicit acceptance criteria. `@LEAD` creates a Coordinator; a Worker creates a direct AgentTask. The main process atomically writes the Task, first user message, activities and first execution. On success the UI selects the new Task Room; on any validation or capability failure it writes nothing.
 
 ## Mention semantics
 
@@ -45,11 +47,11 @@ The project launch room is a virtual pre-Task surface, not a second durable mess
 - a normal message while LEAD is `waiting_human`: appends the user message and creates a `coordinator-review` attempt.
 - unknown, ambiguous or out-of-project mentions reject the entire transaction.
 - no Task Room message is silently converted into a new Kanban Task.
-- the project launch room is the only exception: its impact preview explicitly states that `@LEAD` creates a new Task, and direct Worker mentions are rejected there.
+- the project launch room is the only exception: its impact preview explicitly states whether the single selected Agent creates a Coordinator or a direct Worker execution together with the new Task.
 
 ## LEAD structured protocol
 
-LEAD is a read-only built-in Agent. Its final output must be one JSON object with only these fields:
+LEAD is a read-only built-in Agent. It must finish the turn with the terminating `coordinator_action` tool. The tool input uses this conceptual shape:
 
 ```json
 {
@@ -66,7 +68,7 @@ LEAD is a read-only built-in Agent. Its final output must be one JSON object wit
 }
 ```
 
-Validation is strict: unknown fields, prose wrappers, Markdown fences, duplicate/unknown Agent ids or invalid action-specific fields fail the Coordinator attempt and block the Task. There is no natural-language fallback.
+Validation is strict: a missing or invalid terminating tool call, duplicate/unknown Agent ids or invalid action-specific fields fail the Coordinator attempt and block the Task. Prose, Markdown JSON and textual mentions have no control authority; there is no natural-language fallback.
 
 After all Worker tasks in a delegation batch report, Stella creates a real `coordinator-review` attempt. LEAD then chooses `complete`, `request_revision`, `replan` or `ask_human`. `complete` still produces only `reported + pending`; the user must accept the report before the Task becomes completed.
 
@@ -86,7 +88,7 @@ Schema v4 stores `customAgents` in `board.json`. A project Agent contains the no
 
 - Board schema v1, v2 and v3 are backed up and migrated to v4.
 - v3 migration adds an empty `customAgents` collection without rewriting historical execution truth.
-- existing Squad output-mention behavior remains available for compatibility.
+- persisted legacy `squad-leader` records remain readable, but queued legacy prompts are upgraded to the same typed Coordinator protocol before execution; output mention control is not retained.
 - fixed Workflows, human gates, DAG snapshots, Autopilot and Pi session continuation retain their existing data paths.
 
 ## Verification obligations

@@ -272,6 +272,8 @@ export interface AgentTask {
   readonly reviewedAt?: string;
   readonly prompt: string;
   readonly parentAgentTaskId?: string;
+  /** Coordinator delegation/review generation. Legacy records without it belong to round 1. */
+  readonly delegationRound?: number;
   readonly squadId?: string;
   readonly executionPlan?: AgentExecutionPlanSnapshot;
   readonly runtimeToken?: string;
@@ -849,6 +851,7 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   assertOptionalIsoDate(value.reviewedAt, `${path}.reviewedAt`);
   assertString(value.prompt, `${path}.prompt`);
   assertOptionalString(value.parentAgentTaskId, `${path}.parentAgentTaskId`);
+  if (value.delegationRound !== undefined) assertPositiveInteger(value.delegationRound, `${path}.delegationRound`);
   assertOptionalString(value.squadId, `${path}.squadId`);
   if (value.executionPlan !== undefined) assertAgentExecutionPlan(value.executionPlan, `${path}.executionPlan`);
   assertOptionalString(value.runtimeToken, `${path}.runtimeToken`);
@@ -866,11 +869,18 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   if (value.status === "waiting_children" && value.kind !== "squad-leader" && value.kind !== "mention-root" && value.kind !== "coordinator") {
     throw new Error(`${path} 只有 Squad Leader、mention root 或 Coordinator 能等待子任务`);
   }
-  if (value.status === "waiting_human" && value.kind !== "coordinator") throw new Error(`${path} 只有 Coordinator 能等待用户回复`);
+  if (value.status === "waiting_human" && value.kind !== "coordinator" && value.kind !== "squad-leader") {
+    throw new Error(`${path} 只有 Coordinator 或兼容期 Squad Leader 能等待用户回复`);
+  }
   if (value.kind === "delegated" && !value.parentAgentTaskId) throw new Error(`${path}.parentAgentTaskId 是 delegated 任务的必填字段`);
   if (value.kind === "coordinator-review" && !value.parentAgentTaskId) throw new Error(`${path}.parentAgentTaskId 是 coordinator-review 的必填字段`);
+  if (value.delegationRound !== undefined && value.kind !== "delegated" && value.kind !== "coordinator-review") {
+    throw new Error(`${path}.delegationRound 只允许 Coordinator 子任务使用`);
+  }
   if (value.kind === "squad-leader" && !value.squadId) throw new Error(`${path}.squadId 是 Squad Leader 的必填字段`);
-  if (value.executionPlan?.kind === "squad" && value.kind !== "squad-leader") throw new Error(`${path}.executionPlan 与 AgentTask kind 不一致`);
+  if (value.executionPlan?.kind === "squad" && value.kind !== "squad-leader" && value.kind !== "coordinator" && value.kind !== "coordinator-review") {
+    throw new Error(`${path}.executionPlan 与 AgentTask kind 不一致`);
+  }
   if (value.executionPlan?.kind === "coordinator" && value.kind !== "coordinator" && value.kind !== "coordinator-review") {
     throw new Error(`${path}.executionPlan 与 AgentTask kind 不一致`);
   }
@@ -1159,6 +1169,9 @@ function validateReferences(state: BoardState): void {
       }
       if (parent.executionAttempt !== agentTask.executionAttempt || parent.taskSpec.revision !== agentTask.taskSpec.revision) {
         throw new Error(`AgentTask ${agentTask.id} 与父任务的执行身份不一致`);
+      }
+      if (agentTask.delegationRound !== undefined && parent.kind !== "coordinator" && parent.kind !== "squad-leader") {
+        throw new Error(`AgentTask ${agentTask.id} 的 delegationRound 只允许 Coordinator 执行树使用`);
       }
     }
     if (agentTask.status === "waiting_children" && !state.agentTasks.some((candidate) => candidate.parentAgentTaskId === agentTask.id)) {

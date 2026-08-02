@@ -12,16 +12,24 @@ describe("deriveTeamLaunchDraft", () => {
         objective: "评估 NLRP3 作为帕金森病早研靶点。覆盖临床竞品和关键风险。",
         acceptanceCriteria: ACCEPTANCE,
         priority: "medium",
+        targetToken: "lead",
       });
   });
 
-  it("requires acceptance criteria and exactly one LEAD in the task launchpad", () => {
+  it("requires acceptance criteria and exactly one explicit owner", () => {
     expect(() => deriveTeamLaunchDraft("@LEAD 研究问题", " ")).toThrow("验收标准");
-    expect(() => deriveTeamLaunchDraft("先研究一下这个问题", ACCEPTANCE)).toThrow("需要通过 @LEAD");
+    expect(() => deriveTeamLaunchDraft("先研究一下这个问题", ACCEPTANCE)).toThrow("指定负责人");
     expect(() => deriveTeamLaunchDraft("@LEAD", ACCEPTANCE)).toThrow("写明任务目标");
-    expect(() => deriveTeamLaunchDraft("@BUILD 直接修改项目", ACCEPTANCE)).toThrow("只接受 @LEAD");
-    expect(() => deriveTeamLaunchDraft("@LEAD 规划后让 @BUILD 开始", ACCEPTANCE)).toThrow("只接受 @LEAD");
-    expect(() => deriveTeamLaunchDraft("@LEAD 请规划，稍后再问 @LEAD", ACCEPTANCE)).toThrow("只能包含一个 @LEAD");
+    expect(() => deriveTeamLaunchDraft("@LEAD 规划后让 @BUILD 开始", ACCEPTANCE)).toThrow("只能指定一个负责人");
+    expect(() => deriveTeamLaunchDraft("@LEAD 请规划，稍后再问 @LEAD", ACCEPTANCE)).toThrow("只能指定一个负责人");
+  });
+
+  it("supports direct Worker ownership for a clear task", () => {
+    expect(deriveTeamLaunchDraft("@BUILD 实现并验证模型选择器", ACCEPTANCE)).toMatchObject({
+      targetToken: "build",
+      title: "实现并验证模型选择器",
+      objective: "实现并验证模型选择器",
+    });
   });
 
   it("limits long Unicode titles without splitting code points", () => {

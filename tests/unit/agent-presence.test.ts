@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { deriveAgentPresences } from "../../src/shared/agent-presence";
-import { BOARD_SCHEMA_VERSION, parseBoardState, type ProjectAgentDefinition } from "../../src/shared/kanban";
+import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, parseBoardState, type AgentTask, type KanbanTask, type ProjectAgentDefinition } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG, catalogForBoard } from "../../src/shared/orchestration-catalog";
 
 const NOW = "2026-07-18T03:00:00.000Z";
@@ -56,5 +56,29 @@ describe("Agent Presence projection", () => {
     expect(presences.find((presence) => presence.agent.id === "lead")).toMatchObject({ state: "waiting", activeTaskId: "task-waiting", detail: "等待用户回复" });
     expect(presences.find((presence) => presence.agent.id === "custom-one")).toMatchObject({ state: "available", workload: 0 });
     expect(presences.some((presence) => presence.agent.id === "custom-two")).toBe(false);
+  });
+
+  it("surfaces a current protocol failure without letting historical executions override presence", () => {
+    const task: KanbanTask = Object.freeze({
+      id: "task", title: "协调失败", description: "", acceptanceCriteria: "可核查", priority: "high",
+      projectPath: "C:/one", projectName: "one", trusted: true,
+      executionTarget: Object.freeze({ kind: "agent", agentId: "lead" }), stage: "blocked", blockedReason: "协议无效",
+      specRevision: 1, executionAttempt: 2, createdAt: NOW, updatedAt: NOW,
+    });
+    const failed: AgentTask = Object.freeze({
+      id: "failed", taskId: task.id, executionAttempt: 2,
+      taskSpec: Object.freeze({ revision: 1, title: task.title, description: "", acceptanceCriteria: "可核查", priority: "high", executionTarget: task.executionTarget }),
+      agentSnapshot: lead, kind: "coordinator", status: "protocol-invalid", acceptance: "not-ready", prompt: "规划",
+      error: "未调用 coordinator_action", createdAt: NOW, updatedAt: NOW, completedAt: NOW,
+    });
+    const historical: AgentTask = Object.freeze({ ...failed, id: "historical", executionAttempt: 1, status: "reported", error: undefined });
+    const state = Object.freeze({ ...EMPTY_BOARD_STATE, tasks: Object.freeze([task]), agentTasks: Object.freeze([historical, failed]) });
+    const presences = deriveAgentPresences(state, BUILTIN_ORCHESTRATION_CATALOG, "C:/one", NOW);
+
+    expect(presences.find((presence) => presence.agent.id === "lead")).toMatchObject({
+      state: "attention",
+      activeTaskId: task.id,
+      detail: "未调用 coordinator_action",
+    });
   });
 });

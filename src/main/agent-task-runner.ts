@@ -226,7 +226,9 @@ export class AgentTaskRunner {
       throw new Error(`已认领 AgentTask ${claimed.agentTask.id} 缺少 runtimeToken`);
     }
     const agent = claimed.agentTask.agentSnapshot;
-    const structuredCoordinator = claimed.agentTask.kind === "coordinator" || claimed.agentTask.kind === "coordinator-review";
+    const structuredCoordinator = claimed.agentTask.kind === "coordinator"
+      || claimed.agentTask.kind === "coordinator-review"
+      || claimed.agentTask.kind === "squad-leader";
     const allowedTools = structuredCoordinator
       ? Object.freeze([...new Set([...agent.allowedTools, "coordinator_action"])])
       : agent.allowedTools;

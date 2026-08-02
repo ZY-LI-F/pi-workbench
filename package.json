@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "productName": "Stella Pi Workbench",
   "private": true,
-  "description": "A polished desktop GUI for the Pi coding agent, signed by Stella.",
+  "description": "A local-first Pi desktop workbench with native chat, model routing, inspectable agent teams, Kanban, DAG workflows, and artifact previews.",
   "author": "Stella",
   "license": "MIT",
   "repository": {

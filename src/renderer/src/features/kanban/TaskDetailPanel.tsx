@@ -25,6 +25,7 @@ import remarkGfm from "remark-gfm";
 import { availableMentionAgentsForTask, parseAgentMentions } from "@shared/agent-mentions";
 import type { AgentMentionQuery } from "@shared/agent-mentions";
 import type { AgentPresence } from "@shared/agent-presence";
+import type { AgentTaskQueueEntry } from "@shared/agent-task-scheduler";
 import { MANUAL_TASK_STAGES } from "@shared/kanban";
 import type {
   AgentTask,
@@ -44,6 +45,7 @@ import { ArtifactDetails } from "./ArtifactDetails";
 import { AgentMentionInput, type AgentMentionRequest } from "./AgentMentionInput";
 import { WorkflowDag } from "./WorkflowDag";
 import { useMediaQuery } from "../../hooks/use-media-query";
+import { AgentExecutionGraph } from "./AgentExecutionGraph";
 
 interface TaskDetailPanelProps {
   readonly task: KanbanTask;
@@ -51,6 +53,7 @@ interface TaskDetailPanelProps {
   readonly squads: readonly Squad[];
   readonly runs: readonly WorkflowRun[];
   readonly agentTasks: readonly AgentTask[];
+  readonly agentTaskQueue?: readonly AgentTaskQueueEntry[];
   readonly comments: readonly TaskComment[];
   readonly activities: readonly TaskActivity[];
   readonly busy: boolean;
@@ -110,6 +113,7 @@ export function TaskDetailPanel({
   squads,
   runs,
   agentTasks,
+  agentTaskQueue,
   comments,
   activities,
   busy,
@@ -270,6 +274,12 @@ export function TaskDetailPanel({
           </div>
         )}
         {task.blockedReason && <div className="task-detail__blocked"><XCircle size={14} /><span>{task.blockedReason}</span></div>}
+
+        <AgentExecutionGraph
+          agentTasks={agentTasks}
+          activeRootId={task.activeAgentTaskId ?? (task.awaitingReviewExecution?.kind === "agent-task" ? task.awaitingReviewExecution.id : undefined)}
+          queueEntries={agentTaskQueue}
+        />
 
         <WorkflowDag
           workflowExpected={executionTarget.kind === "workflow"}

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
 import { deriveAgentPresences } from "@shared/agent-presence";
+import { deriveAgentTaskQueue } from "@shared/agent-task-scheduler";
 import {
   MANUAL_TASK_STAGES,
   type BoardLane,
@@ -291,6 +292,7 @@ export function KanbanWorkspace({
             squads={board.squads}
             runs={taskRuns(selectedTask.id)}
             agentTasks={taskAgentTasks(selectedTask.id)}
+            agentTaskQueue={deriveAgentTaskQueue(board, Date.now())}
             comments={taskComments(selectedTask.id)}
             activities={taskActivities(selectedTask.id)}
             busy={state.pending.includes(selectedTask.id)}

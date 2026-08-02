@@ -16,15 +16,17 @@ const PROJECT = Object.freeze({
   requiresSelection: false,
 });
 const LEAD = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "lead");
-if (!LEAD) throw new Error("测试目录缺少 LEAD");
+const BUILDER = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
+if (!LEAD || !BUILDER) throw new Error("测试目录缺少 LEAD 或 BUILDER");
+const AGENTS = Object.freeze([LEAD, BUILDER]);
 
 describe("TeamLaunchRoom", () => {
   it("selects LEAD from the visible roster, previews the new task, and submits one launch message", async () => {
     const user = userEvent.setup();
     const onLaunch = vi.fn(async () => undefined);
-    render(<TeamLaunchRoom project={PROJECT} lead={LEAD} presences={[]} busy={false} executionEnabled onLaunch={onLaunch} />);
+    render(<TeamLaunchRoom project={PROJECT} lead={LEAD} agents={AGENTS} presences={[]} busy={false} executionEnabled onLaunch={onLaunch} />);
 
-    const composer = screen.getByPlaceholderText("@LEAD 说明目标、边界和希望得到的结果…") as HTMLTextAreaElement;
+    const composer = screen.getByPlaceholderText("@LEAD 处理复杂任务，或 @指定Worker 直接执行清晰任务…") as HTMLTextAreaElement;
     await user.type(composer, "@le");
     expect(screen.getByRole("listbox", { name: "选择要 @ 的 Agent" })).toBeTruthy();
     await user.keyboard("{Enter}");
@@ -37,17 +39,21 @@ describe("TeamLaunchRoom", () => {
     expect(composer.value).toBe("");
   });
 
-  it("accepts a Team Pulse LEAD request and blocks direct Worker instructions", async () => {
-    const { rerender } = render(<TeamLaunchRoom project={PROJECT} lead={LEAD} presences={[]} busy={false} executionEnabled onLaunch={async () => undefined} />);
-    const composer = screen.getByPlaceholderText("@LEAD 说明目标、边界和希望得到的结果…") as HTMLTextAreaElement;
-    rerender(<TeamLaunchRoom project={PROJECT} lead={LEAD} presences={[]} mentionRequest={{ requestId: 1, agentId: "lead" }} busy={false} executionEnabled onLaunch={async () => undefined} />);
+  it("accepts Team Pulse requests for LEAD and a direct Worker", async () => {
+    const onLaunch = vi.fn(async () => undefined);
+    const { rerender } = render(<TeamLaunchRoom project={PROJECT} lead={LEAD} agents={AGENTS} presences={[]} busy={false} executionEnabled onLaunch={onLaunch} />);
+    const composer = screen.getByPlaceholderText("@LEAD 处理复杂任务，或 @指定Worker 直接执行清晰任务…") as HTMLTextAreaElement;
+    rerender(<TeamLaunchRoom project={PROJECT} lead={LEAD} agents={AGENTS} presences={[]} mentionRequest={{ requestId: 1, agentId: "lead" }} busy={false} executionEnabled onLaunch={onLaunch} />);
     await waitFor(() => expect(composer.value).toBe("@LEAD "));
 
     const user = userEvent.setup();
     await user.type(screen.getByRole("textbox", { name: /验收标准/ }), "真实修改通过自动化验证");
     await user.clear(composer);
     await user.type(composer, "@BUILD 直接修改项目");
-    expect(screen.getByRole("alert").textContent).toContain("任务启动台只接受 @LEAD");
-    expect((screen.getByRole("button", { name: "创建任务并交给 LEAD" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("status").textContent).toContain("直接交给");
+    const submit = screen.getByRole("button", { name: "创建并直接执行" }) as HTMLButtonElement;
+    expect(submit.disabled).toBe(false);
+    await user.click(submit);
+    await waitFor(() => expect(onLaunch).toHaveBeenCalledWith("@BUILD 直接修改项目", "真实修改通过自动化验证"));
   });
 });

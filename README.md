@@ -1,8 +1,24 @@
-# Stella · Pi Workbench
+# Stella Pi Workbench
 
-这是一个为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造的 Electron 桌面工作台。它直接启动安装包内置的 Pi JSONL RPC 进程，不模拟回复、不绕开 Pi 的会话系统；完整 Pi 工作台与 Task Control 是两个可独立启动、独立报错的一等能力面。应用默认进入 Pi 原生会话工作台，并隐藏团队协作、任务看板、自动化、任务桥和相关命令；需要这些实验能力时，可在“偏好设置 → 功能页面”显式开启，关闭不会删除已有任务。除聊天、会话、模型、扩展和终端外，项目还提供任务看板、三栏 Team Chat、Task Room、LEAD Coordinator、固定与项目级 Agent、动态 Squad、版本化 Workflow、人工验收、Autopilot 和只读可视化 DAG。界面提供 Stella、晨曦、定阳、旭日、月华、黑曜夜契、绮旅黄金、棋境八套可持久化原创皮肤；每套皮肤都可替换或恢复自己的本地背景图片，并以贯穿界面的 **Stella 签名**保持统一识别度。
+> **Pi 原生桌面工作台 + 可选的本地 Agent 团队控制面。** 在同一个应用里完成真实 Pi 会话、模型路由、文件预览、任务看板、结构化多 Agent 委派、执行图、人工验收与本地自动化。
 
-![Stella 任务星图](docs/kanban-stella.png)
+Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造的 local-first Electron 工作台。它直接运行安装包内置的 Pi JSONL RPC，不模拟 Agent 回复，不绕开 Pi 的会话、模型、Skill 或扩展系统。Pi 原生工作台默认可独立使用；Team、Kanban、Workflow 与 Autopilot 是显式开启的第二能力面，即使它们发生故障也不应阻断普通 Pi 会话。
+
+这已经不是一个“Pi 皮肤项目”。八套可替换主题仍然保留，但它们只是统一产品体验的表现层；项目主体是一个可安装、可审计、可恢复的本地 AI 工作台。Stella 也不复刻 Multica 或 AgentTeams/HiClaw 的服务端栈，而是在单机边界内吸收其 Issue/Attempt、Room/Leader/Worker、显式触发、依赖调度与结果验收思想。
+
+## 产品定位
+
+| 能力面 | 用户得到什么 | 架构边界 |
+| --- | --- | --- |
+| **Pi 原生工作台** | 聊天、会话树、模型与 Provider 配置、思考级别、扩展、Skills、终端、附件和本地产物预览 | 直接使用真实 Pi RPC；无需创建 Task，也不依赖 Team 功能 |
+| **Agent 团队控制面** | 任务启动台、Task Room、Kanban、LEAD / Worker 委派、Squad、Workflow DAG、执行图、人工验收和 Autopilot | Stella 只负责确定性状态、调度与审计；每个 Agent 仍由独立 Pi Runtime 执行 |
+| **桌面体验层** | Windows/macOS 安装包、全局模型可见性、响应式三栏布局、八套主题与可替换背景 | 主题不进入领域模型，不改变执行语义 |
+
+团队功能默认隐藏，可在“偏好设置 → 功能页面”开启；关闭只隐藏入口，不删除任务历史。数据保存在本机，凭据继续使用 Pi 标准配置目录，不引入 PostgreSQL、Redis、远程控制面或常驻 Daemon。
+
+![Stella Team Workspace：任务频道、Task Room 与 Agent Pulse](docs/team-chat-stella.png)
+
+当前 Team 改进的完整上游证据、采用/拒绝矩阵和固定提交链接见 [`docs/research/team-multica-hiclaw-2026-08.md`](docs/research/team-multica-hiclaw-2026-08.md)；已实现的不变量与后续 Room/Plan DAG 边界见 [`docs/specs/stella-team-reliability-v1.md`](docs/specs/stella-team-reliability-v1.md)、[ADR 0005](docs/adr/0005-dependency-aware-agent-task-scheduling.md) 和 [ADR 0006](docs/adr/0006-use-one-typed-coordinator-protocol-for-team-leaders.md)。
 
 ## Pi 模型路由与配置
 
@@ -48,18 +64,16 @@ Stella 不复制 Multica、HiClaw 或外部聊天平台，也不引入 PostgreSQ
 - **实时项目权限**：后台 Runner 每次启动真实 Pi 前重新读取项目当前 trust，永不复用 Task 中陈旧的授权快照。切换为受限模式会同步 Task/Autopilot 并中止该项目仍在运行或排队的执行；主进程也拒绝从隐藏的旧项目 Task Room 修改任务。
 - **显式 Pi↔Task 桥接**：只有开启团队功能后，Pi 顶栏才显示“固化为任务”；它只打开可编辑草稿，用户保存后才创建 `planned` Task。Task 中的“在 Pi 中继续”只打开用户选定且经主进程校验属于该 Task 的 session。普通 Pi 操作不会生成任务。
 - **无第二套消息系统**：Task Room 是 Task、Message、Activity、Run、Step、AgentTask 和 Artifact 的纯时间线投影。所有条目保留 Run / Step / AgentTask 来源 ID。
-- **一个 Team Chat 入口**：左侧“团队协作”不是另一套聊天数据库；左栏永久保留“任务启动台”，填写可验证的验收标准并发送 `@LEAD + 目标`，即可原子创建 Task、首条消息和 Coordinator，再自动进入新 Task Room。其他 Task Channel 仍在中栏展开同一事实流，右栏显示从执行记录派生的 Team Pulse。
+- **一个 Team Chat 入口**：左侧“团队协作”不是另一套聊天数据库；左栏永久保留“任务启动台”，填写可验证的验收标准并指定恰好一个负责人。`@LEAD` 原子创建 Task、首条消息和 Coordinator；明确的 `@Worker` 则创建 direct AgentTask。成功后自动进入新 Task Room，右栏显示从执行事实派生的 Team Pulse。
 - **无第二套执行引擎**：可视化 DAG 是历史 Workflow snapshot 与 StepRun 的只读投影；选点可查看 Agent、目标、错误、Artifact 和 session，不会反向修改执行状态。
 
 ![Stella Task Room、DAG 与 mention 影响预览](docs/task-room-stella.png)
 
 ![Stella Agent 名册与中文 mention 检索](docs/agent-mention-picker-stella.png)
 
-![Stella 任务启动台：通过 @LEAD 创建任务](docs/team-launch-room-stella.png)
+![Stella 任务启动台：指定 LEAD 或 Worker 创建任务](docs/team-launch-room-stella.png)
 
-![Stella Team Chat、LEAD mention 与 Team Pulse](docs/team-chat-stella.png)
-
-团队协作默认进入常驻的“任务启动台”，不要求先打开看板建卡：点击右侧通用调度负责人，或在输入器中输入 `@` 选择 `@LEAD`，写明目标和必填验收标准，确认影响预览后点击“创建任务并交给 LEAD”。成功后页面自动切换到刚创建的 Task Room；后续可在其中直接 `@Worker`、回答 LEAD 的澄清问题并验收报告。团队页顶部、侧栏和 `Ctrl/Cmd + N` 都回到同一启动台；需要预先选择优先级、固定 Workflow 或 Squad 时，从“任务看板”使用结构化新建任务。
+团队协作默认进入常驻的“任务启动台”，不要求先打开看板建卡：输入 `@` 可查看当前项目可用 Agent；复杂、跨职责或尚需拆解的任务选择 `@LEAD`，边界和负责人都明确的任务可直接选择一个 `@Worker`。写明目标与必填验收标准、确认影响预览后，Stella 原子创建 Task、首条消息和第一个 AgentTask，再自动进入新 Task Room。后续可继续 `@Worker`、回答 LEAD 的澄清问题、查看依赖与委派轮次，并验收报告。团队页顶部、侧栏和 `Ctrl/Cmd + N` 都回到同一启动台；需要预先选择优先级、固定 Workflow 或 Squad 时，从“任务看板”使用结构化新建任务。
 
 ## 任务看板与固定 Agent 团队
 
@@ -123,12 +137,12 @@ npm run test:e2e:pharma:live
 
 Stella 在固定看板之上增加了一层刻意保持简单的本地自动化，不引入 PostgreSQL、外部 Daemon 或第二套后端服务：
 
-- **持久 AgentTaskQueue**：任务可直接交给单个 Agent；排队、运行、会话路径、最终输出、token、费用、失败和中断都会写入 `board.json`。正常返回成为 `reported`，仍需独立验收；应用异常退出后，运行项会明确恢复为 `interrupted`。
-- **任务启动台**：团队协作首页始终存在一个项目级 Launchpad。填写必填验收标准并发送一个 `@LEAD + 目标` 后，主进程在同一事务中创建普通优先级 Task、确定性标题、首条用户消息和 Coordinator AgentTask；任一校验失败都不会留下孤儿 Task。启动成功后消息只存在于新 Task Room，不维护第二份大厅聊天记录。
+- **依赖感知 AgentTaskQueue**：任务可直接交给单个 Agent，也可由 Coordinator 按轮次委派。排队、依赖、队列位置、运行、会话路径、最终输出、token、费用、失败和中断都会写入或投影自 `board.json`。调度采用“优先级 + 无上限等待老化 + 稳定持久顺序”，高优先级先行，同时避免低优先级永久饥饿；子任务只有在父任务进入等待成员状态后才可运行。
+- **任务启动台**：团队协作首页始终存在一个项目级 Launchpad。填写必填验收标准并发送一个明确的 `@Agent + 目标` 后，主进程在同一事务中创建普通优先级 Task、确定性标题、首条用户消息和首个 AgentTask；`@LEAD` 进入结构化协调，`@Worker` 直接执行。任一校验失败都不会留下孤儿 Task。启动成功后消息只存在于新 Task Room，不维护第二份大厅聊天记录。
 - **评论与 `@mention` 委派**：Task Room 输入 `@` 会展开当前任务真正可用的 Agent 名册，可按中文名称、职责、呼号或 id 检索，也可用方向键与 Enter / Tab 完成选择；输入框上方的快捷呼号与 Team Pulse 成员卡都能直接插入稳定的 `@CALLSIGN`。候选项同时显示实时 Presence、读写权限和必需 Skills。精确 `@builder` / `@BUILD` 仍可直接输入并生成真实 AgentTask；提交前会显示将创建的任务数量和委派顺序。未知、歧义或超出当前项目 / Squad 范围的 mention 会整体拒绝，不留下半条消息或半组队列。
 - **`@lead` Coordinator**：`@lead` 启动通用调度负责人，并与直接 Worker 委派保持互斥；一条消息不能同时选择 LEAD 和 Worker。LEAD 必须把内置的终止型 `coordinator_action` 工具作为该回合最后动作，并提交 `delegate / request_revision / replan / complete / ask_human` 之一；Stella 校验 TypeBox schema、执行计划快照、Agent 范围和所需 Skills 后才创建真实子任务。成员报告后会再启动一个 LEAD 验收回合，而不是直接把父任务判为完成；`ask_human` 会停在 Task Room，普通用户回复会唤醒下一回合。自然语言、手写 JSON 或自然语言里的 `@mention` 都不会被当成已委派。
 - **项目级 AgentDraft**：Team Pulse 的“创建 Agent”可为当前项目保存自定义角色、呼号、职责、固定指令、Skills、thinking 与工具权限。只读 Agent 禁用 `bash/edit/write`；可写 Agent 必须由用户明确勾选确认。创建后可直接 `@CALLSIGN`，也可由 LEAD 选择，其他项目不可调用。
-- **动态 Squad**：保留固定 Leader + 成员目录能力，以兼容显式 Squad 工作流。Squad 带版本和明确的 `global / project` 作用域；包含项目 Agent 的 Squad 只能被同一项目的 Task/Autopilot 使用。开放式团队协作优先使用可复核的 `@lead` Coordinator；Squad 的产物 mention 路径仍保留真实子任务、失败传播和审计记录。
+- **动态 Squad**：保留固定 Leader + 成员目录能力，以兼容显式 Squad 工作流。Squad 带版本和明确的 `global / project` 作用域；包含项目 Agent 的 Squad 只能被同一项目的 Task/Autopilot 使用。Squad Leader 与 LEAD 共用终止型 `coordinator_action`，自然语言中的 mention 不产生控制副作用。某个 Worker 失败只结束该 Worker；同轮兄弟继续，全部终态后由 Leader 结合成功与失败报告明确修订、重规划、追问或完成。
 - **Autopilot**：把“任务模板 + 当前项目 + 执行目标”固化成 Manual、Schedule 或 Webhook 规则。每次触发都会新建独立 Task 和审计记录，然后进入同一套真实分发路径，不复用旧任务状态。
 
 ![Stella 自动化工作室](docs/automation-stella.png)
@@ -190,14 +204,15 @@ Webhook 与 Schedule 都随桌面应用启动和关闭；它们不是公网服�
 ## 已覆盖的交互
 
 - 任务看板：六阶段任务星图、跨项目筛选、搜索、流程过滤、拖放、详情、编辑、删除和状态归档。
-- 团队协作：左侧永久任务启动台与 Task Channel、中间启动输入器或完整 Task Room、右侧可收起 Team Pulse；支持从零发送 `@LEAD` 创建任务、可检索 Agent 名册、键盘 mention 选择、Team Pulse 一键 @、直接 `@worker`、LEAD 追问恢复和项目 AgentDraft。
+- 团队协作：左侧永久任务启动台与 Task Channel、中间启动输入器或完整 Task Room、右侧可收起 Team Pulse；支持从零选择一个 `@LEAD` 或 `@Worker` 创建任务、可检索 Agent 名册、键盘 mention 选择、Team Pulse 一键 @、LEAD 追问恢复和项目 AgentDraft，并提供“全部 / 待我处理 / 执行中”频道投影。
 - Task Room：目标、用户消息、系统回执、Agent 输出、Run/Step/AgentTask 状态、Artifact 与验收决定的单一时间线投影。
 - 可视化 DAG：历史 Run 切换、步骤依赖、六种节点状态、键盘选点，以及 Agent、目标、错误、Artifact 与 session 详情。
 - Pi↔Task：当前会话固化为可编辑任务草稿、来源 identity、执行 session 显式续接和后台 session 历史隔离。
 - Capability Health：Pi、Task、Schedule、Webhook 独立状态、原始错误和单独重试。
-- 本地任务队列：直接 Agent 分发、任务评论、精确 `@mention`、串行持久队列、真实产物与运行统计。
+- 本地任务队列：直接 Agent 分发、任务评论、精确 `@mention`、依赖感知公平调度、稳定队列位置、真实产物与运行统计；当前 Runner 如实保持单执行器，不伪装并行。
 - LEAD Coordinator：终止型 `coordinator_action` 工具协议、真实委派、成员报告后的复核回合、请求修订/重新规划/追问用户，以及无自然语言或手写 JSON 隐式分发。
-- 动态 Squad：Leader 提示词、成员目录、兼容的产物 mention 委派、父子执行轨迹与整组失败传播。
+- 动态 Squad：Leader 提示词、成员目录、统一结构化 Coordinator 协议、委派轮次、Worker 局部失败、Leader 汇总恢复与父子执行轨迹。
+- Agent 执行图：按当前根执行展示 Coordinator、委派轮次、Worker 与 Leader 验收节点，并显示状态、依赖等待、队列位置和原始错误。
 - Autopilot：Manual、应用打开期间的 Schedule、loopback Webhook、启停、绑定项目、fresh Task 和触发审计。
 - 固定编排：六个通用 Agent、四个医药 Agent、内置团队与流程、版本快照、隔离 Pi 会话、项目写入互斥与真实运行事件。
 - 人工关卡：方案批准/驳回、最终验收、决定说明、流程中止、失败原因与可重新分发的历史实例。
@@ -314,7 +329,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 64 个 Vitest 文件、263 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、DAG 投影与键盘交互，以及 AgentTaskQueue、Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、输入器行为、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
+当前全量套件为 70 个 Vitest 文件、290 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、委派轮次与失败回流、依赖感知公平调度、过期队列与当前执行隔离、Agent Presence/人工注意投影、执行图、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、Workflow DAG 投影与键盘交互，以及 Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、输入器行为、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台的 LEAD/Worker 选择、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 
@@ -332,12 +347,13 @@ src/
 ├─ preload/              contextBridge 白名单 API
 ├─ renderer/src/
 │  ├─ components/        会话、输入器、检查器、终端、弹窗和导航
-│  ├─ features/kanban/   看板、Task Room、只读 DAG、Pi 桥接、Squad 与 Autopilot 工作室
+│  ├─ features/kanban/   看板、Task Room、Workflow DAG、Agent 执行图、Pi 桥接与 Autopilot
+│  ├─ features/team/     任务启动台、Task Channel、Agent Pulse 与频道注意投影
 │  ├─ hooks/             Pi/看板状态同步与本地偏好
 │  ├─ assets/skins/      七张原创、可由用户替换的皮肤主视觉
 │  ├─ lib/               不可变运行态 reducer 与皮肤定义
 │  └─ styles/            多皮肤设计令牌、布局与响应式样式
-└─ shared/               共享协议、v6 领域模型、timeline/DAG/session 纯投影与内置编排目录
+└─ shared/               共享协议、v6 领域模型、依赖调度、attention/presence/timeline/DAG 纯投影与编排目录
 ```
 
 主进程以 Electron 自带的 Node 运行时启动 Pi RPC，并设置 `ELECTRON_RUN_AS_NODE=1`。渲染器开启 `contextIsolation` 与 `sandbox`，只通过 preload 暴露的窄接口访问本地能力；外部链接仅允许 HTTP(S)，项目路径和 IPC 命令在主进程边界验证。

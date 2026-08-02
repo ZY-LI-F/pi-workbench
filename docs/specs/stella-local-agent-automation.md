@@ -1,6 +1,6 @@
 # Stella 本地 Agent 自动化 Spec
 
-> 状态：Approved / Ready for agent  
+> 状态：历史基线 Spec；当前队列、Squad 与 Coordinator 规则以 [`stella-team-reliability-v1.md`](stella-team-reliability-v1.md)、ADR 0005 和 ADR 0006 为准
 > 日期：2026-07-17  
 > 目标：先交付固定 Kanban + 本地持久化 AgentTaskQueue + Squad 动态委派 + Manual / Schedule / Webhook Autopilot + 内置 Pi RPC Runner。
 
@@ -20,7 +20,7 @@
 
 1. `TaskComment`：保存用户和 Agent 的任务讨论；用户评论中的有效 `@mention` 可创建 AgentTask。
 2. `AgentTask`：独立于 Kanban Task 和 Workflow Run 的持久执行队列，支持根任务、Squad Leader、子委派、终态和 Pi 产物。
-3. `Squad`：保存 Leader、成员和 Leader 指令；Leader 输出的成员 `@mention` 会生成串行子任务。
+3. `Squad`：保存 Leader、成员和 Leader 指令；现行实现由 Leader 的终止型 `coordinator_action` 创建带委派轮次的子任务，普通输出中的 `@mention` 没有控制权。
 4. `Autopilot` / `AutopilotRun`：保存创建任务的模板、执行目标、手动/周期/Webhook 触发配置和每次触发审计。
 5. `AgentTaskRunner`：Electron 主进程内的单执行者，调用安装包内置、精确锁定的 Pi 0.83.0 RPC entry；不查找全局 CLI。
 6. 应用运行期间的 `ScheduleRunner` 与仅监听 `127.0.0.1` 的 Webhook Server。
@@ -132,14 +132,14 @@ Run records snapshot the selected Agent definition before execution. Updating th
 
 ### AgentTask Queue
 
-1. New AgentTasks enter `queued` and are ordered by `createdAt`, then `id`.
-2. The Runner atomically re-reads Board State, claims exactly one oldest queued AgentTask and sets a fresh `runtimeToken` before launching Pi.
+1. New AgentTasks enter `queued`; a pure scheduler first classifies them as `ready`, dependency-blocked or structurally invalid.
+2. The Runner atomically re-reads Board State, claims exactly one ready AgentTask using effective priority, waiting-time aging, `createdAt` and durable insertion order, then sets a fresh `runtimeToken` before launching Pi.
 3. Only the AgentTask whose persisted `runtimeToken` matches the active Runtime may process its events.
 4. `succeeded`, `failed`, `interrupted`, and `cancelled` are terminal. A terminal task never transitions again.
 5. A direct or delegated AgentTask success writes an Agent comment containing the final output.
-6. A Squad Leader success is parsed for exact, case-insensitive member aliases in the form `@agent-id` or `@callsign`. Duplicate mentions enqueue one child only, in first-appearance order.
-7. If a Leader emits no member mention it succeeds immediately. If it emits valid mentions it becomes `waiting_children` and the children enter `queued`.
-8. When all children succeed, the Leader succeeds. If any child fails, is interrupted, or is cancelled, the Leader fails with a summary of child outcomes.
+6. LEAD and Squad Leader both use the terminating `coordinator_action` protocol; only validated delegate actions create children, and each delegation/revision/replan receives a monotonic round number.
+7. A Leader that delegates becomes `waiting_children`; a Coordinator review is runnable only after every Worker in that round reaches a terminal state.
+8. A Worker failure is local to that Worker. Siblings continue, then the Leader receives all successful and failed results and explicitly decides whether to revise, replan, ask the user or complete. Coordinator/control failures still block the root.
 9. Root success moves the Kanban Task to `review`; root failure/interruption/cancellation moves it to the corresponding visible Task status. Existing fixed Workflow behavior remains unchanged.
 10. On app shutdown, the persisted AgentTask is changed to `interrupted` before its Pi process is stopped. On startup, any residual `running` AgentTask is also changed to `interrupted`; `queued` and `waiting_children` records remain.
 
@@ -191,11 +191,11 @@ Required tests:
 1. Parse valid schema v2 and reject malformed TaskComment, AgentTask, Squad, Autopilot and AutopilotRun records.
 2. Migrate valid v1 once, create a backup, preserve all tasks/runs/activities and reject malformed v1 without replacing it.
 3. Recover residual `running` AgentTasks as `interrupted`, while keeping `queued` and `waiting_children`.
-4. Atomically claim only the oldest queued AgentTask and never start two fake Runtimes concurrently.
+4. Atomically claim only the dependency-ready head selected by the fair scheduler and never start two Runtimes concurrently.
 5. Persist real Pi session/output/stats on success and explicit error on failure.
 6. Prove abort versus late completion leaves the AgentTask terminal.
 7. Validate comments before writing, enqueue distinct mentions in order and reject unknown/ambiguous aliases atomically.
-8. Parse Squad Leader mentions, create children once, wait for all children, succeed on all success and fail on any terminal child failure.
+8. Reject prose-only Squad control, validate `coordinator_action`, preserve delegation rounds, continue siblings after one Worker failure and re-enter the Leader after all same-round Workers terminate.
 9. Trigger Manual Autopilot into a fresh Task and root AgentTask/Workflow Run.
 10. Run a due schedule once while open, record an elapsed startup occurrence as `missed`, and advance its next timestamp.
 11. Accept a valid loopback JSON POST, reject invalid method/token/content/body, and persist failed action audits.
