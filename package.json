@@ -8,11 +8,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZY-LI-F/stella-pi-workbench.git"
+    "url": "git+https://github.com/ZY-LI-F/pi-workbench.git"
   },
-  "homepage": "https://github.com/ZY-LI-F/stella-pi-workbench#readme",
+  "homepage": "https://github.com/ZY-LI-F/pi-workbench#readme",
   "bugs": {
-    "url": "https://github.com/ZY-LI-F/stella-pi-workbench/issues"
+    "url": "https://github.com/ZY-LI-F/pi-workbench/issues"
   },
   "type": "module",
   "main": "./out/main/index.js",
