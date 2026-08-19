@@ -5,10 +5,10 @@ import {
   type Autopilot,
   type AutopilotRun,
   type AutopilotTrigger,
+  type AutomatedExecutionTarget,
   type BoardBootstrap,
   type BoardState,
   type CreateAutopilotInput,
-  type ExecutionTarget,
   type JsonObject,
   type KanbanTask,
   type OrchestrationCatalog,
@@ -294,7 +294,7 @@ export class AutopilotService {
     });
   }
 
-  #assertExecutionTarget(state: BoardState, target: ExecutionTarget, projectPath: string): void {
+  #assertExecutionTarget(state: BoardState, target: AutomatedExecutionTarget, projectPath: string): void {
     if (target.kind === "workflow" && !this.#catalog.workflows.some((workflow) => workflow.id === target.workflowId)) throw new Error(`未知流程模板: ${target.workflowId}`);
     if (target.kind === "agent") {
       const agent = catalogForBoard(this.#catalog, state).agents.find((candidate) => candidate.id === target.agentId);

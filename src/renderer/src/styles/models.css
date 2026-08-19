@@ -570,6 +570,7 @@
 
 @media (max-width: 820px) {
   .model-config-header { padding-right: 130px; }
+  .model-config-header__more { display: block; }
   .model-config-header__actions .model-runtime-state,
   .model-config-header__actions .button-secondary { display: none; }
   .model-route-strip { grid-template-columns: 1fr 1fr; gap: 9px; }

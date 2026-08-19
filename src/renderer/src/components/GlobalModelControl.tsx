@@ -13,6 +13,7 @@ interface GlobalModelControlProps {
   readonly teamFeaturesEnabled: boolean;
   readonly online: boolean;
   readonly busy: boolean;
+  readonly compact?: boolean;
   readonly onChange: (model: ModelSummary) => void;
 }
 
@@ -26,6 +27,7 @@ export function GlobalModelControl({
   teamFeaturesEnabled,
   online,
   busy,
+  compact = false,
   onChange,
 }: GlobalModelControlProps) {
   const selectedKey = selectedModel ? modelKey(selectedModel) : "";
@@ -35,7 +37,7 @@ export function GlobalModelControl({
   const disabled = !online || busy || models.length === 0;
 
   return (
-    <section className={`global-model ${online ? "is-online" : "is-offline"} ${busy ? "is-busy" : ""}`} aria-label="全局运行模型">
+    <section className={`global-model ${compact ? "is-compact" : ""} ${online ? "is-online" : "is-offline"} ${busy ? "is-busy" : ""}`} aria-label="全局运行模型">
       <header className="global-model__header">
         <span><i />MODEL RELAY</span>
         <small>{busy ? "切换中" : online ? "全局生效" : "Pi 离线"}</small>
@@ -67,7 +69,7 @@ export function GlobalModelControl({
         </select>
         <ChevronDown size={13} />
       </label>
-      <p>{teamFeaturesEnabled ? "会话、团队与看板共用；Agent 的显式设置优先。" : "当前 Pi 会话使用；Provider 与模型在配置页统一管理。"}</p>
+      <p>{teamFeaturesEnabled ? "会话、团队与自动执行任务共用；Agent 的显式设置优先。" : "会话与自动执行任务共用；手工任务不会调用模型。"}</p>
     </section>
   );
 }

@@ -113,6 +113,7 @@ describe("Kanban automation interactions", () => {
         workflows={BUILTIN_ORCHESTRATION_CATALOG.workflows}
         agents={BUILTIN_ORCHESTRATION_CATALOG.agents}
         squads={[]}
+        automationEnabled={false}
         busy={false}
         onClose={() => undefined}
         onCreate={onCreate}
@@ -121,12 +122,15 @@ describe("Kanban automation interactions", () => {
     );
 
     expect((screen.getByPlaceholderText("清楚描述要交付的结果") as HTMLInputElement).value).toBe("来自 Pi 的任务");
+    expect(screen.getByRole("tab", { name: "自己推进" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.queryByRole("tab", { name: "单 Agent" })).toBeNull();
     expect(screen.getByText("保存后只创建待规划任务，不会自动分发。来源 session identity 将随任务保存。")).toBeTruthy();
     await user.clear(screen.getByPlaceholderText("清楚描述要交付的结果"));
     await user.type(screen.getByPlaceholderText("清楚描述要交付的结果"), "用户确认后的任务");
     await user.click(screen.getByRole("button", { name: "创建任务" }));
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
       title: "用户确认后的任务",
+      executionTarget: { kind: "manual" },
       sourcePiSessionPath: "C:/sessions/source.jsonl",
       sourcePiSessionId: "source-session",
     })));

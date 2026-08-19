@@ -79,6 +79,15 @@ describe("kanban domain", () => {
     expect(canMoveTaskManually({ ...task, activeRunId: "run-1" }, "planned")).toBe(false);
   });
 
+  it("lets user-managed tasks enter progress and review without fabricating an execution", () => {
+    const manualTask: KanbanTask = Object.freeze({ ...task, id: "manual-task", executionTarget: Object.freeze({ kind: "manual" }) });
+    expect(canMoveTaskManually(manualTask, "running")).toBe(true);
+    expect(canMoveTaskManually(manualTask, "review")).toBe(true);
+    expect(canMoveTaskManually(manualTask, "queued")).toBe(false);
+    expect(parseBoardState(boardWith({ tasks: [{ ...manualTask, stage: "running" }] })).tasks[0]?.stage).toBe("running");
+    expect(parseBoardState(boardWith({ tasks: [{ ...manualTask, stage: "review" }] })).tasks[0]?.stage).toBe("review");
+  });
+
   it("calculates progress from succeeded steps", () => {
     const run = {
       steps: [

@@ -52,8 +52,25 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
       { timeout: 45_000, message: "Pi should be ready before exercising workspace controls" },
     ).toBe("ready");
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
-    await expect(window.getByRole("button", { name: "固化为任务" })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "固化为任务" })).toBeVisible();
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "pi-native-default.png"), fullPage: true, animations: "disabled" });
+
+    await window.getByRole("button", { name: "任务看板", exact: true }).click();
+    await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
+    await window.getByRole("button", { name: "新建任务", exact: true }).click();
+    const manualDialog = window.getByRole("dialog", { name: "创建看板任务" });
+    await expect(manualDialog.getByRole("tab", { name: "自己推进" })).toHaveAttribute("aria-selected", "true");
+    await manualDialog.getByLabel(/任务标题/).fill("验证通用手工看板");
+    await manualDialog.getByLabel("任务说明").fill("不启用 Team，由用户自己推进。 ");
+    await manualDialog.getByRole("button", { name: "创建任务", exact: true }).click();
+    const manualCard = window.locator(".kanban-card", { hasText: "验证通用手工看板" });
+    await expect(manualCard).toContainText("手工任务 · 由你推进");
+    await expect(manualCard.getByLabel("任务归属：个人")).toBeVisible();
+    await manualCard.dragTo(window.locator(".kanban-lane--running"));
+    await expect(window.locator(".kanban-lane--running", { hasText: "验证通用手工看板" })).toBeVisible();
+    await manualCard.dragTo(window.locator(".kanban-lane--review"));
+    await expect(window.locator(".kanban-lane--review", { hasText: "验证通用手工看板" })).toBeVisible();
+
     await enableTeamFeatures(window);
     await window.getByRole("button", { name: "团队协作", exact: true }).click();
     await expect(window.getByRole("heading", { name: "团队协作" })).toBeVisible();
@@ -67,12 +84,14 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await expect(window.getByLabel("最小化")).toBeVisible();
     await expect(window.getByLabel("全局运行模型")).toContainText("全局生效");
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置", exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(window.getByLabel("当前模型路由")).toBeVisible();
     await expect(window.getByLabel("Provider 列表")).toBeVisible();
     await expect(window.getByLabel("Provider 配置台")).toContainText("查看或替换 API key");
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "model-configuration-stella.png"), fullPage: true, animations: "disabled" });
+    await window.locator(".sidebar").getByRole("tab", { name: "任务栏", exact: true }).click();
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
     await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
 
@@ -82,13 +101,16 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await taskDialog.getByLabel(/任务标题/).fill("验证固定 Agent 看板");
     await taskDialog.getByLabel("任务说明").fill("确认任务卡片、拖放和编排目录交互。");
     await taskDialog.getByLabel("验收标准").fill("任务能在看板中持久化并显示流程星轨。");
+    await taskDialog.getByRole("tab", { name: "固定流程" }).click();
     await taskDialog.getByRole("button", { name: /代码审阅/ }).click();
     await taskDialog.getByRole("button", { name: "创建任务", exact: true }).click();
     const taskCard = window.locator(".kanban-card", { hasText: "验证固定 Agent 看板" });
     await expect(taskCard).toBeVisible();
+    await expect(taskCard.getByLabel("任务归属：TEAM")).toBeVisible();
 
     await taskCard.getByRole("button", { name: "验证固定 Agent 看板", exact: true }).click();
     const taskRoom = window.getByLabel("任务详情：验证固定 Agent 看板");
+    await expect(taskRoom.getByLabel("任务归属：TEAM")).toBeVisible();
     await expect(taskRoom.getByText("任务事实流", { exact: true })).toBeVisible();
     await expect(taskRoom.getByText("尚无持久化 Run", { exact: true })).toBeVisible();
     const roomComposer = taskRoom.getByPlaceholder("补充上下文；输入 @ 选择 Agent，或直接发送普通消息…");
@@ -157,6 +179,18 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await catalog.getByRole("tab", { name: "流程" }).click();
     await expect(catalog.getByText("功能交付流程", { exact: true })).toBeVisible();
     await window.keyboard.press("Escape");
+
+    await window.setViewportSize({ width: 760, height: 720 });
+    const kanbanMore = window.getByRole("button", { name: "更多看板操作" });
+    await expect(kanbanMore).toBeVisible();
+    await kanbanMore.click();
+    const kanbanMoreMenu = window.getByRole("menu", { name: "更多看板操作" });
+    await expect(kanbanMoreMenu.getByRole("menuitem", { name: /打开命令终端/ })).toBeVisible();
+    await window.screenshot({ path: testInfo.outputPath("kanban-more-menu.png"), animations: "disabled" });
+    await kanbanMoreMenu.getByRole("menuitem", { name: /编排目录/ }).click();
+    await expect(catalog).toBeVisible();
+    await window.keyboard.press("Escape");
+    await window.setViewportSize({ width: 1_850, height: 1_000 });
 
     await window.getByRole("button", { name: "偏好设置", exact: true }).click();
     let settings = window.getByRole("dialog", { name: "偏好设置" });
@@ -253,6 +287,7 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await expect(settings).toBeHidden();
 
     await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.locator(".sidebar").getByRole("button", { name: "当前会话", exact: true }).click();
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await expect(globalModel).toHaveValue(selectedGlobalModel);

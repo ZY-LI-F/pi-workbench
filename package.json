@@ -1,6 +1,6 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "productName": "Stella Pi Workbench",
   "private": true,
   "description": "A local-first Pi desktop workbench with native chat, model routing, inspectable agent teams, Kanban, DAG workflows, and artifact previews.",

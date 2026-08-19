@@ -265,7 +265,13 @@ function PptxPreview({ data }: { readonly data: LocalFilePreviewData }) {
     <div className="file-preview__pptx">
       <div className="file-preview__pager">
         <button type="button" aria-label="上一张幻灯片" disabled={slideIndex === 0} onClick={() => setSlideIndex((value) => value - 1)}><ChevronLeft size={15} /></button>
-        <span>第 {slideIndex + 1} / {state.slides.length} 张</span>
+        <label className="file-preview__slide-picker">
+          <span className="sr-only">跳转幻灯片</span>
+          <select aria-label="跳转幻灯片" value={slideIndex} onChange={(event) => setSlideIndex(Number(event.target.value))}>
+            {state.slides.map((_, index) => <option value={index} key={index}>第 {index + 1} / {state.slides.length} 张</option>)}
+          </select>
+          <ChevronDown size={13} aria-hidden="true" />
+        </label>
         <button type="button" aria-label="下一张幻灯片" disabled={slideIndex >= state.slides.length - 1} onClick={() => setSlideIndex((value) => value + 1)}><ChevronRight size={15} /></button>
       </div>
       <iframe className="file-preview__slide" title={`${data.name} 第 ${slideIndex + 1} 张`} sandbox="" srcDoc={document} />

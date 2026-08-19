@@ -80,11 +80,21 @@ async function launchIsolatedApp(paths: IsolatedAppPaths): Promise<LaunchedApp> 
   return Object.freeze({ electronApp, window, pageErrors });
 }
 
-async function sessionState(window: Page): Promise<{ readonly sessionId: string; readonly sessionName?: string }> {
+async function sessionState(window: Page): Promise<{
+  readonly sessionId: string;
+  readonly sessionName?: string;
+  readonly sessionFile?: string;
+  readonly messageCount: number;
+}> {
   return window.evaluate(async () => {
     const response = await window.stella.command({ type: "get_state" });
     if (!response.success || !("data" in response)) throw new Error(response.success ? "get_state 没有返回 data" : response.error);
-    return Object.freeze({ sessionId: response.data.sessionId, sessionName: response.data.sessionName });
+    return Object.freeze({
+      sessionId: response.data.sessionId,
+      sessionName: response.data.sessionName,
+      sessionFile: response.data.sessionFile,
+      messageCount: response.data.messageCount,
+    });
   });
 }
 
@@ -108,7 +118,7 @@ async function expectComposerInsideViewport(window: Page): Promise<void> {
   }), { message: "聊天输入框必须完整位于当前窗口可视区域内" }).toBe(true);
 }
 
-test("persists the optional team surface and returns to native Pi when it is disabled", async ({}, testInfo) => {
+test("persists the optional team surface while keeping the generic task board available", async ({}, testInfo) => {
   const paths = await createIsolatedAppPaths(testInfo);
   let running: ElectronApplication | undefined;
 
@@ -116,8 +126,9 @@ test("persists the optional team surface and returns to native Pi when it is dis
     const first = await launchIsolatedApp(paths);
     running = first.electronApp;
     await expect(first.window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
-    await expect(first.window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
-    await expect(first.window.locator(".capability-ledger .capability-dot")).toHaveCount(1);
+    await expect(first.window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
+    await expect(first.window.getByRole("button", { name: "固化为任务" })).toBeVisible();
+    await expect(first.window.locator(".capability-ledger .capability-dot")).toHaveCount(2);
 
     await first.window.getByRole("button", { name: "偏好设置", exact: true }).click();
     const firstSettings = first.window.getByRole("dialog", { name: "偏好设置" });
@@ -129,6 +140,7 @@ test("persists the optional team surface and returns to native Pi when it is dis
     await firstToggle.click();
     await first.window.keyboard.press("Escape");
     await expect(firstSettings).toBeHidden();
+    await first.window.getByRole("button", { name: "打开侧栏", exact: true }).click();
     await expect(first.window.getByRole("button", { name: "团队协作", exact: true })).toBeVisible();
     await expect(first.window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
     await expect(first.window.locator(".capability-ledger .capability-dot")).toHaveCount(4);
@@ -147,11 +159,15 @@ test("persists the optional team surface and returns to native Pi when it is dis
     await expect(secondToggle).toHaveAttribute("aria-checked", "true");
     await secondToggle.click();
     await second.window.keyboard.press("Escape");
-    await expect(second.window.getByLabel("给 Pi 的消息")).toBeVisible();
+    await expect(second.window.getByRole("heading", { name: "任务星图" })).toBeVisible();
+    await second.window.getByRole("button", { name: "打开侧栏", exact: true }).click();
     await expect(second.window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
-    await expect(second.window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
-    await expect(second.window.getByRole("button", { name: "固化为任务" })).toHaveCount(0);
-    await expect(second.window.locator(".capability-ledger .capability-dot")).toHaveCount(1);
+    await expect(second.window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
+    await expect(second.window.locator(".capability-ledger .capability-dot")).toHaveCount(2);
+    await second.window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
+    await second.window.getByRole("button", { name: "当前会话", exact: true }).click();
+    await expect(second.window.getByLabel("给 Pi 的消息")).toBeVisible();
+    await expect(second.window.getByRole("button", { name: "固化为任务" })).toBeVisible();
     expect(second.pageErrors).toEqual([]);
     await closeApp(running);
     running = undefined;
@@ -159,10 +175,57 @@ test("persists the optional team surface and returns to native Pi when it is dis
     const third = await launchIsolatedApp(paths);
     running = third.electronApp;
     await expect(third.window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
-    await expect(third.window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
+    await expect(third.window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
     expect(third.pageErrors).toEqual([]);
   } finally {
     await closeApp(running);
+  }
+});
+
+test("imports a Skill folder and hot-loads it into the current Pi session", async ({}, testInfo) => {
+  const paths = await createIsolatedAppPaths(testInfo);
+  const skillFolder = testInfo.outputPath("e2e-hot-skill");
+  await mkdir(skillFolder, { recursive: true });
+  await writeFile(join(skillFolder, "SKILL.md"), [
+    "---",
+    "name: e2e-hot-skill",
+    "description: Verify folder import and runtime hot loading.",
+    "---",
+    "",
+    "# E2E hot Skill",
+    "",
+    "Return the exact text `E2E_SKILL_READY` when invoked.",
+    "",
+  ].join("\n"), "utf8");
+
+  const { electronApp, window, pageErrors } = await launchIsolatedApp(paths);
+  try {
+    const before = await sessionState(window);
+    await electronApp.evaluate(({ dialog }, selectedFolder) => {
+      dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [selectedFolder] });
+    }, skillFolder);
+
+    const sidebar = window.locator(".sidebar");
+    await sidebar.getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
+    await sidebar.getByRole("button", { name: "Skills 管理", exact: true }).click();
+    await window.getByRole("button", { name: /选择文件夹并热加载/ }).click();
+
+    await expect(window.locator(".skills-install-result")).toContainText("e2e-hot-skill 已热加载", { timeout: 30_000 });
+    const skillRow = window.locator(".skill-row", { hasText: "e2e-hot-skill" });
+    await expect(skillRow).toContainText("/skill:e2e-hot-skill");
+    await expect(skillRow).toContainText("所有项目");
+    const after = await sessionState(window);
+    expect(after.sessionId).toBe(before.sessionId);
+    expect(after.messageCount).toBe(before.messageCount);
+    const refreshed = await window.evaluate(() => window.stella.refresh());
+    expect(refreshed.commands).toContainEqual(expect.objectContaining({
+      name: "skill:e2e-hot-skill",
+      source: "skill",
+      location: "user",
+    }));
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await electronApp.close();
   }
 });
 
@@ -202,6 +265,26 @@ test("executes native session, modal, command palette, and terminal interactions
     const before = await sessionState(window);
     await window.keyboard.press("Control+N");
     await expect.poll(() => sessionState(window).then((state) => state.sessionId)).not.toBe(before.sessionId);
+    const currentSession = await sessionState(window);
+    expect(currentSession.sessionFile).toBeTruthy();
+
+    const composerInput = window.getByLabel("给 Pi 的消息");
+    const composerResizeHandle = window.getByRole("separator", { name: "调整输入区高度" });
+    const initialComposerHeight = await composerInput.evaluate((element) => element.getBoundingClientRect().height);
+    const composerResizeBox = await composerResizeHandle.boundingBox();
+    if (!composerResizeBox) throw new Error("输入区高度拖拽柄不可见");
+    await window.mouse.move(composerResizeBox.x + composerResizeBox.width / 2, composerResizeBox.y + composerResizeBox.height / 2);
+    await window.mouse.down();
+    await window.mouse.move(composerResizeBox.x + composerResizeBox.width / 2, composerResizeBox.y - 96, { steps: 4 });
+    await window.mouse.up();
+    await expect.poll(() => composerInput.evaluate((element) => element.getBoundingClientRect().height)).toBeGreaterThan(initialComposerHeight + 70);
+    await expect.poll(() => window.evaluate(() => {
+      const stored = localStorage.getItem("stella.preferences.v2");
+      if (!stored) return 0;
+      const value = JSON.parse(stored) as { composerHeight?: unknown };
+      return typeof value.composerHeight === "number" ? value.composerHeight : 0;
+    })).toBeGreaterThan(initialComposerHeight + 70);
+    await expectComposerInsideViewport(window);
 
     const inspector = window.locator(".inspector.is-open");
     const resizeHandle = inspector.getByRole("separator", { name: "调整检查器宽度" });
@@ -213,6 +296,26 @@ test("executes native session, modal, command palette, and terminal interactions
     await window.mouse.move(resizeBox.x - 88, resizeBox.y + 120, { steps: 4 });
     await window.mouse.up();
     await expect.poll(() => inspector.evaluate((element) => element.getBoundingClientRect().width)).toBeGreaterThan(initialInspectorWidth + 60);
+    await expect.poll(() => window.evaluate(() => {
+      const stored = localStorage.getItem("stella.preferences.v2");
+      if (!stored) return 0;
+      const value = JSON.parse(stored) as { inspectorWidth?: unknown };
+      return typeof value.inspectorWidth === "number" ? value.inspectorWidth : 0;
+    })).toBeGreaterThan(initialInspectorWidth + 60);
+    const topbar = window.locator(".topbar");
+    await expect(topbar.getByRole("button", { name: "更多会话操作" })).toBeVisible();
+    await expect(topbar.getByLabel("思考级别")).toBeHidden();
+    await expect.poll(() => topbar.evaluate((element) => {
+      const sessionTrack = element.querySelector<HTMLElement>(".topbar__session-track")?.getBoundingClientRect();
+      const controls = element.querySelector<HTMLElement>(".topbar__controls")?.getBoundingClientRect();
+      return Boolean(sessionTrack && controls && sessionTrack.right <= controls.left + 1);
+    }), { message: "检查器变宽后，顶部会话入口不能与右侧控件重叠" }).toBe(true);
+    await topbar.getByRole("button", { name: "更多会话操作" }).click();
+    const topbarOverflow = topbar.getByRole("menu", { name: "更多会话操作" });
+    await expect(topbarOverflow.getByRole("menuitem", { name: /固化为任务/ })).toBeVisible();
+    await expect(topbarOverflow.getByRole("menuitem", { name: /新建会话/ })).toBeVisible();
+    await topbarOverflow.getByRole("menuitem", { name: /复制 Session 地址/ }).click();
+    expect(await electronApp.evaluate(({ clipboard }) => clipboard.readText())).toBe(currentSession.sessionFile);
     await inspector.getByRole("tab", { name: "文件", exact: true }).click();
     await expect(inspector.getByText("选择一个会话文件", { exact: true })).toBeVisible();
     await inspector.getByRole("tab", { name: "上下文", exact: true }).click();
@@ -233,6 +336,11 @@ test("executes native session, modal, command palette, and terminal interactions
     await expect(palette.getByRole("option", { name: /团队/ })).toHaveCount(0);
     await window.keyboard.press("Escape");
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
+    await window.locator(".sidebar").getByRole("button", { name: "Skills 管理", exact: true }).click();
+    await expect(window.getByRole("heading", { name: "Skills 管理", exact: true })).toBeVisible();
+    await expect(window.getByText("只支持文件夹", { exact: true })).toBeVisible();
+    await window.locator(".sidebar").getByRole("button", { name: "当前会话", exact: true }).click();
     await window.locator(".sidebar").getByRole("button", { name: "运行命令", exact: true }).click();
     const terminal = window.locator(".terminal-drawer.is-open");
     const terminalInput = terminal.getByPlaceholder("输入 PowerShell / shell 命令…");
@@ -270,6 +378,15 @@ test("executes native session, modal, command palette, and terminal interactions
 
     await window.setViewportSize({ width: 760, height: 720 });
     await expectComposerInsideViewport(window);
+    const chatMore = window.getByRole("button", { name: "更多会话操作" });
+    await expect(chatMore).toBeVisible();
+    await chatMore.click();
+    const chatMoreMenu = window.getByRole("menu", { name: "更多会话操作" });
+    await expect(chatMoreMenu.getByRole("menuitem", { name: /模型配置/ })).toBeVisible();
+    await expect(chatMoreMenu.getByRole("menuitem", { name: /会话检查器/ })).toBeVisible();
+    await chatMoreMenu.getByRole("menuitem", { name: /设置/ }).click();
+    await expect(settings).toBeVisible();
+    await window.keyboard.press("Escape");
     const sidebar = window.locator(".sidebar");
     await expect.poll(() => sidebar.evaluate((element) => element.getBoundingClientRect().right)).toBeLessThanOrEqual(1);
     await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
@@ -316,6 +433,7 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     await expect(window.getByText("1 个附件已保留在当前会话草稿中")).toBeVisible();
     await expect(window.getByText("草稿已保存至本机")).toBeVisible({ timeout: 15_000 });
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.locator(".sidebar").getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置" })).toBeVisible();
     await window.locator(".sidebar").getByRole("button", { name: "当前会话", exact: true }).click();
@@ -326,6 +444,11 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     await sidebar.getByRole("button", { name: "关闭侧栏" }).click();
     await expect(window.locator(".app-shell")).toHaveClass(/sidebar-collapsed/);
     await expect(sidebar).toHaveAttribute("aria-hidden", "true");
+    await expect.poll(() => window.evaluate(() => {
+      const stored = localStorage.getItem("stella.preferences.v2");
+      if (!stored) return undefined;
+      return (JSON.parse(stored) as { sidebarCollapsed?: unknown }).sidebarCollapsed;
+    })).toBe(true);
     await expect.poll(async () => {
       const box = await composerWrap.boundingBox();
       return box ? Math.ceil(box.y + box.height) : Number.POSITIVE_INFINITY;
@@ -336,6 +459,11 @@ test("keeps the chat path, attachment draft, session actions, and desktop sideba
     await openSidebar.click();
     await expect(sidebar).toHaveClass(/is-open/);
     await expect(sidebar.getByRole("button", { name: "关闭侧栏" })).toBeFocused();
+    await expect.poll(() => window.evaluate(() => {
+      const stored = localStorage.getItem("stella.preferences.v2");
+      if (!stored) return undefined;
+      return (JSON.parse(stored) as { sidebarCollapsed?: unknown }).sidebarCollapsed;
+    })).toBe(false);
 
     await window.locator(".project-switcher__trigger").click();
     await window.locator(".project-menu").getByRole("button").filter({ hasText: "comparison-project" }).click();

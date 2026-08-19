@@ -44,6 +44,39 @@ class MemoryRepository implements BoardRepository {
 }
 
 describe("BoardService", () => {
+  it("creates a user-managed task and moves it through progress and review", async () => {
+    const repository = new MemoryRepository();
+    let nextId = 0;
+    const service = new BoardService({
+      repository,
+      catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      emitChanged: () => undefined,
+      projectIdentity: (path) => path.toLocaleLowerCase(),
+      now: () => NOW,
+      id: () => `manual-${++nextId}`,
+    });
+
+    await service.createTask({
+      title: "整理实验记录",
+      description: "由用户完成",
+      acceptanceCriteria: "记录已归档",
+      priority: "medium",
+      projectPath: "C:/project",
+      projectName: "project",
+      trusted: true,
+      executionTarget: { kind: "manual" },
+    });
+    const taskId = repository.state.tasks[0]?.id;
+    if (!taskId) throw new Error("手工任务未创建");
+
+    await service.moveTask(taskId, "running");
+    expect(repository.state.tasks[0]).toMatchObject({ executionTarget: { kind: "manual" }, stage: "running" });
+    await service.moveTask(taskId, "review");
+    expect(repository.state.tasks[0]?.stage).toBe("review");
+    await service.moveTask(taskId, "completed");
+    expect(repository.state.tasks[0]?.stage).toBe("completed");
+  });
+
   it("synchronizes a project trust downgrade across Tasks and Autopilots", async () => {
     const repository = new MemoryRepository();
     const service = new BoardService({

@@ -41,6 +41,7 @@ import type {
 import type { LocalPathInspection } from "./local-path";
 import type { LocalFilePreviewData } from "./file-preview";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "./composer-draft";
+import type { PiSkillInstallResult, PiSkillInstallScope } from "./pi-skill";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
@@ -236,6 +237,7 @@ export interface StellaDesktopApi {
   copyText(value: string): Promise<void>;
   composerDraftLoad(key: string): Promise<ComposerDraftSnapshot | undefined>;
   composerDraftSave(input: SaveComposerDraftInput): Promise<void>;
+  installPiSkillFolder(scope: PiSkillInstallScope): Promise<PiSkillInstallResult>;
   modelConfigurationInitialize(): Promise<PiModelConfigurationSnapshot>;
   modelConfigurationRevealApiKey(providerId: string): Promise<PiApiKeyRevealResult>;
   modelConfigurationTestConnection(input: TestPiModelConnectionInput): Promise<PiModelConnectionTestResult>;

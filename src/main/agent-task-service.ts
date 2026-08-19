@@ -163,18 +163,19 @@ export class AgentTaskService {
 
   async addComment(input: CreateTaskCommentInput): Promise<BoardBootstrap> {
     const body = normalizedRequired(input.body, "评论内容");
+    const dispatchMentions = input.dispatchMentions !== false;
     const preview = await this.#repository.read();
     const previewTask = this.#task(preview, input.taskId);
-    const previewAgents = availableMentionAgentsForTask(previewTask, this.#catalogFor(preview), preview.squads);
-    const previewMentions = parseAgentMentions(body, previewAgents).agents;
+    const previewAgents = dispatchMentions ? availableMentionAgentsForTask(previewTask, this.#catalogFor(preview), preview.squads) : Object.freeze([]);
+    const previewMentions = dispatchMentions ? parseAgentMentions(body, previewAgents).agents : Object.freeze([]);
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#task(current, input.taskId);
-      const availableAgents = availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads);
-      const mentions = parseAgentMentions(body, availableAgents).agents;
+      const availableAgents = dispatchMentions ? availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads) : Object.freeze([]);
+      const mentions = dispatchMentions ? parseAgentMentions(body, availableAgents).agents : Object.freeze([]);
       const activeRoot = task.activeAgentTaskId ? this.#agentTask(current, task.activeAgentTaskId) : undefined;
-      const resumingCoordinator = mentions.length === 0 && activeRoot?.kind === "coordinator" && activeRoot.status === "waiting_human";
+      const resumingCoordinator = dispatchMentions && mentions.length === 0 && activeRoot?.kind === "coordinator" && activeRoot.status === "waiting_human";
       if (mentions.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         throw new Error("任务正在执行；请先中止或等待完成后再使用 @mention 分发");
       }

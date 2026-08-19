@@ -127,7 +127,7 @@ export function SettingsDialog({
           <div className="setting-row">
             <span>
               <strong>显示团队功能（实验）</strong>
-              <small>显示团队协作、任务看板与自动化入口；关闭不会删除已有任务。</small>
+              <small>显示团队协作与自动化入口；任务看板始终可用，关闭不会删除已有任务。</small>
             </span>
             <Toggle
               label="显示团队功能"

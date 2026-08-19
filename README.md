@@ -274,9 +274,9 @@ npm run dist:mac:arm64
 Artifacts are written to `release/` and include version, OS, and architecture in the file name:
 
 ```text
-Stella Pi Workbench-0.3.0-win-x64.exe
-Stella Pi Workbench-0.3.0-mac-x64.dmg
-Stella Pi Workbench-0.3.0-mac-arm64.dmg
+Stella Pi Workbench-0.3.1-win-x64.exe
+Stella Pi Workbench-0.3.1-mac-x64.dmg
+Stella Pi Workbench-0.3.1-mac-arm64.dmg
 ```
 
 Formal macOS signing must run on macOS. The repository includes [a GitHub Actions release workflow](.github/workflows/release.yml) for Windows x64, macOS Apple Silicon, and macOS Intel. Manual workflow runs may produce explicitly unsigned internal-test artifacts. A matching version tag requires signing, Apple notarization for macOS, and successful builds on every platform before creating the GitHub Release.
@@ -290,7 +290,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic suite contains **70 Vitest files and 290 tests**. It covers Team feature gating, schema migrations and backups, specification/execution-attempt isolation, live trust, typed Coordinator tools, Skill preflight, frozen plans, delegation rounds, Worker failure recovery, dependency-aware fair scheduling, stale-queue isolation, Presence and human-attention projections, execution graphs, RPC timeout shutdown, capability isolation, workspace leases, explicit result acceptance, Task Room projection, Pi session bridging, Workflow DAGs, Autopilot, Webhook, extension UI, font scaling, terminal cancellation, composer behavior, multi-file session previews, preview IPC, and a real ten-slide PPTX relationship-path regression.
+The current deterministic suite contains **75 Vitest files and 318 tests**. It covers Team feature gating, schema migrations and backups, specification/execution-attempt isolation, live trust, typed Coordinator tools, Skill preflight and hot loading, frozen plans, delegation rounds, Worker failure recovery, dependency-aware fair scheduling, stale-queue isolation, Presence and human-attention projections, execution graphs, RPC timeout shutdown, capability isolation, workspace leases, explicit result acceptance, Task Room projection, Pi session bridging, Workflow DAGs, Autopilot, Webhook, extension UI, font scaling, terminal cancellation, resizable composer behavior, session-address diagnostics, multi-file session previews, preview IPC, and a real ten-slide PPTX relationship-path regression.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 

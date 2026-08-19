@@ -38,6 +38,7 @@ import type {
   UpdateSquadInput,
 } from "../shared/kanban";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "../shared/composer-draft";
+import type { PiSkillInstallResult, PiSkillInstallScope } from "../shared/pi-skill";
 
 const api: StellaDesktopApi = Object.freeze({
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
@@ -68,6 +69,8 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:composer-draft:load", key) as Promise<ComposerDraftSnapshot | undefined>,
   composerDraftSave: (input: SaveComposerDraftInput) =>
     ipcRenderer.invoke("stella:composer-draft:save", input) as Promise<void>,
+  installPiSkillFolder: (scope: PiSkillInstallScope) =>
+    ipcRenderer.invoke("stella:skills:install-folder", scope) as Promise<PiSkillInstallResult>,
   modelConfigurationInitialize: () =>
     ipcRenderer.invoke("stella:model-configuration:initialize") as Promise<PiModelConfigurationSnapshot>,
   modelConfigurationRevealApiKey: (providerId: string) =>

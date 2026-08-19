@@ -44,7 +44,7 @@ export async function launchPharmaApp(
   } else {
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await expect(window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
-    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
+    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
   }
   return Object.freeze({ electronApp, window });
 }
@@ -73,6 +73,7 @@ export async function createNlrp3Task(window: Page, options: Nlrp3TaskOptions = 
     "报告含人类验证、机制、成药性、安全、标志物、竞品、评分、反证、90 天计划和来源台账；",
     "证据审计独立复算并指出会改变结论的问题。",
   ].join("\n"));
+  await dialog.getByRole("tab", { name: "固定流程" }).click();
   await dialog.getByRole("button", { name: /早研靶评/ }).click();
   await dialog.getByRole("button", { name: "创建任务", exact: true }).click();
   const card = window.locator(".kanban-card", { hasText: "NLRP3 早研靶点评估" });

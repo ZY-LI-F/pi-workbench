@@ -26,7 +26,7 @@ import { availableMentionAgentsForTask, parseAgentMentions } from "@shared/agent
 import type { AgentMentionQuery } from "@shared/agent-mentions";
 import type { AgentPresence } from "@shared/agent-presence";
 import type { AgentTaskQueueEntry } from "@shared/agent-task-scheduler";
-import { MANUAL_TASK_STAGES } from "@shared/kanban";
+import { manualMoveStagesForTask } from "@shared/kanban";
 import type {
   AgentTask,
   KanbanTask,
@@ -46,6 +46,7 @@ import { AgentMentionInput, type AgentMentionRequest } from "./AgentMentionInput
 import { WorkflowDag } from "./WorkflowDag";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { AgentExecutionGraph } from "./AgentExecutionGraph";
+import { TaskCollaborationBadge, taskCollaborationScope } from "./TaskCollaborationBadge";
 
 interface TaskDetailPanelProps {
   readonly task: KanbanTask;
@@ -72,6 +73,7 @@ interface TaskDetailPanelProps {
   readonly agentPresences?: readonly AgentPresence[];
   readonly mentionRequest?: AgentMentionRequest;
   readonly availableSkillNames?: readonly string[];
+  readonly mentionsEnabled?: boolean;
   readonly variant?: "drawer" | "workspace";
 }
 
@@ -132,6 +134,7 @@ export function TaskDetailPanel({
   agentPresences = [],
   mentionRequest,
   availableSkillNames,
+  mentionsEnabled = true,
   variant = "drawer",
 }: TaskDetailPanelProps) {
   const [gateComment, setGateComment] = useState("");
@@ -158,19 +161,26 @@ export function TaskDetailPanel({
     ? run.steps.find((step) => step.stepId === run.currentStepId && step.stepKind === "human-gate" && step.status === "waiting")
     : undefined;
   const executionTarget = task.executionTarget;
+  const isManual = executionTarget.kind === "manual";
+  const collaborationScope = taskCollaborationScope(task, runs.length > 0 || agentTasks.length > 0);
+  const isTeamTask = collaborationScope === "team";
   const workflow = executionTarget.kind === "workflow"
     ? catalog.workflows.find((candidate) => candidate.id === executionTarget.workflowId)
     : undefined;
-  const executionLabel = executionTarget.kind === "workflow"
-    ? workflow?.shortName ?? executionTarget.workflowId
-    : executionTarget.kind === "agent"
-      ? catalog.agents.find((agent) => agent.id === executionTarget.agentId)?.name ?? executionTarget.agentId
-      : squads.find((squad) => squad.id === executionTarget.squadId)?.name ?? executionTarget.squadId;
+  const executionLabel = executionTarget.kind === "manual"
+    ? "自己推进"
+    : executionTarget.kind === "workflow"
+      ? workflow?.shortName ?? executionTarget.workflowId
+      : executionTarget.kind === "agent"
+        ? catalog.agents.find((agent) => agent.id === executionTarget.agentId)?.name ?? executionTarget.agentId
+        : squads.find((squad) => squad.id === executionTarget.squadId)?.name ?? executionTarget.squadId;
   const isRedispatch = task.stage === "blocked";
   const activeAgentTask = agentTasks.find((candidate) => candidate.id === task.activeAgentTaskId);
   const waitingCoordinator = activeAgentTask?.kind === "coordinator" && activeAgentTask.status === "waiting_human";
-  const mentionAgents = useMemo(() => availableMentionAgentsForTask(task, catalog, squads), [catalog, squads, task]);
-  const mentionsDisabledReason = task.activeRunId || task.activeAgentTaskId
+  const mentionAgents = useMemo(() => mentionsEnabled ? availableMentionAgentsForTask(task, catalog, squads) : Object.freeze([]), [catalog, mentionsEnabled, squads, task]);
+  const mentionsDisabledReason = !mentionsEnabled
+    ? "开启团队功能后可在任务记录中 @Agent 分发工作"
+    : task.activeRunId || task.activeAgentTaskId
     ? waitingCoordinator
       ? "LEAD 正在等待你的普通回复；当前不能并行创建新的 mention"
       : "任务正在执行；请先中止或等待完成后再使用 @mention 分发"
@@ -196,6 +206,7 @@ export function TaskDetailPanel({
       : undefined;
   const mentionPreview = useMemo<MentionPreview>(() => {
     if (!commentBody.trim()) return Object.freeze({ agents: Object.freeze([]) });
+    if (!mentionsEnabled) return Object.freeze({ agents: Object.freeze([]) });
     try {
       const previewBody = activeMentionQuery
         ? `${commentBody.slice(0, activeMentionQuery.start)}${commentBody.slice(activeMentionQuery.end)}`
@@ -216,7 +227,7 @@ export function TaskDetailPanel({
     } catch (cause) {
       return Object.freeze({ agents: Object.freeze([]), error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [activeMentionQuery, commentBody, mentionAgents, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator]);
+  }, [activeMentionQuery, commentBody, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator]);
 
   useEffect(() => {
     setCommentBody("");
@@ -257,7 +268,7 @@ export function TaskDetailPanel({
   return (
     <aside ref={panelRef} className={`task-detail task-detail--${variant}`} aria-label={`任务详情：${task.title}`} role={overlayDrawer ? "dialog" : "complementary"} aria-modal={overlayDrawer || undefined} tabIndex={overlayDrawer ? -1 : undefined}>
       <header className="task-detail__header">
-        <div><small>TASK ROOM</small><h2>{task.title}</h2></div>
+        <div><small>{isTeamTask ? "TEAM TASK" : "PERSONAL TASK"}</small><h2>{task.title}</h2></div>
         {variant === "drawer" && <button ref={closeButtonRef} type="button" className="icon-button" aria-label="关闭任务详情" onClick={onClose}><X size={17} /></button>}
       </header>
 
@@ -265,7 +276,8 @@ export function TaskDetailPanel({
         <div className="task-detail__badges">
           <span className={`status-chip status-chip--${task.stage}`}>任务 · {STAGE_LABEL[task.stage]}</span>
           <span className={`priority-badge priority-badge--${task.priority}`}>{PRIORITY_LABEL[task.priority]}优先级</span>
-          <span>{executionLabel}</span>
+          <TaskCollaborationBadge scope={collaborationScope} />
+          <span className={isManual ? "manual-mode-badge" : undefined}>{executionLabel}</span>
         </div>
         {executionTruth && (
           <div className="task-detail__execution-truth">
@@ -293,7 +305,7 @@ export function TaskDetailPanel({
 
         <section className="task-room" aria-label="任务事实时间线">
           <header className="task-room__header">
-            <div><small>TASK ROOM TIMELINE</small><h3>任务事实流</h3></div>
+            <div><small>{isManual ? "TASK LOG" : "TASK ROOM TIMELINE"}</small><h3>{isManual ? "任务记录" : "任务事实流"}</h3></div>
             <span>{timeline.length} 条</span>
           </header>
           <div className="task-room__timeline">
@@ -362,10 +374,10 @@ export function TaskDetailPanel({
               setCommentBody("");
             });
           }}>
-            <label htmlFor={`task-room-message-${task.id}`}>发送到 Task Room</label>
+            <label htmlFor={`task-room-message-${task.id}`}>{isManual ? "添加任务记录" : "发送到 Task Room"}</label>
             <AgentMentionInput
               id={`task-room-message-${task.id}`}
-              ariaLabel="输入 Task Room 消息并 @ Agent"
+              ariaLabel={mentionsEnabled ? "输入 Task Room 消息并 @ Agent" : "输入任务记录"}
               value={commentBody}
               agents={mentionAgents}
               presences={agentPresences}
@@ -374,7 +386,7 @@ export function TaskDetailPanel({
               mentionsDisabled={Boolean(mentionsDisabledReason)}
               mentionsDisabledReason={mentionsDisabledReason}
               rows={3}
-              placeholder={waitingCoordinator ? "回复 LEAD 的问题；提交后自动进入下一决策回合…" : "补充上下文；输入 @ 选择 Agent，或直接发送普通消息…"}
+              placeholder={waitingCoordinator ? "回复 LEAD 的问题；提交后自动进入下一决策回合…" : !mentionsEnabled ? "记录进展、决定或阻塞…" : isManual ? "记录进展、决定或阻塞；需要协助时可输入 @ 选择 Agent…" : "补充上下文；输入 @ 选择 Agent，或直接发送普通消息…"}
               onChange={setCommentBody}
               onQueryChange={setActiveMentionQuery}
               onRequestError={setError}
@@ -396,9 +408,9 @@ export function TaskDetailPanel({
       </div>
 
       {error && <p className="task-detail__error" role="alert">{error}</p>}
-      {!executionEnabled && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <p className="task-detail__execution-disabled">Pi Runtime 不可用；任务记录仍可编辑，执行入口已暂停。</p>}
+      {!isManual && !executionEnabled && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <p className="task-detail__execution-disabled">Pi Runtime 不可用；任务记录仍可编辑，执行入口已暂停。</p>}
       <footer className="task-detail__actions">
-        {!task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <button type="button" className="button-primary" disabled={busy || !executionEnabled} onClick={() => void perform(onDispatch)}>{isRedispatch ? <RotateCcw size={14} /> : <Play size={14} />}{isRedispatch ? "重新分发" : "开始执行"}</button>}
+        {!isManual && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <button type="button" className="button-primary" disabled={busy || !executionEnabled} onClick={() => void perform(onDispatch)}>{isRedispatch ? <RotateCcw size={14} /> : <Play size={14} />}{isRedispatch ? "重新分发" : "开始执行"}</button>}
         {(task.activeRunId || task.activeAgentTaskId) && <button type="button" className="button-danger-soft" disabled={busy} onClick={() => void perform(onAbort)}><Ban size={14} />中止执行</button>}
         {!task.activeRunId && !task.activeAgentTaskId && <button type="button" className="button-secondary" disabled={busy || Boolean(task.awaitingReviewExecution)} title={task.awaitingReviewExecution ? "请先验收、退回或重新分发当前报告" : undefined} onClick={onEdit}><Pencil size={14} />编辑</button>}
         {!task.activeRunId && !task.activeAgentTaskId && (
@@ -407,7 +419,7 @@ export function TaskDetailPanel({
             if (stage) void perform(() => onMove(stage));
           }}>
             <option value="">移动到…</option>
-            {MANUAL_TASK_STAGES.map((stage) => <option value={stage} key={stage}>{STAGE_LABEL[stage]}</option>)}
+            {manualMoveStagesForTask(task).map((stage) => <option value={stage} key={stage}>{STAGE_LABEL[stage]}</option>)}
           </select>
         )}
         {!task.activeRunId && !task.activeAgentTaskId && (!confirmDelete

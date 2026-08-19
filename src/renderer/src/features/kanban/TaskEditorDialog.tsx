@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Bot, Check, Folder, GitBranch, MessageSquareShare, Sparkles, Users } from "lucide-react";
+import { Bot, Check, Folder, GitBranch, MessageSquareShare, Sparkles, UserRound, Users } from "lucide-react";
 import type {
   AgentDefinition,
   CreateTaskInput,
@@ -21,6 +21,7 @@ interface TaskEditorDialogProps {
   readonly workflows: readonly WorkflowDefinition[];
   readonly agents: readonly AgentDefinition[];
   readonly squads: readonly Squad[];
+  readonly automationEnabled?: boolean;
   readonly busy: boolean;
   readonly onClose: () => void;
   readonly onCreate: (input: CreateTaskInput) => Promise<void>;
@@ -34,21 +35,22 @@ const PRIORITIES: readonly { readonly value: TaskPriority; readonly label: strin
   { value: "urgent", label: "紧急" },
 ]);
 
-function targetId(target: ExecutionTarget | undefined, workflows: readonly WorkflowDefinition[]): string {
-  if (!target) return workflows[0]?.id ?? "";
+function targetId(target: ExecutionTarget | undefined): string {
+  if (!target || target.kind === "manual") return "manual";
   if (target.kind === "workflow") return target.workflowId;
   if (target.kind === "agent") return target.agentId;
   return target.squadId;
 }
 
-export function TaskEditorDialog({ task, draft, project, workflows, agents, squads, busy, onClose, onCreate, onUpdate }: TaskEditorDialogProps) {
+export function TaskEditorDialog({ task, draft, project, workflows, agents, squads, automationEnabled = true, busy, onClose, onCreate, onUpdate }: TaskEditorDialogProps) {
   const [title, setTitle] = useState(task?.title ?? draft?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? draft?.description ?? "");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(task?.acceptanceCriteria ?? draft?.acceptanceCriteria ?? "");
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? draft?.priority ?? "medium");
-  const [executionKind, setExecutionKind] = useState<ExecutionTarget["kind"]>(task?.executionTarget.kind ?? "workflow");
-  const [executionId, setExecutionId] = useState(targetId(task?.executionTarget, workflows));
+  const [executionKind, setExecutionKind] = useState<ExecutionTarget["kind"]>(task?.executionTarget.kind ?? "manual");
+  const [executionId, setExecutionId] = useState(targetId(task?.executionTarget));
   const [error, setError] = useState("");
+  const showAutomationChoices = automationEnabled || (task !== undefined && task.executionTarget.kind !== "manual");
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -56,15 +58,17 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
       setError("请填写任务标题");
       return;
     }
-    if (!executionId) {
+    if (executionKind !== "manual" && !executionId) {
       setError("请选择执行目标");
       return;
     }
-    const executionTarget: ExecutionTarget = executionKind === "workflow"
-      ? { kind: "workflow", workflowId: executionId }
-      : executionKind === "agent"
-        ? { kind: "agent", agentId: executionId }
-        : { kind: "squad", squadId: executionId };
+    const executionTarget: ExecutionTarget = executionKind === "manual"
+      ? { kind: "manual" }
+      : executionKind === "workflow"
+        ? { kind: "workflow", workflowId: executionId }
+        : executionKind === "agent"
+          ? { kind: "agent", agentId: executionId }
+          : { kind: "squad", squadId: executionId };
     setError("");
     try {
       if (task) {
@@ -133,20 +137,27 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
             </select>
           </label>
           <div className="kanban-field">
-            <span>执行目标</span>
+            <span>推进方式</span>
             <div className="execution-kind-picker" role="tablist" aria-label="执行目标类型">
               {([
+                ["manual", "自己推进", UserRound],
                 ["workflow", "固定流程", Sparkles],
                 ["agent", "单 Agent", Bot],
                 ["squad", "动态 Squad", Users],
-              ] as const).map(([kind, label, Icon]) => (
+              ] as const).filter(([kind]) => kind === "manual" || showAutomationChoices).map(([kind, label, Icon]) => (
                 <button type="button" role="tab" aria-selected={executionKind === kind} className={executionKind === kind ? "is-selected" : ""} key={kind} onClick={() => {
                   setExecutionKind(kind);
-                  setExecutionId(kind === "workflow" ? workflows[0]?.id ?? "" : kind === "agent" ? agents[0]?.id ?? "" : squads[0]?.id ?? "");
+                  setExecutionId(kind === "manual" ? "manual" : kind === "workflow" ? workflows[0]?.id ?? "" : kind === "agent" ? agents[0]?.id ?? "" : squads[0]?.id ?? "");
                 }}><Icon size={12} />{label}</button>
               ))}
             </div>
             <div className="workflow-picker">
+              {executionKind === "manual" && (
+                <div className="manual-execution-choice">
+                  <span><UserRound size={15} />由你掌控进度</span>
+                  <small>创建后不会调用模型。可直接把任务拖到执行中、待审核、受阻或已完成。</small>
+                </div>
+              )}
               {executionKind === "workflow" && workflows.map((workflow) => (
                 <button
                   type="button"

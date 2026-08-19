@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   Archive,
+  BookOpenCheck,
   FileOutput,
   FolderOpen,
   GitFork,
@@ -48,13 +49,7 @@ import { CommandPalette, type PaletteAction } from "./components/CommandPalette"
 import { Composer, type ComposerImage } from "./components/Composer";
 import { Conversation } from "./components/Conversation";
 import { ExtensionDialog } from "./components/ExtensionDialog";
-import {
-  constrainInspectorWidth,
-  DEFAULT_INSPECTOR_WIDTH,
-  FILE_INSPECTOR_WIDTH,
-  Inspector,
-  type InspectorTab,
-} from "./components/Inspector";
+import { Inspector, type InspectorTab } from "./components/Inspector";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { Sidebar, type WorkspaceView } from "./components/Sidebar";
 import { TerminalDrawer } from "./components/TerminalDrawer";
@@ -66,8 +61,14 @@ import { KanbanWorkspace } from "./features/kanban/KanbanWorkspace";
 import { createPiTaskDraft, type PiTaskDraft } from "./features/kanban/pi-task-draft";
 import { TeamWorkspace } from "./features/team/TeamWorkspace";
 import { ModelConfigurationWorkspace } from "./features/models/ModelConfigurationWorkspace";
+import { SkillsManagementWorkspace } from "./features/skills/SkillsManagementWorkspace";
 import { parseBashResult } from "./lib/pi-bash-result";
 import { sessionFileReferences } from "./lib/session-files";
+import { constrainComposerEditorHeight } from "./lib/composer-layout";
+import {
+  constrainInspectorWidth,
+  FILE_INSPECTOR_WIDTH,
+} from "./lib/inspector-layout";
 
 interface AppProps {
   readonly api: StellaDesktopApi;
@@ -139,10 +140,12 @@ export function App({ api }: AppProps) {
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
   const skinArtwork = useSkinArtwork(api);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth >= 1280);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("context");
-  const [inspectorWidth, setInspectorWidth] = useState(() => constrainInspectorWidth(DEFAULT_INSPECTOR_WIDTH, window.innerWidth));
+  const [inspectorWidth, setInspectorWidth] = useState(() => constrainInspectorWidth(preferences.inspectorWidth, window.innerWidth));
+  const [composerHeight, setComposerHeight] = useState<number | null>(() => preferences.composerHeight === null
+    ? null
+    : constrainComposerEditorHeight(preferences.composerHeight, window.innerHeight));
   const [filePreview, setFilePreview] = useState<LocalPathInspection>();
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -163,13 +166,15 @@ export function App({ api }: AppProps) {
   const bootstrap = state.bootstrap;
   const composerDraft = useSessionComposerDraft(bootstrap, api);
   const compactSidebar = useMediaQuery("(max-width: 1060px)");
+  const sidebarCollapsed = preferences.sidebarCollapsed;
   const sidebarVisible = compactSidebar ? sidebarOpen : !sidebarCollapsed;
   const piReady = piHealth?.state === "ready" && Boolean(bootstrap);
   const teamFeaturesEnabled = preferences.teamFeaturesEnabled;
-  const activeView: WorkspaceView = !teamFeaturesEnabled && (workspaceView === "team" || workspaceView === "kanban")
-    ? "chat"
+  const activeView: WorkspaceView = !teamFeaturesEnabled && workspaceView === "team"
+    ? "kanban"
     : workspaceView;
   const sessionFiles = useMemo(() => sessionFileReferences(state.messages), [state.messages]);
+  const sessionAddress = bootstrap?.state.sessionFile?.trim() || undefined;
 
   const reportActionError = (action: string, cause: unknown) => {
     if (isReportedRuntimeError(cause)) return;
@@ -199,8 +204,16 @@ export function App({ api }: AppProps) {
   }, [preferencesStorageError, runtimeNotify]);
 
   useEffect(() => {
-    if (teamFeaturesEnabled || (workspaceView !== "team" && workspaceView !== "kanban")) return;
-    setWorkspaceView("chat");
+    if (preferences.inspectorWidth === inspectorWidth && preferences.composerHeight === composerHeight) return;
+    const timeout = window.setTimeout(() => {
+      setPreferences(Object.freeze({ ...preferences, inspectorWidth, composerHeight }));
+    }, 240);
+    return () => window.clearTimeout(timeout);
+  }, [composerHeight, inspectorWidth, preferences, setPreferences]);
+
+  useEffect(() => {
+    if (teamFeaturesEnabled || workspaceView !== "team") return;
+    setWorkspaceView("kanban");
     setSidebarOpen(false);
   }, [teamFeaturesEnabled, workspaceView]);
 
@@ -238,17 +251,29 @@ export function App({ api }: AppProps) {
   }, [bootstrap?.state.sessionId]);
 
   useEffect(() => {
-    const constrainCurrentWidth = () => setInspectorWidth((current) => constrainInspectorWidth(current, window.innerWidth));
-    window.addEventListener("resize", constrainCurrentWidth);
-    return () => window.removeEventListener("resize", constrainCurrentWidth);
+    const constrainCurrentLayout = () => {
+      setInspectorWidth((current) => constrainInspectorWidth(current, window.innerWidth));
+      setComposerHeight((current) => current === null ? null : constrainComposerEditorHeight(current, window.innerHeight));
+    };
+    window.addEventListener("resize", constrainCurrentLayout);
+    return () => window.removeEventListener("resize", constrainCurrentLayout);
   }, []);
+
+  const copySessionAddress = (address: string): void => {
+    runAction("复制 Session 地址", async () => {
+      const normalized = address.trim();
+      if (!normalized) throw new Error("当前会话尚未生成可追踪的 session 文件");
+      await api.copyText(normalized);
+      controller.notify(`Session 地址已复制 · ${bootstrap?.state.sessionId.slice(0, 8) ?? "unknown"}`, "success");
+    });
+  };
 
   const openSidebar = () => {
     if (compactSidebar) {
       setSidebarOpen(true);
       window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
     } else {
-      setSidebarCollapsed(false);
+      setPreferences(Object.freeze({ ...preferences, sidebarCollapsed: false }));
       window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
     }
   };
@@ -264,7 +289,7 @@ export function App({ api }: AppProps) {
     } else {
       const activeElement = document.activeElement;
       if (activeElement instanceof HTMLElement && activeElement.closest(".sidebar")) activeElement.blur();
-      setSidebarCollapsed(true);
+      setPreferences(Object.freeze({ ...preferences, sidebarCollapsed: true }));
       window.requestAnimationFrame(() => {
         const trigger = Array.from(document.querySelectorAll<HTMLButtonElement>('button[aria-label="打开侧栏"]'))
           .find((button) => button.getClientRects().length > 0 && !button.disabled);
@@ -294,11 +319,6 @@ export function App({ api }: AppProps) {
   };
 
   const newTask = () => {
-    if (!teamFeaturesEnabled) {
-      controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
-      openSettings();
-      return;
-    }
     if (!bootstrap) {
       controller.notify("需要先选择一个可用项目，才能新建任务", "warning");
       return;
@@ -323,11 +343,6 @@ export function App({ api }: AppProps) {
   };
 
   const solidifyCurrentSession = () => {
-    if (!teamFeaturesEnabled) {
-      controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
-      openSettings();
-      return;
-    }
     if (!bootstrap) {
       controller.notify("Pi Runtime 尚未就绪，无法读取当前会话", "warning");
       return;
@@ -468,22 +483,23 @@ export function App({ api }: AppProps) {
   const paletteActions = useMemo<readonly PaletteAction[]>(
     () => {
       const actions: PaletteAction[] = [
+        { id: "kanban", label: "打开任务看板", detail: "管理手工任务、Pi 会话任务与自动执行任务", icon: LayoutDashboard, run: () => setWorkspaceView("kanban") },
         { id: "models", label: "打开模型配置", detail: "连接 Provider、维护自定义模型并选择全局路由", icon: SlidersHorizontal, run: () => setWorkspaceView("models") },
+        { id: "skills", label: "打开 Skills 管理", detail: "查看、添加并热加载 Pi Skills", icon: BookOpenCheck, run: () => setWorkspaceView("skills") },
         { id: "project", label: "打开项目", detail: "选择新的本地工作目录", icon: FolderOpen, run: () => runAction("打开项目", chooseProject) },
       ];
       if (teamFeaturesEnabled) {
         actions.push(
           { id: "team", label: "打开团队协作", detail: "在 Task Room 中 @lead 或直接委派 Worker", icon: UsersRound, run: () => setWorkspaceView("team") },
-          { id: "kanban", label: "打开任务看板", detail: "监督固定 Agent 团队与流程", icon: LayoutDashboard, run: () => setWorkspaceView("kanban") },
         );
       }
       if (!bootstrap) return actions;
       return [
         ...actions,
+        { id: "task", label: "新建看板任务", detail: "默认由你推进，也可选择 Workflow、Agent 或 Squad", icon: Plus, run: newTask },
+        { id: "capture-task", label: "固化当前会话为任务", detail: "保存来源会话并创建可手工推进的任务草稿", icon: ListPlus, run: solidifyCurrentSession },
         ...(teamFeaturesEnabled ? [
           { id: "team-task", label: "通过 @LEAD 启动任务", detail: "进入任务启动台并填写可验证验收标准", icon: MessageSquarePlus, run: newTeamTask },
-          { id: "task", label: "新建看板任务", detail: "选择固定流程并分发", icon: Plus, run: newTask },
-          { id: "capture-task", label: "固化当前会话为任务", detail: "打开带来源 identity 的可编辑草稿", icon: ListPlus, run: solidifyCurrentSession },
         ] : []),
         { id: "chat", label: "返回当前会话", detail: "与 Pi 直接对话", icon: MessagesSquare, run: () => setWorkspaceView("chat") },
         { id: "new", label: "新建会话", detail: "开始一个干净的 Pi 会话", icon: Plus, run: () => runAction("新建会话", newSession) },
@@ -558,7 +574,7 @@ export function App({ api }: AppProps) {
         onNewSession={() => runAction("新建会话", newSession)}
         onNewTask={activeView === "kanban" ? newTask : newTeamTask}
         onSwitchView={(view) => {
-          if (!teamFeaturesEnabled && (view === "team" || view === "kanban")) {
+          if (!teamFeaturesEnabled && view === "team") {
             controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
             openSettings();
             return;
@@ -600,12 +616,14 @@ export function App({ api }: AppProps) {
           onOpenSidebar={openSidebar}
           onFocusSession={focusComposer}
           onNewSession={() => runAction("新建会话", newSession)}
+          sessionAddress={sessionAddress}
+          onCopySessionAddress={copySessionAddress}
           onToggleInspector={() => setInspectorOpen((value) => !value)}
           onOpenModels={() => setWorkspaceView("models")}
           onOpenSettings={openSettings}
           onThinkingChange={(level) => runAction("切换思考级别", () => setThinking(level))}
           onAbortRetry={() => runAction("停止自动重试", () => controller.command({ type: "abort_retry" }))}
-          onSolidifyTask={teamFeaturesEnabled && piReady ? solidifyCurrentSession : undefined}
+          onSolidifyTask={piReady && taskHealth?.state === "ready" ? solidifyCurrentSession : undefined}
         />
         <div className="conversation-stage">
           {!piReady && (
@@ -653,6 +671,8 @@ export function App({ api }: AppProps) {
           sendDisabled={!piReady}
           sendDisabledReason={!piReady ? (piHealth?.state === "loading" || state.phase === "loading" ? "Pi 正在连接，草稿不会丢失" : "Pi 恢复后即可发送") : undefined}
           draftPersistence={composerDraft.persistence}
+          height={composerHeight}
+          onHeightChange={setComposerHeight}
         />
       </main> : activeView === "chat" ? (
         <main className="workspace capability-workspace">
@@ -665,7 +685,7 @@ export function App({ api }: AppProps) {
             {piHealth?.state === "loading" || state.phase === "loading" ? <>
               <div className="startup-screen__loader"><span /><span /><span /></div>
               <h1>正在恢复 Pi 工作区</h1>
-              <p>{teamFeaturesEnabled ? "团队任务历史仍可独立查看。" : "正在恢复会话、模型、命令与项目资源。"}</p>
+              <p>任务看板仍可独立查看；正在恢复会话、模型、命令与项目资源。</p>
             </> : <>
               <span className="startup-screen__error-mark">!</span>
               <h1>Pi 工作区暂不可用</h1>
@@ -674,7 +694,7 @@ export function App({ api }: AppProps) {
               <div className="capability-workspace__actions">
                 <button type="button" className="button-primary" disabled={capabilities.state.retrying.includes("pi")} onClick={() => runAction("重试 Pi", retryPi)}><RefreshCw size={15} />{capabilities.state.retrying.includes("pi") ? "正在重试" : "重试 Pi"}</button>
                 <button type="button" className="button-secondary" onClick={() => runAction("打开项目", chooseProject)}><FolderOpen size={15} />选择其他项目</button>
-                {teamFeaturesEnabled && <button type="button" className="button-secondary" onClick={() => setWorkspaceView("kanban")}><LayoutDashboard size={15} />查看任务看板</button>}
+                <button type="button" className="button-secondary" onClick={() => setWorkspaceView("kanban")}><LayoutDashboard size={15} />查看任务看板</button>
               </div>
             </>}
           </section>
@@ -687,6 +707,16 @@ export function App({ api }: AppProps) {
           modelChanging={modelChanging}
           onOpenSidebar={openSidebar}
           onModelChange={setModel}
+          onRuntimeRefresh={controller.refresh}
+          onNotify={controller.notify}
+        />
+      ) : activeView === "skills" ? (
+        <SkillsManagementWorkspace
+          api={api}
+          bootstrap={bootstrap}
+          online={piReady}
+          runtimeBusy={state.streaming || state.compacting}
+          onOpenSidebar={openSidebar}
           onRuntimeRefresh={controller.refresh}
           onNotify={controller.notify}
         />
@@ -707,12 +737,13 @@ export function App({ api }: AppProps) {
           onContinueTaskSession={(taskId, sessionPath) => continueTaskSession(taskId, sessionPath)}
           onError={(message) => controller.notify(message, "error")}
         />
-      ) : activeView === "kanban" && teamFeaturesEnabled ? (
+      ) : activeView === "kanban" ? (
         <KanbanWorkspace
           api={api}
           controller={kanban}
           project={bootstrap?.project}
           executionEnabled={piReady}
+          teamFeaturesEnabled={teamFeaturesEnabled}
           taskCapabilityError={taskHealth?.error}
           taskCapabilityRetrying={capabilities.state.retrying.includes("task")}
           onRetryTaskCapability={() => void capabilities.retry("task").catch((cause: unknown) => controller.notify(`重试 Task Control 失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))}

@@ -117,6 +117,19 @@ describe("BoardStore", () => {
     expect(files.some((file) => file.includes(".v1.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
   });
 
+  it("migrates an installed schema v6 board before storing user-managed tasks", async () => {
+    const path = await temporaryBoardPath();
+    const now = "2026-07-17T01:00:00.000Z";
+    const { version: _version, ...collections } = EMPTY_BOARD_STATE;
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, JSON.stringify({ ...collections, version: 6 }), "utf8");
+
+    const migrated = await new BoardStore(path, { now: () => now, id: () => "backup-id" }).initialize();
+
+    expect(migrated.version).toBe(BOARD_SCHEMA_VERSION);
+    expect((await readdir(dirname(path))).some((file) => file.includes(".v6.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
+  });
+
   it("migrates schema v2 to the current version without losing automation history", async () => {
     const path = await temporaryBoardPath();
     const now = "2026-07-17T01:00:00.000Z";

@@ -29,7 +29,7 @@ describe("GlobalModelControl", () => {
 
     expect(screen.getByText("当前模型 · anthropic")).toBeTruthy();
     expect(screen.getByText("Claude Sonnet")).toBeTruthy();
-    expect(screen.getByText(/会话、团队与看板共用/)).toBeTruthy();
+    expect(screen.getByText(/会话、团队与自动执行任务共用/)).toBeTruthy();
     const selector = screen.getByRole("combobox", { name: "全局模型" });
     expect((selector as HTMLSelectElement).value).toBe("anthropic/claude-sonnet");
 
@@ -50,7 +50,7 @@ describe("GlobalModelControl", () => {
     );
 
     expect(screen.getByText("Pi 离线")).toBeTruthy();
-    expect(screen.getByText(/当前 Pi 会话使用/)).toBeTruthy();
+    expect(screen.getByText(/手工任务不会调用模型/)).toBeTruthy();
     expect((screen.getByRole("combobox", { name: "全局模型" }) as HTMLSelectElement).disabled).toBe(true);
   });
 });

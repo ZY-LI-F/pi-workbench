@@ -31,6 +31,7 @@ test("runs a real Pi conversation through Alibaba Bailian Qwen", async ({}, test
     await expect(globalModel).toHaveValue(qwen.value);
     await expect(window.getByLabel("全局运行模型")).toContainText(expectedLabel);
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.getByRole("button", { name: "当前会话", exact: true }).click();
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await window.getByLabel("思考级别").selectOption("off");

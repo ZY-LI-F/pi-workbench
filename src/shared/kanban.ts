@@ -1,4 +1,5 @@
-export const BOARD_SCHEMA_VERSION = 6 as const;
+export const BOARD_SCHEMA_VERSION = 7 as const;
+export const BOARD_SCHEMA_V6 = 6 as const;
 export const BOARD_SCHEMA_V5 = 5 as const;
 export const BOARD_SCHEMA_V4 = 4 as const;
 export const BOARD_SCHEMA_V3 = 3 as const;
@@ -40,8 +41,11 @@ export type AgentTaskStatus = (typeof AGENT_TASK_STATUSES)[number];
 export const TERMINAL_AGENT_TASK_STATUSES = ["reported", "protocol-invalid", "failed", "interrupted", "cancelled"] as const;
 
 export type BoardLane = TaskStage;
-export const MANUAL_TASK_STAGES = ["planned", "blocked", "completed"] as const satisfies readonly TaskStage[];
+/** Stages a user-managed task can enter without creating an execution. */
+export const MANUAL_TASK_STAGES = ["planned", "running", "review", "blocked", "completed"] as const satisfies readonly TaskStage[];
 export type ManualTaskStage = (typeof MANUAL_TASK_STAGES)[number];
+/** Automated tasks keep running/review under lifecycle control. */
+export const AUTOMATED_TASK_MANUAL_STAGES = ["planned", "blocked", "completed"] as const satisfies readonly ManualTaskStage[];
 
 export const WORKFLOW_RUN_STATUSES = ["queued", "running", "review", "blocked", "failed", "interrupted", "reported"] as const;
 export type WorkflowRunStatus = (typeof WORKFLOW_RUN_STATUSES)[number];
@@ -124,9 +128,12 @@ export interface WorkflowDefinition {
 }
 
 export type ExecutionTarget =
+  | { readonly kind: "manual" }
   | { readonly kind: "workflow"; readonly workflowId: string }
   | { readonly kind: "agent"; readonly agentId: string }
   | { readonly kind: "squad"; readonly squadId: string };
+
+export type AutomatedExecutionTarget = Exclude<ExecutionTarget, { readonly kind: "manual" }>;
 
 export type ExecutionReference =
   | { readonly kind: "workflow"; readonly id: string; readonly attempt: number }
@@ -340,7 +347,7 @@ export interface Autopilot {
   readonly projectPath: string;
   readonly projectName: string;
   readonly trusted: boolean;
-  readonly executionTarget: ExecutionTarget;
+  readonly executionTarget: AutomatedExecutionTarget;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -441,6 +448,8 @@ export interface UpdateTaskInput {
 export interface CreateTaskCommentInput {
   readonly taskId: string;
   readonly body: string;
+  /** False records literal text without interpreting @tokens as Agent dispatch. */
+  readonly dispatchMentions?: boolean;
 }
 
 export interface LaunchTeamTaskInput {
@@ -495,7 +504,7 @@ export interface CreateAutopilotInput {
   readonly projectPath: string;
   readonly projectName: string;
   readonly trusted: boolean;
-  readonly executionTarget: ExecutionTarget;
+  readonly executionTarget: AutomatedExecutionTarget;
 }
 
 export interface UpdateAutopilotInput extends Omit<CreateAutopilotInput, "trigger"> {
@@ -538,10 +547,16 @@ export const EMPTY_BOARD_STATE: BoardState = Object.freeze({
 });
 
 const MANUAL_STAGES = new Set<TaskStage>(MANUAL_TASK_STAGES);
+const AUTOMATED_MANUAL_STAGES = new Set<TaskStage>(AUTOMATED_TASK_MANUAL_STAGES);
 const TERMINAL_AGENT_TASK_SET = new Set<AgentTaskStatus>(TERMINAL_AGENT_TASK_STATUSES);
 
 export function canMoveTaskManually(task: KanbanTask, next: TaskStage): next is ManualTaskStage {
-  return task.activeRunId === undefined && task.activeAgentTaskId === undefined && MANUAL_STAGES.has(next);
+  if (task.activeRunId !== undefined || task.activeAgentTaskId !== undefined) return false;
+  return task.executionTarget.kind === "manual" ? MANUAL_STAGES.has(next) : AUTOMATED_MANUAL_STAGES.has(next);
+}
+
+export function manualMoveStagesForTask(task: KanbanTask): readonly ManualTaskStage[] {
+  return task.executionTarget.kind === "manual" ? MANUAL_TASK_STAGES : AUTOMATED_TASK_MANUAL_STAGES;
 }
 
 export function workflowProgress(run: WorkflowRun | undefined): number {
@@ -664,7 +679,7 @@ function assertProjectAgent(value: unknown, path: string): asserts value is Proj
 
 function assertExecutionTarget(value: unknown, path: string): asserts value is ExecutionTarget {
   if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
-  assertOneOf(value.kind, ["workflow", "agent", "squad"] as const, `${path}.kind`);
+  assertOneOf(value.kind, ["manual", "workflow", "agent", "squad"] as const, `${path}.kind`);
   if (value.kind === "workflow") assertString(value.workflowId, `${path}.workflowId`);
   if (value.kind === "agent") assertString(value.agentId, `${path}.agentId`);
   if (value.kind === "squad") assertString(value.squadId, `${path}.squadId`);
@@ -937,6 +952,7 @@ function assertAutopilot(value: unknown, path: string): asserts value is Autopil
   assertString(value.projectName, `${path}.projectName`);
   if (typeof value.trusted !== "boolean") throw new Error(`${path}.trusted 必须是布尔值`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
+  if (value.executionTarget.kind === "manual") throw new Error(`${path}.executionTarget 不能是手工执行`);
   assertIsoDate(value.createdAt, `${path}.createdAt`);
   assertIsoDate(value.updatedAt, `${path}.updatedAt`);
 }
@@ -1087,10 +1103,13 @@ function validateReferences(state: BoardState): void {
     }
     const active = task.activeRunId !== undefined || task.activeAgentTaskId !== undefined;
     if ((active || awaiting) && attempt <= 0) throw new Error(`任务 ${task.id} 的当前执行缺少有效 executionAttempt`);
-    if ((task.stage === "queued" || task.stage === "running") && !active) {
+    if (task.stage === "queued" && !active) {
       throw new Error(`任务 ${task.id} 在 ${task.stage} 阶段但没有 active execution`);
     }
-    if (task.stage === "review" && !active && !awaiting) {
+    if (task.stage === "running" && !active && task.executionTarget.kind !== "manual") {
+      throw new Error(`任务 ${task.id} 在 ${task.stage} 阶段但没有 active execution`);
+    }
+    if (task.stage === "review" && !active && !awaiting && task.executionTarget.kind !== "manual") {
       throw new Error(`任务 ${task.id} 在 review 阶段但没有人工关卡或待验收执行`);
     }
     if ((task.stage === "planned" || task.stage === "blocked" || task.stage === "completed") && (active || awaiting)) {
@@ -1648,14 +1667,24 @@ export function migrateBoardStateV5(value: unknown): BoardState {
   });
 }
 
+/** Schema v7 adds user-managed tasks without rewriting existing execution data. */
+export function migrateBoardStateV6(value: unknown): BoardState {
+  if (!isRecord(value)) throw new Error("schema v6 看板文件根节点必须是对象");
+  if (value.version !== BOARD_SCHEMA_V6) throw new Error(`无法从版本 ${String(value.version)} 迁移看板`);
+  return parseBoardState({ ...value, version: BOARD_SCHEMA_VERSION });
+}
+
 export interface ParsedBoardFile {
   readonly state: BoardState;
-  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5;
+  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6;
 }
 
 export function parseBoardFile(value: unknown): ParsedBoardFile {
   if (!isRecord(value)) throw new Error("看板文件根节点必须是对象");
   if (value.version === BOARD_SCHEMA_VERSION) return Object.freeze({ state: parseBoardState(value) });
+  if (value.version === BOARD_SCHEMA_V6) {
+    return Object.freeze({ state: migrateBoardStateV6(value), migratedFrom: BOARD_SCHEMA_V6 });
+  }
   if (value.version === BOARD_SCHEMA_V5) {
     return Object.freeze({ state: migrateBoardStateV5(value), migratedFrom: BOARD_SCHEMA_V5 });
   }

@@ -1,4 +1,5 @@
-import { copyFile, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
+import { cp, copyFile, mkdir, readFile, readdir, realpath, rename, rm, stat } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -7,6 +8,7 @@ import {
   ModelRuntime,
   SessionManager,
   hasTrustRequiringProjectResources,
+  loadSkillsFromDir,
 } from "@earendil-works/pi-coding-agent";
 import {
   app,
@@ -38,6 +40,7 @@ import {
   MANUAL_TASK_STAGES,
   TASK_PRIORITIES,
   type BoardBootstrap,
+  type AutomatedExecutionTarget,
   type CreateAutopilotInput,
   type CreateProjectAgentInput,
   type CreateTaskCommentInput,
@@ -95,6 +98,8 @@ import {
 import { LocalPathService } from "./local-path-service";
 import { LocalFilePreviewService } from "./local-file-preview-service";
 import { ComposerDraftStore } from "./composer-draft-store";
+import { isPiSkillInstallScope, type PiSkillInstallResult } from "../shared/pi-skill";
+import { PiSkillInstaller } from "./pi-skill-installer";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
@@ -181,6 +186,7 @@ let boardService: BoardService;
 let workflowOrchestrator: WorkflowOrchestrator;
 let agentTaskService: AgentTaskService;
 let agentSkillService: AgentSkillService;
+let piSkillInstaller: PiSkillInstaller;
 let agentTaskRunner: AgentTaskRunner;
 let executionReviewService: ExecutionReviewService;
 let squadService: SquadService;
@@ -296,6 +302,7 @@ function stringArrayValue(value: unknown, label: string): readonly string[] {
 
 function validatedExecutionTarget(value: unknown): ExecutionTarget {
   const target = objectValue(value, "executionTarget");
+  if (target.kind === "manual") return Object.freeze({ kind: "manual" });
   if (target.kind === "workflow") {
     return Object.freeze({ kind: "workflow", workflowId: requiredString(target.workflowId, "workflowId") });
   }
@@ -306,6 +313,12 @@ function validatedExecutionTarget(value: unknown): ExecutionTarget {
     return Object.freeze({ kind: "squad", squadId: requiredString(target.squadId, "squadId") });
   }
   throw new Error(`不支持的执行目标: ${String(target.kind)}`);
+}
+
+function validatedAutomatedExecutionTarget(value: unknown): AutomatedExecutionTarget {
+  const target = validatedExecutionTarget(value);
+  if (target.kind === "manual") throw new Error("Autopilot 不能使用手工执行目标");
+  return target;
 }
 
 function validatedCreateTask(value: unknown): CreateTaskInput {
@@ -387,6 +400,7 @@ function validatedTaskComment(value: unknown): CreateTaskCommentInput {
   return Object.freeze({
     taskId: requiredString(input.taskId, "taskId"),
     body: textValue(input.body, "body"),
+    dispatchMentions: input.dispatchMentions === undefined ? undefined : booleanValue(input.dispatchMentions, "dispatchMentions"),
   });
 }
 
@@ -501,7 +515,7 @@ function validatedCreateAutopilot(value: unknown): CreateAutopilotInput {
     projectPath: textValue(input.projectPath, "projectPath"),
     projectName: textValue(input.projectName, "projectName"),
     trusted: booleanValue(input.trusted, "trusted"),
-    executionTarget: validatedExecutionTarget(input.executionTarget),
+    executionTarget: validatedAutomatedExecutionTarget(input.executionTarget),
   });
 }
 
@@ -599,10 +613,11 @@ async function launchTeamTaskForCurrentProject(value: unknown): Promise<BoardBoo
 
 async function dispatchBoardTask(taskId: string): Promise<BoardBootstrap> {
   assertTaskCapability();
-  assertPiExecutionCapability();
   const state = await boardStore.read();
   const task = state.tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error(`找不到任务: ${taskId}`);
+  if (task.executionTarget.kind === "manual") throw new Error("手工任务由用户推进；如需自动执行，请编辑任务并选择 Workflow、Agent 或 Squad");
+  assertPiExecutionCapability();
   if (task.executionTarget.kind === "workflow") return workflowOrchestrator.dispatch(taskId);
   if (task.executionTarget.kind === "agent") {
     const bootstrap = await agentTaskService.dispatchDirect(taskId);
@@ -664,7 +679,11 @@ function mapCommand(command: Record<string, unknown>): SlashCommandSummary {
     name: stringValue(command.name),
     description: typeof command.description === "string" ? command.description : undefined,
     source,
-    location: typeof sourceInfo.location === "string" ? sourceInfo.location : undefined,
+    location: typeof sourceInfo.location === "string"
+      ? sourceInfo.location
+      : typeof sourceInfo.scope === "string"
+        ? sourceInfo.scope
+        : undefined,
     path: typeof sourceInfo.path === "string" ? sourceInfo.path : undefined,
   });
 }
@@ -992,6 +1011,27 @@ function piAgentDir(): string {
   return join(homedir(), ".pi", "agent");
 }
 
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch (cause) {
+    if (typeof cause === "object" && cause !== null && "code" in cause && cause.code === "ENOENT") return false;
+    throw cause;
+  }
+}
+
+function inspectPiSkillFolder(path: string) {
+  const result = loadSkillsFromDir({ dir: path, source: "stella-folder-import" });
+  const manifest = join(path, "SKILL.md");
+  const skill = result.skills.find((candidate) => pathComparisonKey(candidate.filePath) === pathComparisonKey(manifest));
+  if (!skill) {
+    const detail = result.diagnostics.map((diagnostic) => diagnostic.message).join("；");
+    throw new Error(`SKILL.md 未通过 Pi 校验${detail ? `：${detail}` : ""}`);
+  }
+  return Object.freeze({ name: skill.name, description: skill.description });
+}
+
 let builtinModelProviderIdsPromise: Promise<ReadonlySet<string>> | undefined;
 
 function builtinModelProviderIds(): Promise<ReadonlySet<string>> {
@@ -1039,18 +1079,80 @@ async function captureCurrentSessionPath(): Promise<string | undefined> {
   ).sessionFile;
 }
 
-async function restartRuntimeAfterModelConfigurationChange(sessionPath: string | undefined): Promise<void> {
-  if (!currentProject) return;
+async function restartRuntimePreservingSession(sessionPath: string | undefined, sessionId?: string): Promise<RuntimeBootstrap> {
+  if (!currentProject) throw new Error("尚未选择项目");
   capabilityHealth.set("pi", "loading");
   try {
+    // Pi reports the future JSONL path even before an empty session has written
+    // its first record. Passing that non-existent path via --session creates a
+    // new ID, so resume unsaved sessions by their exact ID instead.
+    const persistedSessionPath = sessionPath && await pathExists(sessionPath) ? sessionPath : undefined;
     await runtime.stop();
     interactiveCommandRouter?.release();
-    await runtime.start({ ...currentProject, sessionPath: sessionPath ?? undefined });
-    await hydrate();
+    await runtime.start({
+      ...currentProject,
+      sessionPath: persistedSessionPath,
+      sessionId: persistedSessionPath ? undefined : sessionId,
+    });
+    const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
+    return bootstrap;
   } catch (cause) {
     capabilityHealth.set("pi", "error", errorMessage(cause));
     throw cause;
+  }
+}
+
+async function restartRuntimeAfterModelConfigurationChange(sessionPath: string | undefined): Promise<void> {
+  await restartRuntimePreservingSession(sessionPath);
+}
+
+async function chooseInstallAndReloadPiSkill(event: IpcMainInvokeEvent, scopeValue: unknown): Promise<PiSkillInstallResult> {
+  assertMainWindowFrame(event);
+  assertPiExecutionCapability();
+  if (!isPiSkillInstallScope(scopeValue)) throw new Error(`不支持的 Skill 安装范围：${String(scopeValue)}`);
+  if (!currentProject || currentProject.implicitDefault) throw new Error("请先选择项目，再添加 Pi Skill");
+  if (!mainWindow || mainWindow.isDestroyed()) throw new Error("Stella 主窗口不可用，无法选择 Skill 文件夹");
+
+  const selection = await dialog.showOpenDialog(mainWindow, {
+    title: "选择包含 SKILL.md 的 Skill 文件夹",
+    buttonLabel: "选择 Skill 文件夹",
+    properties: ["openDirectory"],
+  });
+  if (selection.canceled) return Object.freeze({ cancelled: true });
+  const sourceFolder = selection.filePaths[0];
+  if (!sourceFolder) throw new Error("文件夹选择器没有返回路径");
+
+  const project = currentProject;
+  const lease = await workspaceAdmission.acquireInteractive(project.cwd, {
+    id: randomUUID(),
+    kind: "interactive",
+    label: "Pi Skill 安装与热加载",
+  });
+  try {
+    const sessionState = dataFromResponse<RuntimeBootstrap["state"]>(
+      await runtime.send({ type: "get_state" }),
+      "get_state",
+    );
+    if (sessionState.isStreaming || sessionState.isCompacting) {
+      throw new Error("Pi 正在生成或压缩上下文；请等待当前操作完成后再添加 Skill");
+    }
+    const existing = await agentSkillService.discover(project.cwd, project.trusted);
+    const skill = await piSkillInstaller.installFolder({
+      sourceFolder,
+      scope: scopeValue,
+      projectPath: project.cwd,
+      projectTrusted: project.trusted,
+      existingSkillNames: existing.names,
+    });
+    await restartRuntimePreservingSession(sessionState.sessionFile, sessionState.sessionId);
+    return Object.freeze({
+      cancelled: false,
+      skill,
+      reloadedAt: new Date().toISOString(),
+    });
+  } finally {
+    lease.release();
   }
 }
 
@@ -1157,7 +1259,6 @@ async function initializeTaskCapability(): Promise<void> {
       emitChanged: emitSnapshot,
       projectIdentity: pathComparisonKey,
     });
-    agentSkillService = new AgentSkillService();
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
@@ -1306,6 +1407,9 @@ function registerIpcHandlers(): void {
     assertMainWindowFrame(event);
     return composerDraftStore.save(input);
   });
+  ipcMain.handle("stella:skills:install-folder", (event, scope: unknown) =>
+    chooseInstallAndReloadPiSkill(event, scope),
+  );
   ipcMain.handle("stella:model-configuration:initialize", () => modelConfigurationService.snapshot());
   ipcMain.handle("stella:model-configuration:reveal-api-key", (event, providerId: unknown) => {
     assertMainWindowFrame(event);
@@ -1539,6 +1643,23 @@ if (!singleInstanceLock) {
       readFile,
     });
     composerDraftStore = new ComposerDraftStore(join(app.getPath("userData"), "composer-drafts"));
+    agentSkillService = new AgentSkillService();
+    piSkillInstaller = new PiSkillInstaller({
+      agentDir: piAgentDir(),
+      id: randomUUID,
+      inspectSkillFolder: inspectPiSkillFolder,
+      storage: Object.freeze({
+        realpath,
+        stat,
+        exists: pathExists,
+        mkdir: async (path: string) => { await mkdir(path, { recursive: true }); },
+        copyDirectory: async (source: string, destination: string) => {
+          await cp(source, destination, { recursive: true, force: false, errorOnExist: true, verbatimSymlinks: true });
+        },
+        rename,
+        removeDirectory: async (path: string) => { await rm(path, { recursive: true, force: true }); },
+      }),
+    });
     registerSkinArtworkProtocol();
     registerIpcHandlers();
     createWindow();

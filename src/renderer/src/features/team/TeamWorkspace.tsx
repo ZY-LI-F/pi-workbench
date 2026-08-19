@@ -14,6 +14,7 @@ import { AgentDraftDialog } from "./AgentDraftDialog";
 import { TeamLaunchRoom } from "./TeamLaunchRoom";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { deriveTeamTaskAttention } from "@shared/team-task-attention";
+import { HeaderOverflowMenu } from "../../components/HeaderOverflowMenu";
 
 const TEAM_LAUNCH_ROOM_ID = "project-launch-room";
 type ChannelFilter = "all" | "attention" | "active";
@@ -136,7 +137,7 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
     <main className="team-workspace">
       <header className="team-header">
         <div className="team-header__identity"><button type="button" className="icon-button" aria-label="打开侧栏" onClick={onOpenSidebar}><Menu size={18} /></button><span className="team-header__mark"><UsersRound size={19} /><i /></span><div><small>STELLA TEAM RELAY</small><h1>团队协作</h1></div><em>Stella</em></div>
-        <div className="team-header__status"><span className="current-model-chip" title="所有页面共享的当前 Pi 模型"><Bot size={12} />{modelLabel ?? "未选择模型"}</span><span><i className={executionEnabled ? "is-live" : ""} />{executionEnabled ? "PI RUNTIME ONLINE" : "BOARD ONLY"}</span><button type="button" className="button-secondary team-pulse-toggle" aria-expanded={pulseOpen} aria-controls="team-pulse-panel" onClick={() => setPulseOpen(true)}><UsersRound size={14} />Agent</button><button type="button" className="button-primary" onClick={onNewTask}><Plus size={14} />新建任务</button></div>
+        <div className="team-header__status"><span className="current-model-chip" title="所有页面共享的当前 Pi 模型"><Bot size={12} />{modelLabel ?? "未选择模型"}</span><span><i className={executionEnabled ? "is-live" : ""} />{executionEnabled ? "PI RUNTIME ONLINE" : "BOARD ONLY"}</span><button type="button" className="button-secondary team-pulse-toggle" aria-expanded={pulseOpen} aria-controls="team-pulse-panel" onClick={() => setPulseOpen(true)}><UsersRound size={14} />Agent</button><button type="button" className="button-primary" onClick={onNewTask}><Plus size={14} />新建任务</button><HeaderOverflowMenu className="team-header__more" ariaLabel="更多团队操作" status={`${executionEnabled ? "Pi Runtime 在线" : "仅看板模式"} · ${modelLabel ?? "未选择模型"}`} actions={[{ id: "agents", label: "Agent 状态", description: "查看成员状态并创建项目 Agent", icon: <UsersRound size={14} />, onSelect: () => setPulseOpen(true) }, { id: "new-task", label: "新建任务", description: "创建新的 Team 任务", icon: <Plus size={14} />, onSelect: onNewTask }]} /></div>
       </header>
 
       <div className="team-grid">

@@ -27,6 +27,7 @@ export interface PiRuntimeStartOptions {
   readonly cwd: string;
   readonly trusted: boolean;
   readonly sessionPath?: string;
+  readonly sessionId?: string;
   readonly sessionName?: string;
   readonly provider?: string;
   readonly model?: string;
@@ -89,6 +90,9 @@ export class PiRpcRuntime {
   }
 
   async start(options: PiRuntimeStartOptions): Promise<void> {
+    if (options.sessionPath && options.sessionId) {
+      throw new Error("Pi Runtime 不能同时使用 sessionPath 与 sessionId");
+    }
     const directory = await stat(options.cwd);
     if (!directory.isDirectory()) throw new Error(`项目路径不是目录: ${options.cwd}`);
     await this.stop();
@@ -96,6 +100,7 @@ export class PiRpcRuntime {
     this.#dependencies.emitRuntimeSignal({ type: "runtime_starting", cwd: options.cwd });
     const args: string[] = [this.#dependencies.rpcEntryPath, options.trusted ? "--approve" : "--no-approve"];
     if (options.sessionPath) args.push("--session", options.sessionPath);
+    else if (options.sessionId) args.push("--session-id", options.sessionId);
     if (options.sessionName) args.push("--name", options.sessionName);
     if (options.provider) args.push("--provider", options.provider);
     if (options.model) args.push("--model", options.model);

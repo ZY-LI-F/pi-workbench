@@ -135,6 +135,7 @@ describe("Capability Health", () => {
     expect(screen.getByText("保留的任务历史")).toBeTruthy();
     expect((screen.getByRole("button", { name: "分发任务 保留的任务历史" }) as HTMLButtonElement).disabled).toBe(true);
 
+    await user.click(screen.getByRole("tab", { name: "PI 原生工作台" }));
     await user.click(screen.getByRole("button", { name: "当前会话" }));
     await waitFor(() => expect(screen.getByRole("heading", { name: "Pi 工作区暂不可用" })).toBeTruthy());
     expect(screen.getByText("Pi startup injection")).toBeTruthy();
