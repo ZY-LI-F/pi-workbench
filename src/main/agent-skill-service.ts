@@ -1,9 +1,9 @@
 import { sep, resolve } from "node:path";
-import { DefaultResourceLoader, getAgentDir, type ResourceLoader } from "@earendil-works/pi-coding-agent";
+import { DefaultResourceLoader, getAgentDir, SettingsManager, type ResourceLoader } from "@earendil-works/pi-coding-agent";
 import type { AgentDefinition } from "../shared/kanban";
 
 interface AgentSkillServiceDependencies {
-  readonly createLoader?: (projectPath: string) => ResourceLoader;
+  readonly createLoader?: (projectPath: string, trusted: boolean) => ResourceLoader;
 }
 
 export interface AgentSkillSnapshot {
@@ -20,21 +20,25 @@ function insidePath(candidate: string, root: string): boolean {
 }
 
 export class AgentSkillService {
-  readonly #createLoader: (projectPath: string) => ResourceLoader;
+  readonly #createLoader: (projectPath: string, trusted: boolean) => ResourceLoader;
 
   constructor(dependencies: AgentSkillServiceDependencies = {}) {
-    this.#createLoader = dependencies.createLoader ?? ((projectPath) => new DefaultResourceLoader({
-      cwd: projectPath,
-      agentDir: getAgentDir(),
-      noExtensions: true,
-      noPromptTemplates: true,
-      noThemes: true,
-      noContextFiles: true,
-    }));
+    this.#createLoader = dependencies.createLoader ?? ((projectPath, trusted) => {
+      const agentDir = getAgentDir();
+      return new DefaultResourceLoader({
+        cwd: projectPath,
+        agentDir,
+        settingsManager: SettingsManager.create(projectPath, agentDir, { projectTrusted: trusted }),
+        noExtensions: true,
+        noPromptTemplates: true,
+        noThemes: true,
+        noContextFiles: true,
+      });
+    });
   }
 
   async discover(projectPath: string, trusted: boolean): Promise<AgentSkillSnapshot> {
-    const loader = this.#createLoader(projectPath);
+    const loader = this.#createLoader(projectPath, trusted);
     await loader.reload();
     const skills = loader.getSkills();
     const names = new Set(skills.skills

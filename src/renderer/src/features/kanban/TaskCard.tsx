@@ -1,9 +1,9 @@
 import type { DragEvent } from "react";
-import { Activity, AlertTriangle, Bot, Clock3, Play, ShieldAlert } from "lucide-react";
+import { Activity, AlertTriangle, Bot, Clock3, Play, ShieldAlert, UserRound } from "lucide-react";
 import {
   activeStep,
   canMoveTaskManually,
-  MANUAL_TASK_STAGES,
+  manualMoveStagesForTask,
   workflowProgress,
   type AgentTask,
   type BoardBridgeEvent,
@@ -13,6 +13,7 @@ import {
   type WorkflowRun,
 } from "@shared/kanban";
 import { ACCEPTANCE_LABEL, EXECUTION_STATUS_LABEL, PRIORITY_LABEL, STAGE_LABEL, formatRelativeTime } from "./kanban-format";
+import { TaskCollaborationBadge, taskCollaborationScope } from "./TaskCollaborationBadge";
 
 interface TaskCardProps {
   readonly task: KanbanTask;
@@ -28,6 +29,7 @@ interface TaskCardProps {
   readonly onOpen: () => void;
   readonly onDispatch: () => void;
   readonly onDragStart: (event: DragEvent<HTMLElement>) => void;
+  readonly onDragEnd: () => void;
 }
 
 function trailClass(status: WorkflowRun["steps"][number]["status"]): string {
@@ -38,21 +40,25 @@ function trailClass(status: WorkflowRun["steps"][number]["status"]): string {
   return "";
 }
 
-export function TaskCard({ task, workflow, executionLabel, run, agentTask, activities, liveEvent, liveAgentTaskEvent, busy, executionEnabled, onOpen, onDispatch, onDragStart }: TaskCardProps) {
+export function TaskCard({ task, workflow, executionLabel, run, agentTask, activities, liveEvent, liveAgentTaskEvent, busy, executionEnabled, onOpen, onDispatch, onDragStart, onDragEnd }: TaskCardProps) {
   const step = activeStep(run);
   const latestActivity = activities.at(-1);
-  const canDispatch = !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed";
+  const isManual = task.executionTarget.kind === "manual";
+  const canDispatch = !isManual && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed";
   const execution = run ?? agentTask;
+  const collaborationScope = taskCollaborationScope(task, Boolean(run || agentTask));
   return (
     <article
-      className={`kanban-card priority-${task.priority} status-${task.stage}`}
-      draggable={MANUAL_TASK_STAGES.some((stage) => canMoveTaskManually(task, stage))}
+      className={`kanban-card priority-${task.priority} status-${task.stage} ${isManual ? "execution-manual" : ""}`}
+      draggable={manualMoveStagesForTask(task).some((stage) => canMoveTaskManually(task, stage))}
       onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
       data-task-id={task.id}
     >
       <div className="kanban-card__edge" />
       <div className="kanban-card__topline">
         <span className={`priority-badge priority-badge--${task.priority}`}>{PRIORITY_LABEL[task.priority]}</span>
+        <TaskCollaborationBadge scope={collaborationScope} />
         <span className="kanban-card__project">{task.projectName}</span>
         <span className={`status-chip status-chip--${task.stage}`}>{STAGE_LABEL[task.stage]}</span>
       </div>
@@ -71,18 +77,22 @@ export function TaskCard({ task, workflow, executionLabel, run, agentTask, activ
         </div>
       )}
 
-      <div className="star-trail" aria-label={run ? `流程进度 ${workflowProgress(run)}%` : "尚未分发"}>
-        {run ? run.steps.map((runStep, index) => (
-          <span className={`star-trail__node ${trailClass(runStep.status)}`} key={runStep.id} title={`${runStep.name} · ${runStep.status}`}>
-            <i />{index < run.steps.length - 1 && <b />}
-          </span>
-        )) : workflow?.steps.map((workflowStep, index) => (
-          <span className="star-trail__node" key={workflowStep.id} title={workflowStep.name}>
-            <i />{index < workflow.steps.length - 1 && <b />}
-          </span>
-        ))}
-        {liveEvent && <span className="star-trail__signal" title={liveEvent.eventType}><Activity size={10} /></span>}
-      </div>
+      {isManual ? (
+        <div className="manual-task-rail"><UserRound size={13} /><span>拖动卡片更新进度</span></div>
+      ) : (
+        <div className="star-trail" aria-label={run ? `流程进度 ${workflowProgress(run)}%` : "尚未分发"}>
+          {run ? run.steps.map((runStep, index) => (
+            <span className={`star-trail__node ${trailClass(runStep.status)}`} key={runStep.id} title={`${runStep.name} · ${runStep.status}`}>
+              <i />{index < run.steps.length - 1 && <b />}
+            </span>
+          )) : workflow?.steps.map((workflowStep, index) => (
+            <span className="star-trail__node" key={workflowStep.id} title={workflowStep.name}>
+              <i />{index < workflow.steps.length - 1 && <b />}
+            </span>
+          ))}
+          {liveEvent && <span className="star-trail__signal" title={liveEvent.eventType}><Activity size={10} /></span>}
+        </div>
+      )}
 
       {agentTask && (
         <div className={`agent-task-rail agent-task-rail--${agentTask.status}`}>

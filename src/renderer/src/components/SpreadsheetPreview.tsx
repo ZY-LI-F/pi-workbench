@@ -168,14 +168,14 @@ function SpreadsheetGrid({
         </colgroup>
         <thead>
           <tr>
-            <th className="spreadsheet-grid__corner" />
-            {columns.map((column) => <th key={column}>{runtime.columnLabel(column)}</th>)}
+            <th className="spreadsheet-grid__corner" aria-hidden="true" />
+            {columns.map((column) => <th scope="col" key={column}>{runtime.columnLabel(column)}</th>)}
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row} style={{ height: rowHeight(worksheet, row) }}>
-              <th>{row}</th>
+              <th scope="row">{row}</th>
               {columns.flatMap((column) => {
                 const merge = mergedRangeAt(worksheet, row, column);
                 if (merge) {

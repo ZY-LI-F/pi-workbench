@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import { PassThrough, Writable } from "node:stream";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
-import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "../../src/main/pi-rpc-runtime";
+import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment, type PiRuntimeStartOptions } from "../../src/main/pi-rpc-runtime";
 
 class FakeRpcProcess extends EventEmitter {
   readonly stdout = new PassThrough();
@@ -46,13 +46,19 @@ afterEach(async () => {
   await Promise.all(runtimes.splice(0).map((runtime) => runtime.stop()));
 });
 
-async function startedRuntime(timeout: number, maxProtocolRecordBytes?: number) {
+async function startedRuntime(
+  timeout: number,
+  maxProtocolRecordBytes?: number,
+  startOptions: PiRuntimeStartOptions = { cwd: process.cwd(), trusted: false },
+) {
   const child = new FakeRpcProcess();
   const signals: unknown[] = [];
+  const spawnArgs: string[][] = [];
   const runtime = new PiRpcRuntime({
     executablePath: "node",
     rpcEntryPath: "rpc-entry.js",
-    spawnProcess: () => {
+    spawnProcess: (_command, args) => {
+      spawnArgs.push([...args]);
       setImmediate(() => child.emit("spawn"));
       return child as unknown as ChildProcessWithoutNullStreams;
     },
@@ -62,11 +68,36 @@ async function startedRuntime(timeout: number, maxProtocolRecordBytes?: number) 
     maxProtocolRecordBytes,
   });
   runtimes.push(runtime);
-  await runtime.start({ cwd: process.cwd(), trusted: false });
-  return { child, runtime, signals };
+  await runtime.start(startOptions);
+  return { child, runtime, signals, spawnArgs };
 }
 
 describe("PiRpcRuntime request boundaries", () => {
+  it("resumes an unsaved session by its exact ID", async () => {
+    const sessionId = "01a01595-7f5c-7a0d-a4d3-118f199cbd8b";
+    const { spawnArgs } = await startedRuntime(5_000, undefined, {
+      cwd: process.cwd(),
+      trusted: false,
+      sessionId,
+    });
+
+    expect(spawnArgs[0]).toContain("--session-id");
+    expect(spawnArgs[0]).toContain(sessionId);
+    expect(spawnArgs[0]).not.toContain("--session");
+  });
+
+  it("rejects conflicting session selectors before stopping the active runtime", async () => {
+    const { runtime } = await startedRuntime(5_000);
+
+    await expect(runtime.start({
+      cwd: process.cwd(),
+      trusted: false,
+      sessionPath: "C:/sessions/current.jsonl",
+      sessionId: "01a01595-7f5c-7a0d-a4d3-118f199cbd8b",
+    })).rejects.toThrow("不能同时使用 sessionPath 与 sessionId");
+    expect(runtime.running).toBe(true);
+  });
+
   it("rejects an RPC request that never receives a response", async () => {
     const { child, runtime, signals } = await startedRuntime(15);
 

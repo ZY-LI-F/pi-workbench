@@ -43,4 +43,20 @@ describe("native chat layout contract", () => {
     expect(previewStage).toContain("height: 100%");
     expect(previewStage).toContain("overflow: auto");
   });
+
+  it("collapses topbar actions from the actual middle-column width", async () => {
+    const css = await readFile(join(process.cwd(), "src", "renderer", "src", "styles", "app.css"), "utf8");
+    const workspace = css.match(/\.workspace\s*\{(?<body>[\s\S]*?)\}/u)?.groups?.body ?? "";
+    const topbar = css.match(/\.topbar\s*\{(?<body>[\s\S]*?)\}/u)?.groups?.body ?? "";
+    const composer = css.match(/\.composer-wrap\s*\{(?<body>[\s\S]*?)\}/u)?.groups?.body ?? "";
+    const topbarLayer = Number(topbar.match(/z-index:\s*(\d+)/u)?.[1]);
+    const composerLayer = Number(composer.match(/z-index:\s*(\d+)/u)?.[1]);
+
+    expect(workspace).toContain("container-name: workspace-pane");
+    expect(workspace).toContain("container-type: inline-size");
+    expect(topbarLayer).toBeGreaterThan(composerLayer);
+    expect(css).toMatch(/@container workspace-pane \(max-width: 900px\)[\s\S]*?\.topbar__more\s*\{[\s\S]*?display: block/u);
+    expect(css).toMatch(/@container workspace-pane \(max-width: 760px\)[\s\S]*?\.topbar \.thinking-control\s*\{[\s\S]*?display: none/u);
+    expect(css).toMatch(/@container workspace-pane \(max-width: 760px\)[\s\S]*?\.topbar__session-track button:not\(\.is-current\)\s*\{[\s\S]*?display: none/u);
+  });
 });

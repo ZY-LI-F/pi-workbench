@@ -79,9 +79,26 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
       { timeout: 15_000, message: "Task Control capability should be ready" },
     ).toBe("ready");
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
+    const composerResize = window.getByRole("separator", { name: "调整输入区高度" });
+    await expect(composerResize).toBeVisible();
+    await composerResize.press("ArrowUp");
+    await expect(composerResize).toHaveAttribute("aria-valuetext", /像素$/);
+
+    const packagedSession = await window.evaluate(async () => {
+      const response = await window.stella.command({ type: "get_state" });
+      if (!response.success || !("data" in response)) throw new Error(response.success ? "get_state 没有返回 data" : response.error);
+      return Object.freeze({ sessionFile: response.data.sessionFile });
+    });
+    if (!packagedSession.sessionFile) throw new Error("打包态会话没有生成可追踪的 sessionFile");
+    const sessionMore = window.getByRole("button", { name: "更多会话操作" });
+    await expect(sessionMore).toBeVisible();
+    await sessionMore.click();
+    await window.getByRole("menu", { name: "更多会话操作" }).getByRole("menuitem", { name: /复制 Session 地址/ }).click();
+    expect(await electronApp.evaluate(({ clipboard }) => clipboard.readText())).toBe(packagedSession.sessionFile);
+
     await expect(window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
-    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toHaveCount(0);
-    await expect(window.locator(".capability-ledger .capability-dot")).toHaveCount(1);
+    await expect(window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
+    await expect(window.locator(".capability-ledger .capability-dot")).toHaveCount(2);
     await enableTeamFeatures(window);
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
     await expect(window.getByRole("button", { name: "新建看板任务" })).toBeVisible();
@@ -112,6 +129,7 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
       hasCustomConfiguration: true,
     });
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置", exact: true })).toBeVisible({ timeout: 30_000 });
     const packagedProvider = window.getByLabel("Provider 列表").getByRole("button", { name: /Packaged Smoke/ });
@@ -124,6 +142,7 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     await window.getByRole("button", { name: "隐藏当前 API key" }).click();
     await expect(currentKey).not.toHaveValue("packaged-smoke-only");
     expect(await window.getByRole("dialog").allTextContents()).toEqual([]);
+    await window.locator(".sidebar").getByRole("tab", { name: "任务栏", exact: true }).click();
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
 
     await window.getByRole("button", { name: "新建任务", exact: true }).click();

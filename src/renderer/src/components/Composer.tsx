@@ -1,4 +1,14 @@
-import { useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type SetStateAction,
+} from "react";
 import {
   ArrowUp,
   Command,
@@ -11,6 +21,12 @@ import {
 import type { SlashCommandSummary } from "@shared/contracts";
 import type { RuntimeUiState } from "../lib/runtime-state";
 import type { ComposerDraftPersistence, ComposerImage } from "../hooks/use-session-composer-draft";
+import {
+  AUTO_COMPOSER_EDITOR_MAX_HEIGHT,
+  constrainComposerEditorHeight,
+  maximumComposerEditorHeight,
+  MIN_COMPOSER_EDITOR_HEIGHT,
+} from "../lib/composer-layout";
 
 export type { ComposerImage } from "../hooks/use-session-composer-draft";
 
@@ -33,6 +49,22 @@ interface ComposerProps {
   readonly sendDisabled?: boolean;
   readonly sendDisabledReason?: string;
   readonly draftPersistence?: ComposerDraftPersistence;
+  readonly height: number | null;
+  readonly onHeightChange: (height: number | null) => void;
+}
+
+const SLASH_COMMAND_SOURCE_SEARCH = Object.freeze({
+  extension: "extension 扩展",
+  prompt: "prompt 提示词 命令",
+  skill: "skill skills 技能",
+} satisfies Record<SlashCommandSummary["source"], string>);
+
+function slashCommandKey(command: SlashCommandSummary): string {
+  return `${command.source}:${command.name}`;
+}
+
+function slashCommandSearchText(command: SlashCommandSummary): string {
+  return `${command.name} ${command.description ?? ""} ${SLASH_COMMAND_SOURCE_SEARCH[command.source]}`.toLocaleLowerCase();
 }
 
 function fileToImage(file: File): Promise<ComposerImage> {
@@ -75,25 +107,43 @@ export function Composer({
   sendDisabled = false,
   sendDisabledReason,
   draftPersistence = Object.freeze({ status: "saved" }),
+  height,
+  onHeightChange,
 }: ComposerProps) {
+  const slashListId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const resizeStart = useRef<Readonly<{ clientY: number; height: number }> | null>(null);
+  const slashOptionRefs = useRef(new Map<string, HTMLButtonElement>());
   const [sending, setSending] = useState(false);
-  const slashQuery = draft.startsWith("/") && !draft.includes("\n") ? draft.slice(1).split(/\s/)[0] ?? "" : null;
+  const [resizing, setResizing] = useState(false);
+  const [activeSlashCommandKey, setActiveSlashCommandKey] = useState<string>();
+  const [dismissedSlashDraft, setDismissedSlashDraft] = useState<string>();
+  const slashBody = draft.startsWith("/") && !draft.includes("\n") ? draft.slice(1) : null;
+  const slashQuery = slashBody !== null && !/\s/u.test(slashBody) ? slashBody : null;
   const matchingCommands = useMemo(
     () =>
       slashQuery === null
         ? []
         : commands
-            .filter((command) => command.name.toLocaleLowerCase().includes(slashQuery.toLocaleLowerCase()))
+            .filter((command) => slashCommandSearchText(command).includes(slashQuery.toLocaleLowerCase()))
             .slice(0, 8),
     [commands, slashQuery],
   );
+  const slashMenuOpen = matchingCommands.length > 0 && dismissedSlashDraft !== draft;
+  const storedActiveSlashIndex = matchingCommands.findIndex((command) => slashCommandKey(command) === activeSlashCommandKey);
+  const activeSlashIndex = storedActiveSlashIndex >= 0 ? storedActiveSlashIndex : 0;
+  const activeSlashCommand = slashMenuOpen ? matchingCommands[activeSlashIndex] : undefined;
+  const resolvedActiveSlashKey = activeSlashCommand ? slashCommandKey(activeSlashCommand) : undefined;
+  const slashMenuLabel = matchingCommands.every((command) => command.source === "skill") ? "Pi Skills" : "Pi 命令";
   const aboveWidgets = Object.entries(widgets).filter(([, widget]) => widget.placement === "aboveEditor");
   const belowWidgets = Object.entries(widgets).filter(([, widget]) => widget.placement === "belowEditor");
+  const manualHeight = height === null ? null : constrainComposerEditorHeight(height, window.innerHeight);
 
   useEffect(() => {
     if (!editorInjection) return;
+    setDismissedSlashDraft(undefined);
+    setActiveSlashCommandKey(undefined);
     onDraftChange(editorInjection.text);
     textareaRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 每条注入只按 id 应用一次；跟踪对象或回调身份会在重渲染时覆盖用户草稿
@@ -102,9 +152,83 @@ export function Composer({
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
+    if (manualHeight !== null) {
+      textarea.style.height = `${manualHeight}px`;
+      return;
+    }
     textarea.style.height = "0px";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 190)}px`;
-  }, [draft]);
+    textarea.style.height = `${Math.min(textarea.scrollHeight, AUTO_COMPOSER_EDITOR_MAX_HEIGHT)}px`;
+  }, [draft, manualHeight]);
+
+  useEffect(() => {
+    if (!resizing) return;
+    const handlePointerMove = (event: PointerEvent): void => {
+      const start = resizeStart.current;
+      if (!start) return;
+      onHeightChange(constrainComposerEditorHeight(start.height + start.clientY - event.clientY, window.innerHeight));
+    };
+    const stopResizing = (): void => {
+      resizeStart.current = null;
+      setResizing(false);
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopResizing);
+    window.addEventListener("pointercancel", stopResizing);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResizing);
+      window.removeEventListener("pointercancel", stopResizing);
+    };
+  }, [onHeightChange, resizing]);
+
+  useEffect(() => {
+    if (!slashMenuOpen || !resolvedActiveSlashKey) return;
+    slashOptionRefs.current.get(resolvedActiveSlashKey)?.scrollIntoView?.({ block: "nearest" });
+  }, [resolvedActiveSlashKey, slashMenuOpen]);
+
+  const selectSlashCommand = (command: SlashCommandSummary): void => {
+    setDismissedSlashDraft(undefined);
+    setActiveSlashCommandKey(undefined);
+    onDraftChange(`/${command.name} `);
+    textareaRef.current?.focus();
+  };
+
+  const moveSlashSelection = (direction: 1 | -1): void => {
+    if (matchingCommands.length === 0) return;
+    const nextIndex = (activeSlashIndex + direction + matchingCommands.length) % matchingCommands.length;
+    const nextCommand = matchingCommands[nextIndex];
+    if (nextCommand) setActiveSlashCommandKey(slashCommandKey(nextCommand));
+  };
+
+  const measuredEditorHeight = (): number => {
+    const measured = textareaRef.current?.getBoundingClientRect().height ?? 0;
+    return Math.max(MIN_COMPOSER_EDITOR_HEIGHT, measured);
+  };
+
+  const startResizing = (event: ReactPointerEvent<HTMLDivElement>): void => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.focus();
+    resizeStart.current = Object.freeze({ clientY: event.clientY, height: manualHeight ?? measuredEditorHeight() });
+    setResizing(true);
+  };
+
+  const resizeWithKeyboard = (event: ReactKeyboardEvent<HTMLDivElement>): void => {
+    const step = event.shiftKey ? 48 : 16;
+    const current = manualHeight ?? measuredEditorHeight();
+    const next = event.key === "ArrowUp"
+      ? current + step
+      : event.key === "ArrowDown"
+        ? current - step
+        : event.key === "Home"
+          ? MIN_COMPOSER_EDITOR_HEIGHT
+          : event.key === "End"
+            ? maximumComposerEditorHeight(window.innerHeight)
+            : undefined;
+    if (next === undefined) return;
+    event.preventDefault();
+    onHeightChange(constrainComposerEditorHeight(next, window.innerHeight));
+  };
 
   const submit = async () => {
     if (sending || sendDisabled || (!draft.trim() && images.length === 0)) return;
@@ -124,23 +248,56 @@ export function Composer({
   return (
     <div className="composer-wrap">
       <div className="composer-orbit" aria-hidden="true"><i /><span /><span /></div>
-      <div className={`composer ${streaming ? "is-streaming" : ""}`}>
-        {matchingCommands.length > 0 && (
+      <div className={`composer ${streaming ? "is-streaming" : ""}${resizing ? " is-resizing" : ""}`}>
+        <div
+          className="composer__resize-handle"
+          role="separator"
+          tabIndex={0}
+          aria-label="调整输入区高度"
+          aria-orientation="horizontal"
+          aria-valuemin={MIN_COMPOSER_EDITOR_HEIGHT}
+          aria-valuemax={maximumComposerEditorHeight(window.innerHeight)}
+          aria-valuenow={manualHeight ?? MIN_COMPOSER_EDITOR_HEIGHT}
+          aria-valuetext={manualHeight === null ? "自动高度" : `${manualHeight} 像素`}
+          title="上下拖动调整输入区高度；双击恢复自动高度"
+          onPointerDown={startResizing}
+          onKeyDown={resizeWithKeyboard}
+          onDoubleClick={() => onHeightChange(null)}
+        ><i /><i /><i /></div>
+        {slashMenuOpen && (
           <div className="slash-menu popover-surface">
-            <p className="popover-label">Pi 命令</p>
-            {matchingCommands.map((command) => (
-              <button
-                type="button"
-                key={`${command.source}:${command.name}`}
-                onClick={() => {
-                  onDraftChange(`/${command.name} `);
-                  textareaRef.current?.focus();
-                }}
-              >
-                <span className={`slash-menu__source slash-menu__source--${command.source}`}><Command size={13} /></span>
-                <span><strong>/{command.name}</strong><small>{command.description || command.source}</small></span>
-              </button>
-            ))}
+            <header className="slash-menu__header">
+              <p className="popover-label">{slashMenuLabel}</p>
+              <span className="slash-menu__navigation-hint" aria-hidden="true"><kbd>↑↓</kbd> 选择 · <kbd>Esc</kbd> 关闭</span>
+            </header>
+            <div className="slash-menu__list" id={slashListId} role="listbox" aria-label="斜杠命令候选">
+              {matchingCommands.map((command, index) => {
+                const commandKey = slashCommandKey(command);
+                const active = index === activeSlashIndex;
+                return (
+                  <button
+                    type="button"
+                    role="option"
+                    id={`${slashListId}-option-${index}`}
+                    aria-selected={active}
+                    tabIndex={-1}
+                    className={active ? "is-active" : undefined}
+                    key={commandKey}
+                    ref={(node) => {
+                      if (node) slashOptionRefs.current.set(commandKey, node);
+                      else slashOptionRefs.current.delete(commandKey);
+                    }}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onMouseEnter={() => setActiveSlashCommandKey(commandKey)}
+                    onClick={() => selectSlashCommand(command)}
+                  >
+                    <span className={`slash-menu__source slash-menu__source--${command.source}`}><Command size={13} /></span>
+                    <span className="slash-menu__content"><strong>/{command.name}</strong><small>{command.description || command.source}</small></span>
+                    {active && <span className="slash-menu__confirm" aria-hidden="true"><kbd>Enter</kbd><small>或 Tab</small></span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -161,17 +318,46 @@ export function Composer({
         <textarea
           ref={textareaRef}
           value={draft}
-          onChange={(event) => onDraftChange(event.target.value)}
+          onChange={(event) => {
+            setDismissedSlashDraft(undefined);
+            setActiveSlashCommandKey(undefined);
+            onDraftChange(event.target.value);
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            if (event.nativeEvent.isComposing) return;
+            if (slashMenuOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+              event.preventDefault();
+              moveSlashSelection(event.key === "ArrowDown" ? 1 : -1);
+              return;
+            }
+            if (slashMenuOpen && ((event.key === "Enter" && !event.shiftKey) || (event.key === "Tab" && !event.shiftKey))) {
+              if (!activeSlashCommand) return;
+              event.preventDefault();
+              selectSlashCommand(activeSlashCommand);
+              return;
+            }
+            if (slashMenuOpen && event.key === "Escape") {
+              event.preventDefault();
+              setDismissedSlashDraft(draft);
+              return;
+            }
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               void submit();
+              return;
             }
             if (event.key === "Escape" && streaming) onStop();
           }}
           placeholder={sendDisabled ? "Pi 正在恢复；可以先准备消息和附件…" : streaming ? "补充指令，或排到当前任务之后…" : "描述目标，添加图片，或输入 / 使用命令…"}
           rows={1}
           aria-label="给 Pi 的消息"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          aria-controls={slashMenuOpen ? slashListId : undefined}
+          aria-expanded={slashMenuOpen}
+          aria-activedescendant={slashMenuOpen ? `${slashListId}-option-${activeSlashIndex}` : undefined}
+          style={manualHeight === null ? undefined : { height: `${manualHeight}px`, maxHeight: `${manualHeight}px` }}
         />
 
         {belowWidgets.map(([key, widget]) => <div className="composer-widget composer-widget--below" key={key}><strong>{key}</strong><pre>{widget.lines.join("\n")}</pre></div>)}

@@ -56,6 +56,9 @@ describe("preferences", () => {
       expect(parsePreferences(JSON.stringify({ ...LEGACY_PREFERENCES, skin }))).toMatchObject({
         skin,
         fontSize: "default",
+        sidebarCollapsed: false,
+        inspectorWidth: 360,
+        composerHeight: null,
         teamFeaturesEnabled: false,
       });
     }
@@ -75,6 +78,9 @@ describe("preferences", () => {
       ...LEGACY_PREFERENCES,
       skin: "stella",
       fontSize: "default",
+      sidebarCollapsed: false,
+      inspectorWidth: 360,
+      composerHeight: null,
       teamFeaturesEnabled: false,
     });
 
@@ -92,6 +98,26 @@ describe("preferences", () => {
       fontSize: "default",
       teamFeaturesEnabled: true,
     })).teamFeaturesEnabled).toBe(true);
+  });
+
+  it("parses persisted three-column layout preferences and rejects invalid widths", () => {
+    expect(parsePreferences(JSON.stringify({
+      ...LEGACY_PREFERENCES,
+      skin: "stella",
+      sidebarCollapsed: true,
+      inspectorWidth: 684,
+      composerHeight: 312,
+    }))).toMatchObject({ sidebarCollapsed: true, inspectorWidth: 684, composerHeight: 312 });
+    expect(() => parsePreferences(JSON.stringify({
+      ...LEGACY_PREFERENCES,
+      skin: "stella",
+      inspectorWidth: Number.NaN,
+    }))).toThrow(`本地偏好 ${PREFERENCES_STORAGE_KEY} 格式无效`);
+    expect(() => parsePreferences(JSON.stringify({
+      ...LEGACY_PREFERENCES,
+      skin: "stella",
+      composerHeight: -20,
+    }))).toThrow(`本地偏好 ${PREFERENCES_STORAGE_KEY} 格式无效`);
   });
 
   it("uses explicit defaults while preserving corrupted v2 JSON for diagnosis", () => {

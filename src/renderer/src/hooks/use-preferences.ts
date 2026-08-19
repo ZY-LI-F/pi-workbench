@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isSkinId } from "@shared/skin-artwork";
 import type { SkinPreference } from "../lib/skins";
+import { DEFAULT_INSPECTOR_WIDTH } from "../lib/inspector-layout";
 
 export type ThemePreference = "system" | "dark" | "light";
 export type DensityPreference = "comfortable" | "compact";
@@ -11,6 +12,9 @@ export interface Preferences {
   readonly theme: ThemePreference;
   readonly density: DensityPreference;
   readonly fontSize: FontSizePreference;
+  readonly sidebarCollapsed: boolean;
+  readonly inspectorWidth: number;
+  readonly composerHeight: number | null;
   readonly teamFeaturesEnabled: boolean;
   readonly autoRetry: boolean;
   readonly defaultQueueMode: "steer" | "followUp";
@@ -23,6 +27,9 @@ export const DEFAULT_PREFERENCES: Preferences = Object.freeze({
   theme: "dark",
   density: "comfortable",
   fontSize: "default",
+  sidebarCollapsed: false,
+  inspectorWidth: DEFAULT_INSPECTOR_WIDTH,
+  composerHeight: null,
   teamFeaturesEnabled: false,
   autoRetry: true,
   defaultQueueMode: "steer",
@@ -35,6 +42,9 @@ function normalizePreferences(value: unknown): Preferences | undefined {
   if (record.theme !== "system" && record.theme !== "dark" && record.theme !== "light") return undefined;
   if (record.density !== "comfortable" && record.density !== "compact") return undefined;
   if (record.fontSize !== undefined && record.fontSize !== "small" && record.fontSize !== "default" && record.fontSize !== "large") return undefined;
+  if (record.sidebarCollapsed !== undefined && typeof record.sidebarCollapsed !== "boolean") return undefined;
+  if (record.inspectorWidth !== undefined && (typeof record.inspectorWidth !== "number" || !Number.isFinite(record.inspectorWidth) || record.inspectorWidth <= 0)) return undefined;
+  if (record.composerHeight !== undefined && record.composerHeight !== null && (typeof record.composerHeight !== "number" || !Number.isFinite(record.composerHeight) || record.composerHeight <= 0)) return undefined;
   if (record.teamFeaturesEnabled !== undefined && typeof record.teamFeaturesEnabled !== "boolean") return undefined;
   if (typeof record.autoRetry !== "boolean") return undefined;
   if (record.defaultQueueMode !== "steer" && record.defaultQueueMode !== "followUp") return undefined;
@@ -43,13 +53,16 @@ function normalizePreferences(value: unknown): Preferences | undefined {
     theme: record.theme,
     density: record.density,
     fontSize: record.fontSize ?? DEFAULT_PREFERENCES.fontSize,
+    sidebarCollapsed: record.sidebarCollapsed ?? DEFAULT_PREFERENCES.sidebarCollapsed,
+    inspectorWidth: record.inspectorWidth ?? DEFAULT_PREFERENCES.inspectorWidth,
+    composerHeight: record.composerHeight === undefined ? DEFAULT_PREFERENCES.composerHeight : record.composerHeight,
     teamFeaturesEnabled: record.teamFeaturesEnabled ?? DEFAULT_PREFERENCES.teamFeaturesEnabled,
     autoRetry: record.autoRetry,
     defaultQueueMode: record.defaultQueueMode,
   });
 }
 
-type LegacyPreferences = Omit<Preferences, "skin" | "fontSize" | "teamFeaturesEnabled">;
+type LegacyPreferences = Omit<Preferences, "skin" | "fontSize" | "sidebarCollapsed" | "inspectorWidth" | "composerHeight" | "teamFeaturesEnabled">;
 
 function isLegacyPreferences(value: unknown): value is LegacyPreferences {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
@@ -120,6 +133,9 @@ function loadPreferences(): LoadedPreferences {
       ...legacy,
       skin: "stella" as const,
       fontSize: DEFAULT_PREFERENCES.fontSize,
+      sidebarCollapsed: DEFAULT_PREFERENCES.sidebarCollapsed,
+      inspectorWidth: DEFAULT_PREFERENCES.inspectorWidth,
+      composerHeight: DEFAULT_PREFERENCES.composerHeight,
       teamFeaturesEnabled: DEFAULT_PREFERENCES.teamFeaturesEnabled,
     });
   } catch (cause) {
@@ -159,7 +175,7 @@ export function usePreferences(): readonly [Preferences, (next: Preferences) => 
     return () => media.removeEventListener("change", applyTheme);
   }, [preferences.density, preferences.fontSize, preferences.skin, preferences.theme]);
 
-  const setPreferences = (next: Preferences) => {
+  const setPreferences = useCallback((next: Preferences) => {
     const frozen = Object.freeze({ ...next });
     try {
       localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(frozen));
@@ -169,7 +185,7 @@ export function usePreferences(): readonly [Preferences, (next: Preferences) => 
     }
     setPreferencesState(frozen);
     setStorageError(undefined);
-  };
+  }, []);
 
   return [preferences, setPreferences, storageError] as const;
 }

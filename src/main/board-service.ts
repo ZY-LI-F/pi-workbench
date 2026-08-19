@@ -35,6 +35,14 @@ function normalizedText(value: string, label: string, required: boolean): string
   return normalized;
 }
 
+function taskStageLabel(stage: ManualTaskStage): string {
+  if (stage === "planned") return "待规划";
+  if (stage === "running") return "执行中";
+  if (stage === "review") return "待审核";
+  if (stage === "blocked") return "受阻";
+  return "已完成";
+}
+
 export class BoardService {
   readonly #repository: BoardRepository;
   readonly #catalog: OrchestrationCatalog;
@@ -134,6 +142,9 @@ export class BoardService {
       const description = normalizedText(input.description, "任务说明", false);
       const acceptanceCriteria = normalizedText(input.acceptanceCriteria, "验收标准", false);
       const targetChanged = JSON.stringify(task.executionTarget) !== JSON.stringify(input.executionTarget);
+      const resetManualProgress = task.executionTarget.kind === "manual"
+        && input.executionTarget.kind !== "manual"
+        && (task.stage === "running" || task.stage === "review");
       const specChanged = task.title !== title
         || task.description !== description
         || task.acceptanceCriteria !== acceptanceCriteria
@@ -146,13 +157,19 @@ export class BoardService {
         acceptanceCriteria,
         priority: input.priority,
         executionTarget: Object.freeze({ ...input.executionTarget }),
+        stage: resetManualProgress ? "planned" : task.stage,
+        blockedReason: resetManualProgress ? undefined : task.blockedReason,
         specRevision: specChanged ? task.specRevision + 1 : task.specRevision,
         updatedAt: now,
       });
       return {
         ...current,
         tasks: current.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
-        activities: [...current.activities, this.#activity(task.id, "task", "任务内容已更新", undefined, now)],
+        activities: [
+          ...current.activities,
+          this.#activity(task.id, "task", "任务内容已更新", undefined, now),
+          ...(resetManualProgress ? [this.#activity(task.id, "status", "任务改为自动执行，已移回待规划", undefined, now)] : []),
+        ],
       };
     });
   }
@@ -162,7 +179,9 @@ export class BoardService {
     return this.#commit((current) => {
       const task = this.#task(current, taskId);
       if (!canMoveTaskManually(task, stage)) {
-        throw new Error("只能把未运行的任务手动移到待规划、受阻或已完成列");
+        throw new Error(task.executionTarget.kind === "manual"
+          ? "手工任务只能在未运行自动执行时移到待规划、执行中、待审核、受阻或已完成列"
+          : "自动任务只能在未运行时手动移到待规划、受阻或已完成列");
       }
       const superseded = supersedePendingExecutions(current, task.id, "任务已由用户手动移动，原执行不再等待验收");
       const nextTask: KanbanTask = Object.freeze({
@@ -175,7 +194,7 @@ export class BoardService {
       return {
         ...superseded,
         tasks: superseded.tasks.map((candidate) => candidate.id === task.id ? nextTask : candidate),
-        activities: [...superseded.activities, this.#activity(task.id, "status", `任务已移到${stage === "planned" ? "待规划" : stage === "blocked" ? "受阻" : "已完成"}`, undefined, now)],
+        activities: [...superseded.activities, this.#activity(task.id, "status", `任务已移到${taskStageLabel(stage)}`, undefined, now)],
       };
     });
   }
@@ -238,6 +257,7 @@ export class BoardService {
   }
 
   #assertExecutionTarget(state: BoardState, target: ExecutionTarget, projectPath: string): void {
+    if (target.kind === "manual") return;
     const catalog = this.#catalogFor(state);
     if (target.kind === "workflow" && !this.#catalog.workflows.some((workflow) => workflow.id === target.workflowId)) {
       throw new Error(`未知流程模板: ${target.workflowId}`);

@@ -99,6 +99,7 @@ test("reveals the configured API key on demand and runs a real isolated model pr
       throw new Error(await window.locator(".startup-screen--error").innerText());
     }
 
+    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await window.getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置", exact: true })).toBeVisible({ timeout: 30_000 });
     const providerList = window.getByLabel("Provider 列表");

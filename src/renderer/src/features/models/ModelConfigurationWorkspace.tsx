@@ -28,6 +28,7 @@ import type {
   PiModelProviderSummary,
 } from "@shared/model-configuration";
 import { ProviderConfigurationDialog } from "./ProviderConfigurationDialog";
+import { HeaderOverflowMenu } from "../../components/HeaderOverflowMenu";
 
 interface ModelConfigurationWorkspaceProps {
   readonly api: StellaDesktopApi;
@@ -328,6 +329,13 @@ export function ModelConfigurationWorkspace({
     clearProviderDiagnostics();
   };
 
+  const revealPiConfiguration = (): void => {
+    if (!snapshot) return;
+    void api.revealPath(snapshot.agentDir).catch((cause: unknown) => {
+      onNotify(`打开 Pi 配置目录失败：${cause instanceof Error ? cause.message : String(cause)}`, "error");
+    });
+  };
+
   return (
     <main className="model-configuration-workspace">
       <header className="model-config-header">
@@ -336,8 +344,31 @@ export function ModelConfigurationWorkspace({
         <div className="model-config-header__actions">
           <span className={`model-runtime-state ${online ? "is-online" : ""}`}><i />{online ? "PI RUNTIME ONLINE" : "PI RUNTIME OFFLINE"}</span>
           <button type="button" className="button-secondary" disabled={loading || testingConnection || Boolean(busyAction)} onClick={() => void load()}><RefreshCw size={14} className={loading ? "spin" : ""} />刷新</button>
-          <button type="button" className="button-secondary" disabled={!snapshot} onClick={() => snapshot && void api.revealPath(snapshot.agentDir).catch((cause: unknown) => onNotify(`打开 Pi 配置目录失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))}><FolderCog size={14} />配置目录</button>
+          <button type="button" className="button-secondary" disabled={!snapshot} onClick={revealPiConfiguration}><FolderCog size={14} />配置目录</button>
           <button type="button" className="button-primary" disabled={testingConnection || Boolean(busyAction)} onClick={() => setEditorState({ builtIn: false })}><CirclePlus size={14} />自定义 Provider</button>
+          <HeaderOverflowMenu
+            className="model-config-header__more"
+            ariaLabel="更多模型配置操作"
+            status={online ? "Pi Runtime 在线" : "Pi Runtime 离线"}
+            actions={[
+              {
+                id: "refresh",
+                label: loading ? "正在刷新" : "刷新模型配置",
+                description: "重新读取 Provider、模型和凭据状态",
+                icon: <RefreshCw size={14} className={loading ? "spin" : ""} />,
+                disabled: loading || testingConnection || Boolean(busyAction),
+                onSelect: () => void load(),
+              },
+              {
+                id: "configuration-directory",
+                label: "配置目录",
+                description: "在文件管理器中显示 Pi 配置",
+                icon: <FolderCog size={14} />,
+                disabled: !snapshot,
+                onSelect: revealPiConfiguration,
+              },
+            ]}
+          />
         </div>
       </header>
 

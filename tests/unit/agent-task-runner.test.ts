@@ -344,6 +344,17 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.agentTasks).toHaveLength(before.agentTasks.length);
   });
 
+  it("stores @tokens literally when the generic board disables Team dispatch", async () => {
+    const { repository, agentTaskService, createTask } = await setup();
+    const taskId = await createTask("普通看板记录");
+
+    await agentTaskService.addComment({ taskId, body: "记录 @builder 尚未开始", dispatchMentions: false });
+
+    expect(repository.state.comments.at(-1)?.body).toBe("记录 @builder 尚未开始");
+    expect(repository.state.agentTasks.filter((task) => task.taskId === taskId)).toEqual([]);
+    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("planned");
+  });
+
   it("rejects mixing LEAD coordinator mode with direct Worker mentions atomically", async () => {
     const { repository, agentTaskService, createTask } = await setup();
     const taskId = await createTask("拒绝混合协调协议");

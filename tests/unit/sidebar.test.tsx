@@ -1,5 +1,6 @@
 import React from "react";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import type { RuntimeBootstrap } from "@shared/contracts";
 import { Sidebar } from "@renderer/components/Sidebar";
@@ -73,18 +74,27 @@ function renderSidebar(source = bootstrap(), teamFeaturesEnabled = false, open =
 }
 
 describe("Sidebar", () => {
-  it("shows only Pi-native navigation until team features are explicitly enabled", () => {
+  it("defaults to the task rail and keeps Pi-native navigation in its own tab", async () => {
+    const user = userEvent.setup();
     const { unmount } = renderSidebar();
 
-    expect(screen.getByText("PI 原生工作台")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "团队协作" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "任务看板" })).toBeNull();
-    expect(screen.getByLabelText("能力状态").children).toHaveLength(1);
+    expect(screen.getByRole("tab", { name: /任务栏/ }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByLabelText("全局运行模型")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /生成 CDK2 早研任务/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "当前会话" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /团队协作/ })).toBeNull();
+    expect(screen.getByRole("button", { name: "任务看板" })).toBeTruthy();
+    expect(screen.getByLabelText("能力状态").children).toHaveLength(2);
     expect(screen.getAllByRole("button", { name: "关闭侧栏" })).toHaveLength(1);
+
+    await user.click(screen.getByRole("tab", { name: "PI 原生工作台" }));
+    expect(screen.getByRole("button", { name: "当前会话" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "模型配置" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Skills 管理" })).toBeTruthy();
 
     unmount();
     renderSidebar(bootstrap(), true);
-    expect(screen.getByRole("button", { name: "团队协作" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /团队协作/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: "任务看板" })).toBeTruthy();
     expect(screen.getByLabelText("能力状态").children).toHaveLength(4);
   });

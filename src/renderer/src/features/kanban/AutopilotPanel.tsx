@@ -7,8 +7,8 @@ import {
   type Autopilot,
   type AutopilotRun,
   type AutopilotTrigger,
+  type AutomatedExecutionTarget,
   type CreateAutopilotInput,
-  type ExecutionTarget,
   type KanbanTask,
   type OrchestrationCatalog,
   type Squad,
@@ -56,13 +56,13 @@ function initialNextRun(): string {
   return localDateTime(new Date(Date.now() + 60 * 60_000).toISOString());
 }
 
-function targetValue(target: ExecutionTarget): string {
+function targetValue(target: AutomatedExecutionTarget): string {
   if (target.kind === "workflow") return `workflow:${target.workflowId}`;
   if (target.kind === "agent") return `agent:${target.agentId}`;
   return `squad:${target.squadId}`;
 }
 
-function parseTarget(value: string): ExecutionTarget {
+function parseTarget(value: string): AutomatedExecutionTarget {
   const separator = value.indexOf(":");
   const kind = value.slice(0, separator);
   const id = value.slice(separator + 1);

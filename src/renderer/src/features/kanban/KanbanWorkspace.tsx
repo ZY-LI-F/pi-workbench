@@ -15,6 +15,7 @@ import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
 import { deriveAgentPresences } from "@shared/agent-presence";
 import { deriveAgentTaskQueue } from "@shared/agent-task-scheduler";
 import {
+  canMoveTaskManually,
   MANUAL_TASK_STAGES,
   type BoardLane,
   type KanbanTask,
@@ -25,6 +26,7 @@ import {
   type WorkflowDefinition,
 } from "@shared/kanban";
 import type { KanbanController } from "../../hooks/use-kanban";
+import { HeaderOverflowMenu } from "../../components/HeaderOverflowMenu";
 import { CatalogDialog } from "./CatalogDialog";
 import { AutomationStudioDialog } from "./AutomationStudioDialog";
 import { LANE_CONFIG } from "./kanban-format";
@@ -38,6 +40,7 @@ interface KanbanWorkspaceProps {
   readonly controller: KanbanController;
   readonly project?: ProjectMeta;
   readonly executionEnabled: boolean;
+  readonly teamFeaturesEnabled: boolean;
   readonly taskCapabilityError?: string;
   readonly taskCapabilityRetrying: boolean;
   readonly onRetryTaskCapability: () => void;
@@ -66,6 +69,7 @@ function workflowForTask(task: KanbanTask, catalog: OrchestrationCatalog): Workf
 
 function executionLabelForTask(task: KanbanTask, catalog: OrchestrationCatalog, squads: readonly Squad[]): string {
   const target = task.executionTarget;
+  if (target.kind === "manual") return "手工任务 · 由你推进";
   if (target.kind === "workflow") return catalog.workflows.find((workflow) => workflow.id === target.workflowId)?.shortName ?? target.workflowId;
   if (target.kind === "agent") return catalog.agents.find((agent) => agent.id === target.agentId)?.name ?? target.agentId;
   return squads.find((squad) => squad.id === target.squadId)?.name ?? target.squadId;
@@ -76,6 +80,7 @@ export function KanbanWorkspace({
   controller,
   project,
   executionEnabled,
+  teamFeaturesEnabled,
   taskCapabilityError,
   taskCapabilityRetrying,
   onRetryTaskCapability,
@@ -91,7 +96,8 @@ export function KanbanWorkspace({
   const { state } = controller;
   const [query, setQuery] = useState("");
   const [projectScope, setProjectScope] = useState<"current" | "all">(project ? "current" : "all");
-  const [workflowFilter, setWorkflowFilter] = useState("all");
+  const [executionFilter, setExecutionFilter] = useState("all");
+  const [draggingTaskId, setDraggingTaskId] = useState<string>();
   const [selectedTaskId, setSelectedTaskId] = useState<string>();
   const [editorTaskId, setEditorTaskId] = useState<string | "new">();
   const [newTaskDraft, setNewTaskDraft] = useState<PiTaskDraft>();
@@ -112,6 +118,10 @@ export function KanbanWorkspace({
     if (!project) setProjectScope("all");
   }, [project]);
 
+  useEffect(() => {
+    if (!teamFeaturesEnabled && executionFilter !== "all" && executionFilter !== "manual") setExecutionFilter("all");
+  }, [executionFilter, teamFeaturesEnabled]);
+
   const bootstrap = state.bootstrap;
   const board = bootstrap?.board;
   const catalog = bootstrap?.catalog;
@@ -126,6 +136,7 @@ export function KanbanWorkspace({
     requiresTrust: false,
     requiresSelection: false,
   }) : project;
+  const draggingTask = board?.tasks.find((task) => task.id === draggingTaskId);
 
   useEffect(() => {
     if (selectedTaskId && board && !board.tasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(undefined);
@@ -141,10 +152,17 @@ export function KanbanWorkspace({
     const normalizedQuery = query.trim().toLocaleLowerCase();
     return board.tasks
       .filter((task) => projectScope === "all" || task.projectPath === project?.cwd)
-      .filter((task) => workflowFilter === "all" || (task.executionTarget.kind === "workflow" && task.executionTarget.workflowId === workflowFilter))
+      .filter((task) => executionFilter === "all"
+        || (executionFilter === "manual"
+          ? task.executionTarget.kind === "manual"
+          : executionFilter === "agent"
+            ? task.executionTarget.kind === "agent"
+            : executionFilter === "squad"
+              ? task.executionTarget.kind === "squad"
+              : task.executionTarget.kind === "workflow" && task.executionTarget.workflowId === executionFilter))
       .filter((task) => !normalizedQuery || `${task.title} ${task.description} ${task.acceptanceCriteria} ${task.projectName}`.toLocaleLowerCase().includes(normalizedQuery))
       .sort((left, right) => PRIORITY_ORDER[left.priority] - PRIORITY_ORDER[right.priority] || Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
-  }, [board, project?.cwd, projectScope, query, workflowFilter]);
+  }, [board, executionFilter, project?.cwd, projectScope, query]);
 
   const report = (cause: unknown) => {
     const message = cause instanceof Error ? cause.message : String(cause);
@@ -174,6 +192,9 @@ export function KanbanWorkspace({
     if (!MANUAL_LANES.has(lane)) return;
     const taskId = event.dataTransfer.getData("application/x-stella-task");
     if (!taskId) return;
+    const task = board?.tasks.find((candidate) => candidate.id === taskId);
+    if (!task || !canMoveTaskManually(task, lane)) return;
+    setDraggingTaskId(undefined);
     void move(taskId, lane as ManualTaskStage).catch(() => undefined);
   };
 
@@ -216,17 +237,46 @@ export function KanbanWorkspace({
         </div>
         <div className="kanban-header__actions">
           <span className="current-model-chip" title="所有页面共享的当前 Pi 模型">{modelLabel ?? "未选择模型"}</span>
-          <button type="button" className="button-secondary" onClick={() => setCatalogOpen(true)}><Users size={15} />编排目录</button>
-          <button type="button" className="button-secondary" disabled={!project} onClick={() => setAutomationOpen(true)}><Zap size={15} />自动化</button>
+          {teamFeaturesEnabled && <button type="button" className="button-secondary" onClick={() => setCatalogOpen(true)}><Users size={15} />编排目录</button>}
+          {teamFeaturesEnabled && <button type="button" className="button-secondary" disabled={!project} onClick={() => setAutomationOpen(true)}><Zap size={15} />自动化</button>}
           <button type="button" className="icon-button" disabled={!project} aria-label="打开命令终端" onClick={onOpenTerminal}><TerminalSquare size={16} /></button>
           <button type="button" className="button-primary" disabled={!project} onClick={() => { setNewTaskDraft(undefined); setEditorTaskId("new"); }}><Plus size={15} />新建任务</button>
+          <HeaderOverflowMenu
+            className="kanban-header__more"
+            ariaLabel="更多看板操作"
+            status={`当前模型 · ${modelLabel ?? "未选择模型"}`}
+            actions={[
+              ...(teamFeaturesEnabled ? [{
+                id: "catalog",
+                label: "编排目录",
+                description: "查看 Agent、团队和固定流程",
+                icon: <Users size={14} />,
+                onSelect: () => setCatalogOpen(true),
+              }, {
+                id: "automation",
+                label: "自动化",
+                description: "管理 Schedule、Webhook 和 Autopilot",
+                icon: <Zap size={14} />,
+                disabled: !project,
+                onSelect: () => setAutomationOpen(true),
+              }] : []),
+              {
+                id: "terminal",
+                label: "打开命令终端",
+                description: "在当前项目执行本地命令",
+                icon: <TerminalSquare size={14} />,
+                disabled: !project,
+                onSelect: onOpenTerminal,
+              },
+            ]}
+          />
         </div>
       </header>
 
       <div className="kanban-controls">
         <div className="kanban-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索任务、说明或验收标准" />{query && <button type="button" onClick={() => setQuery("")}>清除</button>}</div>
         <label className="kanban-select"><span>项目</span><select value={projectScope} disabled={!project} onChange={(event) => setProjectScope(event.target.value as "current" | "all")}>{project && <option value="current">{project.name}</option>}<option value="all">全部项目</option></select><ChevronDown size={13} /></label>
-        <label className="kanban-select"><Workflow size={13} /><select value={workflowFilter} onChange={(event) => setWorkflowFilter(event.target.value)}><option value="all">全部流程</option>{catalog.workflows.map((workflow) => <option value={workflow.id} key={workflow.id}>{workflow.shortName}</option>)}</select><ChevronDown size={13} /></label>
+        <label className="kanban-select"><Workflow size={13} /><select value={executionFilter} onChange={(event) => setExecutionFilter(event.target.value)}><option value="all">全部方式</option><option value="manual">自己推进</option>{teamFeaturesEnabled && <option value="agent">单 Agent</option>}{teamFeaturesEnabled && <option value="squad">Squad</option>}{teamFeaturesEnabled && catalog.workflows.map((workflow) => <option value={workflow.id} key={workflow.id}>{workflow.shortName}</option>)}</select><ChevronDown size={13} /></label>
         <span className="kanban-controls__count">显示 {visibleTasks.length} / {board.tasks.length} 项</span>
       </div>
 
@@ -236,9 +286,10 @@ export function KanbanWorkspace({
         <div className="kanban-board" aria-label="任务看板">
           {LANE_CONFIG.map((lane) => {
             const tasks = visibleTasks.filter((task) => task.stage === lane.id);
+            const acceptsDraggedTask = Boolean(draggingTask && canMoveTaskManually(draggingTask, lane.id));
             return (
               <section
-                className={`kanban-lane kanban-lane--${lane.id} ${MANUAL_LANES.has(lane.id) ? "is-droppable" : ""}`}
+                className={`kanban-lane kanban-lane--${lane.id} ${MANUAL_LANES.has(lane.id) ? "is-droppable" : ""} ${acceptsDraggedTask ? "is-drop-target" : ""}`}
                 key={lane.id}
                 onDragOver={(event) => { if (MANUAL_LANES.has(lane.id)) event.preventDefault(); }}
                 onDrop={(event) => dropTask(event, lane.id)}
@@ -273,7 +324,9 @@ export function KanbanWorkspace({
                         onDragStart={(event) => {
                           event.dataTransfer.effectAllowed = "move";
                           event.dataTransfer.setData("application/x-stella-task", task.id);
+                          setDraggingTaskId(task.id);
                         }}
+                        onDragEnd={() => setDraggingTaskId(undefined)}
                       />
                     );
                   })}
@@ -309,7 +362,7 @@ export function KanbanWorkspace({
               catch (cause) { report(cause); throw cause; }
             }}
             onAddComment={async (body) => {
-              try { await controller.addComment({ taskId: selectedTask.id, body }); }
+              try { await controller.addComment({ taskId: selectedTask.id, body, dispatchMentions: teamFeaturesEnabled }); }
               catch (cause) { report(cause); throw cause; }
             }}
             onMove={(status) => move(selectedTask.id, status)}
@@ -324,6 +377,7 @@ export function KanbanWorkspace({
             onRevealPath={(path) => void api.revealPath(path)}
             onContinueInPi={(sessionPath) => onContinueTaskSession(selectedTask.id, sessionPath)}
             agentPresences={deriveAgentPresences(board, catalog, selectedTask.projectPath)}
+            mentionsEnabled={teamFeaturesEnabled}
           />
         )}
       </div>
@@ -336,14 +390,15 @@ export function KanbanWorkspace({
           workflows={catalog.workflows}
           agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === editorProject.cwd)}
           squads={board.squads}
+          automationEnabled={teamFeaturesEnabled}
           busy={state.pending.includes(editorTaskId === "new" ? "create" : editorTaskId)}
           onClose={() => setEditorTaskId(undefined)}
           onCreate={async (input) => { await controller.createTask(input); }}
           onUpdate={async (input) => { await controller.updateTask(input); }}
         />
       )}
-      {catalogOpen && <CatalogDialog catalog={catalog} onClose={() => setCatalogOpen(false)} />}
-      {automationOpen && project && (
+      {teamFeaturesEnabled && catalogOpen && <CatalogDialog catalog={catalog} onClose={() => setCatalogOpen(false)} />}
+      {teamFeaturesEnabled && automationOpen && project && (
         <AutomationStudioDialog
           catalog={Object.freeze({
             ...catalog,

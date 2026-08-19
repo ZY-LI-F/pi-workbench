@@ -210,6 +210,7 @@ async function waitForTurn(
     sawStreaming ||= current.isStreaming;
 
     if (exerciseNavigation && sawStreaming && !navigationRoundTrip && Date.now() - startedAt >= 5_000) {
+      await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
       await window.locator(".sidebar").getByRole("button", { name: "模型配置", exact: true }).click();
       await expect(window.getByRole("heading", { name: "模型配置" })).toBeVisible();
       await window.locator(".sidebar").getByRole("button", { name: "当前会话", exact: true }).click();

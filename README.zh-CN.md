@@ -51,7 +51,7 @@ Pi 在回复中给出绝对本地文件路径后，“输出文件与路径”�
 
 Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
 
-## v0.3.0 的简单架构
+## v0.3.1 的简单架构
 
 Stella 不复制 Multica、HiClaw 或外部聊天平台，也不引入 PostgreSQL、Redis、远程后端和常驻 Daemon。整个本地控制面仍是一个 Electron 应用、一份 `board.json` 和真实 Pi 子进程，但把最容易混淆的事实拆开：
 
@@ -283,16 +283,18 @@ npm run dist:mac:arm64
 产物统一写入 `release/`，文件名包含版本、系统与架构，例如：
 
 ```text
-Stella Pi Workbench-0.3.0-win-x64.exe
-Stella Pi Workbench-0.3.0-mac-x64.dmg
-Stella Pi Workbench-0.3.0-mac-arm64.dmg
+Stella Pi Workbench-0.3.1-win-x64.exe
+Stella Pi Workbench-0.3.1-mac-x64.dmg
+Stella Pi Workbench-0.3.1-mac-arm64.dmg
 ```
 
-当前工作区生成的 Windows x64 安装器可用仓库根目录的 [`SHA256SUMS.txt`](SHA256SUMS.txt) 校验；v0.3.0 的 SHA-256 为：
+本地构建完成后运行以下命令生成当前产物的 SHA-256 清单：
 
-```text
-F29AA268BB81B38A70D0BA4EDF29E4DFB4BF11F4C67FC0F0EBB3D59B487E7762  Stella Pi Workbench-0.3.0-win-x64.exe
+```bash
+npm run release:checksums
 ```
+
+清单写入 `release/SHA256SUMS.txt`。GitHub Actions 会为各平台分别生成并上传带平台后缀的校验清单，避免使用与当前二进制不匹配的历史哈希。
 
 macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成正式 Mac 发布包。项目包含 [GitHub Actions 发布流程](.github/workflows/release.yml)，会分别在 Windows x64、macOS Apple Silicon 和 macOS Intel 主机上安装目标架构依赖并打包。
 
@@ -300,7 +302,7 @@ macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成�
 
 手动运行 `Build installers` 工作流会生成可供内部验证的构建产物；如果没有证书，产物会明确保持未签名。Windows 会显示“未知发布者”，未签名的 macOS 应用会被 Gatekeeper 拦截，因此不应把未签名的 Mac 包当作正式公共发行版。
 
-推送与 `package.json` 版本一致的标签（例如 `v0.3.0`）时，工作流会强制要求签名；Mac 任务还会强制要求 Apple 公证。全部平台成功后才会创建 GitHub Release。仓库 Secrets 使用：
+推送与 `package.json` 版本一致的标签（例如 `v0.3.1`）时，工作流会强制要求签名；Mac 任务还会强制要求 Apple 公证。全部平台成功后才会创建 GitHub Release。仓库 Secrets 使用：
 
 | Secret | 用途 |
 | --- | --- |
@@ -315,10 +317,10 @@ macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成�
 正式发布示例：
 
 ```bash
-npm version 0.3.0 --no-git-tag-version
+npm version 0.3.1 --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "release: v0.3.0"
-git tag v0.3.0
+git commit -m "release: v0.3.1"
+git tag v0.3.1
 git push origin main --tags
 ```
 
@@ -331,7 +333,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 70 个 Vitest 文件、290 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、Coordinator/Squad 快照、委派轮次与失败回流、依赖感知公平调度、过期队列与当前执行隔离、Agent Presence/人工注意投影、执行图、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、Workflow DAG 投影与键盘交互，以及 Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、输入器行为、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台的 LEAD/Worker 选择、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
+当前全量套件为 75 个 Vitest 文件、318 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、文件夹安装与热加载、Coordinator/Squad 快照、委派轮次与失败回流、依赖感知公平调度、过期队列与当前执行隔离、Agent Presence/人工注意投影、执行图、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、Workflow DAG 投影与键盘交互，以及 Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、可拖高输入器、Session 地址诊断、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台的 LEAD/Worker 选择、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 
