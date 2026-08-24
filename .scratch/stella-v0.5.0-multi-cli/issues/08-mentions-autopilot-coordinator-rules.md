@@ -4,7 +4,7 @@
 
 **Blocked by:** 07 — 跨后端固定 Workflow。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Worker mention 继承当前 Task 的 Profile snapshot，并在创建执行前校验兼容性。
 - [ ] Autopilot 保存 Profile，创建 Task 时原样复制并在触发前重新探测。

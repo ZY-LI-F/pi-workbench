@@ -69,7 +69,7 @@ describe("ClaudePrintExecutionAdapter", () => {
     const outcome = await (await adapter()).run(request(), (event) => events.push(event), new AbortController().signal);
     expect(outcome).toEqual({
       result: { kind: "report", output: "Claude 完成：完成任务" },
-      session: { backendId: "claude", sessionId: "claude-session-shim" },
+      session: { backendId: "claude", sessionId: expect.stringMatching(/^claude-session-shim-\d+$/u) },
       usage: { inputTokens: 12, outputTokens: 12, cost: 0.04 },
       backendVersion: "8.7.6",
     });
@@ -82,13 +82,13 @@ describe("ClaudePrintExecutionAdapter", () => {
 
   it("surfaces result, permission, missing-terminal, and malformed JSONL failures with partial evidence", async () => {
     await expect((await adapter("failure")).run(request(), () => undefined, new AbortController().signal))
-      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: "模型执行失败", session: { sessionId: "claude-session-shim" }, backendVersion: "8.7.6" });
+      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: "模型执行失败", session: { sessionId: expect.stringMatching(/^claude-session-shim-\d+$/u) }, backendVersion: "8.7.6" });
     await expect((await adapter("permission")).run(request(), () => undefined, new AbortController().signal))
       .rejects.toMatchObject({ name: "ExecutionProtocolError", message: "Claude CLI 未获授权执行工具：Write" });
     await expect((await adapter("no-terminal")).run(request(), () => undefined, new AbortController().signal))
       .rejects.toBeInstanceOf(ExecutionProtocolError);
     await expect((await adapter("invalid-jsonl")).run(request(), () => undefined, new AbortController().signal))
-      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: expect.stringContaining("无效 JSON"), session: { sessionId: "claude-session-shim" } });
+      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: expect.stringContaining("无效 JSON"), session: { sessionId: expect.stringMatching(/^claude-session-shim-\d+$/u) } });
   });
 
   it("aborts the owned process group and exposes a resumable command", async () => {

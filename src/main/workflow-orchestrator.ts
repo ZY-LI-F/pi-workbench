@@ -32,8 +32,8 @@ import {
   assertAgentWorkspacePolicy,
   type WorkspaceLease,
 } from "./workspace-admission";
-import { snapshotExecutionProfile } from "../shared/execution-profile";
-import { ExecutionAbortedError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
+import { executionProfileAgentIncompatibility, snapshotExecutionProfile, type ExecutionProfileId } from "../shared/execution-profile";
+import { ExecutionAbortedError, ExecutionProtocolError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
 import type { ExecutionBackendRegistryContract } from "./execution-backend-registry";
 
 interface OrchestratorDependencies {
@@ -66,7 +66,11 @@ interface WaitingAdmission {
 }
 
 function cloneAgent(definition: AgentDefinition): AgentDefinition {
-  return Object.freeze({ ...definition, allowedTools: Object.freeze([...definition.allowedTools]) });
+  return Object.freeze({
+    ...definition,
+    allowedTools: Object.freeze([...definition.allowedTools]),
+    requiredSkills: definition.requiredSkills ? Object.freeze([...definition.requiredSkills]) : undefined,
+  });
 }
 
 function cloneWorkflow(definition: WorkflowDefinition): WorkflowDefinition {
@@ -111,7 +115,10 @@ export class WorkflowOrchestrator {
       await this.#backendRegistry.initialize();
     }
     if (!previewTask.executionProfileId) throw new Error(`任务 ${previewTask.id} 未选择执行 Profile`);
-    this.#backendRegistry.assertCompatible(previewTask.executionProfileId, "workflow-step");
+    const previewWorkflow = this.#workflow(previewTask.executionTarget.workflowId);
+    const previewAgentIds = new Set(previewWorkflow.steps.flatMap((step) => step.kind === "agent" ? [step.agentId] : []));
+    const previewAgents = Object.freeze([...previewAgentIds].map((agentId) => this.#agent(agentId)));
+    this.#assertWorkflowProfile(previewTask.executionProfileId, previewAgents);
     this.#backendRegistry.resolve(previewTask.executionProfileId);
     const previewTrusted = await this.#resolveProjectTrust(previewTask.projectPath);
     await this.#resolveProjectPath(previewTask.projectPath, previewTrusted);
@@ -127,7 +134,7 @@ export class WorkflowOrchestrator {
       const agentIds = new Set(workflow.steps.filter((step) => step.kind === "agent").map((step) => step.agentId));
       const agents = Object.freeze([...agentIds].map((id) => cloneAgent(this.#agent(id))));
       if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
-      this.#backendRegistry.assertCompatible(task.executionProfileId, "workflow-step");
+      this.#assertWorkflowProfile(task.executionProfileId, agents);
       this.#backendRegistry.resolve(task.executionProfileId);
       const executionProfile = snapshotExecutionProfile(task.executionProfileId);
       runId = this.#id();
@@ -341,7 +348,7 @@ export class WorkflowOrchestrator {
     const agent = run.agents.find((candidate) => candidate.id === definition.agentId);
     if (!agent) throw new Error(`流程快照缺少 Agent: ${definition.agentId}`);
     assertAgentWorkspacePolicy(agent);
-    this.#backendRegistry.assertCompatible(run.executionProfile.id, "workflow-step");
+    this.#assertWorkflowProfile(run.executionProfile.id, run.agents);
     const resolvedBackend = this.#backendRegistry.resolve(run.executionProfile.id);
     const trusted = await this.#resolveProjectTrust(task.projectPath);
     const projectPath = await this.#resolveProjectPath(task.projectPath, trusted);
@@ -682,12 +689,33 @@ export class WorkflowOrchestrator {
         && !latestRun.steps.some((step) => step.status === "running" && step.runtimeToken === runtimeToken)) return current;
       const failedStepId = latestRun.steps.find((step) => step.stepId === latestRun.currentStepId && step.status === "running")?.stepId
         ?? latestRun.steps.find((step) => step.status === "running" || step.status === "pending")?.stepId;
+      const protocolFailure = cause instanceof ExecutionProtocolError ? cause : undefined;
       const failedRun: WorkflowRun = Object.freeze({
         ...latestRun,
         status: "failed",
         currentStepId: undefined,
         steps: Object.freeze(latestRun.steps.map((step) => step.stepId === failedStepId
-          ? Object.freeze({ ...step, status: "failed" as const, runtimeToken: undefined, error: message, completedAt: now })
+          ? Object.freeze({
+              ...step,
+              status: "failed" as const,
+              runtimeToken: undefined,
+              backendVersion: protocolFailure?.backendVersion ?? step.backendVersion,
+              session: protocolFailure?.session ?? step.session,
+              artifact: protocolFailure?.output
+                ? Object.freeze({
+                    title: `${step.name} · 失败前部分产物`,
+                    content: protocolFailure.output,
+                    session: protocolFailure.session,
+                    inputTokens: protocolFailure.usage?.inputTokens,
+                    outputTokens: protocolFailure.usage?.outputTokens,
+                    cost: protocolFailure.usage?.cost,
+                    startedAt: step.startedAt,
+                    completedAt: now,
+                  })
+                : step.artifact,
+              error: message,
+              completedAt: now,
+            })
           : step)),
         updatedAt: now,
         completedAt: now,
@@ -765,6 +793,12 @@ export class WorkflowOrchestrator {
     const agent = this.#catalog.agents.find((candidate) => candidate.id === agentId);
     if (!agent) throw new Error(`未知 Agent: ${agentId}`);
     return agent;
+  }
+
+  #assertWorkflowProfile(profileId: ExecutionProfileId, agents: readonly AgentDefinition[]): void {
+    this.#backendRegistry.assertCompatible(profileId, "workflow-step");
+    const incompatibility = executionProfileAgentIncompatibility(profileId, agents);
+    if (incompatibility) throw new Error(incompatibility);
   }
 
   #activity(

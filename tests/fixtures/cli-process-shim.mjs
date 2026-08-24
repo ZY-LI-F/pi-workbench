@@ -46,11 +46,12 @@ if (mode === "jsonl") {
   } else if (argv[0] === "login" && argv[1] === "status") {
     process.stderr.write("Logged in using ChatGPT\n");
   } else if (argv[0] === "exec") {
+    const sessionId = `thread-shim-${process.pid}`;
     let input = "";
     process.stdin.setEncoding("utf8");
     process.stdin.on("data", (chunk) => { input += chunk; });
     process.stdin.on("end", () => {
-      process.stdout.write(`${JSON.stringify({ type: "thread.started", thread_id: "thread-shim" })}\n`);
+      process.stdout.write(`${JSON.stringify({ type: "thread.started", thread_id: sessionId })}\n`);
       if (behavior === "wait") {
         setInterval(() => {}, 1000);
         return;
@@ -80,11 +81,12 @@ if (mode === "jsonl") {
   } else if (argv[0] === "auth" && argv[1] === "status") {
     process.stdout.write(JSON.stringify({ loggedIn: true, authMethod: "shim" }));
   } else if (argv[0] === "-p") {
+    const sessionId = `claude-session-shim-${process.pid}`;
     let input = "";
     process.stdin.setEncoding("utf8");
     process.stdin.on("data", (chunk) => { input += chunk; });
     process.stdin.on("end", () => {
-      process.stdout.write(`${JSON.stringify({ type: "system", subtype: "init", session_id: "claude-session-shim", model: "claude-shim", permissionMode: "acceptEdits" })}\n`);
+      process.stdout.write(`${JSON.stringify({ type: "system", subtype: "init", session_id: sessionId, model: "claude-shim", permissionMode: "acceptEdits" })}\n`);
       if (behavior === "wait") {
         setInterval(() => {}, 1000);
         return;
@@ -94,17 +96,17 @@ if (mode === "jsonl") {
         return;
       }
       const toolName = behavior === "permission" ? "Write" : "Bash";
-      process.stdout.write(`${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", id: "toolu-shim", name: toolName, input: {} }], usage: { input_tokens: 10, output_tokens: 4 } }, session_id: "claude-session-shim" })}\n`);
-      process.stdout.write(`${JSON.stringify({ type: "user", message: { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu-shim", is_error: behavior === "permission", content: behavior === "permission" ? "Claude requested permissions, but you haven't granted it yet." : "ok" }] }, session_id: "claude-session-shim" })}\n`);
+      process.stdout.write(`${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", id: "toolu-shim", name: toolName, input: {} }], usage: { input_tokens: 10, output_tokens: 4 } }, session_id: sessionId })}\n`);
+      process.stdout.write(`${JSON.stringify({ type: "user", message: { role: "user", content: [{ type: "tool_result", tool_use_id: "toolu-shim", is_error: behavior === "permission", content: behavior === "permission" ? "Claude requested permissions, but you haven't granted it yet." : "ok" }] }, session_id: sessionId })}\n`);
       const output = `Claude 完成：${input}`;
-      process.stdout.write(`${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: output }], usage: { input_tokens: 2, output_tokens: 8 } }, session_id: "claude-session-shim" })}\n`);
+      process.stdout.write(`${JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: output }], usage: { input_tokens: 2, output_tokens: 8 } }, session_id: sessionId })}\n`);
       if (behavior === "failure") {
-        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "error_during_execution", is_error: true, errors: ["模型执行失败"], session_id: "claude-session-shim", total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 } })}\n`);
+        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "error_during_execution", is_error: true, errors: ["模型执行失败"], session_id: sessionId, total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 } })}\n`);
         process.exitCode = 1;
       } else if (behavior === "permission") {
-        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "success", is_error: false, result: output, session_id: "claude-session-shim", total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 }, permission_denials: [{ tool_name: "Write", tool_use_id: "toolu-shim", tool_input: {} }] })}\n`);
+        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "success", is_error: false, result: output, session_id: sessionId, total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 }, permission_denials: [{ tool_name: "Write", tool_use_id: "toolu-shim", tool_input: {} }] })}\n`);
       } else if (behavior !== "no-terminal") {
-        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "success", is_error: false, result: output, session_id: "claude-session-shim", total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 }, permission_denials: [] })}\n`);
+        process.stdout.write(`${JSON.stringify({ type: "result", subtype: "success", is_error: false, result: output, session_id: sessionId, total_cost_usd: 0.04, usage: { input_tokens: 12, output_tokens: 12 }, permission_denials: [] })}\n`);
       }
     });
   } else {

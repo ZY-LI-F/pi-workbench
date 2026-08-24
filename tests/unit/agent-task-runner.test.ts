@@ -314,7 +314,7 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.agentTasks.find((task) => task.taskId === taskId)).toMatchObject({
       status: "reported",
       output: expect.stringContaining("Claude 完成："),
-      session: { backendId: "claude", sessionId: "claude-session-shim" },
+      session: { backendId: "claude", sessionId: expect.stringMatching(/^claude-session-shim-\d+$/u) },
       backendVersion: "8.7.6",
       inputTokens: 12,
       outputTokens: 12,

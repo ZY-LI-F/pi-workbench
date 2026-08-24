@@ -60,7 +60,7 @@ describe("CodexExecExecutionAdapter", () => {
     const outcome = await (await adapter()).run(request("codex.exec"), (event) => events.push(event), new AbortController().signal);
     expect(outcome).toEqual({
       result: { kind: "report", output: "Codex 完成：完成任务" },
-      session: { backendId: "codex", sessionId: "thread-shim" },
+      session: { backendId: "codex", sessionId: expect.stringMatching(/^thread-shim-\d+$/u) },
       usage: { inputTokens: 21, outputTokens: 34 },
       backendVersion: "7.6.5",
     });
@@ -73,14 +73,14 @@ describe("CodexExecExecutionAdapter", () => {
 
   it("surfaces turn failure and missing terminal state as protocol failures with partial identity", async () => {
     await expect((await adapter("failure")).run(request("codex.exec"), () => undefined, new AbortController().signal))
-      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: "模型执行失败", session: { sessionId: "thread-shim" } });
+      .rejects.toMatchObject({ name: "ExecutionProtocolError", message: "模型执行失败", session: { sessionId: expect.stringMatching(/^thread-shim-\d+$/u) } });
     await expect((await adapter("no-terminal")).run(request("codex.exec"), () => undefined, new AbortController().signal))
       .rejects.toBeInstanceOf(ExecutionProtocolError);
     await expect((await adapter("invalid-jsonl")).run(request("codex.exec"), () => undefined, new AbortController().signal))
       .rejects.toMatchObject({
         name: "ExecutionProtocolError",
         message: expect.stringContaining("无效 JSON"),
-        session: { backendId: "codex", sessionId: "thread-shim" },
+        session: { backendId: "codex", sessionId: expect.stringMatching(/^thread-shim-\d+$/u) },
         backendVersion: "7.6.5",
       });
   });
