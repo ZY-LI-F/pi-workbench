@@ -96,7 +96,13 @@ import {
   type ExecutionProfileId,
 } from "../shared/execution-profile";
 import type { ExecutionSessionReference } from "../shared/execution-session";
-import { isExternalExecutionSourceId, type ExternalExecutionOrigin } from "../shared/external-execution";
+import {
+  isExternalExecutionSourceId,
+  type ContinueExternalExecutionInput,
+  type ExternalExecutionOrigin,
+  type ExternalExecutionScope,
+  type ImportExternalExecutionInput,
+} from "../shared/external-execution";
 import { isSkinId, type SkinArtworkDescriptor, type SkinId } from "../shared/skin-artwork";
 import { SkinArtworkService, type StoredSkinArtwork } from "./skin-artwork-service";
 import {
@@ -115,6 +121,8 @@ import {
 import { LocalPathService } from "./local-path-service";
 import { LocalFilePreviewService } from "./local-file-preview-service";
 import { ComposerDraftStore } from "./composer-draft-store";
+import { ClaudeExternalExecutionSource } from "./claude-external-execution-source";
+import { ExternalExecutionService } from "./external-execution-service";
 import { isPiSkillInstallScope, type PiSkillInstallResult } from "../shared/pi-skill";
 import { PiSkillInstaller } from "./pi-skill-installer";
 
@@ -208,6 +216,7 @@ let piSkillInstaller: PiSkillInstaller;
 let agentTaskRunner: AgentTaskRunner;
 let executionBackendRegistry: ExecutionBackendRegistry;
 let executionBackendSettingsService: ExecutionBackendSettingsService | undefined;
+let externalExecutionService: ExternalExecutionService;
 let taskCapabilityInitialization: Promise<void> | undefined;
 let executionReviewService: ExecutionReviewService;
 let squadService: SquadService;
@@ -306,6 +315,19 @@ function validatedExecutionBackendConfiguration(value: unknown): ConfigureExecut
     backendId: record.backendId,
     executablePath: record.executablePath?.trim() || undefined,
   });
+}
+
+function validatedExternalExecutionScope(value: unknown): ExternalExecutionScope {
+  const scope = objectValue(value, "外部执行 scope");
+  if (scope.kind === "all") return Object.freeze({ kind: "all" });
+  if (scope.kind === "project") return Object.freeze({ kind: "project", projectPath: requiredString(scope.projectPath, "projectPath") });
+  throw new Error(`无效外部执行 scope: ${String(scope.kind)}`);
+}
+
+function validatedExternalExecutionReference(value: unknown): ImportExternalExecutionInput & ContinueExternalExecutionInput {
+  const reference = objectValue(value, "外部执行引用");
+  if (!isExternalExecutionSourceId(reference.sourceId)) throw new Error(`无效外部执行 Source: ${String(reference.sourceId)}`);
+  return Object.freeze({ sourceId: reference.sourceId, externalId: requiredString(reference.externalId, "externalId") });
 }
 
 function booleanValue(value: unknown, label: string): boolean {
@@ -1388,6 +1410,20 @@ async function initializeTaskCapability(): Promise<void> {
     });
     const executionBackendSnapshot = await executionBackendSettingsService.initialize();
     broadcast("execution-backend", executionBackendSnapshot);
+    externalExecutionService = new ExternalExecutionService({
+      sources: [new ClaudeExternalExecutionSource({
+        configuration: () => {
+          const settings = executionBackendSettingsService;
+          if (!settings) throw new Error("Claude CLI 设置尚未初始化");
+          return settings.configuration("claude");
+        },
+        copyText: (value) => clipboard.writeText(value),
+        cwd: app.getPath("home"),
+      })],
+      repository: boardStore,
+      boardService,
+      resolveProjectTrust,
+    });
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
@@ -1494,6 +1530,22 @@ function registerIpcHandlers(): void {
     const snapshot = await (await executionBackendSettings()).retry(backendId);
     broadcast("execution-backend", snapshot);
     return snapshot;
+  });
+  ipcMain.handle("stella:external-executions:refresh", async (_event, value: unknown) => {
+    assertTaskCapability();
+    const requested = validatedExternalExecutionScope(value);
+    const scope = requested.kind === "all"
+      ? requested
+      : Object.freeze({ kind: "project" as const, projectPath: await canonicalExistingPath(requested.projectPath) });
+    return externalExecutionService.refresh(scope);
+  });
+  ipcMain.handle("stella:external-executions:import", async (_event, value: unknown) => {
+    assertTaskCapability();
+    return externalExecutionService.import(validatedExternalExecutionReference(value));
+  });
+  ipcMain.handle("stella:external-executions:continue", async (_event, value: unknown) => {
+    assertTaskCapability();
+    return externalExecutionService.continue(validatedExternalExecutionReference(value));
   });
   ipcMain.handle("stella:initialize", () => initializeRuntime());
   ipcMain.handle("stella:refresh", () => refreshPiCapability());
@@ -1833,7 +1885,7 @@ app.on("before-quit", (event) => {
   event.preventDefault();
   if (shutdownStarted) return;
   shutdownStarted = true;
-  void Promise.all([runtime.stop(), composerDraftStore?.drain(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop()])
+  void Promise.all([runtime.stop(), composerDraftStore?.drain(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop(), externalExecutionService?.shutdown()])
     .then(() => {
       interactiveCommandRouter?.release();
       workspaceAdmission.shutdown();

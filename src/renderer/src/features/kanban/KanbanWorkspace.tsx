@@ -5,6 +5,7 @@ import {
   FolderKanban,
   Menu,
   Plus,
+  RadioTower,
   Search,
   TerminalSquare,
   Users,
@@ -35,6 +36,9 @@ import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskEditorDialog } from "./TaskEditorDialog";
 import type { PiTaskDraft } from "./pi-task-draft";
 import { executionProfile, type ExecutionBackendCatalogSnapshot } from "@shared/execution-profile";
+import type { ExternalExecutionScope } from "@shared/external-execution";
+import { useExternalExecutions } from "../../hooks/use-external-executions";
+import { ExternalExecutionBoard } from "./ExternalExecutionBoard";
 
 interface KanbanWorkspaceProps {
   readonly api: StellaDesktopApi;
@@ -120,6 +124,11 @@ export function KanbanWorkspace({
   const [newTaskDraft, setNewTaskDraft] = useState<PiTaskDraft>();
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [automationOpen, setAutomationOpen] = useState(false);
+  const [surface, setSurface] = useState<"stella" | "external">("stella");
+  const externalScope = useMemo<ExternalExecutionScope>(() => projectScope === "current" && project
+    ? Object.freeze({ kind: "project", projectPath: project.cwd })
+    : Object.freeze({ kind: "all" }), [project, projectScope]);
+  const externalExecutions = useExternalExecutions(api, externalScope, surface === "external" && state.phase === "ready");
 
   // 打开编辑器后立即消费请求计数，避免 project 变化或组件重挂载时重新弹出幽灵对话框。
   useEffect(() => {
@@ -265,7 +274,7 @@ export function KanbanWorkspace({
   const taskComments = (taskId: string) => board.comments.filter((comment) => comment.taskId === taskId);
 
   return (
-    <main className={`kanban-workspace ${selectedTask ? "has-detail" : ""}`}>
+    <main className={`kanban-workspace ${surface === "stella" && selectedTask ? "has-detail" : ""}`}>
       <header className="kanban-header">
         <div className="kanban-header__identity">
           <button type="button" className="icon-button kanban-menu" aria-label="打开侧栏" onClick={onOpenSidebar}><Menu size={18} /></button>
@@ -274,6 +283,10 @@ export function KanbanWorkspace({
           <em>Stella</em>
         </div>
         <div className="kanban-header__actions">
+          <div className="kanban-surface-switch" role="tablist" aria-label="任务视图">
+            <button type="button" role="tab" aria-selected={surface === "stella"} className={surface === "stella" ? "is-active" : ""} onClick={() => setSurface("stella")}><FolderKanban size={13} />Stella Tasks</button>
+            <button type="button" role="tab" aria-selected={surface === "external"} className={surface === "external" ? "is-active" : ""} onClick={() => { setSelectedTaskId(undefined); setSurface("external"); }}><RadioTower size={13} />CLI Tasks</button>
+          </div>
           <span className="current-model-chip" title="所有页面共享的当前 Pi 模型">{modelLabel ?? "未选择模型"}</span>
           {teamFeaturesEnabled && <button type="button" className="button-secondary" onClick={() => setCatalogOpen(true)}><Users size={15} />编排目录</button>}
           {teamFeaturesEnabled && <button type="button" className="button-secondary" disabled={!project} onClick={() => setAutomationOpen(true)}><Zap size={15} />自动化</button>}
@@ -312,15 +325,28 @@ export function KanbanWorkspace({
       </header>
 
       <div className="kanban-controls">
-        <div className="kanban-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索任务、说明或验收标准" />{query && <button type="button" onClick={() => setQuery("")}>清除</button>}</div>
+        <div className="kanban-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={surface === "external" ? "搜索外部任务、目录或 Session" : "搜索任务、说明或验收标准"} />{query && <button type="button" onClick={() => setQuery("")}>清除</button>}</div>
         <label className="kanban-select"><span>项目</span><select value={projectScope} disabled={!project} onChange={(event) => setProjectScope(event.target.value as "current" | "all")}>{project && <option value="current">{project.name}</option>}<option value="all">全部项目</option></select><ChevronDown size={13} /></label>
-        <label className="kanban-select"><Workflow size={13} /><select value={executionFilter} onChange={(event) => setExecutionFilter(event.target.value)}><option value="all">全部方式</option><option value="manual">自己推进</option>{teamFeaturesEnabled && <option value="agent">单 Agent</option>}{teamFeaturesEnabled && <option value="squad">Squad</option>}{teamFeaturesEnabled && catalog.workflows.map((workflow) => <option value={workflow.id} key={workflow.id}>{workflow.shortName}</option>)}</select><ChevronDown size={13} /></label>
-        <span className="kanban-controls__count">显示 {visibleTasks.length} / {board.tasks.length} 项</span>
+        {surface === "stella" && <label className="kanban-select"><Workflow size={13} /><select value={executionFilter} onChange={(event) => setExecutionFilter(event.target.value)}><option value="all">全部方式</option><option value="manual">自己推进</option>{teamFeaturesEnabled && <option value="agent">单 Agent</option>}{teamFeaturesEnabled && <option value="squad">Squad</option>}{teamFeaturesEnabled && catalog.workflows.map((workflow) => <option value={workflow.id} key={workflow.id}>{workflow.shortName}</option>)}</select><ChevronDown size={13} /></label>}
+        <span className="kanban-controls__count">{surface === "stella" ? `显示 ${visibleTasks.length} / ${board.tasks.length} 项` : `外部任务 ${externalExecutions.snapshot?.sources.reduce((total, source) => total + source.items.length, 0) ?? 0} 项`}</span>
       </div>
 
       {state.error && <div className="kanban-inline-error" role="alert">{state.error}</div>}
 
-      <div className="kanban-stage">
+      {surface === "external" ? (
+        <ExternalExecutionBoard
+          snapshot={externalExecutions.snapshot}
+          loading={externalExecutions.loading}
+          refreshing={externalExecutions.refreshing}
+          error={externalExecutions.error}
+          busy={externalExecutions.busy}
+          query={query}
+          onRefresh={externalExecutions.refresh}
+          onImport={(item) => externalExecutions.importExecution({ sourceId: item.sourceId, externalId: item.externalId })}
+          onContinue={(item) => externalExecutions.continueExecution({ sourceId: item.sourceId, externalId: item.externalId })}
+          onOpenTask={(taskId) => { setSelectedTaskId(taskId); setSurface("stella"); }}
+        />
+      ) : <div className="kanban-stage">
         <div className="kanban-board" aria-label="任务看板">
           {LANE_CONFIG.map((lane) => {
             const tasks = visibleTasks.filter((task) => task.stage === lane.id);
@@ -424,7 +450,7 @@ export function KanbanWorkspace({
             mentionsEnabled={teamFeaturesEnabled}
           />
         )}
-      </div>
+      </div>}
 
       {editorTaskId && editorProject && (
         <TaskEditorDialog

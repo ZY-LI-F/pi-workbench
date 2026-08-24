@@ -85,4 +85,15 @@ describe("ExecutionBackendSettingsService", () => {
       executionBackends: { claude: { executablePath: "/new/claude" } },
     });
   });
+
+  it("exposes only the active resolved configuration to external execution sources", async () => {
+    const { service } = await fixture();
+    expect(() => service.configuration("claude")).toThrow("尚未初始化");
+    await service.initialize();
+
+    const automatic = service.configuration("claude");
+    expect(automatic).toMatchObject({ executable: "/auto/claude", executableSource: "auto" });
+    await service.configure({ backendId: "claude", executablePath: "/new/claude" });
+    expect(service.configuration("claude")).toMatchObject({ executable: "/new/claude", executableSource: "path" });
+  });
 });

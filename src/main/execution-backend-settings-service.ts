@@ -5,6 +5,7 @@ import {
 } from "../shared/execution-profile";
 import type { ExecutionBackendCatalogSnapshot, ExecutionBackendRegistryContract } from "./execution-backend-registry";
 import { ExecutableResolver, unresolvedExecutionBackendConfiguration } from "./executable-resolver";
+import type { ExecutionBackendConfiguration } from "./execution-backend";
 import type { StateStore } from "./state-store";
 
 interface ExecutionBackendSettingsServiceOptions {
@@ -19,6 +20,7 @@ export class ExecutionBackendSettingsService {
   readonly #stateStore: StateStore;
   readonly #registry: ExecutionBackendRegistryContract;
   readonly #resolver: Pick<ExecutableResolver, "resolve">;
+  readonly #configurations = new Map<ConfigurableExecutionBackendId, ExecutionBackendConfiguration>();
 
   constructor(options: ExecutionBackendSettingsServiceOptions) {
     this.#stateStore = options.stateStore;
@@ -35,7 +37,7 @@ export class ExecutionBackendSettingsService {
         return unresolvedExecutionBackendConfiguration(backendId, cause);
       }
     }));
-    for (const configuration of configurations) this.#registry.activateConfiguration(configuration);
+    for (const configuration of configurations) this.#activate(configuration);
     return this.#registry.initialize();
   }
 
@@ -47,7 +49,7 @@ export class ExecutionBackendSettingsService {
       throw new Error(candidateHealth.error ?? `${input.backendId} CLI 探测失败`);
     }
     await this.#stateStore.configureExecutionBackend(input.backendId, executablePath);
-    this.#registry.activateConfiguration(candidate);
+    this.#activate(candidate);
     return this.#registry.refresh(input.backendId);
   }
 
@@ -55,12 +57,30 @@ export class ExecutionBackendSettingsService {
     if (backendId === "pi") return this.#registry.refresh("pi");
     const persisted = await this.#stateStore.read();
     const configuration = await this.#resolveOrUnavailable(backendId, persisted.executionBackends?.[backendId]?.executablePath);
-    this.#registry.activateConfiguration(configuration);
+    this.#activate(configuration);
     return this.#registry.refresh(backendId);
   }
 
   snapshot(): ExecutionBackendCatalogSnapshot {
     return this.#registry.snapshot();
+  }
+
+  configuration(backendId: ConfigurableExecutionBackendId): ExecutionBackendConfiguration {
+    const configuration = this.#configurations.get(backendId);
+    if (!configuration) throw new Error(`${backendId} CLI 尚未初始化`);
+    if (!configuration.executable) throw new Error(configuration.resolutionError ?? `${backendId} CLI 当前不可用`);
+    return Object.freeze({
+      ...configuration,
+      prefixArgv: configuration.prefixArgv ? Object.freeze([...configuration.prefixArgv]) : undefined,
+    });
+  }
+
+  #activate(configuration: ExecutionBackendConfiguration): void {
+    this.#registry.activateConfiguration(configuration);
+    this.#configurations.set(configuration.backendId as ConfigurableExecutionBackendId, Object.freeze({
+      ...configuration,
+      prefixArgv: configuration.prefixArgv ? Object.freeze([...configuration.prefixArgv]) : undefined,
+    }));
   }
 
   async #resolveOrUnavailable(backendId: ConfigurableExecutionBackendId, executablePath?: string) {

@@ -104,7 +104,12 @@ export class BoardService {
   async createTask(input: CreateTaskInput): Promise<BoardBootstrap> {
     if (!TASK_PRIORITIES.includes(input.priority)) throw new Error(`无效优先级: ${String(input.priority)}`);
     const now = this.#now();
+    const externalOrigin = input.externalOrigin;
     return this.#commit((current) => {
+      if (externalOrigin && current.tasks.some((task) => task.externalOrigin?.sourceId === externalOrigin.sourceId
+        && task.externalOrigin.externalId === externalOrigin.externalId)) {
+        throw new Error(`外部执行已导入: ${externalOrigin.sourceId}/${externalOrigin.externalId}`);
+      }
       this.#assertExecutionTarget(current, input.executionTarget, input.projectPath);
       const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
       this.#assertExecutionProfileAgents(current, input.executionTarget, executionProfileId);

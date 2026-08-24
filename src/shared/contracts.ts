@@ -47,6 +47,14 @@ import type { LocalPathInspection } from "./local-path";
 import type { LocalFilePreviewData } from "./file-preview";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "./composer-draft";
 import type { PiSkillInstallResult, PiSkillInstallScope } from "./pi-skill";
+import type {
+  ContinueExternalExecutionInput,
+  ContinueExternalExecutionResult,
+  ExternalExecutionCatalogSnapshot,
+  ExternalExecutionScope,
+  ImportExternalExecutionInput,
+  ImportExternalExecutionResult,
+} from "./external-execution";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
@@ -229,6 +237,9 @@ export interface StellaDesktopApi {
   executionBackendsInitialize(): Promise<ExecutionBackendCatalogSnapshot>;
   executionBackendConfigure(input: ConfigureExecutionBackendInput): Promise<ExecutionBackendCatalogSnapshot>;
   executionBackendRetry(backendId: ExecutionBackendId): Promise<ExecutionBackendCatalogSnapshot>;
+  externalExecutionsRefresh(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot>;
+  externalExecutionImport(input: ImportExternalExecutionInput): Promise<ImportExternalExecutionResult>;
+  externalExecutionContinue(input: ContinueExternalExecutionInput): Promise<ContinueExternalExecutionResult>;
   initialize(): Promise<RuntimeBootstrap>;
   command(command: PiCommand): Promise<PiResponse>;
   refresh(): Promise<RuntimeBootstrap>;

@@ -40,6 +40,11 @@ import type {
 } from "../shared/kanban";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "../shared/composer-draft";
 import type { PiSkillInstallResult, PiSkillInstallScope } from "../shared/pi-skill";
+import type {
+  ContinueExternalExecutionInput,
+  ExternalExecutionScope,
+  ImportExternalExecutionInput,
+} from "../shared/external-execution";
 
 const api: StellaDesktopApi = Object.freeze({
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
@@ -49,6 +54,12 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:execution-backends:configure", input) as Promise<ExecutionBackendCatalogSnapshot>,
   executionBackendRetry: (backendId: ExecutionBackendId) =>
     ipcRenderer.invoke("stella:execution-backends:retry", backendId) as Promise<ExecutionBackendCatalogSnapshot>,
+  externalExecutionsRefresh: (scope: ExternalExecutionScope) =>
+    ipcRenderer.invoke("stella:external-executions:refresh", scope) as ReturnType<StellaDesktopApi["externalExecutionsRefresh"]>,
+  externalExecutionImport: (input: ImportExternalExecutionInput) =>
+    ipcRenderer.invoke("stella:external-executions:import", input) as ReturnType<StellaDesktopApi["externalExecutionImport"]>,
+  externalExecutionContinue: (input: ContinueExternalExecutionInput) =>
+    ipcRenderer.invoke("stella:external-executions:continue", input) as ReturnType<StellaDesktopApi["externalExecutionContinue"]>,
   initialize: () => ipcRenderer.invoke("stella:initialize") as Promise<RuntimeBootstrap>,
   command: (command: PiCommand) => ipcRenderer.invoke("stella:command", command),
   refresh: () => ipcRenderer.invoke("stella:refresh") as Promise<RuntimeBootstrap>,
