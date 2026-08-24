@@ -2,6 +2,7 @@ import { expect, test, _electron as electron, type ElectronApplication, type Pag
 import { mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import { join, resolve } from "node:path";
+import { expectTopbarActionReachable } from "./helpers/topbar-actions";
 
 interface IsolatedAppPaths {
   readonly appRoot: string;
@@ -127,7 +128,7 @@ test("persists the optional team surface while keeping the generic task board av
     running = first.electronApp;
     await expect(first.window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
     await expect(first.window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();
-    await expect(first.window.getByRole("button", { name: "固化为任务" })).toBeVisible();
+    await expectTopbarActionReachable(first.window, "固化为任务");
     await expect(first.window.locator(".capability-ledger .capability-dot")).toHaveCount(2);
 
     await first.window.getByRole("button", { name: "偏好设置", exact: true }).click();
@@ -167,7 +168,7 @@ test("persists the optional team surface while keeping the generic task board av
     await second.window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
     await second.window.getByRole("button", { name: "当前会话", exact: true }).click();
     await expect(second.window.getByLabel("给 Pi 的消息")).toBeVisible();
-    await expect(second.window.getByRole("button", { name: "固化为任务" })).toBeVisible();
+    await expectTopbarActionReachable(second.window, "固化为任务");
     expect(second.pageErrors).toEqual([]);
     await closeApp(running);
     running = undefined;

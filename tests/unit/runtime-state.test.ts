@@ -151,6 +151,48 @@ describe("runtimeReducer", () => {
     expect(state.extensionRequest).toBeUndefined();
   });
 
+  it("clears session-scoped activity when bootstrap changes project or session", () => {
+    let state = piEvent(readyState(), {
+      type: "queue_update",
+      steering: ["旧会话消息"],
+      followUp: ["旧会话后续"],
+    });
+    state = piEvent(state, { type: "tool_execution_start", toolCallId: "old-tool", toolName: "read", args: {} });
+    state = piEvent(state, { type: "extension_ui_request", id: "old-dialog", method: "input", title: "旧请求" });
+    state = runtimeReducer(state, {
+      type: "BRIDGE_EVENT",
+      event: { source: "runtime", payload: { type: "runtime_stderr", message: "old diagnostic" } },
+    });
+
+    const nextBootstrap = Object.freeze({
+      ...BOOTSTRAP,
+      state: Object.freeze({ ...BOOTSTRAP.state, sessionId: "session-2" }),
+    }) as RuntimeBootstrap;
+    state = runtimeReducer(state, { type: "BOOTSTRAP", payload: nextBootstrap });
+
+    expect(state.bootstrap).toBe(nextBootstrap);
+    expect(state.tools).toEqual({});
+    expect(state.queue).toEqual({ steering: [], followUp: [] });
+    expect(state.extensionRequest).toBeUndefined();
+    expect(state.stderr).toBe("");
+  });
+
+  it("surfaces automatic compaction failures and clears the busy state", () => {
+    let state = piEvent(readyState(), { type: "compaction_start", reason: "threshold" });
+    state = piEvent(state, {
+      type: "compaction_end",
+      reason: "threshold",
+      result: undefined,
+      aborted: false,
+      willRetry: false,
+      errorMessage: "Compaction failed: quota exceeded",
+    });
+
+    expect(state.compacting).toBe(false);
+    expect(state.error).toContain("quota exceeded");
+    expect(state.notices.at(-1)?.message).toContain("自动上下文压缩失败");
+  });
+
   it("surfaces Pi extension errors as persistent notices and diagnostics", () => {
     const result = piEvent(readyState(), {
       type: "extension_error",

@@ -213,7 +213,21 @@ function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>):
   if (payload.type === "agent_start") return { ...state, streaming: true, retrying: false };
   if (payload.type === "agent_settled") return { ...state, streaming: false, retrying: false };
   if (payload.type === "compaction_start") return { ...state, compacting: true };
-  if (payload.type === "compaction_end") return { ...state, compacting: false };
+  if (payload.type === "compaction_end") {
+    const errorMessage = typeof payload.errorMessage === "string" && payload.errorMessage.trim().length > 0
+      ? payload.errorMessage.trim()
+      : undefined;
+    if (!errorMessage || payload.reason === "manual") return { ...state, compacting: false };
+    return {
+      ...state,
+      compacting: false,
+      error: errorMessage,
+      notices: Object.freeze([
+        ...state.notices,
+        Object.freeze({ id: crypto.randomUUID(), type: "error" as const, message: `自动上下文压缩失败：${errorMessage}` }),
+      ]),
+    };
+  }
   if (payload.type === "auto_retry_start") return { ...state, retrying: true };
   if (payload.type === "auto_retry_end") return { ...state, retrying: false };
   if (payload.type === "queue_update") {
@@ -322,8 +336,18 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
 
 export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): RuntimeUiState {
   if (action.type === "BOOTSTRAP") {
+    const identityChanged = Boolean(
+      state.bootstrap
+      && (
+        state.bootstrap.project.cwd !== action.payload.project.cwd
+        || state.bootstrap.state.sessionId !== action.payload.state.sessionId
+      )
+    );
+    const base = identityChanged
+      ? { ...INITIAL_RUNTIME_STATE, notices: state.notices }
+      : state;
     return {
-      ...state,
+      ...base,
       phase: "ready",
       bootstrap: action.payload,
       messages: action.payload.messages,

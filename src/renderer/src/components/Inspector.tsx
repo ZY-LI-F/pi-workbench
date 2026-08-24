@@ -36,6 +36,7 @@ interface InspectorProps {
   readonly queue: RuntimeUiState["queue"];
   readonly extensionStatuses: RuntimeUiState["extensionStatuses"];
   readonly extensionWidgets: RuntimeUiState["extensionWidgets"];
+  readonly compactDisabled?: boolean;
   readonly filePreview?: LocalPathInspection;
   readonly fileReferences: readonly SessionFileReference[];
   readonly onTabChange: (tab: InspectorTab) => void;
@@ -113,11 +114,12 @@ function TreeNode({
 
 function ContextPanel({
   bootstrap,
+  compactDisabled,
   onCompact,
   onExport,
   onClone,
   onRename,
-}: Pick<InspectorProps, "bootstrap" | "onCompact" | "onExport" | "onClone" | "onRename">) {
+}: Pick<InspectorProps, "bootstrap" | "compactDisabled" | "onCompact" | "onExport" | "onClone" | "onRename">) {
   const stats = bootstrap.stats;
   const percent = stats.contextUsage?.percent ?? 0;
   return (
@@ -142,7 +144,7 @@ function ContextPanel({
         <button type="button" className="inspector-action" onClick={onRename}><PencilLine size={15} /><span><strong>重命名</strong><small>{bootstrap.state.sessionName || "未命名会话"}</small></span><ChevronRight size={14} /></button>
         <button type="button" className="inspector-action" onClick={onClone}><CopyPlus size={15} /><span><strong>克隆分支</strong><small>复制当前活动分支</small></span><ChevronRight size={14} /></button>
         <button type="button" className="inspector-action" onClick={onExport}><FileOutput size={15} /><span><strong>导出 HTML</strong><small>生成可分享的只读记录</small></span><ChevronRight size={14} /></button>
-        <button type="button" className="inspector-action" onClick={onCompact}><Archive size={15} /><span><strong>立即压缩</strong><small>保留重点并释放上下文</small></span><ChevronRight size={14} /></button>
+        <button type="button" className="inspector-action" disabled={compactDisabled} title={compactDisabled ? "请等待当前生成、压缩或队列处理完成" : undefined} onClick={onCompact}><Archive size={15} /><span><strong>立即压缩</strong><small>{compactDisabled ? "当前回合结束后可压缩" : "保留重点并释放上下文"}</small></span><ChevronRight size={14} /></button>
       </section>
 
       <div className="inspector-signature"><span>Observed by</span><strong>Stella</strong><i /></div>
@@ -205,6 +207,7 @@ export function Inspector({
   queue,
   extensionStatuses,
   extensionWidgets,
+  compactDisabled,
   filePreview,
   fileReferences,
   onTabChange,
@@ -292,7 +295,7 @@ export function Inspector({
         <button type="button" role="tab" id="inspector-tab-tree" aria-controls="inspector-panel-tree" aria-selected={tab === "tree"} className={tab === "tree" ? "is-active" : ""} onClick={() => onTabChange("tree")}>分支</button>
         <button type="button" role="tab" id="inspector-tab-files" aria-controls="inspector-panel-files" aria-selected={tab === "files"} className={tab === "files" ? "is-active" : ""} onClick={() => onTabChange("files")}><span>文件</span>{fileReferences.length > 0 && <small aria-hidden="true">{fileReferences.length}</small>}</button>
       </div>
-      {tab === "context" && <ContextPanel bootstrap={bootstrap} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} />}
+      {tab === "context" && <ContextPanel bootstrap={bootstrap} compactDisabled={compactDisabled} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} />}
       {tab === "activity" && <ActivityPanel tools={tools} queue={queue} extensionStatuses={extensionStatuses} extensionWidgets={extensionWidgets} />}
       {tab === "tree" && (
         <div className="inspector-panel tree-panel" id="inspector-panel-tree" role="tabpanel" aria-labelledby="inspector-tab-tree">

@@ -3,7 +3,7 @@ import { EventEmitter } from "node:events";
 import { PassThrough, Writable } from "node:stream";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
-import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment, type PiRuntimeStartOptions } from "../../src/main/pi-rpc-runtime";
+import { PiRpcRuntime, piRpcCompactionTimeoutFromEnvironment, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment, type PiRuntimeStartOptions } from "../../src/main/pi-rpc-runtime";
 
 class FakeRpcProcess extends EventEmitter {
   readonly stdout = new PassThrough();
@@ -50,6 +50,7 @@ async function startedRuntime(
   timeout: number,
   maxProtocolRecordBytes?: number,
   startOptions: PiRuntimeStartOptions = { cwd: process.cwd(), trusted: false },
+  compactionTimeoutMs?: number,
 ) {
   const child = new FakeRpcProcess();
   const signals: unknown[] = [];
@@ -65,6 +66,7 @@ async function startedRuntime(
     emitPiEvent: () => undefined,
     emitRuntimeSignal: (signal) => signals.push(signal),
     requestTimeoutMs: timeout,
+    compactionTimeoutMs,
     maxProtocolRecordBytes,
   });
   runtimes.push(runtime);
@@ -107,6 +109,17 @@ describe("PiRpcRuntime request boundaries", () => {
     expect(signals).toContainEqual(expect.objectContaining({ type: "protocol_error", message: expect.stringContaining("abort 在 15ms 内没有返回响应") }));
   });
 
+  it("uses a separate long-running timeout for manual compaction", async () => {
+    const { child, runtime } = await startedRuntime(15, undefined, { cwd: process.cwd(), trusted: false }, 100);
+    const pending = runtime.send({ type: "compact" });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const request = child.requests.find((candidate) => candidate.type === "compact");
+    child.stdout.write(`${JSON.stringify({ id: request?.id, type: "response", command: "compact", success: true, data: { summary: "ok" } })}\n`);
+
+    await expect(pending).resolves.toMatchObject({ command: "compact", success: true });
+    expect(runtime.running).toBe(true);
+  });
+
   it("rejects all pending work when Pi writes malformed protocol JSON", async () => {
     const { child, runtime, signals } = await startedRuntime(5_000);
     const pending = runtime.send({ type: "abort" });
@@ -122,6 +135,13 @@ describe("PiRpcRuntime request boundaries", () => {
     expect(piRpcRequestTimeoutFromEnvironment("0")).toBe(0);
     expect(() => piRpcRequestTimeoutFromEnvironment("-1")).toThrow("非负数字");
     expect(() => piRpcRequestTimeoutFromEnvironment("NaN")).toThrow("非负数字");
+  });
+
+  it("validates the dedicated compaction timeout", () => {
+    expect(piRpcCompactionTimeoutFromEnvironment(undefined)).toBe(600_000);
+    expect(piRpcCompactionTimeoutFromEnvironment("900000")).toBe(900_000);
+    expect(piRpcCompactionTimeoutFromEnvironment("0")).toBe(0);
+    expect(() => piRpcCompactionTimeoutFromEnvironment("-1")).toThrow("非负数字");
   });
 
   it("stops on an explicitly oversized newline-delimited protocol record", async () => {

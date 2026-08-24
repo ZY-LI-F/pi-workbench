@@ -46,10 +46,12 @@ export interface PiRuntimeController {
 export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
   const [state, dispatch] = useReducer(runtimeReducer, INITIAL_RUNTIME_STATE);
   const settledRefreshPending = useRef(false);
+  const bootstrapRequestEpoch = useRef(0);
 
   const refresh = useCallback(async () => {
+    const epoch = ++bootstrapRequestEpoch.current;
     const bootstrap = await api.refresh();
-    dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+    if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
     return bootstrap;
   }, [api]);
 
@@ -67,10 +69,11 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
         !settledRefreshPending.current
       ) {
         settledRefreshPending.current = true;
+        const epoch = ++bootstrapRequestEpoch.current;
         void api
           .refresh()
           .then((bootstrap) => {
-            if (active) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+            if (active && bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
           })
           .catch((error: unknown) => {
             if (active) dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
@@ -81,10 +84,11 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
       }
     });
 
+    const initializeEpoch = ++bootstrapRequestEpoch.current;
     void api
       .initialize()
       .then((bootstrap) => {
-        if (active) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (active && bootstrapRequestEpoch.current === initializeEpoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
       })
       .catch((error: unknown) => {
         if (active) dispatch({ type: "INITIALIZE_FAILED", error: errorMessage(error) });
@@ -130,10 +134,11 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
 
   const openProject = useCallback(
     async (path: string, trusted: boolean) => {
+      const epoch = ++bootstrapRequestEpoch.current;
       try {
         const bootstrap = await api.openProject(path, trusted);
         if (!bootstrap) return null;
-        dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
         return bootstrap;
       } catch (error) {
         dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
@@ -145,9 +150,10 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
 
   const openTaskSession = useCallback(
     async (input: OpenTaskSessionInput) => {
+      const epoch = ++bootstrapRequestEpoch.current;
       try {
         const bootstrap = await api.openTaskSession(input);
-        dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
         return bootstrap;
       } catch (error) {
         dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });

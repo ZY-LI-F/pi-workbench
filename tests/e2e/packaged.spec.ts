@@ -156,7 +156,7 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     }
     await window.getByRole("button", { name: "偏好设置", exact: true }).click();
     const settings = window.getByRole("dialog", { name: "偏好设置" });
-    await expect(settings.getByText(/Pi Workbench · Pi v0\.83\.0/)).toBeVisible();
+    await expect(settings.getByText(/Pi Workbench · Pi v0\.84\.2/)).toBeVisible();
     await expect(window.locator(".sidebar")).not.toHaveClass(/is-open/);
     expect(pageErrors).toEqual([]);
   } finally {

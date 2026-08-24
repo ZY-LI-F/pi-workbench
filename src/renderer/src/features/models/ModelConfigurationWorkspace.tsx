@@ -34,6 +34,7 @@ interface ModelConfigurationWorkspaceProps {
   readonly api: StellaDesktopApi;
   readonly bootstrap?: RuntimeBootstrap;
   readonly online: boolean;
+  readonly runtimeBusy: boolean;
   readonly modelChanging: boolean;
   readonly onOpenSidebar: () => void;
   readonly onModelChange: (model: ModelSummary) => Promise<void>;
@@ -66,10 +67,21 @@ function contextLabel(tokens: number): string {
   return String(tokens);
 }
 
+function resolveSelectedProviderId(
+  current: string,
+  bootstrapProviderId: string | undefined,
+  providers: readonly PiModelProviderSummary[],
+): string {
+  if (providers.some((provider) => provider.id === current)) return current;
+  if (bootstrapProviderId && providers.some((provider) => provider.id === bootstrapProviderId)) return bootstrapProviderId;
+  return providers.find((provider) => provider.configured)?.id ?? providers[0]?.id ?? "";
+}
+
 export function ModelConfigurationWorkspace({
   api,
   bootstrap,
   online,
+  runtimeBusy,
   modelChanging,
   onOpenSidebar,
   onModelChange,
@@ -121,7 +133,7 @@ export function ModelConfigurationWorkspace({
     try {
       const next = await api.modelConfigurationInitialize();
       setSnapshot(next);
-      setSelectedProviderId((current) => current || bootstrap?.state.model?.provider || next.providers.find((provider) => provider.configured)?.id || next.providers[0]?.id || "");
+      setSelectedProviderId((current) => resolveSelectedProviderId(current, bootstrap?.state.model?.provider, next.providers));
     } catch (cause) {
       setLoadError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -155,7 +167,7 @@ export function ModelConfigurationWorkspace({
     void api.modelConfigurationInitialize().then((next) => {
       if (!active) return;
       setSnapshot(next);
-      setSelectedProviderId((current) => current || bootstrap?.state.model?.provider || next.providers.find((provider) => provider.configured)?.id || next.providers[0]?.id || "");
+      setSelectedProviderId((current) => resolveSelectedProviderId(current, bootstrap?.state.model?.provider, next.providers));
     }).catch((cause: unknown) => {
       if (active) setLoadError(cause instanceof Error ? cause.message : String(cause));
     }).finally(() => {
@@ -460,8 +472,8 @@ export function ModelConfigurationWorkspace({
                 <button type="button" className="button-secondary" aria-label={revealedApiKey ? "隐藏当前 API key" : "查看当前 API key"} disabled={revealingApiKey || testingConnection || Boolean(busyAction)} onClick={() => void revealCurrentApiKey()}>{revealedApiKey ? <EyeOff size={13} /> : <Eye size={13} />}{revealingApiKey ? "读取中…" : revealedApiKey ? "隐藏" : "查看"}</button>
               </div>}
               <label className="provider-key-panel__draft"><input aria-label={`${selectedProvider.name} API key`} type={showApiKey ? "text" : "password"} autoComplete="new-password" autoCapitalize="off" spellCheck={false} disabled={testingConnection} value={apiKey} onChange={(event) => { setApiKey(event.target.value); setConnectionResult(undefined); }} placeholder={selectedProvider.configured ? "粘贴新的 API key（不会覆盖当前值，直到保存）" : "粘贴新的 API key"} /><button type="button" aria-label={showApiKey ? "隐藏新 API key" : "显示新 API key"} disabled={!apiKey || testingConnection} onClick={() => setShowApiKey((current) => !current)}>{showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}</button></label>
-              <button type="button" className="button-primary" disabled={!apiKey.trim() || Boolean(busyAction) || testingConnection} onClick={() => void saveApiKey().catch(() => undefined)}><ShieldCheck size={13} />{busyAction === "保存 API key" ? "保存并重载 Pi…" : "安全保存并应用"}</button>
-              {selectedProvider.credentialType && <button type="button" className="provider-key-panel__delete" disabled={Boolean(busyAction) || testingConnection} onClick={() => {
+              <button type="button" className="button-primary" disabled={!apiKey.trim() || Boolean(busyAction) || testingConnection || runtimeBusy} title={runtimeBusy ? "请等待当前 Pi 生成、压缩或队列处理完成" : undefined} onClick={() => void saveApiKey().catch(() => undefined)}><ShieldCheck size={13} />{busyAction === "保存 API key" ? "保存并重载 Pi…" : "安全保存并应用"}</button>
+              {selectedProvider.credentialType && <button type="button" className="provider-key-panel__delete" disabled={Boolean(busyAction) || testingConnection || runtimeBusy} title={runtimeBusy ? "请等待当前 Pi 生成、压缩或队列处理完成" : undefined} onClick={() => {
                 if (!window.confirm(`确认清除 ${selectedProvider.name} 在 auth.json 中保存的凭据？`)) return;
                 void clearStoredCredential().catch(() => undefined);
               }}><Trash2 size={12} />清除已保存凭据</button>}
@@ -483,7 +495,7 @@ export function ModelConfigurationWorkspace({
           provider={editorState.provider}
           initialId={editorState.initialId}
           builtIn={editorState.builtIn}
-          busy={Boolean(busyAction)}
+          busy={Boolean(busyAction) || runtimeBusy}
           onClose={() => setEditorState(undefined)}
           onDiscover={(input) => api.modelConfigurationDiscoverModels(input)}
           onSave={saveProvider}

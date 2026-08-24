@@ -69,7 +69,7 @@ import { BoardStore } from "./board-store";
 import { CapabilityHealthStore } from "./capability-health";
 import { ExecutionReviewService } from "./execution-review-service";
 import { InteractiveCommandRouter } from "./interactive-command-router";
-import { PiRpcRuntime, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
+import { PiRpcRuntime, piRpcCompactionTimeoutFromEnvironment, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
 import { validatedPiCommand } from "./pi-command-validation";
 import { mainWindowBounds } from "./window-bounds";
 import { ScheduleRunner } from "./schedule-runner";
@@ -88,7 +88,7 @@ import {
   type ModelCatalogInspection,
 } from "./model-configuration-service";
 import { createRemoteModelCatalogDiscovery } from "./model-catalog-discovery";
-import { executeModelConfigurationTransaction } from "./model-configuration-transaction";
+import { executeModelConfigurationTransaction, type RuntimeSessionResumeTarget } from "./model-configuration-transaction";
 import {
   canonicalExecutionProjectPath,
   canonicalExistingPath,
@@ -103,6 +103,7 @@ import { PiSkillInstaller } from "./pi-skill-installer";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
+const piRpcCompactionTimeoutMs = piRpcCompactionTimeoutFromEnvironment(process.env.STELLA_PI_COMPACTION_TIMEOUT_MS);
 const piRpcMaxRecordBytes = piRpcMaxRecordBytesFromEnvironment(process.env.STELLA_PI_RPC_MAX_RECORD_BYTES);
 const preloadPath = fileURLToPath(new URL("../preload/index.cjs", import.meta.url));
 const SKIN_ARTWORK_SCHEME = "stella-artwork";
@@ -251,6 +252,7 @@ const runtime = new PiRpcRuntime({
     broadcast("runtime", signal);
   },
   requestTimeoutMs: piRpcRequestTimeoutMs,
+  compactionTimeoutMs: piRpcCompactionTimeoutMs,
   maxProtocolRecordBytes: piRpcMaxRecordBytes,
 });
 
@@ -264,6 +266,7 @@ const workflowRuntimeFactory: WorkflowRuntimeFactory = Object.freeze({
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
     requestTimeoutMs: piRpcRequestTimeoutMs,
+    compactionTimeoutMs: piRpcCompactionTimeoutMs,
     maxProtocolRecordBytes: piRpcMaxRecordBytes,
   }),
 });
@@ -276,6 +279,7 @@ const agentTaskRuntimeFactory: AgentTaskRuntimeFactory = Object.freeze({
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
     requestTimeoutMs: piRpcRequestTimeoutMs,
+    compactionTimeoutMs: piRpcCompactionTimeoutMs,
     maxProtocolRecordBytes: piRpcMaxRecordBytes,
   }),
 });
@@ -1071,12 +1075,19 @@ async function inspectModelCatalog(): Promise<ModelCatalogInspection> {
   });
 }
 
-async function captureCurrentSessionPath(): Promise<string | undefined> {
+async function captureCurrentSession(): Promise<RuntimeSessionResumeTarget | undefined> {
   if (!currentProject || !runtime.running) return undefined;
-  return dataFromResponse<RuntimeBootstrap["state"]>(
+  const session = dataFromResponse<RuntimeBootstrap["state"]>(
     await runtime.send({ type: "get_state" }),
     "get_state",
-  ).sessionFile;
+  );
+  if (session.isStreaming || session.isCompacting || session.pendingMessageCount > 0) {
+    throw new Error("Pi 正在生成、压缩上下文或处理队列消息；请等待当前操作完成后再修改模型配置");
+  }
+  return Object.freeze({
+    ...(session.sessionFile ? { sessionPath: session.sessionFile } : {}),
+    ...(session.sessionId ? { sessionId: session.sessionId } : {}),
+  });
 }
 
 async function restartRuntimePreservingSession(sessionPath: string | undefined, sessionId?: string): Promise<RuntimeBootstrap> {
@@ -1103,8 +1114,8 @@ async function restartRuntimePreservingSession(sessionPath: string | undefined, 
   }
 }
 
-async function restartRuntimeAfterModelConfigurationChange(sessionPath: string | undefined): Promise<void> {
-  await restartRuntimePreservingSession(sessionPath);
+async function restartRuntimeAfterModelConfigurationChange(session: RuntimeSessionResumeTarget | undefined): Promise<void> {
+  await restartRuntimePreservingSession(session?.sessionPath, session?.sessionId);
 }
 
 async function chooseInstallAndReloadPiSkill(event: IpcMainInvokeEvent, scopeValue: unknown): Promise<PiSkillInstallResult> {
@@ -1162,7 +1173,7 @@ async function mutateModelConfiguration(mutation: () => Promise<void>) {
       createCheckpoint: () => modelConfigurationService.createCheckpoint(),
       restoreCheckpoint: (checkpoint, expectedCurrent) =>
         modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
-      captureSessionPath: captureCurrentSessionPath,
+      captureSession: captureCurrentSession,
       restartRuntime: restartRuntimeAfterModelConfigurationChange,
       snapshot: () => modelConfigurationService.snapshot(),
     },
@@ -1275,6 +1286,7 @@ async function initializeTaskCapability(): Promise<void> {
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: emitSnapshot,
       skills: agentSkillService,
+      assertExecutionAvailable: assertPiExecutionCapability,
     });
     executionReviewService = new ExecutionReviewService({
       repository: boardStore,

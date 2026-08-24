@@ -4,6 +4,7 @@ import { createServer } from "node:net";
 import { join, resolve } from "node:path";
 import { enableTeamFeatures } from "./helpers/team-features";
 import { e2eScreenshotPath } from "./helpers/screenshot-path";
+import { clickTopbarAction, expectTopbarActionReachable } from "./helpers/topbar-actions";
 
 async function availableLoopbackPort(): Promise<number> {
   const server = createServer();
@@ -52,7 +53,7 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
       { timeout: 45_000, message: "Pi should be ready before exercising workspace controls" },
     ).toBe("ready");
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
-    await expect(window.getByRole("button", { name: "固化为任务" })).toBeVisible();
+    await expectTopbarActionReachable(window, "固化为任务");
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "pi-native-default.png"), fullPage: true, animations: "disabled" });
 
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
@@ -89,7 +90,8 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await expect(window.getByRole("heading", { name: "模型配置", exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(window.getByLabel("当前模型路由")).toBeVisible();
     await expect(window.getByLabel("Provider 列表")).toBeVisible();
-    await expect(window.getByLabel("Provider 配置台")).toContainText("查看或替换 API key");
+    await expect(window.getByLabel("Provider 列表").getByRole("button", { pressed: true })).toBeVisible();
+    await expect(window.getByLabel("Provider 配置台")).toContainText("真实模型请求");
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "model-configuration-stella.png"), fullPage: true, animations: "disabled" });
     await window.locator(".sidebar").getByRole("tab", { name: "任务栏", exact: true }).click();
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
@@ -292,7 +294,7 @@ test("launches the real Pi RPC workbench and exposes core controls", async ({}, 
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     await expect(globalModel).toHaveValue(selectedGlobalModel);
     await expect(window.getByLabel("思考级别")).toBeVisible();
-    await window.getByRole("button", { name: "固化为任务" }).click();
+    await clickTopbarAction(window, "固化为任务");
     const piTaskDraft = window.getByRole("dialog", { name: "创建看板任务" });
     await expect(piTaskDraft.getByText("来自当前 Pi 会话的可编辑草稿", { exact: true })).toBeVisible();
     await expect(piTaskDraft.getByText(/不会自动分发/)).toBeVisible();

@@ -66,6 +66,7 @@ export function AgentMentionInput({
   const listId = useId();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const caretRef = useRef(value.length);
+  const focusEpochRef = useRef(0);
   const handledRequestRef = useRef<number | undefined>(undefined);
   const [caret, setCaret] = useState(value.length);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -113,11 +114,18 @@ export function AgentMentionInput({
   }, [focusRequest]);
 
   const focusAt = (position: number): void => {
+    const epoch = ++focusEpochRef.current;
+    const activeElement = document.activeElement;
     caretRef.current = position;
     setCaret(position);
     requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(position, position);
+      const textarea = textareaRef.current;
+      if (!textarea || focusEpochRef.current !== epoch) return;
+      // Don't restore a stale caret after the user has already typed or moved
+      // focus to another field in the same animation frame.
+      if (document.activeElement !== activeElement && document.activeElement !== textarea) return;
+      textarea.focus();
+      textarea.setSelectionRange(position, position);
     });
   };
 
@@ -186,6 +194,7 @@ export function AgentMentionInput({
   };
 
   const updateCaret = (): void => {
+    focusEpochRef.current += 1;
     const position = textareaRef.current?.selectionStart ?? value.length;
     caretRef.current = position;
     setCaret(position);
@@ -217,6 +226,7 @@ export function AgentMentionInput({
         aria-expanded={pickerOpen}
         aria-activedescendant={pickerOpen && candidates[activeIndex] ? `${listId}-${candidates[activeIndex]?.id}` : undefined}
         onChange={(event) => {
+          focusEpochRef.current += 1;
           const position = event.currentTarget.selectionStart;
           caretRef.current = position;
           setCaret(position);

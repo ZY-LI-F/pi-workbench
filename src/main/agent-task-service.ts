@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { BoardRepository } from "./board-repository";
 import { availableMentionAgentsForTask, parseAgentMentions } from "../shared/agent-mentions";
-import { coordinatorActionMessage, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
+import { coordinatorActionMessage, normalizeSquadLeaderInstructions, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { applyTaskLifecycle } from "../shared/task-lifecycle";
 import {
@@ -43,6 +43,7 @@ interface AgentTaskServiceDependencies {
   readonly skills: {
     assertAgentsReady(projectPath: string, trusted: boolean, agents: readonly AgentDefinition[]): Promise<void>;
   };
+  readonly assertExecutionAvailable?: () => void;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -110,7 +111,7 @@ function squadPlan(squad: Squad, members: readonly AgentDefinition[]): Extract<A
     squadId: squad.id,
     squadVersion: squad.version,
     squadName: squad.name,
-    leaderInstructions: squad.leaderInstructions,
+    leaderInstructions: normalizeSquadLeaderInstructions(squad.leaderInstructions),
     delegates: Object.freeze(members.map(cloneAgent)),
   });
 }
@@ -151,12 +152,14 @@ export class AgentTaskService {
   readonly #now: () => string;
   readonly #id: () => string;
   readonly #skills: AgentTaskServiceDependencies["skills"];
+  readonly #assertExecutionAvailable: () => void;
 
   constructor(dependencies: AgentTaskServiceDependencies) {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#emitChanged = dependencies.emitChanged;
     this.#skills = dependencies.skills;
+    this.#assertExecutionAvailable = dependencies.assertExecutionAvailable ?? (() => undefined);
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -168,6 +171,9 @@ export class AgentTaskService {
     const previewTask = this.#task(preview, input.taskId);
     const previewAgents = dispatchMentions ? availableMentionAgentsForTask(previewTask, this.#catalogFor(preview), preview.squads) : Object.freeze([]);
     const previewMentions = dispatchMentions ? parseAgentMentions(body, previewAgents).agents : Object.freeze([]);
+    const previewRoot = previewTask.activeAgentTaskId ? preview.agentTasks.find((candidate) => candidate.id === previewTask.activeAgentTaskId) : undefined;
+    const previewResumesCoordinator = previewMentions.length === 0 && previewRoot !== undefined && isCoordinatorRoot(previewRoot) && previewRoot.status === "waiting_human";
+    if (previewMentions.length > 0 || previewResumesCoordinator) this.#assertExecutionAvailable();
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
     const now = this.#now();
     return this.#commit((current) => {
@@ -175,7 +181,8 @@ export class AgentTaskService {
       const availableAgents = dispatchMentions ? availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads) : Object.freeze([]);
       const mentions = dispatchMentions ? parseAgentMentions(body, availableAgents).agents : Object.freeze([]);
       const activeRoot = task.activeAgentTaskId ? this.#agentTask(current, task.activeAgentTaskId) : undefined;
-      const resumingCoordinator = dispatchMentions && mentions.length === 0 && activeRoot?.kind === "coordinator" && activeRoot.status === "waiting_human";
+      const resumingCoordinator = mentions.length === 0 && activeRoot !== undefined && isCoordinatorRoot(activeRoot) && activeRoot.status === "waiting_human";
+      if (mentions.length > 0 || resumingCoordinator) this.#assertExecutionAvailable();
       if (mentions.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         throw new Error("任务正在执行；请先中止或等待完成后再使用 @mention 分发");
       }
@@ -434,7 +441,7 @@ export class AgentTaskService {
       if (nextRunnableAgentTask(current, now)?.agentTask.id !== agentTaskId) return current;
       const task = this.#task(current, next.taskId);
       claimed = true;
-      const normalized = next.kind === "squad-leader" && next.executionPlan?.kind === "squad"
+      let normalized = next.kind === "squad-leader" && next.executionPlan?.kind === "squad"
         ? Object.freeze({
             ...next,
             prompt: this.#squadCoordinatorPrompt(
@@ -445,6 +452,15 @@ export class AgentTaskService {
             ),
           })
         : next;
+      if (next.kind === "delegated" && next.parentAgentTaskId) {
+        const parent = current.agentTasks.find((candidate) => candidate.id === next.parentAgentTaskId);
+        if (parent?.kind === "mention-root") {
+          const group = current.agentTasks.filter((candidate) => candidate.id === parent.id || candidate.parentAgentTaskId === parent.id);
+          const nextIndex = group.findIndex((candidate) => candidate.id === next.id);
+          const predecessors = group.slice(0, Math.max(0, nextIndex)).filter((candidate) => candidate.output);
+          normalized = Object.freeze({ ...normalized, prompt: this.#mentionHandoffPrompt(normalized.prompt, predecessors) });
+        }
+      }
       const running: AgentTask = Object.freeze({ ...normalized, status: "running", runtimeToken, startedAt: now, updatedAt: now });
       return {
         ...current,
@@ -1319,6 +1335,22 @@ export class AgentTaskService {
     ].join("\n");
   }
 
+  #mentionHandoffPrompt(prompt: string, predecessors: readonly AgentTask[]): string {
+    const marker = "<!-- stella-mention-handoff -->";
+    const markerIndex = prompt.indexOf(marker);
+    const basePrompt = (markerIndex >= 0 ? prompt.slice(0, markerIndex) : prompt).trimEnd();
+    if (predecessors.length === 0) return basePrompt;
+    return [
+      basePrompt,
+      "",
+      marker,
+      "## 前序 Agent 实际产物",
+      ...predecessors.map((candidate) => `### ${candidate.agentSnapshot.name}（@${candidate.agentSnapshot.callsign}）\n${candidate.output ?? ""}`),
+      "",
+      "请基于以上已持久化产物继续工作；不要重新假设前序工作尚未发生。",
+    ].join("\n");
+  }
+
   #activity(
     taskId: string,
     kind: TaskActivity["kind"],
@@ -1331,9 +1363,14 @@ export class AgentTaskService {
   }
 
   async #commit(transform: (current: BoardState) => BoardState): Promise<BoardBootstrap> {
-    const board = await this.#repository.update(transform);
+    let changed = false;
+    const board = await this.#repository.update((current) => {
+      const next = transform(current);
+      changed = next !== current;
+      return next;
+    });
     const bootstrap = Object.freeze({ board, catalog: this.#catalogFor(board) });
-    this.#emitChanged(bootstrap);
+    if (changed) this.#emitChanged(bootstrap);
     return bootstrap;
   }
 }

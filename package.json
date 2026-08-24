@@ -1,6 +1,6 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "productName": "Stella Pi Workbench",
   "private": true,
   "description": "A local-first Pi desktop workbench with native chat, model routing, inspectable agent teams, Kanban, DAG workflows, and artifact previews.",
@@ -47,7 +47,7 @@
     "check": "npm run typecheck && npm run lint && npm test"
   },
   "dependencies": {
-    "@earendil-works/pi-coding-agent": "0.83.0",
+    "@earendil-works/pi-coding-agent": "0.84.2",
     "@fontsource-variable/manrope": "5.2.8",
     "@fontsource/marck-script": "5.2.8",
     "@jvmr/pptx-to-html": "^1.1.1",

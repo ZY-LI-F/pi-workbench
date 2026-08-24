@@ -25,6 +25,15 @@ afterEach(async () => {
 });
 
 describe("BoardStore", () => {
+  it("does not rewrite storage when a guarded transaction returns the current state", async () => {
+    const path = await temporaryBoardPath();
+    const store = new BoardStore(path);
+    const initial = await store.initialize();
+
+    await expect(store.update((current) => current)).resolves.toBe(initial);
+    await expect(readFile(path, "utf8")).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
   it("persists transactional updates as validated JSON", async () => {
     const path = await temporaryBoardPath();
     const store = new BoardStore(path);

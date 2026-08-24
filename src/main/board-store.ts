@@ -126,7 +126,9 @@ export class BoardStore implements BoardRepository {
   update(transform: (current: BoardState) => BoardState): Promise<BoardState> {
     const operation = this.#writeQueue.then(async () => {
       const current = await this.read();
-      const next = parseBoardState(transform(current));
+      const transformed = transform(current);
+      if (transformed === current) return current;
+      const next = parseBoardState(transformed);
       await this.#write(next);
       this.#state = next;
       return next;

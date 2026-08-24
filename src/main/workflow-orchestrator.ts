@@ -496,8 +496,8 @@ export class WorkflowOrchestrator {
   ): Promise<void> {
     const runtimeToken = this.#id();
     const runtime = this.#runtimeFactory.create({
-      emitPiEvent: (event) => void this.#handlePiEvent(run.id, event).catch((error) => this.#failRun(run.id, error, runtimeToken)).catch((error) => this.#reportError(error)),
-      emitRuntimeSignal: (signal) => this.#handleRuntimeSignal(run.id, signal),
+      emitPiEvent: (event) => void this.#handlePiEvent(run.id, runtimeToken, event).catch((error) => this.#failRun(run.id, error, runtimeToken)).catch((error) => this.#reportError(error)),
+      emitRuntimeSignal: (signal) => this.#handleRuntimeSignal(run.id, runtimeToken, signal),
     });
     const active: ActiveAgentRun = {
       taskId: task.id,
@@ -589,9 +589,9 @@ export class WorkflowOrchestrator {
     }
   }
 
-  async #handlePiEvent(runId: string, event: unknown): Promise<void> {
+  async #handlePiEvent(runId: string, runtimeToken: string, event: unknown): Promise<void> {
     const active = this.#activeAgents.get(runId);
-    if (!active) return;
+    if (!active || active.runtimeToken !== runtimeToken) return;
     const eventType = stringField(event, "type") ?? "unknown";
     const toolName = stringField(event, "toolName") ?? stringField(event, "name");
     this.#emitBoardEvent({
@@ -610,24 +610,29 @@ export class WorkflowOrchestrator {
     }
     if (eventType === "tool_execution_start" || eventType === "tool_execution_end") {
       const now = this.#now();
-      await this.#commit((current) => ({
-        ...current,
-        activities: [...current.activities, this.#activity(
-          active.taskId,
-          "tool",
-          `${toolName ?? "工具"}${eventType === "tool_execution_start" ? "开始运行" : "运行结束"}`,
-          undefined,
-          now,
-          runId,
-          active.stepId,
-        )],
-      }));
+      await this.#commit((current) => {
+        const latestRun = current.runs.find((candidate) => candidate.id === runId);
+        const latestStep = latestRun?.steps.find((candidate) => candidate.stepId === active.stepId);
+        if (this.#activeAgents.get(runId) !== active || latestStep?.runtimeToken !== runtimeToken) return current;
+        return {
+          ...current,
+          activities: [...current.activities, this.#activity(
+            active.taskId,
+            "tool",
+            `${toolName ?? "工具"}${eventType === "tool_execution_start" ? "开始运行" : "运行结束"}`,
+            undefined,
+            now,
+            runId,
+            active.stepId,
+          )],
+        };
+      });
     }
   }
 
-  #handleRuntimeSignal(runId: string, signal: RuntimeSignal): void {
+  #handleRuntimeSignal(runId: string, runtimeToken: string, signal: RuntimeSignal): void {
     const active = this.#activeAgents.get(runId);
-    if (!active) return;
+    if (!active || active.runtimeToken !== runtimeToken) return;
     this.#emitBoardEvent({
       type: "agent-event",
       taskId: active.taskId,
@@ -637,7 +642,7 @@ export class WorkflowOrchestrator {
       message: signal.type === "runtime_stderr" || signal.type === "protocol_error" ? signal.message : undefined,
     });
     if (signal.type === "runtime_exit") {
-      void this.#failRun(runId, new Error(`Pi RPC 意外退出 (code=${String(signal.code)}, signal=${String(signal.signal)})`)).catch((error) => this.#reportError(error));
+      void this.#failRun(runId, new Error(`Pi RPC 意外退出 (code=${String(signal.code)}, signal=${String(signal.signal)})`), runtimeToken).catch((error) => this.#reportError(error));
     }
   }
 
@@ -663,7 +668,7 @@ export class WorkflowOrchestrator {
       const board = await this.#repository.read();
       const run = this.#run(board, active.runId);
       if (["failed", "blocked", "interrupted", "reported"].includes(run.status)) {
-        this.#activeAgents.delete(active.runId);
+        if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
         try {
           await active.runtime.stop();
         } finally {
@@ -682,6 +687,7 @@ export class WorkflowOrchestrator {
         cost: stats.cost,
       });
       const now = this.#now();
+      let applied = false;
       await this.#commit((current) => {
         const latestRun = this.#run(current, active.runId);
         const latestTask = this.#task(current, active.taskId);
@@ -690,6 +696,7 @@ export class WorkflowOrchestrator {
           || latestStep?.runtimeToken !== active.runtimeToken) {
           return current;
         }
+        applied = true;
         const completedStep: StepRun = Object.freeze({ ...step, status: "succeeded", runtimeToken: undefined, completedAt: now, sessionPath: state.sessionFile, artifact });
         return {
           ...current,
@@ -705,7 +712,16 @@ export class WorkflowOrchestrator {
           activities: [...current.activities, this.#activity(active.taskId, "artifact", `${step.name}已产出结果`, state.sessionFile, now, active.runId, active.stepId)],
         };
       });
-      this.#activeAgents.delete(active.runId);
+      if (!applied) {
+        if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
+        try {
+          await active.runtime.stop();
+        } finally {
+          active.lease?.release();
+        }
+        return;
+      }
+      if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
       try {
         await active.runtime.stop();
       } finally {
@@ -739,14 +755,16 @@ export class WorkflowOrchestrator {
   async #failRun(runId: string, cause: unknown, runtimeToken?: string): Promise<void> {
     const message = cause instanceof Error ? cause.message : String(cause);
     const active = this.#activeAgents.get(runId);
-    const ownedUnpersistedRuntime = runtimeToken !== undefined && active?.runtimeToken === runtimeToken;
-    this.#activeAgents.delete(runId);
-    this.#waitingAdmissions.get(runId)?.controller.abort();
-    if (active) {
+    if (runtimeToken !== undefined && active && active.runtimeToken !== runtimeToken) return;
+    const ownedActive = runtimeToken === undefined || active?.runtimeToken === runtimeToken ? active : undefined;
+    const ownedUnpersistedRuntime = runtimeToken !== undefined && ownedActive?.runtimeToken === runtimeToken;
+    if (ownedActive && this.#activeAgents.get(runId) === ownedActive) this.#activeAgents.delete(runId);
+    if (runtimeToken === undefined) this.#waitingAdmissions.get(runId)?.controller.abort();
+    if (ownedActive) {
       try {
-        await active.runtime.stop();
+        await ownedActive.runtime.stop();
       } finally {
-        active.lease?.release();
+        ownedActive.lease?.release();
       }
     }
     const now = this.#now();
@@ -856,9 +874,14 @@ export class WorkflowOrchestrator {
   }
 
   async #commit(transform: (current: BoardState) => BoardState): Promise<BoardBootstrap> {
-    const board = await this.#repository.update(transform);
+    let changed = false;
+    const board = await this.#repository.update((current) => {
+      const next = transform(current);
+      changed = next !== current;
+      return next;
+    });
     const bootstrap = Object.freeze({ board, catalog: catalogForBoard(this.#catalog, board) });
-    this.#emitBoardEvent({ type: "snapshot", bootstrap });
+    if (changed) this.#emitBoardEvent({ type: "snapshot", bootstrap });
     return bootstrap;
   }
 }

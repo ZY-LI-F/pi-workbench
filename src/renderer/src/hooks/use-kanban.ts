@@ -110,16 +110,23 @@ export interface KanbanController {
 export function useKanban(api: StellaDesktopApi): KanbanController {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const taskCapabilityState = useRef<CapabilityState | undefined>(undefined);
-  const bootstrapEpoch = useRef(0);
+  const stateEpoch = useRef(0);
+  const snapshotEpoch = useRef(0);
+  const operationSequence = useRef(0);
+  const latestAppliedOperation = useRef(0);
+  const pendingCounts = useRef(new Map<string, number>());
 
   useEffect(() => {
     let active = true;
     const initialize = () => {
-      const epoch = bootstrapEpoch.current;
+      const epoch = stateEpoch.current;
       void api.boardInitialize()
         .then((bootstrap) => {
           // 若等待期间已应用更新的快照，丢弃过期的 initialize 结果，避免状态回滚。
-          if (active && bootstrapEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", bootstrap });
+          if (active && stateEpoch.current === epoch) {
+            stateEpoch.current += 1;
+            dispatch({ type: "BOOTSTRAP", bootstrap });
+          }
         })
         .catch((error: unknown) => { if (active) dispatch({ type: "FAILED", error: errorMessage(error) }); });
     };
@@ -135,7 +142,8 @@ export function useKanban(api: StellaDesktopApi): KanbanController {
       }
       if (event.source !== "board") return;
       if (event.payload.type === "snapshot") {
-        bootstrapEpoch.current += 1;
+        snapshotEpoch.current += 1;
+        stateEpoch.current += 1;
         dispatch({ type: "BOOTSTRAP", bootstrap: event.payload.bootstrap });
       }
       else if (event.payload.type === "agent-event") dispatch({ type: "EVENT", event: event.payload });
@@ -151,17 +159,32 @@ export function useKanban(api: StellaDesktopApi): KanbanController {
   }, [api]);
 
   const perform = useCallback(async (key: string, operation: () => Promise<BoardBootstrap>) => {
-    dispatch({ type: "PENDING", key, active: true });
+    const snapshotAtStart = snapshotEpoch.current;
+    const sequence = ++operationSequence.current;
+    const nextCount = (pendingCounts.current.get(key) ?? 0) + 1;
+    pendingCounts.current.set(key, nextCount);
+    if (nextCount === 1) dispatch({ type: "PENDING", key, active: true });
     try {
       const bootstrap = await operation();
-      bootstrapEpoch.current += 1;
-      dispatch({ type: "BOOTSTRAP", bootstrap });
+      // Board operations emit snapshots as well as returning one. If a newer
+      // snapshot or operation already won the race, don't roll the UI back.
+      if (snapshotEpoch.current === snapshotAtStart && sequence >= latestAppliedOperation.current) {
+        latestAppliedOperation.current = sequence;
+        stateEpoch.current += 1;
+        dispatch({ type: "BOOTSTRAP", bootstrap });
+      }
       return bootstrap;
     } catch (error) {
       dispatch({ type: "FAILED", error: errorMessage(error) });
       throw error;
     } finally {
-      dispatch({ type: "PENDING", key, active: false });
+      const remaining = Math.max(0, (pendingCounts.current.get(key) ?? 1) - 1);
+      if (remaining === 0) {
+        pendingCounts.current.delete(key);
+        dispatch({ type: "PENDING", key, active: false });
+      } else {
+        pendingCounts.current.set(key, remaining);
+      }
     }
   }, []);
 

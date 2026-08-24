@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { PiModelConfigurationProviderInput } from "../../src/shared/model-configuration";
 import {
   FileModelConfigurationStorage,
@@ -13,6 +13,10 @@ import {
   type ModelConfigurationStorage,
 } from "../../src/main/model-configuration-service";
 import type { RemoteModelCatalogDiscovery } from "../../src/main/model-catalog-discovery";
+
+const AGENT_DIR = resolve("tests/fixtures/pi-agent");
+const AUTH_PATH = join(AGENT_DIR, "auth.json").replace(/\\/g, "/");
+const MODELS_PATH = join(AGENT_DIR, "models.json").replace(/\\/g, "/");
 
 class MemoryModelConfigurationStorage implements ModelConfigurationStorage {
   readonly values = new Map<string, string>();
@@ -110,7 +114,7 @@ function service(
   discoverModels: RemoteModelCatalogDiscovery = emptyDiscovery(),
 ) {
   return new ModelConfigurationService({
-    agentDir: "C:/pi-agent",
+    agentDir: AGENT_DIR,
     storage,
     inspect: vi.fn(async () => inspection),
     discoverModels,
@@ -217,7 +221,7 @@ describe("ModelConfigurationService", () => {
 
   it("returns credential-blind provider metadata and never exposes inline keys", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/models.json": JSON.stringify({
+      [MODELS_PATH]: JSON.stringify({
         providers: {
           ollama: {
             name: "Ollama",
@@ -278,12 +282,12 @@ describe("ModelConfigurationService", () => {
       getAuth: getAuth as unknown as ModelConfigurationRuntime["getAuth"],
     });
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/auth.json": JSON.stringify({ openai: { type: "api_key", key: "!password-manager read openai" } }),
+      [AUTH_PATH]: JSON.stringify({ openai: { type: "api_key", key: "!password-manager read openai" } }),
     });
 
     const runtimeFactory = vi.fn(async () => runtime);
     const target = new ModelConfigurationService({
-      agentDir: "C:/pi-agent",
+      agentDir: AGENT_DIR,
       storage,
       inspect: vi.fn(async () => INSPECTION),
       discoverModels: emptyDiscovery(),
@@ -358,8 +362,8 @@ describe("ModelConfigurationService", () => {
 
   it("restores only the exact model configuration version written by the transaction", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/auth.json": JSON.stringify({ openai: { type: "api_key", key: "old-key" } }),
-      "C:/pi-agent/models.json": JSON.stringify({ providers: {} }),
+      [AUTH_PATH]: JSON.stringify({ openai: { type: "api_key", key: "old-key" } }),
+      [MODELS_PATH]: JSON.stringify({ providers: {} }),
     });
     const target = service(storage);
     const checkpoint = await target.createCheckpoint();
@@ -367,15 +371,15 @@ describe("ModelConfigurationService", () => {
     const applied = await target.createCheckpoint();
 
     await target.restoreCheckpoint(checkpoint, applied);
-    expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}")).toEqual({
+    expect(JSON.parse(storage.values.get(AUTH_PATH) ?? "{}")).toEqual({
       openai: { type: "api_key", key: "old-key" },
     });
 
     await target.saveApiKey({ providerId: "openai", apiKey: "transaction-key" });
     const staleExpected = await target.createCheckpoint();
-    storage.values.set("C:/pi-agent/auth.json", JSON.stringify({ openai: { type: "api_key", key: "external-edit" } }));
+    storage.values.set(AUTH_PATH, JSON.stringify({ openai: { type: "api_key", key: "external-edit" } }));
     await expect(target.restoreCheckpoint(checkpoint, staleExpected)).rejects.toThrow("回滚冲突");
-    expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}").openai.key).toBe("external-edit");
+    expect(JSON.parse(storage.values.get(AUTH_PATH) ?? "{}").openai.key).toBe("external-edit");
   });
 
   it("tests a selected model with an unsaved key without persisting or returning the secret", async () => {
@@ -475,14 +479,14 @@ describe("ModelConfigurationService", () => {
 
   it("stores an API key in auth.json while preserving provider-scoped environment values", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/auth.json": JSON.stringify({
+      [AUTH_PATH]: JSON.stringify({
         openai: { type: "api_key", key: "old", env: { HTTPS_PROXY: "http://proxy.local" } },
       }),
     });
 
     await service(storage).saveApiKey({ providerId: "openai", apiKey: "new-key" });
 
-    expect(JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}")).toEqual({
+    expect(JSON.parse(storage.values.get(AUTH_PATH) ?? "{}")).toEqual({
       openai: { type: "api_key", key: "new-key", env: { HTTPS_PROXY: "http://proxy.local" } },
     });
   });
@@ -496,8 +500,8 @@ describe("ModelConfigurationService", () => {
       apiKey: "aliyun-secret",
     });
 
-    const models = JSON.parse(storage.values.get("C:/pi-agent/models.json") ?? "{}") as Record<string, any>;
-    const auth = JSON.parse(storage.values.get("C:/pi-agent/auth.json") ?? "{}") as Record<string, any>;
+    const models = JSON.parse(storage.values.get(MODELS_PATH) ?? "{}") as Record<string, any>;
+    const auth = JSON.parse(storage.values.get(AUTH_PATH) ?? "{}") as Record<string, any>;
     expect(models.providers["aliyun-qwen"]).toMatchObject({
       name: "阿里百炼",
       baseUrl: "http://localhost:11434/v1",
@@ -516,7 +520,7 @@ describe("ModelConfigurationService", () => {
 
   it("updates form-owned provider fields but preserves inline auth and advanced compatibility", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/models.json": JSON.stringify({
+      [MODELS_PATH]: JSON.stringify({
         providers: {
           ollama: {
             baseUrl: "http://old.local/v1",
@@ -531,7 +535,7 @@ describe("ModelConfigurationService", () => {
 
     await service(storage).upsertProvider(providerInput());
 
-    const stored = JSON.parse(storage.values.get("C:/pi-agent/models.json") ?? "{}") as Record<string, any>;
+    const stored = JSON.parse(storage.values.get(MODELS_PATH) ?? "{}") as Record<string, any>;
     expect(stored.providers.ollama.apiKey).toBe("$OLLAMA_KEY");
     expect(stored.providers.ollama.compat).toEqual({ supportsDeveloperRole: false });
     expect(stored.providers.ollama.models[0].headers).toEqual({ "x-route": "local" });
@@ -547,7 +551,7 @@ describe("ModelConfigurationService", () => {
 
   it("preserves a valid but form-unmanaged Pi API value when editing other fields", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/models.json": JSON.stringify({ providers: { openai: { api: "openai-codex-responses", baseUrl: "https://proxy.example/v1" } } }),
+      [MODELS_PATH]: JSON.stringify({ providers: { openai: { api: "openai-codex-responses", baseUrl: "https://proxy.example/v1" } } }),
     });
 
     await service(storage).upsertProvider({
@@ -558,14 +562,14 @@ describe("ModelConfigurationService", () => {
       models: [],
     });
 
-    const stored = JSON.parse(storage.values.get("C:/pi-agent/models.json") ?? "{}") as Record<string, any>;
+    const stored = JSON.parse(storage.values.get(MODELS_PATH) ?? "{}") as Record<string, any>;
     expect(stored.providers.openai.api).toBe("openai-codex-responses");
     expect(stored.providers.openai.baseUrl).toBe("https://new-proxy.example/v1");
   });
 
   it("does not expose credentials embedded in a legacy Base URL and preserves them unless explicitly replaced", async () => {
     const storage = new MemoryModelConfigurationStorage({
-      "C:/pi-agent/models.json": JSON.stringify({ providers: { openai: { baseUrl: "https://user:pass@proxy.example/v1" } } }),
+      [MODELS_PATH]: JSON.stringify({ providers: { openai: { baseUrl: "https://user:pass@proxy.example/v1" } } }),
     });
     const target = service(storage);
 
@@ -574,7 +578,7 @@ describe("ModelConfigurationService", () => {
     expect(JSON.stringify(snapshot)).not.toContain("pass");
 
     await target.upsertProvider({ id: "openai", name: "Proxy", authHeader: false, models: [] });
-    const stored = JSON.parse(storage.values.get("C:/pi-agent/models.json") ?? "{}") as Record<string, any>;
+    const stored = JSON.parse(storage.values.get(MODELS_PATH) ?? "{}") as Record<string, any>;
     expect(stored.providers.openai.baseUrl).toBe("https://user:pass@proxy.example/v1");
   });
 });

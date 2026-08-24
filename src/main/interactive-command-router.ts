@@ -30,6 +30,7 @@ export class InteractiveCommandRouter {
   readonly #admission: WorkspaceAdmission;
   readonly #id: () => string;
   #active?: InteractiveLeaseState;
+  #compacting = false;
 
   constructor(dependencies: InteractiveCommandRouterDependencies) {
     this.#runtime = dependencies.runtime;
@@ -40,6 +41,7 @@ export class InteractiveCommandRouter {
   async send(command: PiCommand, workspacePath: string): Promise<PiResponse> {
     if (TURN_COMMANDS.has(command.type)) return this.#sendTurn(command, workspacePath);
     if (command.type === "bash") return this.#sendBash(command, workspacePath);
+    if (command.type === "compact") return this.#sendCompaction(command);
     return this.#runtime.send(command);
   }
 
@@ -90,6 +92,17 @@ export class InteractiveCommandRouter {
       return await this.#runtime.send(command);
     } finally {
       lease.release();
+    }
+  }
+
+  async #sendCompaction(command: PiCommand): Promise<PiResponse> {
+    if (this.#active) throw new Error("Pi 正在生成或处理队列消息；请等待当前回合完成后再压缩上下文");
+    if (this.#compacting) throw new Error("上下文压缩已在进行中");
+    this.#compacting = true;
+    try {
+      return await this.#runtime.send(command);
+    } finally {
+      this.#compacting = false;
     }
   }
 }

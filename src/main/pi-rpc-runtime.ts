@@ -19,6 +19,8 @@ interface RuntimeDependencies {
   readonly emitRuntimeSignal: (event: RuntimeSignal) => void;
   /** Set to 0 to disable. Defaults to 120 seconds. */
   readonly requestTimeoutMs?: number;
+  /** Manual compaction may legitimately take several minutes. Set to 0 to disable. Defaults to 10 minutes. */
+  readonly compactionTimeoutMs?: number;
   /** Maximum size of one newline-delimited Pi RPC record. Set to 0 to disable. Defaults to 64 MiB. */
   readonly maxProtocolRecordBytes?: number;
 }
@@ -68,6 +70,7 @@ export class PiRpcRuntime {
   readonly #pending = new Map<string, PendingRequest>();
   readonly #intentionalStops = new WeakSet<ChildProcessWithoutNullStreams>();
   readonly #requestTimeoutMs: number;
+  readonly #compactionTimeoutMs: number;
   readonly #maxProtocolRecordBytes: number;
   #process: ChildProcessWithoutNullStreams | null = null;
   #stdoutBuffer = "";
@@ -76,12 +79,15 @@ export class PiRpcRuntime {
   constructor(dependencies: RuntimeDependencies) {
     const timeout = dependencies.requestTimeoutMs ?? 120_000;
     if (!Number.isFinite(timeout) || timeout < 0) throw new Error("Pi RPC requestTimeoutMs 必须是非负有限数字");
+    const compactionTimeout = dependencies.compactionTimeoutMs ?? 600_000;
+    if (!Number.isFinite(compactionTimeout) || compactionTimeout < 0) throw new Error("Pi RPC compactionTimeoutMs 必须是非负有限数字");
     const maxProtocolRecordBytes = dependencies.maxProtocolRecordBytes ?? 64 * 1024 * 1024;
     if (!Number.isSafeInteger(maxProtocolRecordBytes) || maxProtocolRecordBytes < 0) {
       throw new Error("Pi RPC maxProtocolRecordBytes 必须是非负安全整数");
     }
     this.#dependencies = dependencies;
     this.#requestTimeoutMs = timeout;
+    this.#compactionTimeoutMs = compactionTimeout;
     this.#maxProtocolRecordBytes = maxProtocolRecordBytes;
   }
 
@@ -197,18 +203,19 @@ export class PiRpcRuntime {
     const id = randomUUID();
     const record = { ...command, id };
     return new Promise<PiResponse>((resolve, reject) => {
-      const timeout = this.#requestTimeoutMs > 0
+      const requestTimeoutMs = command.type === "compact" ? this.#compactionTimeoutMs : this.#requestTimeoutMs;
+      const timeout = requestTimeoutMs > 0
         ? setTimeout(() => {
             if (!this.#pending.delete(id)) return;
             const error = new Error(
-              `Pi RPC 命令 ${command.type} 在 ${this.#requestTimeoutMs}ms 内没有返回响应；执行结果未知，Runtime 已停止`,
+              `Pi RPC 命令 ${command.type} 在 ${requestTimeoutMs}ms 内没有返回响应；执行结果未知，Runtime 已停止`,
             );
             this.#dependencies.emitRuntimeSignal({ type: "protocol_error", message: error.message, record: JSON.stringify(record) });
             void this.stop().then(
               () => reject(error),
               (stopCause: unknown) => reject(new AggregateError([error, stopCause], "Pi RPC 超时且 Runtime 停止失败")),
             );
-          }, this.#requestTimeoutMs)
+          }, requestTimeoutMs)
         : undefined;
       timeout?.unref();
       this.#pending.set(id, { resolve, reject, timeout });
@@ -309,5 +316,12 @@ export function piRpcMaxRecordBytesFromEnvironment(value: string | undefined): n
   if (!Number.isSafeInteger(parsed) || parsed < 0) {
     throw new Error("STELLA_PI_RPC_MAX_RECORD_BYTES 必须是非负安全整数，0 表示禁用边界");
   }
+  return parsed;
+}
+
+export function piRpcCompactionTimeoutFromEnvironment(value: string | undefined): number {
+  if (value === undefined || value.trim() === "") return 600_000;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error("STELLA_PI_COMPACTION_TIMEOUT_MS 必须是非负数字，0 表示禁用超时");
   return parsed;
 }

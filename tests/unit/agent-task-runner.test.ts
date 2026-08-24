@@ -79,12 +79,13 @@ async function setup(
   globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
   resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string> = async (projectPath) => projectPath,
   resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
+  assertExecutionAvailable: () => void = () => undefined,
 ) {
   const repository = new MemoryRepository();
   const id = idFactory();
   const now = () => "2026-07-18T00:00:00.000Z";
   const boardService = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
-  const agentTaskService = new AgentTaskService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, id, now });
+  const agentTaskService = new AgentTaskService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, assertExecutionAvailable, id, now });
   const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
   const events: unknown[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
@@ -344,6 +345,22 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.agentTasks).toHaveLength(before.agentTasks.length);
   });
 
+  it("injects persisted predecessor output when the next mention Worker is claimed", async () => {
+    const runtimeFactory = new FakeAgentRuntimeFactory(["调研结论：入口位于 src/main.ts", "实现完成"]);
+    const { agentTaskService, runtimeFactory: factory, runner, createTask } = await setup(runtimeFactory);
+    const taskId = await createTask("串行交接任务");
+    await agentTaskService.addComment({ taskId, body: "请由 @builder 调研，再请 @VERIFY 根据调研核验" });
+    runner.start();
+    await vi.waitFor(() => expect(factory.runtimes).toHaveLength(1));
+    factory.runtimes[0]?.settle();
+    await vi.waitFor(() => expect(factory.runtimes).toHaveLength(2));
+
+    expect(factory.runtimes[1]?.commands.find((command) => command.type === "prompt")).toMatchObject({
+      type: "prompt",
+      message: expect.stringContaining("调研结论：入口位于 src/main.ts"),
+    });
+  });
+
   it("stores @tokens literally when the generic board disables Team dispatch", async () => {
     const { repository, agentTaskService, createTask } = await setup();
     const taskId = await createTask("普通看板记录");
@@ -353,6 +370,26 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.comments.at(-1)?.body).toBe("记录 @builder 尚未开始");
     expect(repository.state.agentTasks.filter((task) => task.taskId === taskId)).toEqual([]);
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("planned");
+  });
+
+  it("keeps plain comments available but rejects execution effects when Pi is unavailable", async () => {
+    const assertExecutionAvailable = vi.fn(() => { throw new Error("Pi Runtime 不可用于任务执行"); });
+    const { repository, agentTaskService, createTask } = await setup(
+      new FakeAgentRuntimeFactory(),
+      () => undefined,
+      async (projectPath) => projectPath,
+      async () => true,
+      assertExecutionAvailable,
+    );
+    const taskId = await createTask("Capability 评论边界");
+
+    await agentTaskService.addComment({ taskId, body: "仅记录当前阻塞，不创建执行" });
+    const commentsBeforeMention = repository.state.comments.length;
+    await expect(agentTaskService.addComment({ taskId, body: "请由 @builder 执行" })).rejects.toThrow("Pi Runtime 不可用于任务执行");
+
+    expect(repository.state.comments).toHaveLength(commentsBeforeMention);
+    expect(repository.state.agentTasks).toHaveLength(0);
+    expect(assertExecutionAvailable).toHaveBeenCalledOnce();
   });
 
   it("rejects mixing LEAD coordinator mode with direct Worker mentions atomically", async () => {
@@ -640,6 +677,14 @@ describe("AgentTaskRunner", () => {
     const children = repository.state.agentTasks.filter((task) => task.parentAgentTaskId === leader?.id && task.kind === "delegated");
     expect(children.map((child) => child.status)).toEqual(["failed", "reported"]);
     expect(children.some((child) => child.status === "cancelled")).toBe(false);
+
+    if (!leader) throw new Error("测试 Squad Leader 不存在");
+    await repository.update((current) => ({
+      ...current,
+      agentTasks: current.agentTasks.map((task) => task.id === leader.id ? Object.freeze({ ...task, kind: "squad-leader" as const }) : task),
+    }));
+    await agentTaskService.addComment({ taskId, body: "继续缩小范围执行。", dispatchMentions: false });
+    expect(repository.state.agentTasks.find((task) => task.kind === "coordinator-review" && task.status === "queued")).toBeDefined();
   });
 
   it("continues the remaining Squad work when startup recovery finds an interrupted child", async () => {

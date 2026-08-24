@@ -59,6 +59,8 @@ interface TaskDetailPanelProps {
   readonly activities: readonly TaskActivity[];
   readonly busy: boolean;
   readonly executionEnabled: boolean;
+  readonly readOnly?: boolean;
+  readonly onOpenProject?: () => Promise<void>;
   readonly onClose: () => void;
   readonly onEdit: () => void;
   readonly onDispatch: () => Promise<void>;
@@ -82,6 +84,10 @@ interface MentionPreview {
   readonly coordinator?: boolean;
   readonly resumesLead?: boolean;
   readonly error?: string;
+}
+
+function isCoordinatorRoot(agentTask: AgentTask | undefined): boolean {
+  return agentTask?.kind === "coordinator" || agentTask?.kind === "squad-leader";
 }
 
 function timelineIcon(kind: TaskTimelineKind) {
@@ -120,6 +126,8 @@ export function TaskDetailPanel({
   activities,
   busy,
   executionEnabled,
+  readOnly = false,
+  onOpenProject,
   onClose,
   onEdit,
   onDispatch,
@@ -176,10 +184,12 @@ export function TaskDetailPanel({
         : squads.find((squad) => squad.id === executionTarget.squadId)?.name ?? executionTarget.squadId;
   const isRedispatch = task.stage === "blocked";
   const activeAgentTask = agentTasks.find((candidate) => candidate.id === task.activeAgentTaskId);
-  const waitingCoordinator = activeAgentTask?.kind === "coordinator" && activeAgentTask.status === "waiting_human";
+  const waitingCoordinator = isCoordinatorRoot(activeAgentTask) && activeAgentTask?.status === "waiting_human";
   const mentionAgents = useMemo(() => mentionsEnabled ? availableMentionAgentsForTask(task, catalog, squads) : Object.freeze([]), [catalog, mentionsEnabled, squads, task]);
   const mentionsDisabledReason = !mentionsEnabled
     ? "开启团队功能后可在任务记录中 @Agent 分发工作"
+    : !executionEnabled
+      ? "Pi Runtime 不可用；仍可记录普通消息，但暂时不能创建 AgentTask"
     : task.activeRunId || task.activeAgentTaskId
     ? waitingCoordinator
       ? "LEAD 正在等待你的普通回复；当前不能并行创建新的 mention"
@@ -206,12 +216,19 @@ export function TaskDetailPanel({
       : undefined;
   const mentionPreview = useMemo<MentionPreview>(() => {
     if (!commentBody.trim()) return Object.freeze({ agents: Object.freeze([]) });
-    if (!mentionsEnabled) return Object.freeze({ agents: Object.freeze([]) });
+    if (!mentionsEnabled) {
+      if (!waitingCoordinator) return Object.freeze({ agents: Object.freeze([]) });
+      if (!executionEnabled) return Object.freeze({ agents: Object.freeze([]), error: "Pi Runtime 不可用，当前无法唤醒等待中的 LEAD" });
+      return Object.freeze({ agents: Object.freeze([]), resumesLead: true });
+    }
     try {
       const previewBody = activeMentionQuery
         ? `${commentBody.slice(0, activeMentionQuery.start)}${commentBody.slice(activeMentionQuery.end)}`
         : commentBody;
       const agents = parseAgentMentions(previewBody, mentionAgents).agents.map((agent) => Object.freeze({ id: agent.id, name: agent.name, callsign: agent.callsign }));
+      if (!executionEnabled && (agents.length > 0 || waitingCoordinator)) {
+        return Object.freeze({ agents: Object.freeze(agents), error: "Pi Runtime 不可用；普通记录仍可提交，但 Agent 分发和 LEAD 恢复已暂停" });
+      }
       if (agents.length === 0 && waitingCoordinator) return Object.freeze({ agents: Object.freeze([]), resumesLead: true });
       if (agents.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         return Object.freeze({ agents: Object.freeze(agents), error: "任务正在执行；请先中止或等待完成后再使用 @mention 分发" });
@@ -219,15 +236,19 @@ export function TaskDetailPanel({
       if (agents.length > 0 && task.stage === "completed") {
         return Object.freeze({ agents: Object.freeze(agents), error: "已完成任务需先移回待规划列才能使用 @mention 分发" });
       }
+      const lead = agents.find((agent) => agent.id === "lead");
       const coordinator = agents[0]?.id === "lead";
-      if (coordinator && agents.length > 1) {
+      if (lead && !coordinator) {
+        return Object.freeze({ agents: Object.freeze(agents), coordinator: false, error: "@LEAD 必须是消息中的第一个且唯一的 Agent mention" });
+      }
+      if (lead && agents.length > 1) {
         return Object.freeze({ agents: Object.freeze(agents), coordinator, error: "@LEAD 协调模式不能与直接 Worker mention 混用；请让 LEAD 通过结构化计划委派" });
       }
       return Object.freeze({ agents: Object.freeze(agents), coordinator });
     } catch (cause) {
       return Object.freeze({ agents: Object.freeze([]), error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [activeMentionQuery, commentBody, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator]);
+  }, [activeMentionQuery, commentBody, executionEnabled, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator]);
 
   useEffect(() => {
     setCommentBody("");
@@ -286,6 +307,13 @@ export function TaskDetailPanel({
           </div>
         )}
         {task.blockedReason && <div className="task-detail__blocked"><XCircle size={14} /><span>{task.blockedReason}</span></div>}
+        {readOnly && (
+          <div className="task-detail__blocked">
+            <ExternalLink size={14} />
+            <span>该任务属于“{task.projectName}”。当前以只读方式查看，请先打开对应项目后再修改。</span>
+            {onOpenProject && <button type="button" className="button-secondary" onClick={() => void perform(onOpenProject)}>打开项目</button>}
+          </div>
+        )}
 
         <AgentExecutionGraph
           agentTasks={agentTasks}
@@ -297,7 +325,7 @@ export function TaskDetailPanel({
           workflowExpected={executionTarget.kind === "workflow"}
           runs={runs}
           busy={busy}
-          executionEnabled={executionEnabled}
+          executionEnabled={executionEnabled && !readOnly}
           onRevealPath={onRevealPath}
           onContinueInPi={onContinueInPi}
           onError={setError}
@@ -329,14 +357,14 @@ export function TaskDetailPanel({
                     {entry.sessionPath && (
                       <div className="task-room-entry__session-actions">
                         <button type="button" className="button-secondary" onClick={() => onRevealPath(entry.sessionPath ?? "")}><ExternalLink size={12} />文件位置</button>
-                        <button type="button" className="button-secondary" disabled={!executionEnabled || busy} onClick={() => void perform(() => onContinueInPi(entry.sessionPath ?? ""))}><MessagesSquare size={12} />在 Pi 中继续</button>
+                        <button type="button" className="button-secondary" disabled={!executionEnabled || busy || readOnly} onClick={() => void perform(() => onContinueInPi(entry.sessionPath ?? ""))}><MessagesSquare size={12} />在 Pi 中继续</button>
                       </div>
                     )}
                     <TimelineProvenance entry={entry} />
                   </div>
                 </article>
 
-                {currentGate && entry.provenance.source === "workflow-step" && entry.provenance.sourceId === currentGate.id && (
+                {!readOnly && currentGate && entry.provenance.source === "workflow-step" && entry.provenance.sourceId === currentGate.id && (
                   <section className="human-gate-card task-room__inline-control">
                     <small>HUMAN GATE</small>
                     <h3>{currentGate.name}</h3>
@@ -349,7 +377,7 @@ export function TaskDetailPanel({
                   </section>
                 )}
 
-                {isReviewEntry(entry) && reviewTarget && (
+                {!readOnly && isReviewEntry(entry) && reviewTarget && (
                   <section className="execution-review-card task-room__inline-control">
                     <small>EXECUTION ACCEPTANCE</small>
                     <h3>验收本次执行报告</h3>
@@ -366,7 +394,7 @@ export function TaskDetailPanel({
             ))}
           </div>
 
-          <form className="task-comment-composer task-room__composer" onSubmit={(event) => {
+          {!readOnly && <form className="task-comment-composer task-room__composer" onSubmit={(event) => {
             event.preventDefault();
             const body = commentBody;
             void perform(async () => {
@@ -403,13 +431,13 @@ export function TaskDetailPanel({
               </div>
             )}
             <button type="submit" className="button-secondary" aria-label="发送评论" disabled={busy || !commentBody.trim() || Boolean(activeMentionQuery) || Boolean(mentionPreview.error)}><Send size={13} />发送消息</button>
-          </form>
+          </form>}
         </section>
       </div>
 
       {error && <p className="task-detail__error" role="alert">{error}</p>}
-      {!isManual && !executionEnabled && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <p className="task-detail__execution-disabled">Pi Runtime 不可用；任务记录仍可编辑，执行入口已暂停。</p>}
-      <footer className="task-detail__actions">
+      {!readOnly && !isManual && !executionEnabled && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <p className="task-detail__execution-disabled">Pi Runtime 不可用；任务记录仍可编辑，执行入口已暂停。</p>}
+      {!readOnly && <footer className="task-detail__actions">
         {!isManual && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed" && <button type="button" className="button-primary" disabled={busy || !executionEnabled} onClick={() => void perform(onDispatch)}>{isRedispatch ? <RotateCcw size={14} /> : <Play size={14} />}{isRedispatch ? "重新分发" : "开始执行"}</button>}
         {(task.activeRunId || task.activeAgentTaskId) && <button type="button" className="button-danger-soft" disabled={busy} onClick={() => void perform(onAbort)}><Ban size={14} />中止执行</button>}
         {!task.activeRunId && !task.activeAgentTaskId && <button type="button" className="button-secondary" disabled={busy || Boolean(task.awaitingReviewExecution)} title={task.awaitingReviewExecution ? "请先验收、退回或重新分发当前报告" : undefined} onClick={onEdit}><Pencil size={14} />编辑</button>}
@@ -425,7 +453,7 @@ export function TaskDetailPanel({
         {!task.activeRunId && !task.activeAgentTaskId && (!confirmDelete
           ? <button type="button" className="icon-button task-delete" aria-label="删除任务" onClick={() => setConfirmDelete(true)}><Trash2 size={15} /></button>
           : <button type="button" className="button-danger-soft" disabled={busy} onClick={() => void perform(onDelete)}><Trash2 size={14} />确认删除</button>)}
-      </footer>
+      </footer>}
     </aside>
   );
 }

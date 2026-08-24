@@ -58,7 +58,10 @@ function bootstrap(): RuntimeBootstrap {
   } as unknown as RuntimeBootstrap;
 }
 
-function renderWorkspace(apiOverrides: Partial<StellaDesktopApi> = {}) {
+function renderWorkspace(
+  apiOverrides: Partial<StellaDesktopApi> = {},
+  runtimeBootstrap: RuntimeBootstrap = bootstrap(),
+) {
   const api = {
     modelConfigurationInitialize: vi.fn(async () => SNAPSHOT),
     modelConfigurationRevealApiKey: vi.fn(async () => ({ providerId: "openai", apiKey: "resolved-secret", source: "OPENAI_API_KEY" })),
@@ -94,8 +97,9 @@ function renderWorkspace(apiOverrides: Partial<StellaDesktopApi> = {}) {
   render(
     <ModelConfigurationWorkspace
       api={api}
-      bootstrap={bootstrap()}
+      bootstrap={runtimeBootstrap}
       online
+      runtimeBusy={false}
       modelChanging={false}
       onOpenSidebar={vi.fn()}
       onModelChange={onModelChange}
@@ -109,6 +113,21 @@ function renderWorkspace(apiOverrides: Partial<StellaDesktopApi> = {}) {
 afterEach(() => cleanup());
 
 describe("ModelConfigurationWorkspace", () => {
+  it("falls back to an available Provider when Pi reports an unknown bootstrap route", async () => {
+    const unknownBootstrap = {
+      ...bootstrap(),
+      state: {
+        ...bootstrap().state,
+        model: { provider: "unknown", id: "unknown", name: "unknown", contextWindow: 0, reasoning: false },
+      },
+    } as RuntimeBootstrap;
+
+    renderWorkspace({}, unknownBootstrap);
+
+    await within(screen.getByLabelText("Provider 列表")).findByRole("button", { name: /OpenAI/ });
+    await waitFor(() => expect(screen.getByLabelText("Provider 配置台").textContent).toContain("查看或替换 API key"));
+  });
+
   it("shows the active route and switches only through Pi's available model catalog", async () => {
     const user = userEvent.setup();
     const { onModelChange } = renderWorkspace();

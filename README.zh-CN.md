@@ -32,7 +32,7 @@ Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造�
 - **真实连通测试**：可为 Provider 选择具体模型，发送一条独立的极短模型请求并显示成功/失败、实际模型、耗时和测试时间。测试不进入聊天历史、不改变全局模型、不重启当前 Pi RPC；输入框中的新 Key 仅作为本次请求的临时覆盖，空白时使用 Pi 当前凭据。兼容端点返回的错误正文可能回显认证信息，因此主进程只返回脱敏后的结构化诊断，不把原始正文送入页面。测试可能产生极少量 Token 费用。
 - **URL / Key 发现模型**：新建或编辑 Provider 时，可由主进程按协议请求远端模型目录；支持 OpenAI / Responses 的 `data[]`、Anthropic 兼容目录，以及 Gemini `models[]` 多页结果。新 Key 只在内存中用于发现，留空可使用 Pi 已保存的 API Key；结果支持搜索、逐项或批量加入与移除，并把远端明确返回的上下文、输出上限和图像能力带入表单。目录成功不等于模型可推理，保存后仍需执行上面的真实连通测试；未开放 `/models` 的端点会明确返回 404，并保留手工添加 Model ID 的路径。
 - **自定义端点与模型**：受约束表单支持 `openai-completions`、`openai-responses`、`anthropic-messages` 与 `google-generative-ai`，可维护 Base URL、Bearer Header、模型 ID、Context、最大输出、推理和图像输入。已有 `headers`、`compat`、`modelOverrides`、内联密钥及其它高级字段原样保留。
-- **明确应用语义**：保存后重载真实 Pi RPC，并通过当前 `sessionFile` 恢复同一会话；“已保存”“本地已配置”“连通已验证”是三个独立状态，配置、重载或测试失败都会明确显示。OAuth/订阅登录仍由 Pi 的交互式 `/login <provider>` 流程负责。
+- **明确应用语义**：保存后重载真实 Pi RPC，并恢复同一个 session identity；已有 JSONL 时使用 `sessionFile`，空会话尚未写盘时使用精确 session ID。“已保存”“本地已配置”“连通已验证”是三个独立状态，配置、重载或测试失败都会明确显示。OAuth/订阅登录仍由 Pi 的交互式 `/login <provider>` 流程负责。
 
 ![Stella Pi 模型配置与 Provider 路由台](docs/model-configuration-stella.png)
 
@@ -51,7 +51,17 @@ Pi 在回复中给出绝对本地文件路径后，“输出文件与路径”�
 
 Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
 
-## v0.3.1 的简单架构
+## Session 上下文压缩
+
+Stella 直接使用 Pi 的自动/手动 compaction，不维护第二份会话摘要。手动压缩只有在当前回复以及 steering / follow-up 队列全部完成后才可执行，因为 Pi 的原生手动 `compact` 会先中止正在进行的 Agent 操作；并发的手动压缩也会被拒绝。
+
+压缩使用独立的 10 分钟 RPC 超时，不再复用普通命令的 2 分钟超时。成功后会显示 Pi 返回的压缩前与预计压缩后 Token；自动压缩失败会进入当前 session 的可见通知，不再静默失败或让检查器长期停留在压缩状态。
+
+| 环境变量 | 默认值 | 作用 |
+| --- | --- | --- |
+| `STELLA_PI_COMPACTION_TIMEOUT_MS` | `600000` | 手动压缩 RPC 超时；设为 `0` 可关闭该超时 |
+
+## v0.4.0 的简单架构
 
 Stella 不复制 Multica、HiClaw 或外部聊天平台，也不引入 PostgreSQL、Redis、远程后端和常驻 Daemon。整个本地控制面仍是一个 Electron 应用、一份 `board.json` 和真实 Pi 子进程，但把最容易混淆的事实拆开：
 
@@ -248,7 +258,7 @@ npm run preview
 
 ## Windows / macOS 安装包
 
-安装包采用“内置 Pi 运行时、复用用户配置”的结构。`@earendil-works/pi-coding-agent` 及其生产依赖会随 Stella 一起进入安装包，主进程使用 Electron 自带的 Node 运行内置 RPC 入口，因此接收者的全局 `pi` 命令安装在哪里、有没有加入 `PATH`，都不会影响 GUI 启动。
+安装包采用“内置 Pi 运行时、复用用户配置”的结构。`@earendil-works/pi-coding-agent@0.84.2` 及其生产依赖会随 Stella 一起进入安装包，主进程使用 Electron 自带的 Node 运行内置 RPC 入口，因此接收者的全局 `pi` 命令安装在哪里、有没有加入 `PATH`，都不会影响 GUI 启动。
 
 接收者自己的配置、认证、会话、扩展和技能仍从 Pi 的标准用户目录读取：
 
@@ -258,7 +268,7 @@ npm run preview
 
 不要把开发者自己的 API Key、OAuth 凭据或 `.pi/agent` 目录放进安装包。没有单独安装 Pi CLI 的用户也能启动 Stella，但首次调用模型前仍需配置自己的提供方凭据。
 
-看板状态存放在 Electron 的用户数据目录下 `board/board.json`，与被打开的代码仓库分离，因此不会向他人的项目写入 Stella 配置。旧 schema 升级时会先在同目录创建时间戳备份，再按 v1→v6 的确定性迁移链完整保留历史。v6 为 Task、Workflow Run 与 AgentTask 增加规格修订、执行尝试和不可变 `TaskSpecSnapshot`，为运行步骤增加 Runtime token，并为 Squad 增加版本与项目作用域；无法安全恢复的旧 Coordinator 会明确终止并写入迁移活动，而不是伪装继续执行。Agent 步骤使用接收者自己的 Pi 模型和认证；内置角色不硬编码 API Key、模型或本机 Pi 安装路径。
+看板状态存放在 Electron 的用户数据目录下 `board/board.json`，与被打开的代码仓库分离，因此不会向他人的项目写入 Stella 配置。旧 schema 升级时会先在同目录创建时间戳备份，再按 v1→v7 的确定性迁移链完整保留历史。v6 为 Task、Workflow Run 与 AgentTask 增加规格修订、执行尝试和不可变 `TaskSpecSnapshot`，为运行步骤增加 Runtime token，并为 Squad 增加版本与项目作用域；v7 增加用户自主推进的 Task。无法安全恢复的旧 Coordinator 会明确终止并写入迁移活动，而不是伪装继续执行。Agent 步骤使用接收者自己的 Pi 模型和认证；内置角色不硬编码 API Key、模型或本机 Pi 安装路径。
 
 ### 本机打包
 
@@ -283,9 +293,9 @@ npm run dist:mac:arm64
 产物统一写入 `release/`，文件名包含版本、系统与架构，例如：
 
 ```text
-Stella Pi Workbench-0.3.1-win-x64.exe
-Stella Pi Workbench-0.3.1-mac-x64.dmg
-Stella Pi Workbench-0.3.1-mac-arm64.dmg
+Stella Pi Workbench-0.4.0-win-x64.exe
+Stella Pi Workbench-0.4.0-mac-x64.dmg
+Stella Pi Workbench-0.4.0-mac-arm64.dmg
 ```
 
 本地构建完成后运行以下命令生成当前产物的 SHA-256 清单：
@@ -302,7 +312,7 @@ macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成�
 
 手动运行 `Build installers` 工作流会生成可供内部验证的构建产物；如果没有证书，产物会明确保持未签名。Windows 会显示“未知发布者”，未签名的 macOS 应用会被 Gatekeeper 拦截，因此不应把未签名的 Mac 包当作正式公共发行版。
 
-推送与 `package.json` 版本一致的标签（例如 `v0.3.1`）时，工作流会强制要求签名；Mac 任务还会强制要求 Apple 公证。全部平台成功后才会创建 GitHub Release。仓库 Secrets 使用：
+推送与 `package.json` 版本一致的标签（例如 `v0.4.0`）时，工作流会强制要求签名；Mac 任务还会强制要求 Apple 公证。全部平台成功后才会创建 GitHub Release。仓库 Secrets 使用：
 
 | Secret | 用途 |
 | --- | --- |
@@ -317,10 +327,10 @@ macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成�
 正式发布示例：
 
 ```bash
-npm version 0.3.1 --no-git-tag-version
+npm version 0.4.0 --no-git-tag-version
 git add package.json package-lock.json
-git commit -m "release: v0.3.1"
-git tag v0.3.1
+git commit -m "release: v0.4.0"
+git tag v0.4.0
 git push origin main --tags
 ```
 
@@ -333,7 +343,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 75 个 Vitest 文件、318 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5→v6 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、文件夹安装与热加载、Coordinator/Squad 快照、委派轮次与失败回流、依赖感知公平调度、过期队列与当前执行隔离、Agent Presence/人工注意投影、执行图、RPC 超时停机、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、Task Room 稳定投影、显式 session 桥接、后台历史过滤、Workflow DAG 投影与键盘交互，以及 Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、可拖高输入器、Session 地址诊断、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台的 LEAD/Worker 选择、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
+当前全量套件为 76 个 Vitest 文件、333 项测试。它覆盖默认隐藏团队页面及显式开启、v1/v2/v3/v4/v5/v6→v7 迁移与备份、Task 规格/执行尝试隔离、实时 trust、Coordinator 类型化工具、Skill 预检、文件夹安装与热加载、Coordinator/Squad 快照、委派轮次、失败回流与串行产物交接、依赖感知公平调度、过期 Runtime/session/Board 响应隔离、Agent Presence/人工注意投影、执行图、压缩独立超时与互斥、Capability 故障隔离、Workspace Lease FIFO/取消/跨引擎互斥、reported/acceptance 分离、跨项目 Task 只读边界、Task Room 稳定投影、显式 session 桥接、后台历史过滤、Workflow DAG 投影与键盘交互，以及 Autopilot、Webhook、扩展 UI、全局字号、Pi Bash 取消协议、可拖高输入器、Session 地址诊断、会话文件倒序投影、本地预览 IPC 和真实 10 页 PPTX 关系路径回归。Electron 端到端测试使用真实 Pi RPC 冷启动，并检查原生工作台默认入口、团队功能门控及跨重启持久化、从 Team 返回 Pi、任务启动台的 LEAD/Worker 选择、Task Room、mention 影响预览、Pi 会话固化、任务创建、跨列拖放、编排目录、自动化工作室、八套皮肤、会话新建与重命名、聊天、命令面板、检查器、真实终端成功/失败/取消、图片附件、文件预览字节桥、字体切换、键盘焦点和响应式侧栏。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。`test:packaged` 会清空可执行文件搜索路径后直接启动 `release/` 中的新打包应用，只有内置 Pi 与 Task capability 都真实进入 `ready` 才通过。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 
@@ -357,7 +367,7 @@ src/
 │  ├─ assets/skins/      七张原创、可由用户替换的皮肤主视觉
 │  ├─ lib/               不可变运行态 reducer 与皮肤定义
 │  └─ styles/            多皮肤设计令牌、布局与响应式样式
-└─ shared/               共享协议、v6 领域模型、依赖调度、attention/presence/timeline/DAG 纯投影与编排目录
+└─ shared/               共享协议、v7 领域模型、依赖调度、attention/presence/timeline/DAG 纯投影与编排目录
 ```
 
 主进程以 Electron 自带的 Node 运行时启动 Pi RPC，并设置 `ELECTRON_RUN_AS_NODE=1`。渲染器开启 `contextIsolation` 与 `sandbox`，只通过 preload 暴露的窄接口访问本地能力；外部链接仅允许 HTTP(S)，项目路径和 IPC 命令在主进程边界验证。

@@ -61,6 +61,7 @@ class FakeRuntime implements WorkflowAgentRuntime {
   }
 
   settle(): void { this.callbacks.emitPiEvent({ type: "agent_settled" }); }
+  exit(): void { this.callbacks.emitRuntimeSignal({ type: "runtime_exit", code: 1, signal: null }); }
 }
 
 class FakeRuntimeFactory implements WorkflowRuntimeFactory {
@@ -182,6 +183,26 @@ describe("WorkflowOrchestrator", () => {
     await vi.waitFor(() => expect(runtimeFactory.runtimes[2]?.start).toHaveBeenCalledWith(expect.objectContaining({
       allowedTools: expect.arrayContaining(["edit", "write"]),
     })));
+  });
+
+  it("ignores settled and exit events from a previous step Runtime", async () => {
+    const { repository, runtimeFactory, orchestrator, taskId } = await setup();
+    await orchestrator.dispatch(taskId);
+    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.commands.some((command) => command.type === "prompt")).toBe(true));
+    const firstRuntime = runtimeFactory.runtimes[0];
+    firstRuntime?.settle();
+    await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
+    const secondRuntime = runtimeFactory.runtimes[1];
+    await vi.waitFor(() => expect(secondRuntime?.commands.some((command) => command.type === "prompt")).toBe(true));
+
+    firstRuntime?.settle();
+    firstRuntime?.exit();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(secondRuntime?.stop).not.toHaveBeenCalled();
+    expect(secondRuntime?.running).toBe(true);
+    expect(repository.state.runs[0]?.status).toBe("running");
+    expect(repository.state.runs[0]?.steps[1]).toMatchObject({ status: "running" });
   });
 
   it("records an explicit interruption when the user aborts", async () => {

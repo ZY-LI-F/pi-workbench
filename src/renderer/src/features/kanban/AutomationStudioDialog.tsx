@@ -14,6 +14,7 @@ import type {
   UpdateAutopilotInput,
   UpdateSquadInput,
 } from "@shared/kanban";
+import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, normalizeSquadLeaderInstructions } from "@shared/coordinator-protocol";
 import { Modal } from "../../components/Modal";
 import { AutopilotPanel } from "./AutopilotPanel";
 
@@ -45,15 +46,13 @@ interface SquadDraft {
   readonly leaderInstructions: string;
 }
 
-const DEFAULT_INSTRUCTIONS = "先理解任务并完成 Leader 分析。仅在确实需要成员继续执行时，在最终回复中使用成员的精确 @mention；不要假装成员已经执行。";
-
 function emptyDraft(agents: readonly AgentDefinition[]): SquadDraft {
   return Object.freeze({
     name: "",
     description: "",
     leaderAgentId: agents[0]?.id ?? "",
     memberAgentIds: Object.freeze(agents[1] ? [agents[1].id] : []),
-    leaderInstructions: DEFAULT_INSTRUCTIONS,
+    leaderInstructions: DEFAULT_SQUAD_LEADER_INSTRUCTIONS,
   });
 }
 
@@ -63,7 +62,7 @@ function squadDraft(squad: Squad): SquadDraft {
     description: squad.description,
     leaderAgentId: squad.leaderAgentId,
     memberAgentIds: Object.freeze([...squad.memberAgentIds]),
-    leaderInstructions: squad.leaderInstructions,
+    leaderInstructions: normalizeSquadLeaderInstructions(squad.leaderInstructions),
   });
 }
 
@@ -170,7 +169,7 @@ export function AutomationStudioDialog({
             </div>
 
             <section className="squad-role-section">
-              <div><small>01 / LEADER</small><h4>选择 Squad Leader</h4><p>Leader 先执行并决定是否通过 @mention 委派成员。</p></div>
+              <div><small>01 / LEADER</small><h4>选择 Squad Leader</h4><p>Leader 先执行，并通过结构化 coordinator_action 决定是否委派成员。</p></div>
               <div className="squad-agent-grid">
                 {squadAgents.map((agent) => (
                   <button type="button" className={draft.leaderAgentId === agent.id ? "is-selected" : ""} key={agent.id} onClick={() => chooseLeader(agent.id)}>
@@ -181,7 +180,7 @@ export function AutomationStudioDialog({
             </section>
 
             <section className="squad-role-section">
-              <div><small>02 / MEMBERS</small><h4>选择可委派成员</h4><p>最终输出中的精确 @id 或 @CALLSIGN 会生成真实子 AgentTask。</p></div>
+              <div><small>02 / MEMBERS</small><h4>选择可委派成员</h4><p>只有经过校验的 coordinator_action 委派才会生成真实子 AgentTask。</p></div>
               <div className="squad-agent-grid">
                 {squadAgents.filter((agent) => agent.id !== draft.leaderAgentId).map((agent) => (
                   <button type="button" className={draft.memberAgentIds.includes(agent.id) ? "is-selected" : ""} key={agent.id} onClick={() => toggleMember(agent.id)}>
@@ -196,7 +195,7 @@ export function AutomationStudioDialog({
             <div className="squad-protocol-preview">
               <small>DELEGATION PROTOCOL</small>
               <div><span className="is-leader">@{leader?.id ?? "leader"}</span><i />{members.map((agent) => <span key={agent.id}>@{agent.id}</span>)}</div>
-              <p>Leader 的产物先持久化；命中的成员按出现顺序串行执行，父项等待全部子项终结。</p>
+              <p>Leader 的结构化计划先持久化；被委派成员按计划顺序执行，父项等待全部子项终结。</p>
             </div>
           </div>
           {error && <p className="kanban-form-error" role="alert">{error}</p>}

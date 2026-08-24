@@ -100,6 +100,15 @@ function wasCancelled(value: unknown, command: string): boolean {
   return cancelled;
 }
 
+function compactionSummary(value: unknown): string {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return "上下文压缩完成";
+  const result = value as Record<string, unknown>;
+  const before = typeof result.tokensBefore === "number" && Number.isFinite(result.tokensBefore) ? Math.round(result.tokensBefore) : undefined;
+  const after = typeof result.estimatedTokensAfter === "number" && Number.isFinite(result.estimatedTokensAfter) ? Math.round(result.estimatedTokensAfter) : undefined;
+  if (before === undefined || after === undefined) return "上下文压缩完成";
+  return `上下文压缩完成：${before.toLocaleString("zh-CN")} → 约 ${after.toLocaleString("zh-CN")} tokens`;
+}
+
 const SKIN_ARTWORK: Readonly<Partial<Record<SkinPreference, string>>> = Object.freeze({
   chenxi: chenxiArtwork,
   dingyang: dingyangArtwork,
@@ -368,6 +377,14 @@ export function App({ api }: AppProps) {
     controller.notify("已切换到所选任务执行会话", "success");
   };
 
+  const openKnownProject = async (path: string, trusted: boolean) => {
+    await composerDraft.flush();
+    const opened = await controller.openProject(path, trusted);
+    if (!opened) return;
+    setWorkspaceView("kanban");
+    controller.notify(`已打开项目 ${opened.project.name}`, "success");
+  };
+
   const chooseProject = async () => {
     const selection = await controller.chooseProject();
     if (!selection) return;
@@ -465,8 +482,8 @@ export function App({ api }: AppProps) {
   };
 
   const compact = async () => {
-    await controller.command({ type: "compact" }, true);
-    controller.notify("上下文压缩完成", "success");
+    const response = await controller.command({ type: "compact" }, true);
+    controller.notify(compactionSummary(responseData(response)), "success");
   };
 
   const exportSession = async () => {
@@ -505,14 +522,16 @@ export function App({ api }: AppProps) {
         { id: "new", label: "新建会话", detail: "开始一个干净的 Pi 会话", icon: Plus, run: () => runAction("新建会话", newSession) },
         { id: "terminal", label: "运行命令", detail: "打开本地命令抽屉", icon: TerminalSquare, run: () => setTerminalOpen(true) },
         { id: "tree", label: "查看会话图谱", detail: "检查工具活动与分支结构", icon: GitFork, run: () => { setWorkspaceView("chat"); openInspector("tree"); } },
-        { id: "compact", label: "压缩上下文", detail: "生成摘要并释放模型窗口", icon: Archive, run: () => runAction("压缩上下文", compact) },
+        ...(!state.streaming && !state.compacting && state.queue.steering.length === 0 && state.queue.followUp.length === 0
+          ? [{ id: "compact", label: "压缩上下文", detail: "生成摘要并释放模型窗口", icon: Archive, run: () => runAction("压缩上下文", compact) }]
+          : []),
         { id: "export", label: "导出 HTML", detail: "保存当前会话记录", icon: FileOutput, run: () => runAction("导出会话", exportSession) },
         { id: "settings", label: "偏好设置", detail: "外观、队列和 Pi 行为", icon: Settings2, run: openSettings },
       ];
     },
     // 动作闭包读取 bootstrap（messages / sessionFile）与 taskHealth，必须随它们重建，否则固化会话用到旧数据。
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 动作函数每次渲染重建；只需在 bootstrap/taskHealth 变化时重算，其余依赖会导致 memo 失效
-    [bootstrap, taskHealth, teamFeaturesEnabled],
+    [bootstrap, state.compacting, state.queue.followUp.length, state.queue.steering.length, state.streaming, taskHealth, teamFeaturesEnabled],
   );
 
   useEffect(() => {
@@ -704,6 +723,7 @@ export function App({ api }: AppProps) {
           api={api}
           bootstrap={bootstrap}
           online={piReady}
+          runtimeBusy={state.streaming || state.compacting || state.queue.steering.length > 0 || state.queue.followUp.length > 0}
           modelChanging={modelChanging}
           onOpenSidebar={openSidebar}
           onModelChange={setModel}
@@ -751,6 +771,7 @@ export function App({ api }: AppProps) {
           createDraft={createTaskDraft}
           onCreateRequestConsumed={() => setCreateTaskRequest(0)}
           onContinueTaskSession={(taskId, sessionPath) => continueTaskSession(taskId, sessionPath)}
+          onOpenProject={openKnownProject}
           onOpenSidebar={openSidebar}
           onOpenTerminal={() => setTerminalOpen(true)}
           onError={(message) => controller.notify(message, "error")}
@@ -768,6 +789,7 @@ export function App({ api }: AppProps) {
         queue={state.queue}
         extensionStatuses={state.extensionStatuses}
         extensionWidgets={state.extensionWidgets}
+        compactDisabled={state.streaming || state.compacting || state.queue.steering.length > 0 || state.queue.followUp.length > 0}
         filePreview={filePreview}
         fileReferences={sessionFiles}
         onTabChange={setInspectorTab}

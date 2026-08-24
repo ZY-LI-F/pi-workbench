@@ -117,4 +117,25 @@ describe("InteractiveCommandRouter", () => {
     expect(runtime.send).not.toHaveBeenCalled();
     ownerLease.release();
   });
+
+  it("does not let manual compaction abort an active turn or overlap another compaction", async () => {
+    const admission = new WorkspaceAdmission({ canonicalize });
+    let finishCompaction: ((response: PiResponse) => void) | undefined;
+    const compaction = new Promise<PiResponse>((resolve) => { finishCompaction = resolve; });
+    const runtime = {
+      send: vi.fn(async (command: PiCommand): Promise<PiResponse> => command.type === "compact"
+        ? compaction
+        : { id: "1", type: "response", command: command.type, success: true }),
+    };
+    const router = new InteractiveCommandRouter({ runtime, admission });
+
+    await router.send({ type: "prompt", message: "仍在生成" }, "C:/repo");
+    await expect(router.send({ type: "compact" }, "C:/repo")).rejects.toThrow("当前回合完成后再压缩");
+    router.handlePiEvent({ type: "agent_settled" });
+
+    const first = router.send({ type: "compact" }, "C:/repo");
+    await expect(router.send({ type: "compact" }, "C:/repo")).rejects.toThrow("压缩已在进行中");
+    finishCompaction?.({ id: "compact", type: "response", command: "compact", success: true, data: {} });
+    await expect(first).resolves.toMatchObject({ command: "compact", success: true });
+  });
 });

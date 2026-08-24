@@ -1,5 +1,12 @@
 import type { AgentDefinition } from "./kanban";
 
+export const LEGACY_SQUAD_LEADER_INSTRUCTIONS = "先理解任务并完成 Leader 分析。仅在确实需要成员继续执行时，在最终回复中使用成员的精确 @mention；不要假装成员已经执行。";
+export const DEFAULT_SQUAD_LEADER_INSTRUCTIONS = "先理解任务并完成 Leader 分析。需要成员继续执行时，必须通过 coordinator_action 提交结构化委派；不要使用自然语言或 @mention 代替工具调用，也不要假装成员已经执行。";
+
+export function normalizeSquadLeaderInstructions(value: string): string {
+  return value === LEGACY_SQUAD_LEADER_INSTRUCTIONS ? DEFAULT_SQUAD_LEADER_INSTRUCTIONS : value;
+}
+
 export const COORDINATOR_ACTION_TYPES = ["delegate", "request_revision", "replan", "complete", "ask_human"] as const;
 export type CoordinatorActionType = (typeof COORDINATOR_ACTION_TYPES)[number];
 

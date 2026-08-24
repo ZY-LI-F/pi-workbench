@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   test: {
@@ -12,8 +13,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@shared": new URL("./src/shared", import.meta.url).pathname,
-      "@renderer": new URL("./src/renderer/src", import.meta.url).pathname,
+      "@shared": fileURLToPath(new URL("./src/shared", import.meta.url)),
+      "@renderer": fileURLToPath(new URL("./src/renderer/src", import.meta.url)),
     },
   },
 });

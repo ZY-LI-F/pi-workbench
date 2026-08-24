@@ -48,6 +48,7 @@ interface KanbanWorkspaceProps {
   readonly createDraft?: PiTaskDraft;
   readonly onCreateRequestConsumed: () => void;
   readonly onContinueTaskSession: (taskId: string, sessionPath: string) => Promise<void>;
+  readonly onOpenProject: (path: string, trusted: boolean) => Promise<void>;
   readonly onOpenSidebar: () => void;
   readonly onOpenTerminal: () => void;
   readonly onError: (message: string) => void;
@@ -75,6 +76,17 @@ function executionLabelForTask(task: KanbanTask, catalog: OrchestrationCatalog, 
   return squads.find((squad) => squad.id === target.squadId)?.name ?? target.squadId;
 }
 
+function sameProjectPath(left: string | undefined, right: string | undefined): boolean {
+  if (!left || !right) return false;
+  const normalize = (value: string) => {
+    const normalized = value.replaceAll("\\", "/").replace(/\/+$/u, "");
+    return /^[A-Za-z]:\//u.test(normalized) || normalized.startsWith("//")
+      ? normalized.toLocaleLowerCase("en-US")
+      : normalized;
+  };
+  return normalize(left) === normalize(right);
+}
+
 export function KanbanWorkspace({
   api,
   controller,
@@ -88,6 +100,7 @@ export function KanbanWorkspace({
   createDraft,
   onCreateRequestConsumed,
   onContinueTaskSession,
+  onOpenProject,
   onOpenSidebar,
   onOpenTerminal,
   onError,
@@ -137,21 +150,27 @@ export function KanbanWorkspace({
     requiresSelection: false,
   }) : project;
   const draggingTask = board?.tasks.find((task) => task.id === draggingTaskId);
+  const selectedTaskReadOnly = Boolean(selectedTask && !sameProjectPath(selectedTask.projectPath, project?.cwd));
 
   useEffect(() => {
     if (selectedTaskId && board && !board.tasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(undefined);
   }, [board, selectedTaskId]);
 
   useEffect(() => {
-    if (projectScope !== "current" || !project || !selectedTask || selectedTask.projectPath === project.cwd) return;
+    if (projectScope !== "current" || !project || !selectedTask || sameProjectPath(selectedTask.projectPath, project.cwd)) return;
     setSelectedTaskId(undefined);
   }, [project, projectScope, selectedTask]);
+
+  useEffect(() => {
+    if (!editorTask || sameProjectPath(editorTask.projectPath, project?.cwd)) return;
+    setEditorTaskId(undefined);
+  }, [editorTask, project?.cwd]);
 
   const visibleTasks = useMemo(() => {
     if (!board) return [];
     const normalizedQuery = query.trim().toLocaleLowerCase();
     return board.tasks
-      .filter((task) => projectScope === "all" || task.projectPath === project?.cwd)
+      .filter((task) => projectScope === "all" || sameProjectPath(task.projectPath, project?.cwd))
       .filter((task) => executionFilter === "all"
         || (executionFilter === "manual"
           ? task.executionTarget.kind === "manual"
@@ -193,7 +212,7 @@ export function KanbanWorkspace({
     const taskId = event.dataTransfer.getData("application/x-stella-task");
     if (!taskId) return;
     const task = board?.tasks.find((candidate) => candidate.id === taskId);
-    if (!task || !canMoveTaskManually(task, lane)) return;
+    if (!task || !sameProjectPath(task.projectPath, project?.cwd) || !canMoveTaskManually(task, lane)) return;
     setDraggingTaskId(undefined);
     void move(taskId, lane as ManualTaskStage).catch(() => undefined);
   };
@@ -286,7 +305,7 @@ export function KanbanWorkspace({
         <div className="kanban-board" aria-label="任务看板">
           {LANE_CONFIG.map((lane) => {
             const tasks = visibleTasks.filter((task) => task.stage === lane.id);
-            const acceptsDraggedTask = Boolean(draggingTask && canMoveTaskManually(draggingTask, lane.id));
+            const acceptsDraggedTask = Boolean(draggingTask && sameProjectPath(draggingTask.projectPath, project?.cwd) && canMoveTaskManually(draggingTask, lane.id));
             return (
               <section
                 className={`kanban-lane kanban-lane--${lane.id} ${MANUAL_LANES.has(lane.id) ? "is-droppable" : ""} ${acceptsDraggedTask ? "is-drop-target" : ""}`}
@@ -319,6 +338,7 @@ export function KanbanWorkspace({
                         liveAgentTaskEvent={agentTask ? state.liveAgentTaskEvents[agentTask.id] : undefined}
                         busy={state.pending.includes(task.id)}
                         executionEnabled={executionEnabled}
+                        readOnly={!sameProjectPath(task.projectPath, project?.cwd)}
                         onOpen={() => setSelectedTaskId(task.id)}
                         onDispatch={() => void dispatch(task.id).catch(() => undefined)}
                         onDragStart={(event) => {
@@ -350,6 +370,8 @@ export function KanbanWorkspace({
             activities={taskActivities(selectedTask.id)}
             busy={state.pending.includes(selectedTask.id)}
             executionEnabled={executionEnabled}
+            readOnly={selectedTaskReadOnly}
+            onOpenProject={() => onOpenProject(selectedTask.projectPath, selectedTask.trusted)}
             onClose={() => setSelectedTaskId(undefined)}
             onEdit={() => setEditorTaskId(selectedTask.id)}
             onDispatch={() => dispatch(selectedTask.id)}
@@ -389,7 +411,7 @@ export function KanbanWorkspace({
           project={editorProject}
           workflows={catalog.workflows}
           agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === editorProject.cwd)}
-          squads={board.squads}
+          squads={board.squads.filter((squad) => squad.scope === "global" || sameProjectPath(squad.projectPath, editorProject.cwd))}
           automationEnabled={teamFeaturesEnabled}
           busy={state.pending.includes(editorTaskId === "new" ? "create" : editorTaskId)}
           onClose={() => setEditorTaskId(undefined)}
@@ -405,10 +427,10 @@ export function KanbanWorkspace({
             agents: Object.freeze(catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === project.cwd)),
           })}
           project={project}
-          squads={board.squads}
-          tasks={board.tasks}
-          autopilots={board.autopilots}
-          autopilotRuns={board.autopilotRuns}
+          squads={board.squads.filter((squad) => squad.scope === "global" || sameProjectPath(squad.projectPath, project.cwd))}
+          tasks={board.tasks.filter((task) => sameProjectPath(task.projectPath, project.cwd))}
+          autopilots={board.autopilots.filter((autopilot) => sameProjectPath(autopilot.projectPath, project.cwd))}
+          autopilotRuns={board.autopilotRuns.filter((run) => board.autopilots.some((autopilot) => autopilot.id === run.autopilotId && sameProjectPath(autopilot.projectPath, project.cwd)))}
           webhookStatus={state.automationRuntime?.webhook}
           busy={state.pending.some((key) => key.startsWith("squad:") || key.startsWith("autopilot:"))}
           onClose={() => setAutomationOpen(false)}

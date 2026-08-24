@@ -32,7 +32,7 @@ The **Model Configuration** page is a direct Pi model router. It does not mainta
 - **Real connection tests:** users can select a model and send an isolated minimal request. The result shows success or failure, the actual Provider/model, latency, and test time. Tests do not enter chat history, change the global model, or restart the active Pi RPC session. A test may consume a very small number of billable tokens.
 - **Model discovery from URL and Key:** OpenAI/Responses `data[]`, Anthropic-compatible catalogs, and paginated Gemini `models[]` responses are supported. Results can be searched, added, or removed before saving. A successful catalog request is not presented as proof that inference works; the real connection test remains separate.
 - **Custom endpoints:** constrained forms support `openai-completions`, `openai-responses`, `anthropic-messages`, and `google-generative-ai`, including Base URL, bearer headers, model ID, context, output limit, reasoning, and image-input capabilities. Existing advanced fields are preserved.
-- **Explicit apply semantics:** saving reloads the real Pi RPC runtime and restores the same `sessionFile`. “Saved,” “locally configured,” and “remotely verified” are independent states. OAuth and subscription login continue to use Pi's interactive `/login <provider>` flow.
+- **Explicit apply semantics:** saving reloads the real Pi RPC runtime and restores the same session identity—using the persisted `sessionFile`, or the exact session ID before an empty session has written its first record. “Saved,” “locally configured,” and “remotely verified” are independent states. OAuth and subscription login continue to use Pi's interactive `/login <provider>` flow.
 
 ![Stella Pi model configuration and Provider router](docs/model-configuration-stella.png)
 
@@ -52,6 +52,16 @@ Supported formats:
 Legacy binary DOC/PPT/XLS files are not falsely reported as previewable and can still be opened with a system application. Office parsers are dynamically imported, so ordinary chat startup does not load them. Before every preview, the main process revalidates the canonical path and only reads ordinary files inside the current project, Pi data directory, or Stella application-data directory. Files are never uploaded.
 
 The preview toolbar provides zoom, refresh, fit, system open for safe types, reveal in folder, and copy-path actions.
+
+## Session Context and Compaction
+
+Stella exposes Pi's native automatic and manual context compaction rather than maintaining a second conversation summary. Manual compaction is available only after the active reply and all steering/follow-up messages have settled, because Pi intentionally aborts an active Agent operation before a manual compaction. Concurrent manual compactions are rejected.
+
+Compaction has a dedicated ten-minute RPC timeout instead of sharing the ordinary two-minute command timeout. Successful manual compaction reports the before/estimated-after token counts returned by Pi. Automatic compaction failures are surfaced in the session notices rather than leaving the inspector indefinitely busy or failing silently.
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `STELLA_PI_COMPACTION_TIMEOUT_MS` | `600000` | Manual compaction RPC timeout; set to `0` to disable this timeout |
 
 ## A Small, Explicit Architecture
 
@@ -239,7 +249,7 @@ npm run preview
 
 ## Windows and macOS Installers
 
-Installers bundle `@earendil-works/pi-coding-agent` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path.
+Installers bundle `@earendil-works/pi-coding-agent@0.84.2` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path.
 
 Recipient configuration is still read from Pi's standard directory:
 
@@ -249,7 +259,7 @@ Recipient configuration is still read from Pi's standard directory:
 
 Do not package a developer's API Keys, OAuth credentials, or `.pi/agent` directory. A recipient without a separate Pi CLI can launch Stella, but must configure their own Provider credentials before the first model request.
 
-Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v6 chain. Built-in roles never hardcode an API Key, model, or machine-specific Pi path.
+Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v7 chain. Built-in roles never hardcode an API Key, model, or machine-specific Pi path.
 
 ### Local packaging
 
@@ -274,9 +284,9 @@ npm run dist:mac:arm64
 Artifacts are written to `release/` and include version, OS, and architecture in the file name:
 
 ```text
-Stella Pi Workbench-0.3.1-win-x64.exe
-Stella Pi Workbench-0.3.1-mac-x64.dmg
-Stella Pi Workbench-0.3.1-mac-arm64.dmg
+Stella Pi Workbench-0.4.0-win-x64.exe
+Stella Pi Workbench-0.4.0-mac-x64.dmg
+Stella Pi Workbench-0.4.0-mac-arm64.dmg
 ```
 
 Formal macOS signing must run on macOS. The repository includes [a GitHub Actions release workflow](.github/workflows/release.yml) for Windows x64, macOS Apple Silicon, and macOS Intel. Manual workflow runs may produce explicitly unsigned internal-test artifacts. A matching version tag requires signing, Apple notarization for macOS, and successful builds on every platform before creating the GitHub Release.
@@ -290,7 +300,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic suite contains **75 Vitest files and 318 tests**. It covers Team feature gating, schema migrations and backups, specification/execution-attempt isolation, live trust, typed Coordinator tools, Skill preflight and hot loading, frozen plans, delegation rounds, Worker failure recovery, dependency-aware fair scheduling, stale-queue isolation, Presence and human-attention projections, execution graphs, RPC timeout shutdown, capability isolation, workspace leases, explicit result acceptance, Task Room projection, Pi session bridging, Workflow DAGs, Autopilot, Webhook, extension UI, font scaling, terminal cancellation, resizable composer behavior, session-address diagnostics, multi-file session previews, preview IPC, and a real ten-slide PPTX relationship-path regression.
+The current deterministic suite contains **76 Vitest files and 333 tests**. It covers Team feature gating, schema migrations and backups, specification/execution-attempt isolation, live trust, typed Coordinator tools, Skill preflight and hot loading, frozen plans, delegation rounds, Worker failure recovery and serial handoff, dependency-aware fair scheduling, stale Runtime/session/Board response isolation, Presence and human-attention projections, execution graphs, dedicated compaction timeouts, capability isolation, workspace leases, explicit result acceptance, cross-project read-only Task views, Task Room projection, Pi session bridging, Workflow DAGs, Autopilot, Webhook, extension UI, font scaling, terminal cancellation, resizable composer behavior, session-address diagnostics, multi-file session previews, preview IPC, and a real ten-slide PPTX relationship-path regression.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 
@@ -316,7 +326,7 @@ src/
 │  ├─ assets/skins/      Original replaceable theme artwork
 │  ├─ lib/               Immutable runtime reducers and theme definitions
 │  └─ styles/            Design tokens, layouts, themes, and responsive behavior
-└─ shared/               Protocols, v6 domain model, scheduling, attention/presence/timeline/DAG projections, and catalog
+└─ shared/               Protocols, v7 domain model, scheduling, attention/presence/timeline/DAG projections, and catalog
 ```
 
 The main process launches Pi with Electron's Node runtime and `ELECTRON_RUN_AS_NODE=1`. The renderer uses `contextIsolation` and sandboxing and only reaches local capabilities through the preload allowlist. External links are restricted to HTTP(S), and paths and IPC commands are validated in the main process.

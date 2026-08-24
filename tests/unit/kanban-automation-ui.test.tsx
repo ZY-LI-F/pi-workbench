@@ -170,6 +170,52 @@ describe("Kanban automation interactions", () => {
     expect((screen.getByPlaceholderText("补充上下文；输入 @ 选择 Agent，或直接发送普通消息…") as HTMLTextAreaElement).value).toBe("");
   });
 
+  it("keeps another project's task read-only until that project is opened", async () => {
+    const user = userEvent.setup();
+    const onOpenProject = vi.fn(async () => undefined);
+    const onEdit = vi.fn();
+    const onDispatch = vi.fn(async () => undefined);
+    const onDelete = vi.fn(async () => undefined);
+    const onAddComment = vi.fn(async () => undefined);
+    render(
+      <TaskDetailPanel
+        task={Object.freeze({ ...TASK, projectPath: "C:/other", projectName: "other" })}
+        catalog={BUILTIN_ORCHESTRATION_CATALOG}
+        squads={[]}
+        runs={[]}
+        agentTasks={[]}
+        comments={[]}
+        activities={[]}
+        busy={false}
+        executionEnabled={true}
+        readOnly
+        onOpenProject={onOpenProject}
+        onClose={() => undefined}
+        onEdit={onEdit}
+        onDispatch={onDispatch}
+        onAbort={async () => undefined}
+        onDelete={onDelete}
+        onAddComment={onAddComment}
+        onMove={async () => undefined}
+        onResolveGate={async () => undefined}
+        onReviewExecution={async () => undefined}
+        onRevealPath={() => undefined}
+        onContinueInPi={async () => undefined}
+      />,
+    );
+
+    expect(screen.getByText(/当前以只读方式查看/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "发送评论" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "开始执行" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "删除任务" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "打开项目" }));
+    await waitFor(() => expect(onOpenProject).toHaveBeenCalledOnce());
+    expect(onEdit).not.toHaveBeenCalled();
+    expect(onDispatch).not.toHaveBeenCalled();
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(onAddComment).not.toHaveBeenCalled();
+  });
+
   it("previews every AgentTask side effect before an @mention message is submitted", async () => {
     const user = userEvent.setup();
     const onAddComment = vi.fn(async () => undefined);
