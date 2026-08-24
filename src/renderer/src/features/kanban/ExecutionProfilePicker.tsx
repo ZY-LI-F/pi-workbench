@@ -3,6 +3,7 @@ import type { AgentDefinition, ExecutionTarget } from "@shared/kanban";
 import {
   BUILTIN_EXECUTION_PROFILES,
   executionProfileAgentIncompatibility,
+  PI_COORDINATOR_PROFILE_REQUIRED,
   profileSupportsTarget,
   type ExecutionBackendCatalogSnapshot,
   type ExecutionProfileId,
@@ -27,13 +28,17 @@ export function executionProfileOptions(input: {
   return Object.freeze(BUILTIN_EXECUTION_PROFILES.map((profile) => {
     const availability = input.snapshot?.profiles.find((item) => item.profile.id === profile.id);
     const health = input.snapshot?.health.find((item) => item.backendId === profile.backendId);
-    const reason = !profileSupportsTarget(profile.id, input.target)
+    const coordinatorReason = profile.id !== "pi.rpc"
+      && (input.target.kind === "squad" || input.agents.some((agent) => agent.id === "lead"))
+      ? PI_COORDINATOR_PROFILE_REQUIRED
+      : undefined;
+    const reason = coordinatorReason ?? (!profileSupportsTarget(profile.id, input.target)
       ? `${profile.label} 不支持${input.target.kind === "workflow" ? "固定流程" : input.target.kind === "squad" ? "动态 Squad" : "单 Agent"}`
       : executionProfileAgentIncompatibility(profile.id, input.agents)
         ?? (profile.constraints?.requiresGitRepository && !input.gitRepository ? `${profile.label} 需要 Git 项目` : undefined)
         ?? (profile.backendId === "pi" && !input.piExecutionEnabled ? "Pi Runtime 当前不可用" : undefined)
         ?? (availability && !availability.available ? availability.reason ?? `${profile.label} 当前不可用` : undefined)
-        ?? (!availability && profile.backendId !== "pi" ? `${profile.label} 尚未完成探测` : undefined);
+        ?? (!availability && profile.backendId !== "pi" ? `${profile.label} 尚未完成探测` : undefined));
     return Object.freeze({
       id: profile.id,
       label: profile.label,

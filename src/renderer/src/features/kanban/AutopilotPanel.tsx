@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Check, Clock3, Copy, Play, Plus, Radio, Save, Trash2, Webhook } from "lucide-react";
 import type { ProjectMeta } from "@shared/contracts";
 import {
@@ -15,7 +15,8 @@ import {
   type TaskPriority,
   type UpdateAutopilotInput,
 } from "@shared/kanban";
-import { executionProfile, type ExecutionProfileId } from "@shared/execution-profile";
+import type { ExecutionBackendCatalogSnapshot, ExecutionProfileId } from "@shared/execution-profile";
+import { ExecutionProfilePicker, executionProfileOptions } from "./ExecutionProfilePicker";
 
 interface AutopilotPanelProps {
   readonly project: ProjectMeta;
@@ -25,6 +26,8 @@ interface AutopilotPanelProps {
   readonly autopilots: readonly Autopilot[];
   readonly runs: readonly AutopilotRun[];
   readonly webhookStatus?: AutomationRuntimeStatus["webhook"];
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
+  readonly piExecutionEnabled: boolean;
   readonly busy: boolean;
   readonly onCreate: (input: CreateAutopilotInput) => Promise<void>;
   readonly onUpdate: (input: UpdateAutopilotInput) => Promise<void>;
@@ -108,7 +111,7 @@ function draftFromAutopilot(autopilot: Autopilot): AutopilotDraft {
     acceptanceCriteria: autopilot.taskTemplate.acceptanceCriteria,
     priority: autopilot.taskTemplate.priority,
     target: targetValue(autopilot.executionTarget),
-    executionProfileId: autopilot.executionProfileId,
+    executionProfileId: autopilot.executionProfileId ?? "pi.rpc",
   });
 }
 
@@ -133,6 +136,8 @@ export function AutopilotPanel({
   autopilots,
   runs,
   webhookStatus,
+  executionBackends,
+  piExecutionEnabled,
   busy,
   onCreate,
   onUpdate,
@@ -146,11 +151,14 @@ export function AutopilotPanel({
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const initialTargetSignature = useRef(draft.target);
 
   // 仅在切换选择或所选规则真正更新时重置草稿，避免看板快照抹掉输入。
   const selectedUpdatedAt = selected?.updatedAt;
   useEffect(() => {
-    setDraft(selected ? draftFromAutopilot(selected) : emptyDraft(catalog));
+    const nextDraft = selected ? draftFromAutopilot(selected) : emptyDraft(catalog);
+    setDraft(nextDraft);
+    initialTargetSignature.current = nextDraft.target;
     setError("");
     setConfirmDelete(false);
     setCopied(false);
@@ -162,6 +170,39 @@ export function AutopilotPanel({
     [runs, selected],
   );
   const taskIds = useMemo(() => new Set(tasks.map((task) => task.id)), [tasks]);
+  const parsedTarget = useMemo(() => {
+    try { return parseTarget(draft.target); } catch { return undefined; }
+  }, [draft.target]);
+  const targetAgents = useMemo(() => {
+    if (!parsedTarget) return Object.freeze([]);
+    const ids = parsedTarget.kind === "agent"
+      ? [parsedTarget.agentId]
+      : parsedTarget.kind === "workflow"
+        ? catalog.workflows.find((workflow) => workflow.id === parsedTarget.workflowId)?.steps.flatMap((step) => step.kind === "agent" ? [step.agentId] : []) ?? []
+        : (() => {
+            const squad = squads.find((candidate) => candidate.id === parsedTarget.squadId);
+            return squad ? [squad.leaderAgentId, ...squad.memberAgentIds] : [];
+          })();
+    return Object.freeze([...new Set(ids)].flatMap((id) => catalog.agents.find((agent) => agent.id === id) ?? []));
+  }, [catalog, parsedTarget, squads]);
+  const profileOptions = useMemo(() => parsedTarget ? executionProfileOptions({
+    target: parsedTarget,
+    agents: targetAgents,
+    gitRepository: Boolean(project.branch),
+    snapshot: executionBackends,
+    piExecutionEnabled,
+  }) : Object.freeze([]), [executionBackends, parsedTarget, piExecutionEnabled, project.branch, targetAgents]);
+
+  useEffect(() => {
+    const current = profileOptions.find((option) => option.id === draft.executionProfileId);
+    const preservesUnavailableHistory = Boolean(selected)
+      && draft.target === initialTargetSignature.current
+      && draft.executionProfileId === selected?.executionProfileId;
+    if (!current?.selectable && !preservesUnavailableHistory) {
+      const fallback = profileOptions.find((option) => option.selectable);
+      if (fallback) update("executionProfileId", fallback.id);
+    }
+  }, [draft.executionProfileId, draft.target, profileOptions, selected]);
 
   const update = <K extends keyof AutopilotDraft>(key: K, value: AutopilotDraft[K]) => {
     setDraft((current) => Object.freeze({ ...current, [key]: value }));
@@ -197,6 +238,13 @@ export function AutopilotPanel({
     event.preventDefault();
     setError("");
     try {
+      const selectedProfile = profileOptions.find((option) => option.id === draft.executionProfileId);
+      const preservesUnavailableHistory = Boolean(selected)
+        && draft.target === initialTargetSignature.current
+        && draft.executionProfileId === selected?.executionProfileId;
+      if (!selectedProfile?.selectable && !preservesUnavailableHistory) {
+        throw new Error(selectedProfile?.reason ?? "当前没有可用的执行环境");
+      }
       const common = commonInput();
       if (selected) {
         let trigger: AutopilotTrigger;
@@ -325,8 +373,8 @@ export function AutopilotPanel({
                 <optgroup label="单 Agent">{catalog.agents.map((agent) => <option value={`agent:${agent.id}`} key={agent.id}>{agent.name} · @{agent.id}</option>)}</optgroup>
                 {squads.length > 0 && <optgroup label="动态 Squad">{squads.map((squad) => <option value={`squad:${squad.id}`} key={squad.id}>{squad.name}</option>)}</optgroup>}
               </select></label>
-              <label className="kanban-field"><span>执行环境</span><select aria-label="Autopilot 执行环境" value={draft.executionProfileId} onChange={(event) => update("executionProfileId", event.target.value as ExecutionProfileId)}><option value="pi.rpc">{executionProfile("pi.rpc").label}</option></select></label>
             </div>
+            <div className="autopilot-profile-field"><span>执行环境</span><ExecutionProfilePicker options={profileOptions} value={draft.executionProfileId} onChange={(profileId) => update("executionProfileId", profileId)} /></div>
           </section>
 
           {selected && (

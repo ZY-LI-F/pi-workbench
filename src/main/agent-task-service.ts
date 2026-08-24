@@ -29,7 +29,15 @@ import {
   type TaskActivity,
   type TaskComment,
 } from "../shared/kanban";
-import { snapshotExecutionProfile, type ExecutionProfileSnapshot } from "../shared/execution-profile";
+import {
+  executionProfile,
+  executionProfileAgentIncompatibility,
+  PI_COORDINATOR_PROFILE_REQUIRED,
+  profileSupports,
+  snapshotExecutionProfile,
+  type ExecutionProfileId,
+  type ExecutionProfileSnapshot,
+} from "../shared/execution-profile";
 import type { ExecutionSessionReference } from "../shared/execution-session";
 
 export interface TeamLaunchContext extends LaunchTeamTaskInput {
@@ -45,7 +53,10 @@ interface AgentTaskServiceDependencies {
   readonly skills: {
     assertAgentsReady(projectPath: string, trusted: boolean, agents: readonly AgentDefinition[]): Promise<void>;
   };
-  readonly assertExecutionAvailable?: () => void;
+  readonly assertExecutionProfileAvailable?: (
+    profileId: ExecutionProfileId,
+    useCase: "direct-agent" | "worker-mention" | "coordinator" | "squad",
+  ) => void;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -154,14 +165,14 @@ export class AgentTaskService {
   readonly #now: () => string;
   readonly #id: () => string;
   readonly #skills: AgentTaskServiceDependencies["skills"];
-  readonly #assertExecutionAvailable: () => void;
+  readonly #assertExecutionProfileAvailable: NonNullable<AgentTaskServiceDependencies["assertExecutionProfileAvailable"]>;
 
   constructor(dependencies: AgentTaskServiceDependencies) {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#emitChanged = dependencies.emitChanged;
     this.#skills = dependencies.skills;
-    this.#assertExecutionAvailable = dependencies.assertExecutionAvailable ?? (() => undefined);
+    this.#assertExecutionProfileAvailable = dependencies.assertExecutionProfileAvailable ?? (() => undefined);
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -175,7 +186,9 @@ export class AgentTaskService {
     const previewMentions = dispatchMentions ? parseAgentMentions(body, previewAgents).agents : Object.freeze([]);
     const previewRoot = previewTask.activeAgentTaskId ? preview.agentTasks.find((candidate) => candidate.id === previewTask.activeAgentTaskId) : undefined;
     const previewResumesCoordinator = previewMentions.length === 0 && previewRoot !== undefined && isCoordinatorRootAgentTask(previewRoot) && previewRoot.status === "waiting_human";
-    if (previewMentions.length > 0 || previewResumesCoordinator) this.#assertExecutionAvailable();
+    if (previewMentions.length > 0 || previewResumesCoordinator) {
+      this.#assertMentionExecution(previewTask, previewMentions, previewResumesCoordinator ? previewRoot : undefined);
+    }
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
     const now = this.#now();
     return this.#commit((current) => {
@@ -184,7 +197,9 @@ export class AgentTaskService {
       const mentions = dispatchMentions ? parseAgentMentions(body, availableAgents).agents : Object.freeze([]);
       const activeRoot = task.activeAgentTaskId ? this.#agentTask(current, task.activeAgentTaskId) : undefined;
       const resumingCoordinator = mentions.length === 0 && activeRoot !== undefined && isCoordinatorRootAgentTask(activeRoot) && activeRoot.status === "waiting_human";
-      if (mentions.length > 0 || resumingCoordinator) this.#assertExecutionAvailable();
+      if (mentions.length > 0 || resumingCoordinator) {
+        this.#assertMentionExecution(task, mentions, resumingCoordinator ? activeRoot : undefined);
+      }
       if (mentions.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         throw new Error("任务正在执行；请先中止或等待完成后再使用 @mention 分发");
       }
@@ -287,6 +302,7 @@ export class AgentTaskService {
     if (previewParsed.tokens.length !== 1 || previewParsed.agents.length !== 1) throw new Error("任务启动台必须指定一个无歧义的负责人");
     const previewTarget = previewParsed.agents[0];
     if (!previewTarget) throw new Error(`找不到任务负责人：@${draft.targetToken}`);
+    this.#assertExecutionFor("pi.rpc", previewTarget.id === "lead" ? "coordinator" : "direct-agent", Object.freeze([previewTarget]));
     await this.#skills.assertAgentsReady(projectPath, input.trusted, Object.freeze([previewTarget]));
     const now = this.#now();
     return this.#commit((current) => {
@@ -300,6 +316,7 @@ export class AgentTaskService {
       if (parsed.tokens.length !== 1 || parsed.agents.length !== 1) throw new Error("任务启动台必须指定一个无歧义的负责人");
       const target = parsed.agents[0];
       if (!target) throw new Error(`找不到任务负责人：@${draft.targetToken}`);
+      this.#assertExecutionFor("pi.rpc", target.id === "lead" ? "coordinator" : "direct-agent", Object.freeze([target]));
 
       const task: KanbanTask = Object.freeze({
         id: this.#id(),
@@ -365,12 +382,14 @@ export class AgentTaskService {
     const previewTask = this.#dispatchableTask(preview, taskId);
     if (previewTask.executionTarget.kind !== "agent") throw new Error("任务的执行目标不是单 Agent");
     const previewAgent = this.#agent(preview, previewTask.executionTarget.agentId, previewTask.projectPath);
+    this.#assertTaskExecution(previewTask, previewAgent.id === "lead" ? "coordinator" : "direct-agent", Object.freeze([previewAgent]));
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze([previewAgent]));
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#dispatchableTask(current, taskId);
       if (task.executionTarget.kind !== "agent") throw new Error("任务的执行目标不是单 Agent");
       const agent = this.#agent(current, task.executionTarget.agentId, task.projectPath);
+      this.#assertTaskExecution(task, agent.id === "lead" ? "coordinator" : "direct-agent", Object.freeze([agent]));
       const agentTask = this.#rootAgentTask(
         task,
         agent,
@@ -394,6 +413,7 @@ export class AgentTaskService {
     if (previewTask.executionTarget.kind !== "squad") throw new Error("任务的执行目标不是 Squad");
     const previewSquad = this.#squad(preview, previewTask.executionTarget.squadId);
     const previewLeader = this.#agent(preview, previewSquad.leaderAgentId, previewTask.projectPath);
+    this.#assertTaskExecution(previewTask, "squad", Object.freeze([previewLeader]));
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, Object.freeze([previewLeader]));
     const now = this.#now();
     return this.#commit((current) => {
@@ -402,6 +422,7 @@ export class AgentTaskService {
       const squad = this.#squad(current, task.executionTarget.squadId);
       const leader = this.#agent(current, squad.leaderAgentId, task.projectPath);
       const members = squad.memberAgentIds.map((agentId) => this.#agent(current, agentId, task.projectPath));
+      this.#assertTaskExecution(task, "squad", Object.freeze([leader, ...members]));
       const plan = squadPlan(squad, members);
       const agentTask = this.#rootAgentTask(task, leader, "coordinator", this.#squadCoordinatorPrompt(
         task,
@@ -887,6 +908,38 @@ export class AgentTaskService {
   #executionProfile(task: KanbanTask): ExecutionProfileSnapshot {
     if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
     return snapshotExecutionProfile(task.executionProfileId);
+  }
+
+  #assertMentionExecution(task: KanbanTask, agents: readonly AgentDefinition[], coordinator?: AgentTask): void {
+    const profileId = coordinator?.executionProfile.id ?? task.executionProfileId;
+    if (!profileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+    const useCase = coordinator || agents.some((agent) => agent.id === "lead") ? "coordinator" : "worker-mention";
+    this.#assertExecutionFor(profileId, useCase, agents);
+  }
+
+  #assertTaskExecution(
+    task: KanbanTask,
+    useCase: "direct-agent" | "worker-mention" | "coordinator" | "squad",
+    agents: readonly AgentDefinition[],
+  ): void {
+    if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+    this.#assertExecutionFor(task.executionProfileId, useCase, agents);
+  }
+
+  #assertExecutionFor(
+    profileId: ExecutionProfileId,
+    useCase: "direct-agent" | "worker-mention" | "coordinator" | "squad",
+    agents: readonly AgentDefinition[],
+  ): void {
+    if (profileId !== "pi.rpc" && (useCase === "coordinator" || useCase === "squad")) {
+      throw new Error(PI_COORDINATOR_PROFILE_REQUIRED);
+    }
+    if (!profileSupports(profileId, useCase)) {
+      throw new Error(`${executionProfile(profileId).label} 不支持 ${useCase}`);
+    }
+    const reason = executionProfileAgentIncompatibility(profileId, agents);
+    if (reason) throw new Error(reason);
+    this.#assertExecutionProfileAvailable(profileId, useCase);
   }
 
   #withDispatchedRoot(

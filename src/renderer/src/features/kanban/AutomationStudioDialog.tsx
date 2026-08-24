@@ -15,6 +15,7 @@ import type {
   UpdateSquadInput,
 } from "@shared/kanban";
 import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, normalizeSquadLeaderInstructions } from "@shared/coordinator-protocol";
+import type { ExecutionBackendCatalogSnapshot } from "@shared/execution-profile";
 import { Modal } from "../../components/Modal";
 import { AutopilotPanel } from "./AutopilotPanel";
 
@@ -26,6 +27,8 @@ interface AutomationStudioDialogProps {
   readonly autopilots: readonly Autopilot[];
   readonly autopilotRuns: readonly AutopilotRun[];
   readonly webhookStatus?: AutomationRuntimeStatus["webhook"];
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
+  readonly piExecutionEnabled?: boolean;
   readonly busy: boolean;
   readonly onClose: () => void;
   readonly onCreateSquad: (input: CreateSquadInput) => Promise<void>;
@@ -74,6 +77,8 @@ export function AutomationStudioDialog({
   autopilots,
   autopilotRuns,
   webhookStatus,
+  executionBackends,
+  piExecutionEnabled = true,
   busy,
   onClose,
   onCreateSquad,
@@ -215,6 +220,8 @@ export function AutomationStudioDialog({
           autopilots={autopilots}
           runs={autopilotRuns}
           webhookStatus={webhookStatus}
+          executionBackends={executionBackends}
+          piExecutionEnabled={piExecutionEnabled}
           busy={busy}
           onCreate={onCreateAutopilot}
           onUpdate={onUpdateAutopilot}

@@ -748,6 +748,7 @@ export function App({ api }: AppProps) {
           controller={kanban}
           project={bootstrap?.project}
           executionEnabled={piReady}
+          executionBackends={executionBackends.state.snapshot}
           onOpenSidebar={openSidebar}
           onNewTask={newTeamTask}
           focusLaunchRequest={teamLaunchRequest}

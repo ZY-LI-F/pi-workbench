@@ -5,6 +5,7 @@ import {
   isExecutionBackendId,
   isExecutionProfileId,
   snapshotExecutionProfile,
+  PI_COORDINATOR_PROFILE_REQUIRED,
   type ExecutionProfileId,
   type ExecutionProfileSnapshot,
 } from "./execution-profile";
@@ -954,6 +955,10 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   }
   assertAgent(value.agentSnapshot, `${path}.agentSnapshot`);
   assertOneOf(value.kind, AGENT_TASK_KINDS, `${path}.kind`);
+  if ((value.kind === "coordinator" || value.kind === "coordinator-review" || value.kind === "squad-leader")
+    && value.executionProfile.id !== "pi.rpc") {
+    throw new Error(`${path}: ${PI_COORDINATOR_PROFILE_REQUIRED}`);
+  }
   assertOneOf(value.status, AGENT_TASK_STATUSES, `${path}.status`);
   assertOneOf(value.acceptance, EXECUTION_ACCEPTANCE_STATUSES, `${path}.acceptance`);
   assertOptionalString(value.acceptanceComment, `${path}.acceptanceComment`);

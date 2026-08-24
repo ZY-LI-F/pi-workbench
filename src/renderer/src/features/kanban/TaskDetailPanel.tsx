@@ -48,7 +48,12 @@ import { WorkflowDag } from "./WorkflowDag";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { AgentExecutionGraph } from "./AgentExecutionGraph";
 import { TaskCollaborationBadge, taskCollaborationScope } from "./TaskCollaborationBadge";
-import { executionProfile } from "@shared/execution-profile";
+import {
+  executionProfile,
+  executionProfileAgentIncompatibility,
+  PI_COORDINATOR_PROFILE_REQUIRED,
+  profileSupports,
+} from "@shared/execution-profile";
 
 interface TaskDetailPanelProps {
   readonly task: KanbanTask;
@@ -61,6 +66,7 @@ interface TaskDetailPanelProps {
   readonly activities: readonly TaskActivity[];
   readonly busy: boolean;
   readonly executionEnabled: boolean;
+  readonly executionDisabledReason?: string;
   readonly readOnly?: boolean;
   readonly onOpenProject?: () => Promise<void>;
   readonly onClose: () => void;
@@ -124,6 +130,7 @@ export function TaskDetailPanel({
   activities,
   busy,
   executionEnabled,
+  executionDisabledReason,
   readOnly = false,
   onOpenProject,
   onClose,
@@ -188,7 +195,7 @@ export function TaskDetailPanel({
   const mentionsDisabledReason = !mentionsEnabled
     ? "开启团队功能后可在任务记录中 @Agent 分发工作"
     : !executionEnabled
-      ? "Pi Runtime 不可用；仍可记录普通消息，但暂时不能创建 AgentTask"
+      ? `${executionDisabledReason ?? "执行环境当前不可用"}；仍可记录普通消息，但暂时不能创建 AgentTask`
     : task.activeRunId || task.activeAgentTaskId
     ? waitingCoordinator
       ? `${waitingCoordinatorLabel} 正在等待你的普通回复；当前不能并行创建新的 mention`
@@ -217,16 +224,17 @@ export function TaskDetailPanel({
     if (!commentBody.trim()) return Object.freeze({ agents: Object.freeze([]) });
     if (!mentionsEnabled) {
       if (!waitingCoordinator) return Object.freeze({ agents: Object.freeze([]) });
-      if (!executionEnabled) return Object.freeze({ agents: Object.freeze([]), error: `Pi Runtime 不可用，当前无法唤醒等待中的 ${waitingCoordinatorLabel}` });
+      if (!executionEnabled) return Object.freeze({ agents: Object.freeze([]), error: `${executionDisabledReason ?? "执行环境当前不可用"}，当前无法唤醒等待中的 ${waitingCoordinatorLabel}` });
       return Object.freeze({ agents: Object.freeze([]), resumesCoordinator: true });
     }
     try {
       const previewBody = activeMentionQuery
         ? `${commentBody.slice(0, activeMentionQuery.start)}${commentBody.slice(activeMentionQuery.end)}`
         : commentBody;
-      const agents = parseAgentMentions(previewBody, mentionAgents).agents.map((agent) => Object.freeze({ id: agent.id, name: agent.name, callsign: agent.callsign }));
+      const parsedAgents = parseAgentMentions(previewBody, mentionAgents).agents;
+      const agents = parsedAgents.map((agent) => Object.freeze({ id: agent.id, name: agent.name, callsign: agent.callsign }));
       if (!executionEnabled && (agents.length > 0 || waitingCoordinator)) {
-        return Object.freeze({ agents: Object.freeze(agents), error: `Pi Runtime 不可用；普通记录仍可提交，但 Agent 分发和 ${waitingCoordinatorLabel} 恢复已暂停` });
+        return Object.freeze({ agents: Object.freeze(agents), error: `${executionDisabledReason ?? "执行环境当前不可用"}；普通记录仍可提交，但 Agent 分发和 ${waitingCoordinatorLabel} 恢复已暂停` });
       }
       if (agents.length === 0 && waitingCoordinator) return Object.freeze({ agents: Object.freeze([]), resumesCoordinator: true });
       if (agents.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
@@ -243,11 +251,23 @@ export function TaskDetailPanel({
       if (lead && agents.length > 1) {
         return Object.freeze({ agents: Object.freeze(agents), coordinator, error: "@LEAD 协调模式不能与直接 Worker mention 混用；请让 LEAD 通过结构化计划委派" });
       }
+      if (parsedAgents.length > 0) {
+        const profileId = task.executionProfileId ?? "pi.rpc";
+        if (coordinator && profileId !== "pi.rpc") {
+          return Object.freeze({ agents: Object.freeze(agents), coordinator, error: PI_COORDINATOR_PROFILE_REQUIRED });
+        }
+        const useCase = coordinator ? "coordinator" : "worker-mention";
+        if (!profileSupports(profileId, useCase)) {
+          return Object.freeze({ agents: Object.freeze(agents), coordinator, error: `${executionProfile(profileId).label} 不支持 ${useCase}` });
+        }
+        const incompatibility = executionProfileAgentIncompatibility(profileId, parsedAgents);
+        if (incompatibility) return Object.freeze({ agents: Object.freeze(agents), coordinator, error: incompatibility });
+      }
       return Object.freeze({ agents: Object.freeze(agents), coordinator });
     } catch (cause) {
       return Object.freeze({ agents: Object.freeze([]), error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [activeMentionQuery, commentBody, executionEnabled, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator, waitingCoordinatorLabel]);
+  }, [activeMentionQuery, commentBody, executionDisabledReason, executionEnabled, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.executionProfileId, task.stage, waitingCoordinator, waitingCoordinatorLabel]);
 
   useEffect(() => {
     setCommentBody("");

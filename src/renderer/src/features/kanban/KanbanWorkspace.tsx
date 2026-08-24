@@ -391,6 +391,7 @@ export function KanbanWorkspace({
             activities={taskActivities(selectedTask.id)}
             busy={state.pending.includes(selectedTask.id)}
             executionEnabled={executionAvailability(selectedTask).enabled}
+            executionDisabledReason={executionAvailability(selectedTask).reason}
             readOnly={selectedTaskReadOnly}
             onOpenProject={() => onOpenProject(selectedTask.projectPath, selectedTask.trusted)}
             onClose={() => setSelectedTaskId(undefined)}
@@ -455,6 +456,8 @@ export function KanbanWorkspace({
           autopilots={board.autopilots.filter((autopilot) => sameProjectPath(autopilot.projectPath, project.cwd))}
           autopilotRuns={board.autopilotRuns.filter((run) => board.autopilots.some((autopilot) => autopilot.id === run.autopilotId && sameProjectPath(autopilot.projectPath, project.cwd)))}
           webhookStatus={state.automationRuntime?.webhook}
+          executionBackends={executionBackends}
+          piExecutionEnabled={executionEnabled}
           busy={state.pending.some((key) => key.startsWith("squad:") || key.startsWith("autopilot:"))}
           onClose={() => setAutomationOpen(false)}
           onCreateSquad={async (input) => { await controller.createSquad(input); }}

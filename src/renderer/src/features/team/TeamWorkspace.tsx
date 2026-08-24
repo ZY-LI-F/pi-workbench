@@ -15,6 +15,7 @@ import { TeamLaunchRoom } from "./TeamLaunchRoom";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { deriveTeamTaskAttention } from "@shared/team-task-attention";
 import { HeaderOverflowMenu } from "../../components/HeaderOverflowMenu";
+import { executionProfile, type ExecutionBackendCatalogSnapshot } from "@shared/execution-profile";
 
 const TEAM_LAUNCH_ROOM_ID = "project-launch-room";
 type ChannelFilter = "all" | "attention" | "active";
@@ -24,6 +25,7 @@ interface TeamWorkspaceProps {
   readonly controller: KanbanController;
   readonly project?: ProjectMeta;
   readonly executionEnabled: boolean;
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
   readonly onOpenSidebar: () => void;
   readonly onNewTask: () => void;
   readonly focusLaunchRequest?: number;
@@ -36,7 +38,7 @@ interface TeamWorkspaceProps {
   readonly onError: (message: string) => void;
 }
 
-export function TeamWorkspace({ api, controller, project, executionEnabled, onOpenSidebar, onNewTask, focusLaunchRequest, availableSkillNames, modelLabel, taskCapabilityError, taskCapabilityRetrying = false, onRetryTaskCapability, onContinueTaskSession, onError }: TeamWorkspaceProps) {
+export function TeamWorkspace({ api, controller, project, executionEnabled, executionBackends, onOpenSidebar, onNewTask, focusLaunchRequest, availableSkillNames, modelLabel, taskCapabilityError, taskCapabilityRetrying = false, onRetryTaskCapability, onContinueTaskSession, onError }: TeamWorkspaceProps) {
   const { state } = controller;
   const [query, setQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<ChannelFilter>("all");
@@ -102,6 +104,17 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
   const launchAgents = Object.freeze(presences.map((presence) => presence.agent));
   const mentionableAgentIds = new Set(selectedTask ? availableMentionAgentsForTask(selectedTask, catalog, board.squads).map((agent) => agent.id) : []);
   const busy = selectedTask ? state.pending.includes(selectedTask.id) : false;
+  const selectedExecutionAvailability = (() => {
+    if (!selectedTask?.executionProfileId) return { enabled: false, reason: "任务未选择执行环境" } as const;
+    const profile = executionProfile(selectedTask.executionProfileId);
+    if (profile.backendId === "pi") return executionEnabled
+      ? { enabled: true } as const
+      : { enabled: false, reason: "Pi Runtime 当前不可用" } as const;
+    const availability = executionBackends?.profiles.find((item) => item.profile.id === selectedTask.executionProfileId);
+    return availability?.available
+      ? { enabled: true } as const
+      : { enabled: false, reason: availability?.reason ?? `${profile.label} 尚未完成探测` } as const;
+  })();
   const selectedTaskMentionBlock = selectedTask?.activeRunId || selectedTask?.activeAgentTaskId
     ? "当前任务正在执行"
     : selectedTask?.stage === "completed"
@@ -175,7 +188,8 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
             comments={taskComments}
             activities={taskActivities}
             busy={busy}
-            executionEnabled={executionEnabled}
+            executionEnabled={selectedExecutionAvailability.enabled}
+            executionDisabledReason={selectedExecutionAvailability.reason}
             onClose={() => undefined}
             onEdit={() => setEditingTask(true)}
             onDispatch={() => perform(() => controller.dispatchTask(selectedTask.id)).then(() => undefined)}
@@ -255,6 +269,8 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, onOp
         workflows={catalog.workflows}
         agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === selectedTask.projectPath)}
         squads={board.squads}
+        executionBackends={executionBackends}
+        piExecutionEnabled={executionEnabled}
         busy={state.pending.includes(selectedTask.id)}
         onClose={() => setEditingTask(false)}
         onCreate={(input) => controller.createTask(input).then(() => undefined)}

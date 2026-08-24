@@ -39,15 +39,20 @@ const MANUAL_INPUT: CreateAutopilotInput = Object.freeze({
   projectName: "project",
   trusted: true,
   executionTarget: Object.freeze({ kind: "agent", agentId: "tester" }),
+  executionProfileId: "pi.rpc",
 });
 
-function setup(dispatchTask?: (taskId: string) => Promise<BoardBootstrap>) {
+function setup(
+  dispatchTask?: (taskId: string) => Promise<BoardBootstrap>,
+  prepareExecution?: ConstructorParameters<typeof AutopilotService>[0]["prepareExecution"],
+) {
   const repository = new MemoryRepository();
   const changed: BoardBootstrap[] = [];
   const service = new AutopilotService({
     repository,
     catalog: BUILTIN_ORCHESTRATION_CATALOG,
     dispatchTask: dispatchTask ?? (async () => Object.freeze({ board: repository.state, catalog: BUILTIN_ORCHESTRATION_CATALOG })),
+    prepareExecution,
     emitChanged: (bootstrap) => changed.push(bootstrap),
     id: idFactory(),
     token: () => "webhook-token",
@@ -126,5 +131,86 @@ describe("AutopilotService", () => {
       taskId: repository.state.tasks[0]?.id,
     });
     expect(repository.state.activities.at(-1)).toMatchObject({ kind: "error", detail: "Pi Agent 启动失败：ENOENT" });
+  });
+
+  it("copies external Direct Agent and Workflow profiles and re-probes before every dispatch", async () => {
+    const prepareExecution = vi.fn(async () => undefined);
+    const dispatchTask = vi.fn(async () => Object.freeze({ board: EMPTY_BOARD_STATE, catalog: BUILTIN_ORCHESTRATION_CATALOG }));
+    const { repository, service } = setup(dispatchTask, prepareExecution);
+    await service.create({ ...MANUAL_INPUT, executionProfileId: "codex.exec" });
+    const direct = repository.state.autopilots[0];
+    if (!direct) throw new Error("测试缺少 Direct Autopilot");
+    await service.trigger({ autopilotId: direct.id, triggerKind: "manual" });
+    await service.trigger({ autopilotId: direct.id, triggerKind: "manual" });
+
+    await service.create({
+      ...MANUAL_INPUT,
+      name: "Claude 固定流程",
+      executionTarget: { kind: "workflow", workflowId: "feature-delivery" },
+      executionProfileId: "claude.print",
+    });
+    const workflow = repository.state.autopilots.find((candidate) => candidate.name === "Claude 固定流程");
+    if (!workflow) throw new Error("测试缺少 Workflow Autopilot");
+    await service.trigger({ autopilotId: workflow.id, triggerKind: "manual" });
+
+    expect(repository.state.tasks.filter((task) => task.executionProfileId === "codex.exec")).toHaveLength(2);
+    expect(repository.state.tasks.find((task) => task.executionProfileId === "claude.print")?.executionTarget)
+      .toEqual({ kind: "workflow", workflowId: "feature-delivery" });
+    expect(prepareExecution).toHaveBeenNthCalledWith(1, "codex.exec", { kind: "agent", agentId: "tester" });
+    expect(prepareExecution).toHaveBeenNthCalledWith(2, "codex.exec", { kind: "agent", agentId: "tester" });
+    expect(prepareExecution).toHaveBeenNthCalledWith(3, "claude.print", { kind: "workflow", workflowId: "feature-delivery" });
+    expect(dispatchTask).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps generated Task profile history immutable when the Autopilot profile changes", async () => {
+    const { repository, service } = setup();
+    await service.create(MANUAL_INPUT);
+    const created = repository.state.autopilots[0];
+    if (!created) throw new Error("测试缺少 Autopilot");
+    await service.trigger({ autopilotId: created.id, triggerKind: "manual" });
+    const originalTaskId = repository.state.tasks[0]?.id;
+
+    await service.update({
+      ...MANUAL_INPUT,
+      autopilotId: created.id,
+      trigger: { kind: "manual" },
+      executionProfileId: "claude.print",
+    });
+    await service.trigger({ autopilotId: created.id, triggerKind: "manual" });
+
+    expect(repository.state.tasks.find((task) => task.id === originalTaskId)?.executionProfileId).toBe("pi.rpc");
+    expect(repository.state.tasks[0]?.executionProfileId).toBe("claude.print");
+    expect(repository.state.autopilots[0]?.executionProfileId).toBe("claude.print");
+  });
+
+  it("audits a fresh probe failure and never calls dispatch", async () => {
+    const dispatchTask = vi.fn(async () => Object.freeze({ board: EMPTY_BOARD_STATE, catalog: BUILTIN_ORCHESTRATION_CATALOG }));
+    const prepareExecution = vi.fn(async () => { throw new Error("Codex CLI 登录已失效"); });
+    const { repository, service } = setup(dispatchTask, prepareExecution);
+    await service.create({ ...MANUAL_INPUT, executionProfileId: "codex.exec" });
+    const autopilot = repository.state.autopilots[0];
+    if (!autopilot) throw new Error("测试缺少 Autopilot");
+
+    await expect(service.trigger({ autopilotId: autopilot.id, triggerKind: "manual" }))
+      .rejects.toThrow("Autopilot 触发失败: Codex CLI 登录已失效");
+
+    expect(dispatchTask).not.toHaveBeenCalled();
+    expect(repository.state.tasks[0]).toMatchObject({ executionProfileId: "codex.exec", stage: "blocked" });
+    expect(repository.state.autopilotRuns[0]).toMatchObject({ status: "failed", error: "Codex CLI 登录已失效" });
+  });
+
+  it("rejects external LEAD and Pi Skill-bound Autopilots at save time", async () => {
+    const { repository, service } = setup();
+    await expect(service.create({
+      ...MANUAL_INPUT,
+      executionTarget: { kind: "agent", agentId: "lead" },
+      executionProfileId: "codex.exec",
+    })).rejects.toThrow("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
+    await expect(service.create({
+      ...MANUAL_INPUT,
+      executionTarget: { kind: "agent", agentId: "target-biologist" },
+      executionProfileId: "claude.print",
+    })).rejects.toThrow("Claude CLI 不支持依赖 Pi Skills 的 Agent");
+    expect(repository.state.autopilots).toHaveLength(0);
   });
 });

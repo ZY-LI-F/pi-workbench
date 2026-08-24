@@ -22,6 +22,8 @@ export type ExecutionCapability =
   | "structured-result"
   | "open-session";
 
+export const PI_COORDINATOR_PROFILE_REQUIRED = "LEAD、Squad 与 Coordinator 仅支持 Pi RPC";
+
 export interface ExecutionProfileDefinition {
   readonly id: ExecutionProfileId;
   readonly revision: number;
@@ -209,6 +211,9 @@ export function executionProfileAgentIncompatibility(
   agents: readonly AgentDefinition[],
 ): string | undefined {
   const definition = executionProfile(profileId);
+  if (definition.backendId !== "pi" && agents.some((agent) => agent.id === "lead")) {
+    return PI_COORDINATOR_PROFILE_REQUIRED;
+  }
   if (definition.backendId !== "pi" && agents.some((agent) => (agent.requiredSkills?.length ?? 0) > 0)) {
     return `${definition.label} 不支持依赖 Pi Skills 的 Agent`;
   }
@@ -228,5 +233,6 @@ export function assertExecutionProfileTarget(
     return;
   }
   if (profileId === undefined) throw new Error(`${path} 是自动任务的必填字段`);
+  if (target.kind === "squad" && profileId !== "pi.rpc") throw new Error(PI_COORDINATOR_PROFILE_REQUIRED);
   if (!profileSupportsTarget(profileId, target)) throw new Error(`${profileId} 不支持 ${target.kind} 执行目标`);
 }

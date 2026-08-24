@@ -61,7 +61,7 @@ import {
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../shared/orchestration-catalog";
 import { runtimeModelSelectionFromSession, type RuntimeModelSelection } from "../shared/runtime-model";
 import { AgentTaskRunner } from "./agent-task-runner";
-import { ExecutionBackendRegistry } from "./execution-backend-registry";
+import { ExecutionBackendRegistry, type ExecutionUseCase } from "./execution-backend-registry";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./execution-adapters/pi-rpc-execution-adapter";
 import { CodexExecExecutionAdapter } from "./execution-adapters/codex-exec-execution-adapter";
 import { ClaudePrintExecutionAdapter } from "./execution-adapters/claude-print-execution-adapter";
@@ -87,10 +87,12 @@ import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
 import {
   assertExecutionProfileTarget,
+  executionProfile,
   isConfigurableExecutionBackendId,
   isExecutionBackendId,
   isExecutionProfileId,
   type ConfigureExecutionBackendInput,
+  type ExecutionBackendCatalogSnapshot,
   type ExecutionProfileId,
 } from "../shared/execution-profile";
 import type { ExecutionSessionReference } from "../shared/execution-session";
@@ -685,9 +687,7 @@ async function dispatchBoardTask(taskId: string): Promise<BoardBootstrap> {
     : task.executionTarget.kind === "squad"
       ? "squad"
       : task.executionTarget.agentId === "lead" ? "coordinator" : "direct-agent";
-  if (task.executionProfileId === "pi.rpc") assertPiExecutionCapability();
-  executionBackendRegistry.assertCompatible(task.executionProfileId, useCase);
-  executionBackendRegistry.resolve(task.executionProfileId);
+  assertExecutionProfileAvailable(task.executionProfileId, useCase);
   if (task.executionTarget.kind === "workflow") return workflowOrchestrator.dispatch(taskId);
   if (task.executionTarget.kind === "agent") {
     const bootstrap = await agentTaskService.dispatchDirect(taskId);
@@ -697,6 +697,35 @@ async function dispatchBoardTask(taskId: string): Promise<BoardBootstrap> {
   const bootstrap = await agentTaskService.dispatchSquad(taskId);
   agentTaskRunner.notify();
   return bootstrap;
+}
+
+function assertExecutionProfileAvailable(profileId: ExecutionProfileId, useCase: ExecutionUseCase): void {
+  if (profileId === "pi.rpc") assertPiExecutionCapability();
+  executionBackendRegistry.assertCompatible(profileId, useCase);
+  executionBackendRegistry.resolve(profileId);
+}
+
+async function prepareAutopilotExecution(
+  profileId: ExecutionProfileId,
+  target: AutomatedExecutionTarget,
+): Promise<void> {
+  const settings = executionBackendSettingsService;
+  if (!settings) throw new Error("执行环境设置服务尚未初始化");
+  const definition = executionProfile(profileId);
+  let snapshot: ExecutionBackendCatalogSnapshot;
+  if (definition.backendId === "pi") {
+    assertPiExecutionCapability();
+    snapshot = settings.snapshot();
+  } else {
+    snapshot = await settings.retry(definition.backendId);
+  }
+  broadcast("execution-backend", snapshot);
+  const useCase: ExecutionUseCase = target.kind === "workflow"
+    ? "workflow-step"
+    : target.kind === "squad"
+      ? "squad"
+      : target.agentId === "lead" ? "coordinator" : "autopilot";
+  assertExecutionProfileAvailable(profileId, useCase);
 }
 
 async function dispatchCurrentProjectTask(taskId: string): Promise<BoardBootstrap> {
@@ -1373,7 +1402,7 @@ async function initializeTaskCapability(): Promise<void> {
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       emitChanged: emitSnapshot,
       skills: agentSkillService,
-      assertExecutionAvailable: assertPiExecutionCapability,
+      assertExecutionProfileAvailable,
     });
     executionReviewService = new ExecutionReviewService({
       repository: boardStore,
@@ -1390,6 +1419,7 @@ async function initializeTaskCapability(): Promise<void> {
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       dispatchTask: dispatchBoardTask,
+      prepareExecution: prepareAutopilotExecution,
       emitChanged: emitSnapshot,
     });
     scheduleRunner = new ScheduleRunner({

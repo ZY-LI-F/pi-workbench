@@ -4,10 +4,10 @@
 
 **Blocked by:** 07 — 跨后端固定 Workflow。
 
-**Status:** IN PROGRESS
+**Status:** DONE
 
-- [ ] Worker mention 继承当前 Task 的 Profile snapshot，并在创建执行前校验兼容性。
-- [ ] Autopilot 保存 Profile，创建 Task 时原样复制并在触发前重新探测。
-- [ ] Direct Agent 与 Workflow Autopilot 可使用兼容外部 Profile。
-- [ ] Squad、LEAD、Coordinator、Coordinator Review 只允许 `pi.rpc`，UI 与 Main 错误一致。
-- [ ] requiredSkills、Profile 编辑与历史快照规则覆盖 mention/Autopilot 测试。
+- [x] Worker mention 继承当前 Task 的 Profile snapshot，并在创建执行前校验兼容性。
+- [x] Autopilot 保存 Profile，创建 Task 时原样复制并在触发前重新探测。
+- [x] Direct Agent 与 Workflow Autopilot 可使用兼容外部 Profile。
+- [x] Squad、LEAD、Coordinator、Coordinator Review 只允许 `pi.rpc`，UI 与 Main 错误一致。
+- [x] requiredSkills、Profile 编辑与历史快照规则覆盖 mention/Autopilot 测试。

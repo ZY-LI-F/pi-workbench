@@ -139,14 +139,22 @@ async function setup(
   globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
   resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string> = async (projectPath) => projectPath,
   resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
-  assertExecutionAvailable: () => void = () => undefined,
+  assertExecutionAvailable: (profileId: ExecutionProfileId, useCase: "direct-agent" | "worker-mention" | "coordinator" | "squad") => void = () => undefined,
   customBackendRegistry?: ExecutionBackendRegistry,
 ) {
   const repository = new MemoryRepository();
   const id = idFactory();
   const now = () => "2026-07-18T00:00:00.000Z";
   const boardService = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
-  const agentTaskService = new AgentTaskService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, assertExecutionAvailable, id, now });
+  const agentTaskService = new AgentTaskService({
+    repository,
+    catalog: BUILTIN_ORCHESTRATION_CATALOG,
+    emitChanged: () => undefined,
+    skills: READY_AGENT_SKILLS,
+    assertExecutionProfileAvailable: assertExecutionAvailable,
+    id,
+    now,
+  });
   const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
   const events: unknown[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
@@ -525,6 +533,57 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.comments).toHaveLength(commentsBeforeMention);
     expect(repository.state.agentTasks).toHaveLength(0);
     expect(assertExecutionAvailable).toHaveBeenCalledOnce();
+  });
+
+  it("creates external Worker mention trees with one immutable Task Profile snapshot", async () => {
+    const assertExecutionProfileAvailable = vi.fn();
+    const { repository, agentTaskService, createTask } = await setup(
+      new FakeAgentRuntimeFactory(),
+      () => undefined,
+      async (projectPath) => projectPath,
+      async () => true,
+      assertExecutionProfileAvailable,
+    );
+    const taskId = await createTask("Codex mention 快照", { kind: "agent", agentId: "builder" }, "codex.exec");
+
+    await agentTaskService.addComment({ taskId, body: "@builder 实现，再由 @VERIFY 验证" });
+
+    const tree = repository.state.agentTasks.filter((agentTask) => agentTask.taskId === taskId);
+    expect(tree).toHaveLength(2);
+    expect(tree.every((agentTask) => agentTask.executionProfile.id === "codex.exec"
+      && agentTask.taskSpec.executionProfileId === "codex.exec")).toBe(true);
+    expect(assertExecutionProfileAvailable).toHaveBeenCalledWith("codex.exec", "worker-mention");
+  });
+
+  it("rejects LEAD and Pi Skill-bound mentions on external profiles without partial writes", async () => {
+    const { repository, agentTaskService, createTask } = await setup();
+    const taskId = await createTask("外部 mention 兼容边界", { kind: "agent", agentId: "builder" }, "claude.print");
+
+    await expect(agentTaskService.addComment({ taskId, body: "@lead 请协调" }))
+      .rejects.toThrow("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
+    await expect(agentTaskService.addComment({ taskId, body: "@BIO 请分析" }))
+      .rejects.toThrow("Claude CLI 不支持依赖 Pi Skills 的 Agent");
+
+    expect(repository.state.comments).toHaveLength(0);
+    expect(repository.state.agentTasks).toHaveLength(0);
+    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("planned");
+  });
+
+  it("rejects corrupted external Coordinator and Coordinator Review snapshots at the schema boundary", async () => {
+    const { repository, agentTaskService, createTask } = await setup();
+    const taskId = await createTask("拒绝外部协调快照", { kind: "agent", agentId: "builder" }, "codex.exec");
+    await agentTaskService.addComment({ taskId, body: "@builder 执行" });
+    const root = repository.state.agentTasks[0];
+    if (!root) throw new Error("测试缺少 AgentTask");
+
+    expect(() => parseBoardState({
+      ...repository.state,
+      agentTasks: [{ ...root, kind: "coordinator" }],
+    })).toThrow("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
+    expect(() => parseBoardState({
+      ...repository.state,
+      agentTasks: [{ ...root, kind: "coordinator-review", parentAgentTaskId: root.id }],
+    })).toThrow("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
   });
 
   it("rejects mixing LEAD coordinator mode with direct Worker mentions atomically", async () => {

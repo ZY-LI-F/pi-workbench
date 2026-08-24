@@ -7,6 +7,7 @@ import type { AgentTask, Autopilot, KanbanTask } from "../../src/shared/kanban";
 import { TaskDetailPanel } from "../../src/renderer/src/features/kanban/TaskDetailPanel";
 import { TaskEditorDialog } from "../../src/renderer/src/features/kanban/TaskEditorDialog";
 import { AutomationStudioDialog } from "../../src/renderer/src/features/kanban/AutomationStudioDialog";
+import { BUILTIN_EXECUTION_PROFILES, type ExecutionBackendCatalogSnapshot } from "../../src/shared/execution-profile";
 
 afterEach(() => cleanup());
 
@@ -17,6 +18,14 @@ const PROJECT = Object.freeze({
   trusted: true,
   requiresTrust: false,
   requiresSelection: false,
+});
+const EXECUTION_BACKENDS: ExecutionBackendCatalogSnapshot = Object.freeze({
+  health: Object.freeze([
+    Object.freeze({ backendId: "pi" as const, state: "ready" as const, authState: "ready" as const, version: "0.53.0", updatedAt: "2026-08-24T00:00:00.000Z" }),
+    Object.freeze({ backendId: "codex" as const, state: "ready" as const, authState: "ready" as const, version: "0.149.0", updatedAt: "2026-08-24T00:00:00.000Z" }),
+    Object.freeze({ backendId: "claude" as const, state: "ready" as const, authState: "ready" as const, version: "2.1.220", updatedAt: "2026-08-24T00:00:00.000Z" }),
+  ]),
+  profiles: Object.freeze(BUILTIN_EXECUTION_PROFILES.map((profile) => Object.freeze({ profile, available: true }))),
 });
 
 const TASK: KanbanTask = Object.freeze({
@@ -29,6 +38,7 @@ const TASK: KanbanTask = Object.freeze({
   projectName: PROJECT.name,
   trusted: PROJECT.trusted,
   executionTarget: Object.freeze({ kind: "agent", agentId: "builder" }),
+  executionProfileId: "pi.rpc",
   stage: "planned",
   specRevision: 1,
   createdAt: "2026-07-18T00:00:00.000Z",
@@ -45,6 +55,7 @@ const WEBHOOK_AUTOPILOT: Autopilot = Object.freeze({
   projectName: PROJECT.name,
   trusted: true,
   executionTarget: Object.freeze({ kind: "agent", agentId: "builder" }),
+  executionProfileId: "pi.rpc",
   createdAt: "2026-07-18T00:00:00.000Z",
   updatedAt: "2026-07-18T00:00:00.000Z",
 });
@@ -531,6 +542,8 @@ describe("Kanban automation interactions", () => {
         tasks={[]}
         autopilots={[]}
         autopilotRuns={[]}
+        executionBackends={EXECUTION_BACKENDS}
+        piExecutionEnabled
         busy={false}
         onClose={() => undefined}
         onCreateSquad={onCreateSquad}
@@ -567,6 +580,8 @@ describe("Kanban automation interactions", () => {
         tasks={[]}
         autopilots={[]}
         autopilotRuns={[]}
+        executionBackends={EXECUTION_BACKENDS}
+        piExecutionEnabled
         busy={false}
         onClose={() => undefined}
         onCreateSquad={async () => undefined}
@@ -586,6 +601,7 @@ describe("Kanban automation interactions", () => {
     await user.type(screen.getByPlaceholderText("Agent 每次都会收到的固定上下文"), "检查当前工作区变更");
     await user.type(screen.getByPlaceholderText("如何判断这一票完成"), "测试通过并给出报告");
     await user.selectOptions(screen.getByLabelText("执行目标"), "agent:tester");
+    await user.click(screen.getByRole("radio", { name: /Codex CLI/ }));
     await user.click(screen.getByRole("button", { name: "创建规则" }));
 
     await waitFor(() => expect(onCreateAutopilot).toHaveBeenCalledWith(expect.objectContaining({
@@ -593,6 +609,7 @@ describe("Kanban automation interactions", () => {
       trigger: { kind: "manual" },
       projectPath: PROJECT.cwd,
       executionTarget: { kind: "agent", agentId: "tester" },
+      executionProfileId: "codex.exec",
       taskTemplate: expect.objectContaining({ title: "检查发布候选版本" }),
     })));
   });

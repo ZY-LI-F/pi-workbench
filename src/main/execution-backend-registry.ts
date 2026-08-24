@@ -1,5 +1,6 @@
 import {
   BUILTIN_EXECUTION_PROFILES,
+  PI_COORDINATOR_PROFILE_REQUIRED,
   executionProfile,
   profileSupports,
   snapshotExecutionProfile,
@@ -127,6 +128,9 @@ export class ExecutionBackendRegistry implements ExecutionBackendRegistryContrac
 
   assertCompatible(profileId: ExecutionProfileId, useCase: ExecutionUseCase): void {
     if (useCase === "autopilot" && profileId === "codex.review") throw new Error("codex.review 不支持 Autopilot");
+    if (profileId !== "pi.rpc" && (useCase === "coordinator" || useCase === "squad")) {
+      throw new Error(PI_COORDINATOR_PROFILE_REQUIRED);
+    }
     const capability = capabilityFor(useCase);
     if (!profileSupports(profileId, capability)) {
       throw new Error(`${executionProfile(profileId).label} 不支持 ${useCase}`);

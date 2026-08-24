@@ -2,6 +2,7 @@ import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import type { BoardRepository } from "./board-repository";
 import {
   TASK_PRIORITIES,
+  type AgentDefinition,
   type Autopilot,
   type AutopilotRun,
   type AutopilotTrigger,
@@ -18,12 +19,20 @@ import {
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { applyTaskLifecycle } from "../shared/task-lifecycle";
-import { assertExecutionProfileTarget } from "../shared/execution-profile";
+import {
+  assertExecutionProfileTarget,
+  executionProfileAgentIncompatibility,
+  type ExecutionProfileId,
+} from "../shared/execution-profile";
 
 interface AutopilotServiceDependencies {
   readonly repository: BoardRepository;
   readonly catalog: OrchestrationCatalog;
   readonly dispatchTask: (taskId: string) => Promise<BoardBootstrap>;
+  readonly prepareExecution?: (
+    profileId: ExecutionProfileId,
+    target: AutomatedExecutionTarget,
+  ) => Promise<void>;
   readonly emitChanged: (bootstrap: BoardBootstrap) => void;
   readonly now?: () => string;
   readonly id?: () => string;
@@ -76,6 +85,7 @@ export class AutopilotService {
   readonly #repository: BoardRepository;
   readonly #catalog: OrchestrationCatalog;
   readonly #dispatchTask: (taskId: string) => Promise<BoardBootstrap>;
+  readonly #prepareExecution: NonNullable<AutopilotServiceDependencies["prepareExecution"]>;
   readonly #emitChanged: (bootstrap: BoardBootstrap) => void;
   readonly #now: () => string;
   readonly #id: () => string;
@@ -85,6 +95,7 @@ export class AutopilotService {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
     this.#dispatchTask = dependencies.dispatchTask;
+    this.#prepareExecution = dependencies.prepareExecution ?? (async () => undefined);
     this.#emitChanged = dependencies.emitChanged;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
@@ -180,6 +191,8 @@ export class AutopilotService {
     const now = this.#now();
     const taskId = this.#id();
     const runId = this.#id();
+    let executionProfileId: ExecutionProfileId | undefined;
+    let executionTarget: AutomatedExecutionTarget | undefined;
     await this.#commit((current) => {
       const autopilot = this.#autopilot(current, input.autopilotId);
       if (!autopilot.enabled) throw new Error(`Autopilot「${autopilot.name}」已禁用`);
@@ -205,6 +218,10 @@ export class AutopilotService {
         throw new Error(`${autopilot.trigger.kind} 触发不能携带 expectedScheduleAt`);
       }
       this.#assertExecutionTarget(current, autopilot.executionTarget, autopilot.projectPath);
+      assertExecutionProfileTarget(autopilot.executionTarget, autopilot.executionProfileId);
+      this.#assertExecutionProfileAgents(current, autopilot.executionTarget, autopilot.executionProfileId);
+      executionProfileId = autopilot.executionProfileId;
+      executionTarget = Object.freeze({ ...autopilot.executionTarget });
       const payloadText = input.requestPayload ? `\n\nWebhook payload:\n${JSON.stringify(input.requestPayload, null, 2)}` : "";
       const task: KanbanTask = Object.freeze({
         id: taskId,
@@ -242,6 +259,8 @@ export class AutopilotService {
     });
 
     try {
+      if (!executionProfileId || !executionTarget) throw new Error("Autopilot 缺少执行环境快照");
+      await this.#prepareExecution(executionProfileId, executionTarget);
       await this.#dispatchTask(taskId);
       const completedAt = this.#now();
       const bootstrap = await this.#commit((current) => ({
@@ -277,6 +296,7 @@ export class AutopilotService {
     const executionProfileId = input.executionProfileId ?? "pi.rpc";
     assertExecutionProfileTarget(input.executionTarget, executionProfileId);
     if (executionProfileId === "codex.review") throw new Error("Autopilot 不能使用 codex.review");
+    this.#assertExecutionProfileAgents(state, input.executionTarget, executionProfileId);
     if (input.trigger.kind === "schedule") {
       if (!Number.isInteger(input.trigger.intervalMinutes) || input.trigger.intervalMinutes <= 0) throw new Error("计划间隔必须是正整数分钟");
       if (Number.isNaN(Date.parse(input.trigger.nextRunAt))) throw new Error("nextRunAt 不是有效日期");
@@ -317,6 +337,29 @@ export class AutopilotService {
         .filter((agent): agent is Partial<ProjectAgentDefinition> => Boolean(agent?.projectPath));
       if (scopedAgents.some((agent) => agent.projectPath !== projectPath)) throw new Error(`Squad ${squad.id} 包含其他项目的自定义 Agent`);
     }
+  }
+
+  #assertExecutionProfileAgents(
+    state: BoardState,
+    target: AutomatedExecutionTarget,
+    profileId: ExecutionProfileId,
+  ): void {
+    const catalog = catalogForBoard(this.#catalog, state);
+    const agentIds = target.kind === "agent"
+      ? [target.agentId]
+      : target.kind === "workflow"
+        ? this.#catalog.workflows.find((workflow) => workflow.id === target.workflowId)?.steps.flatMap((step) => step.kind === "agent" ? [step.agentId] : []) ?? []
+        : (() => {
+            const squad = state.squads.find((candidate) => candidate.id === target.squadId);
+            return squad ? [squad.leaderAgentId, ...squad.memberAgentIds] : [];
+          })();
+    const agents: AgentDefinition[] = [...new Set(agentIds)].map((agentId) => {
+      const agent = catalog.agents.find((candidate) => candidate.id === agentId);
+      if (!agent) throw new Error(`未知 Agent: ${agentId}`);
+      return agent;
+    });
+    const incompatibility = executionProfileAgentIncompatibility(profileId, agents);
+    if (incompatibility) throw new Error(incompatibility);
   }
 
   #autopilot(state: BoardState, autopilotId: string): Autopilot {

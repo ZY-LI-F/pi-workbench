@@ -95,4 +95,26 @@ describe("ExecutionProfilePicker", () => {
       reason: "Claude CLI 不支持依赖 Pi Skills 的 Agent",
     });
   });
+
+  it("uses the same Pi-only Coordinator rule for LEAD and Squad choices", () => {
+    const leadOptions = executionProfileOptions({
+      target: { kind: "agent", agentId: "lead" },
+      agents: [agent("lead")],
+      gitRepository: true,
+      snapshot: SNAPSHOT,
+      piExecutionEnabled: true,
+    });
+    const squadOptions = executionProfileOptions({
+      target: { kind: "squad", squadId: "squad-1" },
+      agents: [agent("builder")],
+      gitRepository: true,
+      snapshot: SNAPSHOT,
+      piExecutionEnabled: true,
+    });
+
+    expect(leadOptions.find((option) => option.id === "codex.exec")?.reason)
+      .toBe("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
+    expect(squadOptions.find((option) => option.id === "claude.print")?.reason)
+      .toBe("LEAD、Squad 与 Coordinator 仅支持 Pi RPC");
+  });
 });
