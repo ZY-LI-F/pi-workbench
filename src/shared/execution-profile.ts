@@ -2,6 +2,7 @@ import type { ExecutionTarget, WorkspaceAccess } from "./kanban";
 
 export const EXECUTION_BACKEND_IDS = ["pi", "codex", "claude"] as const;
 export type ExecutionBackendId = (typeof EXECUTION_BACKEND_IDS)[number];
+export type ConfigurableExecutionBackendId = Exclude<ExecutionBackendId, "pi">;
 
 export const BUILTIN_EXECUTION_PROFILE_IDS = [
   "pi.rpc",
@@ -52,14 +53,26 @@ export interface ExecutionBackendHealth {
   readonly version?: string;
   readonly authState?: "ready" | "required" | "unknown";
   readonly executableSource?: "bundled" | "path" | "auto";
+  readonly executablePath?: string;
   readonly error?: string;
   readonly updatedAt: string;
+}
+
+export interface ConfigureExecutionBackendInput {
+  readonly backendId: ConfigurableExecutionBackendId;
+  /** Omit or pass an empty string to return to PATH-based automatic discovery. */
+  readonly executablePath?: string;
 }
 
 export interface ExecutionProfileAvailability {
   readonly profile: ExecutionProfileDefinition;
   readonly available: boolean;
   readonly reason?: string;
+}
+
+export interface ExecutionBackendCatalogSnapshot {
+  readonly health: readonly ExecutionBackendHealth[];
+  readonly profiles: readonly ExecutionProfileAvailability[];
 }
 
 const profile = (definition: ExecutionProfileDefinition): ExecutionProfileDefinition => Object.freeze({
@@ -124,6 +137,10 @@ const BY_VERSION = new Map(BUILTIN_EXECUTION_PROFILES.map((definition) => [`${de
 
 export function isExecutionBackendId(value: unknown): value is ExecutionBackendId {
   return typeof value === "string" && EXECUTION_BACKEND_IDS.includes(value as ExecutionBackendId);
+}
+
+export function isConfigurableExecutionBackendId(value: unknown): value is ConfigurableExecutionBackendId {
+  return value === "codex" || value === "claude";
 }
 
 export function isExecutionProfileId(value: unknown): value is ExecutionProfileId {

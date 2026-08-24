@@ -4,11 +4,11 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend。
 
-**Status:** IN PROGRESS
+**Status:** DONE
 
-- [ ] Codex/Claude 自动发现、版本和登录探测不发起模型请求。
-- [ ] 候选路径先探测后原子保存，失败时继续使用旧配置。
-- [ ] 项目记录与 Backend 配置共享一个无丢更新的 StateStore 写队列。
-- [ ] 设置界面显示独立健康状态、版本、路径来源和真实失败原因。
-- [ ] 公共进程 transport 支持固定 argv、stdin、JSONL、stderr、截断、abort 与单次 settle。
-- [ ] Fake executable 和状态存储 contract tests 通过。
+- [x] Codex/Claude 自动发现、版本和登录探测不发起模型请求。
+- [x] 候选路径先探测后原子保存，失败时继续使用旧配置。
+- [x] 项目记录与 Backend 配置共享一个无丢更新的 StateStore 写队列。
+- [x] 设置界面显示独立健康状态、版本、路径来源和真实失败原因。
+- [x] 公共进程 transport 支持固定 argv、stdin、JSONL、stderr、截断、abort 与单次 settle。
+- [x] Fake executable 和状态存储 contract tests 通过。

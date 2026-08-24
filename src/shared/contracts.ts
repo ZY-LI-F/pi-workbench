@@ -26,6 +26,11 @@ import type {
   UpdateSquadInput,
 } from "./kanban";
 import type { CapabilityHealthSnapshot, CapabilityName } from "./capabilities";
+import type {
+  ConfigureExecutionBackendInput,
+  ExecutionBackendCatalogSnapshot,
+  ExecutionBackendId,
+} from "./execution-profile";
 import type { SkinArtworkDescriptor, SkinId } from "./skin-artwork";
 import type {
   DiscoverPiModelsInput,
@@ -215,11 +220,15 @@ export type BridgeEvent =
   | { readonly source: "pi"; readonly payload: AgentSessionEvent | RpcExtensionUIRequest }
   | { readonly source: "runtime"; readonly payload: RuntimeSignal }
   | { readonly source: "board"; readonly payload: BoardBridgeEvent }
-  | { readonly source: "capability"; readonly payload: { readonly type: "capability-health"; readonly snapshot: CapabilityHealthSnapshot } };
+  | { readonly source: "capability"; readonly payload: { readonly type: "capability-health"; readonly snapshot: CapabilityHealthSnapshot } }
+  | { readonly source: "execution-backend"; readonly payload: ExecutionBackendCatalogSnapshot };
 
 export interface StellaDesktopApi {
   capabilities(): Promise<CapabilityHealthSnapshot>;
   retryCapability(name: CapabilityName): Promise<CapabilityHealthSnapshot>;
+  executionBackendsInitialize(): Promise<ExecutionBackendCatalogSnapshot>;
+  executionBackendConfigure(input: ConfigureExecutionBackendInput): Promise<ExecutionBackendCatalogSnapshot>;
+  executionBackendRetry(backendId: ExecutionBackendId): Promise<ExecutionBackendCatalogSnapshot>;
   initialize(): Promise<RuntimeBootstrap>;
   command(command: PiCommand): Promise<PiResponse>;
   refresh(): Promise<RuntimeBootstrap>;

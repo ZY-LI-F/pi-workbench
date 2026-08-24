@@ -13,6 +13,9 @@ export interface ExecutionBackendConfiguration {
   readonly backendId: ExecutionBackendId;
   readonly executable?: string;
   readonly prefixArgv?: readonly string[];
+  readonly displayPath?: string;
+  readonly executableSource?: "bundled" | "path" | "auto";
+  readonly resolutionError?: string;
 }
 
 export interface ExecutionRequest {

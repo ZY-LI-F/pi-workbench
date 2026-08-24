@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend；04 — 外部 CLI 探测、配置与进程基础设施。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Profile picker 只展示健康且与所选 Agent 兼容的 Codex Profile。
 - [ ] Codex JSONL reducer 处理 Thread、Turn、工具、最终消息、错误和未知事件。

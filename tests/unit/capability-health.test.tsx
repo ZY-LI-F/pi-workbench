@@ -116,6 +116,7 @@ describe("Capability Health", () => {
     const api = {
       capabilities: vi.fn(async () => snapshot),
       retryCapability: vi.fn(async () => snapshot),
+      executionBackendsInitialize: vi.fn(async () => ({ health: [], profiles: [] })),
       initialize: vi.fn(async () => { throw new Error("Pi startup injection"); }),
       boardInitialize: vi.fn(async () => ({
         board: Object.freeze({ ...EMPTY_BOARD_STATE, tasks: Object.freeze([TASK]) }),
@@ -150,6 +151,7 @@ describe("Capability Health", () => {
     const api = {
       capabilities: vi.fn(async () => snapshot),
       retryCapability: vi.fn(async () => snapshot),
+      executionBackendsInitialize: vi.fn(async () => ({ health: [], profiles: [] })),
       initialize: vi.fn(async () => PI_BOOTSTRAP),
       refresh: vi.fn(async () => PI_BOOTSTRAP),
       command: vi.fn(async () => ({ success: true, command: "set_auto_retry", data: {} })),

@@ -1,5 +1,12 @@
-import { Check, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RotateCcw, ShieldCheck, ShieldOff, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, Sun } from "lucide-react";
 import type { RuntimeBootstrap } from "@shared/contracts";
+import type {
+  ConfigurableExecutionBackendId,
+  ExecutionBackendCatalogSnapshot,
+  ExecutionBackendHealth,
+  ExecutionBackendId,
+} from "@shared/execution-profile";
 import type { SkinArtworkBySkin, SkinId } from "@shared/skin-artwork";
 import type { FontSizePreference, Preferences, ThemePreference } from "../hooks/use-preferences";
 import { SKIN_OPTIONS, skinDefinition } from "../lib/skins";
@@ -10,9 +17,14 @@ interface SettingsDialogProps {
   readonly preferences: Preferences;
   readonly customArtwork: SkinArtworkBySkin;
   readonly artworkBusySkin: SkinId | null;
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
+  readonly executionBackendBusy: readonly ExecutionBackendId[];
+  readonly executionBackendError?: string;
   readonly onPreferencesChange: (preferences: Preferences) => void;
   readonly onChooseSkinArtwork: (skin: SkinId) => void;
   readonly onResetSkinArtwork: (skin: SkinId) => void;
+  readonly onConfigureExecutionBackend: (backendId: ConfigurableExecutionBackendId, executablePath?: string) => void;
+  readonly onRetryExecutionBackend: (backendId: ExecutionBackendId) => void;
   readonly onAutoCompactionChange: (enabled: boolean) => void;
   readonly onSteeringModeChange: (mode: "all" | "one-at-a-time") => void;
   readonly onFollowUpModeChange: (mode: "all" | "one-at-a-time") => void;
@@ -37,14 +49,66 @@ function Toggle({ checked, onChange, label }: { readonly checked: boolean; reado
   return <button type="button" className={`toggle ${checked ? "is-on" : ""}`} role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)}><span /></button>;
 }
 
+function backendStatus(health: ExecutionBackendHealth | undefined): string {
+  if (!health || health.state === "checking") return "正在探测";
+  if (health.state !== "ready") return "不可用";
+  if (health.authState === "required") return "需要登录";
+  return "可用";
+}
+
+function ExecutionBackendSetting({
+  backendId,
+  health,
+  busy,
+  onConfigure,
+  onRetry,
+}: {
+  readonly backendId: ConfigurableExecutionBackendId;
+  readonly health?: ExecutionBackendHealth;
+  readonly busy: boolean;
+  readonly onConfigure: (backendId: ConfigurableExecutionBackendId, executablePath?: string) => void;
+  readonly onRetry: (backendId: ExecutionBackendId) => void;
+}) {
+  const [path, setPath] = useState(health?.executableSource === "path" ? health.executablePath ?? "" : "");
+  useEffect(() => {
+    setPath(health?.executableSource === "path" ? health.executablePath ?? "" : "");
+  }, [health?.executablePath, health?.executableSource]);
+  const label = backendId === "codex" ? "Codex CLI" : "Claude CLI";
+  return (
+    <div className="execution-backend-setting">
+      <div className="execution-backend-setting__heading">
+        <span><strong>{label}</strong><small>{health?.version ? `v${health.version}` : "未识别版本"} · {health?.executableSource === "path" ? "指定路径" : "PATH 自动发现"}</small></span>
+        <em className={`execution-backend-setting__status is-${health?.state ?? "checking"}`}>{backendStatus(health)}</em>
+      </div>
+      <label>
+        <span className="sr-only">{label} 可执行文件路径</span>
+        <input value={path} placeholder={health?.executablePath ?? `自动查找 ${backendId}`} onChange={(event) => setPath(event.target.value)} />
+      </label>
+      <div className="execution-backend-setting__actions">
+        <button type="button" disabled={busy || path.trim().length === 0} onClick={() => onConfigure(backendId, path.trim())}>验证并保存</button>
+        <button type="button" disabled={busy} onClick={() => onConfigure(backendId, undefined)}>使用自动发现</button>
+        <button type="button" disabled={busy} onClick={() => onRetry(backendId)}><RefreshCw size={12} />重新探测</button>
+      </div>
+      <small className="execution-backend-setting__path">当前：{health?.executablePath ?? "未找到可执行文件"}</small>
+      {health?.authState === "required" && <p>{backendId === "codex" ? "CLI 已安装，但尚未登录 Codex。" : "CLI 已安装，但尚未登录 Claude。"}</p>}
+      {health?.error && <p role="alert">{health.error}</p>}
+    </div>
+  );
+}
+
 export function SettingsDialog({
   bootstrap,
   preferences,
   customArtwork,
   artworkBusySkin,
+  executionBackends,
+  executionBackendBusy,
+  executionBackendError,
   onPreferencesChange,
   onChooseSkinArtwork,
   onResetSkinArtwork,
+  onConfigureExecutionBackend,
+  onRetryExecutionBackend,
   onAutoCompactionChange,
   onSteeringModeChange,
   onFollowUpModeChange,
@@ -135,7 +199,22 @@ export function SettingsDialog({
               onChange={(checked) => onPreferencesChange(Object.freeze({ ...preferences, teamFeaturesEnabled: checked }))}
             />
           </div>
-          <p className="settings-capability-note">Pi 会话、模型、命令、终端和会话图谱始终独立可用；团队层只通过 Pi 的公开接口执行任务。</p>
+          <p className="settings-capability-note">Pi 工作台保持独立；看板任务可按兼容性选择 Pi、Codex CLI 或 Claude CLI。</p>
+        </section>
+
+        <section className="settings-section settings-section--execution-backends">
+          <div className="settings-section__heading"><span>任务执行环境</span><small>只探测安装、版本与登录状态，不发起模型请求</small></div>
+          {(["codex", "claude"] as const).map((backendId) => (
+            <ExecutionBackendSetting
+              key={backendId}
+              backendId={backendId}
+              health={executionBackends?.health.find((item) => item.backendId === backendId)}
+              busy={executionBackendBusy.includes(backendId)}
+              onConfigure={onConfigureExecutionBackend}
+              onRetry={onRetryExecutionBackend}
+            />
+          ))}
+          {executionBackendError && <p className="settings-execution-backend-error" role="alert">{executionBackendError}</p>}
         </section>
 
         <section className="settings-section">

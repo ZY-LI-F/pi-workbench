@@ -63,6 +63,8 @@ import { runtimeModelSelectionFromSession, type RuntimeModelSelection } from "..
 import { AgentTaskRunner } from "./agent-task-runner";
 import { ExecutionBackendRegistry } from "./execution-backend-registry";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./execution-adapters/pi-rpc-execution-adapter";
+import { CliProbeExecutionAdapter } from "./execution-adapters/cli-probe-execution-adapter";
+import { ExecutionBackendSettingsService } from "./execution-backend-settings-service";
 import { AgentTaskService } from "./agent-task-service";
 import { AgentSkillService } from "./agent-skill-service";
 import { AutopilotService } from "./autopilot-service";
@@ -84,8 +86,10 @@ import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
 import {
   assertExecutionProfileTarget,
+  isConfigurableExecutionBackendId,
   isExecutionBackendId,
   isExecutionProfileId,
+  type ConfigureExecutionBackendInput,
   type ExecutionProfileId,
 } from "../shared/execution-profile";
 import type { ExecutionSessionReference } from "../shared/execution-session";
@@ -200,6 +204,8 @@ let agentSkillService: AgentSkillService;
 let piSkillInstaller: PiSkillInstaller;
 let agentTaskRunner: AgentTaskRunner;
 let executionBackendRegistry: ExecutionBackendRegistry;
+let executionBackendSettingsService: ExecutionBackendSettingsService | undefined;
+let taskCapabilityInitialization: Promise<void> | undefined;
 let executionReviewService: ExecutionReviewService;
 let squadService: SquadService;
 let autopilotService: AutopilotService;
@@ -212,7 +218,7 @@ let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
-function broadcast(source: "pi" | "runtime" | "board" | "capability", payload: unknown): void {
+function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend", payload: unknown): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("stella:event", { source, payload });
 }
@@ -285,6 +291,18 @@ const agentTaskRuntimeFactory: PiRpcExecutionRuntimeFactory = Object.freeze({
 function objectValue(value: unknown, label: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error(`${label} 必须是对象`);
   return value as Record<string, unknown>;
+}
+
+function validatedExecutionBackendConfiguration(value: unknown): ConfigureExecutionBackendInput {
+  const record = objectValue(value, "执行后端配置");
+  if (!isConfigurableExecutionBackendId(record.backendId)) throw new Error(`不可配置的执行后端: ${String(record.backendId)}`);
+  if (record.executablePath !== undefined && typeof record.executablePath !== "string") {
+    throw new Error("执行后端 executablePath 必须是字符串");
+  }
+  return Object.freeze({
+    backendId: record.backendId,
+    executablePath: record.executablePath?.trim() || undefined,
+  });
 }
 
 function booleanValue(value: unknown, label: string): boolean {
@@ -1314,15 +1332,24 @@ async function initializeTaskCapability(): Promise<void> {
     });
     const piBackendVersion = await getPiVersion();
     executionBackendRegistry = new ExecutionBackendRegistry({
-      backends: [new PiRpcExecutionAdapter({
-        runtimeFactory: agentTaskRuntimeFactory,
-        globalModel: () => globalModelSelection,
-        coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
-        skills: agentSkillService,
-        backendVersion: () => piBackendVersion,
-      })],
+      backends: [
+        new PiRpcExecutionAdapter({
+          runtimeFactory: agentTaskRuntimeFactory,
+          globalModel: () => globalModelSelection,
+          coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
+          skills: agentSkillService,
+          backendVersion: () => piBackendVersion,
+        }),
+        new CliProbeExecutionAdapter({ backendId: "codex" }),
+        new CliProbeExecutionAdapter({ backendId: "claude" }),
+      ],
     });
-    await executionBackendRegistry.initialize();
+    executionBackendSettingsService = new ExecutionBackendSettingsService({
+      stateStore,
+      registry: executionBackendRegistry,
+    });
+    const executionBackendSnapshot = await executionBackendSettingsService.initialize();
+    broadcast("execution-backend", executionBackendSnapshot);
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
@@ -1395,7 +1422,8 @@ async function retryCapability(name: CapabilityName): Promise<CapabilityHealthSn
       // initializeRuntime 已把精确错误写入 Capability Health。
     }
   } else if (name === "task") {
-    await initializeTaskCapability();
+    taskCapabilityInitialization = initializeTaskCapability();
+    await taskCapabilityInitialization;
   } else if (name === "schedule") {
     await startScheduleCapability();
   } else {
@@ -1404,9 +1432,30 @@ async function retryCapability(name: CapabilityName): Promise<CapabilityHealthSn
   return capabilityHealth.snapshot();
 }
 
+async function executionBackendSettings(): Promise<ExecutionBackendSettingsService> {
+  await taskCapabilityInitialization;
+  if (!executionBackendSettingsService) {
+    const health = capabilityHealth.snapshot().task;
+    throw new Error(`执行后端设置尚未就绪：${health.error ?? health.state}`);
+  }
+  return executionBackendSettingsService;
+}
+
 function registerIpcHandlers(): void {
   ipcMain.handle("stella:capabilities", () => capabilityHealth.snapshot());
   ipcMain.handle("stella:capability:retry", (_event, name: unknown) => retryCapability(validatedCapabilityName(name)));
+  ipcMain.handle("stella:execution-backends:initialize", async () => (await executionBackendSettings()).snapshot());
+  ipcMain.handle("stella:execution-backends:configure", async (_event, input: unknown) => {
+    const snapshot = await (await executionBackendSettings()).configure(validatedExecutionBackendConfiguration(input));
+    broadcast("execution-backend", snapshot);
+    return snapshot;
+  });
+  ipcMain.handle("stella:execution-backends:retry", async (_event, backendId: unknown) => {
+    if (!isExecutionBackendId(backendId)) throw new Error(`未知执行后端: ${String(backendId)}`);
+    const snapshot = await (await executionBackendSettings()).retry(backendId);
+    broadcast("execution-backend", snapshot);
+    return snapshot;
+  });
   ipcMain.handle("stella:initialize", () => initializeRuntime());
   ipcMain.handle("stella:refresh", () => refreshPiCapability());
   ipcMain.handle("stella:command", (_event, command: unknown) => {
@@ -1723,7 +1772,8 @@ if (!singleInstanceLock) {
     registerSkinArtworkProtocol();
     registerIpcHandlers();
     createWindow();
-    void initializeTaskCapability();
+    taskCapabilityInitialization = initializeTaskCapability();
+    void taskCapabilityInitialization;
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

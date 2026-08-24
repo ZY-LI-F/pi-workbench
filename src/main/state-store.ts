@@ -2,10 +2,16 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { RecentProject } from "../shared/contracts";
+import type { ConfigurableExecutionBackendId } from "../shared/execution-profile";
 
-interface PersistedState {
+export interface PersistedExecutionBackendConfiguration {
+  readonly executablePath?: string;
+}
+
+export interface PersistedState {
   readonly lastProject?: string;
   readonly recentProjects: readonly RecentProject[];
+  readonly executionBackends?: Readonly<Partial<Record<ConfigurableExecutionBackendId, PersistedExecutionBackendConfiguration>>>;
 }
 const EMPTY_STATE: PersistedState = Object.freeze({ recentProjects: [] });
 
@@ -40,10 +46,34 @@ function parseState(contents: string, path: string): PersistedState {
     throw new Error(`Stella 状态文件 ${path} 的 lastProject 无效`);
   }
 
-  return {
+  let executionBackends: PersistedState["executionBackends"];
+  if (record.executionBackends !== undefined) {
+    if (typeof record.executionBackends !== "object" || record.executionBackends === null || Array.isArray(record.executionBackends)) {
+      throw new Error(`Stella 状态文件 ${path} 的 executionBackends 无效`);
+    }
+    const configured = record.executionBackends as Record<string, unknown>;
+    for (const key of Object.keys(configured)) {
+      if (key !== "codex" && key !== "claude") throw new Error(`Stella 状态文件 ${path} 包含未知执行后端 ${key}`);
+      const value = configured[key];
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        throw new Error(`Stella 状态文件 ${path} 的 executionBackends.${key} 无效`);
+      }
+      const backend = value as Record<string, unknown>;
+      if (backend.executablePath !== undefined && typeof backend.executablePath !== "string") {
+        throw new Error(`Stella 状态文件 ${path} 的 executionBackends.${key}.executablePath 无效`);
+      }
+    }
+    executionBackends = Object.freeze({
+      codex: configured.codex ? Object.freeze({ ...(configured.codex as PersistedExecutionBackendConfiguration) }) : undefined,
+      claude: configured.claude ? Object.freeze({ ...(configured.claude as PersistedExecutionBackendConfiguration) }) : undefined,
+    });
+  }
+
+  return Object.freeze({
     lastProject: record.lastProject as string | undefined,
     recentProjects: Object.freeze([...record.recentProjects]),
-  };
+    executionBackends,
+  });
 }
 
 export class StateStore {
@@ -63,20 +93,43 @@ export class StateStore {
     }
   }
 
-  recordProject(path: string, trusted: boolean): Promise<PersistedState> {
+  mutate(transform: (current: PersistedState) => PersistedState): Promise<PersistedState> {
     const operation = this.#writeQueue.then(async () => {
-      const current = await this.read();
-      const opened: RecentProject = Object.freeze({ path, trusted, lastOpened: new Date().toISOString() });
-      const recentProjects = Object.freeze([
-        opened,
-        ...current.recentProjects.filter((project) => project.path !== path),
-      ].slice(0, 12));
-      const next: PersistedState = Object.freeze({ lastProject: path, recentProjects });
+      const next = transform(await this.read());
       await this.#write(next);
       return next;
     });
     this.#writeQueue = operation.then(() => undefined, () => undefined);
     return operation;
+  }
+
+  recordProject(path: string, trusted: boolean): Promise<PersistedState> {
+    return this.mutate((current) => {
+      const opened: RecentProject = Object.freeze({ path, trusted, lastOpened: new Date().toISOString() });
+      const recentProjects = Object.freeze([
+        opened,
+        ...current.recentProjects.filter((project) => project.path !== path),
+      ].slice(0, 12));
+      return Object.freeze({ ...current, lastProject: path, recentProjects });
+    });
+  }
+
+  configureExecutionBackend(
+    backendId: ConfigurableExecutionBackendId,
+    executablePath?: string,
+  ): Promise<PersistedState> {
+    const normalizedPath = executablePath?.trim() || undefined;
+    return this.mutate((current) => {
+      const executionBackends = {
+        ...current.executionBackends,
+        [backendId]: normalizedPath ? Object.freeze({ executablePath: normalizedPath }) : undefined,
+      };
+      const hasConfiguration = Boolean(executionBackends.codex || executionBackends.claude);
+      return Object.freeze({
+        ...current,
+        executionBackends: hasConfiguration ? Object.freeze(executionBackends) : undefined,
+      });
+    });
   }
 
   async #write(state: PersistedState): Promise<void> {

@@ -4,9 +4,9 @@ import {
   profileSupports,
   snapshotExecutionProfile,
   type ExecutionBackendHealth,
+  type ExecutionBackendCatalogSnapshot,
   type ExecutionBackendId,
   type ExecutionCapability,
-  type ExecutionProfileAvailability,
   type ExecutionProfileId,
 } from "../shared/execution-profile";
 import type {
@@ -17,14 +17,13 @@ import type {
 
 export type ExecutionUseCase = ExecutionCapability | "autopilot";
 
-export interface ExecutionBackendCatalogSnapshot {
-  readonly health: readonly ExecutionBackendHealth[];
-  readonly profiles: readonly ExecutionProfileAvailability[];
-}
+export type { ExecutionBackendCatalogSnapshot } from "../shared/execution-profile";
 
 export interface ExecutionBackendRegistryContract {
   initialize(): Promise<ExecutionBackendCatalogSnapshot>;
   refresh(backendId?: ExecutionBackendId): Promise<ExecutionBackendCatalogSnapshot>;
+  probeConfiguration(configuration: ExecutionBackendConfiguration): Promise<ExecutionBackendHealth>;
+  activateConfiguration(configuration: ExecutionBackendConfiguration): void;
   resolve(profileId: ExecutionProfileId): ResolvedExecutionBackend;
   assertCompatible(profileId: ExecutionProfileId, useCase: ExecutionUseCase): void;
   snapshot(): ExecutionBackendCatalogSnapshot;
@@ -46,7 +45,7 @@ function capabilityFor(useCase: ExecutionUseCase): ExecutionCapability {
 
 export class ExecutionBackendRegistry implements ExecutionBackendRegistryContract {
   readonly #backends: ReadonlyMap<ExecutionBackendId, ExecutionBackend>;
-  readonly #configurations: ReadonlyMap<ExecutionBackendId, ExecutionBackendConfiguration>;
+  readonly #configurations: Map<ExecutionBackendId, ExecutionBackendConfiguration>;
   readonly #now: () => string;
   #health = new Map<ExecutionBackendId, ExecutionBackendHealth>();
 
@@ -75,14 +74,41 @@ export class ExecutionBackendRegistry implements ExecutionBackendRegistryContrac
       }
       try {
         const configuration = this.#configurations.get(id) ?? Object.freeze({ backendId: id });
-        const health = await backend.probe(configuration);
-        if (health.backendId !== id) throw new Error(`Backend probe 返回了错误 ID: ${health.backendId}`);
+        const health = await this.probeConfiguration(configuration);
         this.#health.set(id, Object.freeze({ ...health }));
       } catch (cause) {
-        this.#health.set(id, unavailableHealth(id, this.#now(), cause instanceof Error ? cause.message : String(cause)));
+        const configuration = this.#configurations.get(id);
+        this.#health.set(id, Object.freeze({
+          ...unavailableHealth(id, this.#now(), cause instanceof Error ? cause.message : String(cause)),
+          executableSource: configuration?.executableSource,
+          executablePath: configuration?.displayPath,
+        }));
       }
     }));
     return this.snapshot();
+  }
+
+  async probeConfiguration(configuration: ExecutionBackendConfiguration): Promise<ExecutionBackendHealth> {
+    const backend = this.#backends.get(configuration.backendId);
+    if (!backend) throw new Error(`未注册执行 Backend: ${configuration.backendId}`);
+    const health = await backend.probe(configuration);
+    if (health.backendId !== configuration.backendId) throw new Error(`Backend probe 返回了错误 ID: ${health.backendId}`);
+    return Object.freeze({ ...health });
+  }
+
+  activateConfiguration(configuration: ExecutionBackendConfiguration): void {
+    if (!this.#backends.has(configuration.backendId)) throw new Error(`未注册执行 Backend: ${configuration.backendId}`);
+    this.#configurations.set(configuration.backendId, Object.freeze({
+      ...configuration,
+      prefixArgv: configuration.prefixArgv ? Object.freeze([...configuration.prefixArgv]) : undefined,
+    }));
+    this.#health.set(configuration.backendId, Object.freeze({
+      backendId: configuration.backendId,
+      state: "checking",
+      executableSource: configuration.executableSource,
+      executablePath: configuration.displayPath,
+      updatedAt: this.#now(),
+    }));
   }
 
   resolve(profileId: ExecutionProfileId): ResolvedExecutionBackend {
@@ -91,7 +117,9 @@ export class ExecutionBackendRegistry implements ExecutionBackendRegistryContrac
     if (!backend) throw new Error(`执行环境 ${definition.label} 未注册 Backend`);
     const health = this.#health.get(definition.backendId)
       ?? unavailableHealth(definition.backendId, this.#now(), "执行环境尚未初始化");
-    if (health.state !== "ready") throw new Error(health.error ?? `执行环境 ${definition.label} 当前不可用`);
+    if (health.state !== "ready" || health.authState === "required") {
+      throw new Error(health.error ?? (health.authState === "required" ? `${definition.label} 尚未登录` : `执行环境 ${definition.label} 当前不可用`));
+    }
     return Object.freeze({ profileId, profile: snapshotExecutionProfile(profileId), backend, health });
   }
 
@@ -107,11 +135,13 @@ export class ExecutionBackendRegistry implements ExecutionBackendRegistryContrac
     const health = Object.freeze([...this.#health.values()].map((item) => Object.freeze({ ...item })));
     const profiles = Object.freeze(BUILTIN_EXECUTION_PROFILES.map((profile) => {
       const backendHealth = this.#health.get(profile.backendId);
-      const available = backendHealth?.state === "ready";
+      const available = backendHealth?.state === "ready" && backendHealth.authState !== "required";
       return Object.freeze({
         profile,
         available,
-        reason: available ? undefined : backendHealth?.error ?? "执行环境尚未初始化",
+        reason: available
+          ? undefined
+          : backendHealth?.error ?? (backendHealth?.authState === "required" ? `${profile.label} 尚未登录` : "执行环境尚未初始化"),
       });
     }));
     return Object.freeze({ health, profiles });

@@ -316,7 +316,7 @@ function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>):
 
 function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUiState {
   if (event.source === "pi") return handlePiEvent(state, event.payload as unknown as Record<string, unknown>);
-  if (event.source === "board") return state;
+  if (event.source === "board" || event.source === "capability" || event.source === "execution-backend") return state;
   const payload = event.payload;
   if (payload.type === "runtime_stderr") return { ...state, stderr: appendDiagnosticText(state.stderr, payload.message) };
   // 运行时重启成功后清除上一次 runtime_exit / protocol_error 留下的错误横幅。

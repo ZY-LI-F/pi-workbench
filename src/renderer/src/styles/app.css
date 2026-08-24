@@ -3926,6 +3926,23 @@
 .setting-row strong { color: var(--text-soft); font-size: 0.75rem; font-weight: 620; }
 .setting-row small { margin-top: 2px; color: var(--text-faint); font-size: 0.75rem; }
 .settings-capability-note { margin: 3px 2px 8px; color: var(--text-faint); font-size: 0.75rem; line-height: 1.55; }
+
+.settings-section--execution-backends { gap: 10px; }
+.execution-backend-setting { display: grid; gap: 8px; padding: 11px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--surface-raised) 70%, transparent); }
+.execution-backend-setting__heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.execution-backend-setting__heading > span { display: grid; gap: 2px; }
+.execution-backend-setting__heading strong { color: var(--text); font-size: 0.7857rem; }
+.execution-backend-setting__heading small,
+.execution-backend-setting__path { color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; overflow-wrap: anywhere; }
+.execution-backend-setting__status { padding: 3px 7px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); font-size: 0.75rem; font-style: normal; white-space: nowrap; }
+.execution-backend-setting__status.is-ready { border-color: color-mix(in srgb, var(--success) 32%, var(--border)); color: var(--success); }
+.execution-backend-setting__status.is-error,
+.execution-backend-setting__status.is-unavailable { border-color: color-mix(in srgb, var(--danger) 32%, var(--border)); color: var(--danger); }
+.execution-backend-setting input { width: 100%; min-width: 0; padding: 8px 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text); font-family: var(--font-mono); font-size: 0.75rem; }
+.execution-backend-setting__actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.execution-backend-setting__actions button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; }
+.execution-backend-setting p,
+.settings-execution-backend-error { margin: 0; color: var(--danger); font-size: 0.75rem; line-height: 1.45; overflow-wrap: anywhere; }
 .toggle { position: relative; width: 36px; height: 20px; padding: 0; flex: 0 0 auto; border: 1px solid var(--border-strong); border-radius: 99px; background: var(--surface); }
 .toggle span { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: 150ms ease; }
 .toggle.is-on { border-color: color-mix(in srgb, var(--accent) 42%, transparent); background: var(--accent-soft); }

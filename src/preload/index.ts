@@ -8,6 +8,7 @@ import type {
   StellaDesktopApi,
 } from "../shared/contracts";
 import type { CapabilityHealthSnapshot, CapabilityName } from "../shared/capabilities";
+import type { ConfigureExecutionBackendInput, ExecutionBackendCatalogSnapshot, ExecutionBackendId } from "../shared/execution-profile";
 import type { SkinArtworkDescriptor, SkinId } from "../shared/skin-artwork";
 import type {
   DiscoverPiModelsInput,
@@ -43,6 +44,11 @@ import type { PiSkillInstallResult, PiSkillInstallScope } from "../shared/pi-ski
 const api: StellaDesktopApi = Object.freeze({
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
   retryCapability: (name: CapabilityName) => ipcRenderer.invoke("stella:capability:retry", name) as Promise<CapabilityHealthSnapshot>,
+  executionBackendsInitialize: () => ipcRenderer.invoke("stella:execution-backends:initialize") as Promise<ExecutionBackendCatalogSnapshot>,
+  executionBackendConfigure: (input: ConfigureExecutionBackendInput) =>
+    ipcRenderer.invoke("stella:execution-backends:configure", input) as Promise<ExecutionBackendCatalogSnapshot>,
+  executionBackendRetry: (backendId: ExecutionBackendId) =>
+    ipcRenderer.invoke("stella:execution-backends:retry", backendId) as Promise<ExecutionBackendCatalogSnapshot>,
   initialize: () => ipcRenderer.invoke("stella:initialize") as Promise<RuntimeBootstrap>,
   command: (command: PiCommand) => ipcRenderer.invoke("stella:command", command),
   refresh: () => ipcRenderer.invoke("stella:refresh") as Promise<RuntimeBootstrap>,

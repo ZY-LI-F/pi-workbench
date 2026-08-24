@@ -32,6 +32,7 @@ import type { SkinArtworkDescriptor, SkinId } from "@shared/skin-artwork";
 import { isReportedRuntimeError, usePiRuntime } from "./hooks/use-pi-runtime";
 import { useKanban } from "./hooks/use-kanban";
 import { useCapabilities } from "./hooks/use-capabilities";
+import { useExecutionBackends } from "./hooks/use-execution-backends";
 import { useMediaQuery } from "./hooks/use-media-query";
 import { usePreferences } from "./hooks/use-preferences";
 import { useSessionComposerDraft } from "./hooks/use-session-composer-draft";
@@ -145,6 +146,7 @@ export function App({ api }: AppProps) {
   const controller = usePiRuntime(api);
   const kanban = useKanban(api);
   const capabilities = useCapabilities(api);
+  const executionBackends = useExecutionBackends(api);
   const { state } = controller;
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
   const skinArtwork = useSkinArtwork(api);
@@ -834,9 +836,17 @@ export function App({ api }: AppProps) {
           preferences={preferences}
           customArtwork={skinArtwork.bySkin}
           artworkBusySkin={skinArtwork.busySkin}
+          executionBackends={executionBackends.state.snapshot}
+          executionBackendBusy={executionBackends.state.busy}
+          executionBackendError={executionBackends.state.error}
           onPreferencesChange={setPreferences}
           onChooseSkinArtwork={(skin) => void chooseSkinArtwork(skin)}
           onResetSkinArtwork={(skin) => void resetSkinArtwork(skin)}
+          onConfigureExecutionBackend={(backendId, executablePath) => runAction(
+            "保存执行环境",
+            () => executionBackends.configure({ backendId, executablePath }),
+          )}
+          onRetryExecutionBackend={(backendId) => runAction("重新探测执行环境", () => executionBackends.retry(backendId))}
           onAutoCompactionChange={(enabled) => runAction("更新自动压缩设置", () => controller.command({ type: "set_auto_compaction", enabled }, true))}
           onSteeringModeChange={(mode) => runAction("更新 Steering 模式", () => controller.command({ type: "set_steering_mode", mode }, true))}
           onFollowUpModeChange={(mode) => runAction("更新 Follow-up 模式", () => controller.command({ type: "set_follow_up_mode", mode }, true))}
