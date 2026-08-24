@@ -1,4 +1,4 @@
-import type { ExecutionTarget, WorkspaceAccess } from "./kanban";
+import type { AgentDefinition, ExecutionTarget, WorkspaceAccess } from "./kanban";
 
 export const EXECUTION_BACKEND_IDS = ["pi", "codex", "claude"] as const;
 export type ExecutionBackendId = (typeof EXECUTION_BACKEND_IDS)[number];
@@ -202,6 +202,20 @@ export function profileSupportsTarget(profileId: ExecutionProfileId, target: Exc
   if (target.kind === "workflow") return profileSupports(profileId, "workflow-step");
   if (target.kind === "squad") return profileSupports(profileId, "squad");
   return profileSupports(profileId, "direct-agent");
+}
+
+export function executionProfileAgentIncompatibility(
+  profileId: ExecutionProfileId,
+  agents: readonly AgentDefinition[],
+): string | undefined {
+  const definition = executionProfile(profileId);
+  if (definition.backendId !== "pi" && agents.some((agent) => (agent.requiredSkills?.length ?? 0) > 0)) {
+    return `${definition.label} 不支持依赖 Pi Skills 的 Agent`;
+  }
+  const allowedAccess = definition.constraints?.agentWorkspaceAccess;
+  const incompatibleAccess = allowedAccess && agents.find((agent) => !allowedAccess.includes(agent.workspaceAccess));
+  if (incompatibleAccess) return `${definition.label} 不支持${incompatibleAccess.workspaceAccess === "write" ? "可写" : "只读"} Agent`;
+  return undefined;
 }
 
 export function assertExecutionProfileTarget(

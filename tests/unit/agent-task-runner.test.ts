@@ -6,6 +6,13 @@ import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-ca
 import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, LEGACY_SQUAD_LEADER_INSTRUCTIONS } from "../../src/shared/coordinator-protocol";
 import { AgentTaskRunner } from "../../src/main/agent-task-runner";
 import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
+import {
+  ExecutionProtocolError,
+  type ExecutionBackend,
+  type ExecutionEvent,
+  type ExecutionOutcome,
+  type ExecutionRequest,
+} from "../../src/main/execution-backend";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime as AgentTaskRuntime, type PiRpcExecutionRuntimeFactory as AgentTaskRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
@@ -13,6 +20,7 @@ import type { BoardRepository } from "../../src/main/board-repository";
 import { SquadService } from "../../src/main/squad-service";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
+import type { ExecutionBackendHealth, ExecutionProfileId } from "../../src/shared/execution-profile";
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -72,6 +80,34 @@ class FakeAgentRuntimeFactory implements AgentTaskRuntimeFactory {
   }
 }
 
+class ProtocolFailingCodexBackend implements ExecutionBackend {
+  readonly backendId = "codex" as const;
+
+  async probe(): Promise<ExecutionBackendHealth> {
+    return Object.freeze({
+      backendId: "codex",
+      state: "ready",
+      authState: "ready",
+      version: "codex-cli 7.6.5",
+      updatedAt: "2026-07-18T00:00:00.000Z",
+    });
+  }
+
+  async run(_request: ExecutionRequest, _emit: (event: ExecutionEvent) => void, _signal: AbortSignal): Promise<ExecutionOutcome> {
+    throw new ExecutionProtocolError({
+      message: "Codex JSONL 缺少 turn.completed 终态",
+      output: "已完成文件分析，但终态丢失",
+      session: { backendId: "codex", sessionId: "thread-partial" },
+      usage: { inputTokens: 45, outputTokens: 67 },
+      backendVersion: "codex-cli 7.6.5",
+    });
+  }
+
+  async openSession(): Promise<never> {
+    throw new Error("not used");
+  }
+}
+
 function idFactory(): () => string {
   let value = 0;
   return () => `id-${String(++value).padStart(3, "0")}`;
@@ -99,6 +135,7 @@ async function setup(
   resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string> = async (projectPath) => projectPath,
   resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
   assertExecutionAvailable: () => void = () => undefined,
+  customBackendRegistry?: ExecutionBackendRegistry,
 ) {
   const repository = new MemoryRepository();
   const id = idFactory();
@@ -110,18 +147,22 @@ async function setup(
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
   const runner = new AgentTaskRunner({
     service: agentTaskService,
-    backendRegistry: backendRegistry(runtimeFactory, globalModel),
+    backendRegistry: customBackendRegistry ?? backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
     admission,
     resolveProjectTrust,
     resolveProjectPath,
   });
 
-  const createTask = async (title: string, executionTarget: ExecutionTarget = { kind: "agent", agentId: "builder" }) => {
+  const createTask = async (
+    title: string,
+    executionTarget: ExecutionTarget = { kind: "agent", agentId: "builder" },
+    executionProfileId?: ExecutionProfileId,
+  ) => {
     await boardService.createTask({
       title, description: "修改真实项目", acceptanceCriteria: "留下可验证结果", priority: "high",
       projectPath: "C:/project", projectName: "project", trusted: true,
-      executionTarget,
+      executionTarget, executionProfileId,
     });
     const task = repository.state.tasks.find((candidate) => candidate.title === title);
     if (!task) throw new Error("测试任务未创建");
@@ -203,6 +244,37 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.tasks.find((task) => task.id === firstTaskId)?.stage).toBe("review");
     expect(repository.state.comments.some((comment) => comment.taskId === firstTaskId && comment.author === "agent" && comment.body === "真实 Agent 产物")).toBe(true);
     expect(repository.state.agentTasks.find((task) => task.taskId === secondTaskId)?.status).toBe("running");
+  });
+
+  it("fails a direct task on a typed Backend protocol error while preserving partial evidence", async () => {
+    const registry = new ExecutionBackendRegistry({
+      backends: [new ProtocolFailingCodexBackend()],
+      now: () => "2026-07-18T00:00:00.000Z",
+    });
+    const { repository, agentTaskService, runner, createTask } = await setup(
+      new FakeAgentRuntimeFactory(),
+      () => undefined,
+      async (projectPath) => projectPath,
+      async () => true,
+      () => undefined,
+      registry,
+    );
+    const taskId = await createTask("Codex 协议失败", { kind: "agent", agentId: "builder" }, "codex.exec");
+    await agentTaskService.dispatchDirect(taskId);
+
+    runner.start();
+
+    await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.taskId === taskId)?.status).toBe("failed"));
+    expect(repository.state.agentTasks.find((task) => task.taskId === taskId)).toMatchObject({
+      output: "已完成文件分析，但终态丢失",
+      error: "Codex JSONL 缺少 turn.completed 终态",
+      session: { backendId: "codex", sessionId: "thread-partial" },
+      backendVersion: "codex-cli 7.6.5",
+      inputTokens: 45,
+      outputTokens: 67,
+    });
+    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
+    expect(repository.state.comments.some((comment) => comment.taskId === taskId && comment.author === "agent")).toBe(false);
   });
 
   it("rejects a stale queued execution without corrupting the task's current root", async () => {

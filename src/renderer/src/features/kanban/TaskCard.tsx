@@ -26,6 +26,7 @@ interface TaskCardProps {
   readonly liveAgentTaskEvent?: Extract<BoardBridgeEvent, { type: "agent-task-event" }>;
   readonly busy: boolean;
   readonly executionEnabled: boolean;
+  readonly executionDisabledReason?: string;
   readonly readOnly?: boolean;
   readonly onOpen: () => void;
   readonly onDispatch: () => void;
@@ -41,7 +42,7 @@ function trailClass(status: WorkflowRun["steps"][number]["status"]): string {
   return "";
 }
 
-export function TaskCard({ task, workflow, executionLabel, run, agentTask, activities, liveEvent, liveAgentTaskEvent, busy, executionEnabled, readOnly = false, onOpen, onDispatch, onDragStart, onDragEnd }: TaskCardProps) {
+export function TaskCard({ task, workflow, executionLabel, run, agentTask, activities, liveEvent, liveAgentTaskEvent, busy, executionEnabled, executionDisabledReason, readOnly = false, onOpen, onDispatch, onDragStart, onDragEnd }: TaskCardProps) {
   const step = activeStep(run);
   const latestActivity = activities.at(-1);
   const isManual = task.executionTarget.kind === "manual";
@@ -122,7 +123,7 @@ export function TaskCard({ task, workflow, executionLabel, run, agentTask, activ
       <div className="kanban-card__footer">
         <span title={latestActivity?.summary}><Clock3 size={11} />{formatRelativeTime(latestActivity?.createdAt ?? task.updatedAt)}</span>
         {canDispatch && (
-          <button type="button" onClick={(event) => { event.stopPropagation(); onDispatch(); }} disabled={busy || !executionEnabled || readOnly} title={readOnly ? "请先打开任务所属项目" : executionEnabled ? undefined : "Pi Runtime 不可用，暂时不能分发"} aria-label={`分发任务 ${task.title}`}>
+          <button type="button" onClick={(event) => { event.stopPropagation(); onDispatch(); }} disabled={busy || !executionEnabled || readOnly} title={readOnly ? "请先打开任务所属项目" : executionEnabled ? undefined : executionDisabledReason ?? "执行环境当前不可用"} aria-label={`分发任务 ${task.title}`}>
             <Play size={12} fill="currentColor" />分发
           </button>
         )}

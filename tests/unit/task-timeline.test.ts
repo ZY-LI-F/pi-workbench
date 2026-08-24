@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import type { AgentTask, KanbanTask, TaskActivity, TaskComment, WorkflowRun } from "../../src/shared/kanban";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 import { projectTaskTimeline } from "../../src/shared/task-timeline";
 
 const BUILDER = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
@@ -27,7 +28,8 @@ const RUN: WorkflowRun = Object.freeze({
   id: "run-1",
   taskId: TASK.id,
   executionAttempt: 1,
-  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget, executionProfileId: "codex.exec" }),
+  executionProfile: snapshotExecutionProfile("codex.exec"),
   workflow: WORKFLOW,
   agents: Object.freeze([BUILDER]),
   status: "reported",
@@ -39,6 +41,7 @@ const RUN: WorkflowRun = Object.freeze({
     name: "实现",
     status: "succeeded",
     agentId: BUILDER.id,
+    backendVersion: "codex-cli 7.6.5",
     artifact: Object.freeze({ title: "实现报告", content: "完成" }),
     startedAt: "2026-07-18T00:01:00.000Z",
     completedAt: "2026-07-18T00:02:00.000Z",
@@ -52,13 +55,15 @@ const AGENT_TASK: AgentTask = Object.freeze({
   id: "agent-task-1",
   taskId: TASK.id,
   executionAttempt: 1,
-  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget, executionProfileId: "codex.exec" }),
+  executionProfile: snapshotExecutionProfile("codex.exec"),
   agentSnapshot: BUILDER,
   kind: "direct",
   status: "reported",
   acceptance: "accepted",
   prompt: "实现",
   output: "Agent 报告",
+  backendVersion: "codex-cli 7.6.5",
   inputTokens: 1_250_000,
   outputTokens: 250_000,
   cost: 0.42,
@@ -90,6 +95,8 @@ describe("projectTaskTimeline", () => {
       source: "workflow-step", sourceId: "step-run-1", runId: RUN.id, stepId: RUN.steps[0]?.stepId,
     });
     expect(timeline.find((item) => item.id === `agent-task:${AGENT_TASK.id}`)?.provenance.agentTaskId).toBe(AGENT_TASK.id);
+    expect(timeline.find((item) => item.id === `agent-task:${AGENT_TASK.id}`)?.detail).toContain("Codex CLI · codex-cli 7.6.5");
+    expect(timeline.find((item) => item.id === "workflow-step:step-run-1")?.detail).toBe("Codex CLI · codex-cli 7.6.5");
     expect(timeline.filter((item) => item.id === `agent-task:${AGENT_TASK.id}:output`)).toHaveLength(0);
     expect(timeline.find((item) => item.id === "message:message-output")?.artifact).toMatchObject({
       content: "Agent 报告",
@@ -97,6 +104,7 @@ describe("projectTaskTimeline", () => {
       outputTokens: 250_000,
       startedAt: "2026-07-18T00:01:30.000Z",
       completedAt: "2026-07-18T00:03:00.000Z",
+      title: expect.stringContaining("Codex CLI"),
     });
     expect(Object.isFrozen(timeline)).toBe(true);
     expect(Object.isFrozen(timeline[0]?.provenance)).toBe(true);

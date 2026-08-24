@@ -63,6 +63,7 @@ export interface OpenExecutionSessionResult {
 
 export interface ExecutionBackend {
   readonly backendId: ExecutionBackendId;
+  activate?(configuration: ExecutionBackendConfiguration): void;
   probe(configuration: ExecutionBackendConfiguration): Promise<ExecutionBackendHealth>;
   run(request: ExecutionRequest, emit: (event: ExecutionEvent) => void, signal: AbortSignal): Promise<ExecutionOutcome>;
   openSession(session: ExecutionSessionReference): Promise<OpenExecutionSessionResult>;

@@ -1875,6 +1875,20 @@
   text-align: center;
 }
 
+.execution-profile-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.execution-profile-picker > button { position: relative; display: grid; min-width: 0; min-height: 70px; padding: 9px 30px 9px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text-muted); text-align: left; transition: border-color .16s ease, background .16s ease, opacity .16s ease; }
+.execution-profile-picker > button:hover:not(:disabled),
+.execution-profile-picker > button.is-selected { border-color: color-mix(in srgb, var(--accent) 46%, var(--border)); background: var(--surface-active); }
+.execution-profile-picker > button.is-unavailable { opacity: .68; }
+.execution-profile-picker > button:disabled { cursor: not-allowed; }
+.execution-profile-picker > button > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.execution-profile-picker > button > span svg { flex: 0 0 auto; color: var(--accent); }
+.execution-profile-picker > button strong { color: var(--text-soft); font-size: 0.75rem; }
+.execution-profile-picker > button em { margin-left: auto; color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; font-style: normal; }
+.execution-profile-picker > button small { margin-top: 5px; color: var(--text-faint); font-size: 0.75rem; line-height: 1.4; overflow-wrap: anywhere; }
+.execution-profile-picker > button > svg { position: absolute; top: 9px; right: 9px; color: var(--success); }
+.execution-profile-picker > button.is-unavailable > svg { color: var(--warning); }
+
 .agent-task-rail {
   position: relative;
   display: grid;

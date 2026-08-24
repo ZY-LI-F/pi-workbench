@@ -19,7 +19,7 @@ import {
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { supersedePendingExecutions } from "../shared/execution-state";
-import { assertExecutionProfileTarget, type ExecutionProfileId } from "../shared/execution-profile";
+import { assertExecutionProfileTarget, executionProfileAgentIncompatibility, type ExecutionProfileId } from "../shared/execution-profile";
 import { cloneExecutionSessionReference } from "../shared/execution-session";
 
 interface BoardServiceDependencies {
@@ -107,6 +107,7 @@ export class BoardService {
     return this.#commit((current) => {
       this.#assertExecutionTarget(current, input.executionTarget, input.projectPath);
       const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
+      this.#assertExecutionProfileAgents(current, input.executionTarget, executionProfileId);
       const task: KanbanTask = Object.freeze({
         id: this.#id(),
         title: normalizedText(input.title, "任务标题", true),
@@ -146,6 +147,7 @@ export class BoardService {
       if (task.awaitingReviewExecution) throw new Error("任务正在等待验收；请先验收或退回本次执行，再修改任务规格");
       this.#assertExecutionTarget(current, input.executionTarget, task.projectPath);
       const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
+      this.#assertExecutionProfileAgents(current, input.executionTarget, executionProfileId);
       const title = normalizedText(input.title, "任务标题", true);
       const description = normalizedText(input.description, "任务说明", false);
       const acceptanceCriteria = normalizedText(input.acceptanceCriteria, "验收标准", false);
@@ -189,6 +191,26 @@ export class BoardService {
     const profileId = target.kind === "manual" ? undefined : requested ?? "pi.rpc";
     assertExecutionProfileTarget(target, profileId);
     return profileId;
+  }
+
+  #assertExecutionProfileAgents(state: BoardState, target: ExecutionTarget, profileId: ExecutionProfileId | undefined): void {
+    if (target.kind === "manual" || !profileId) return;
+    const catalog = this.#catalogFor(state);
+    const agentIds = target.kind === "agent"
+      ? [target.agentId]
+      : target.kind === "workflow"
+        ? this.#catalog.workflows.find((workflow) => workflow.id === target.workflowId)?.steps.flatMap((step) => step.kind === "agent" ? [step.agentId] : []) ?? []
+        : (() => {
+            const squad = state.squads.find((candidate) => candidate.id === target.squadId);
+            return squad ? [squad.leaderAgentId, ...squad.memberAgentIds] : [];
+          })();
+    const agents = [...new Set(agentIds)].map((agentId) => {
+      const agent = catalog.agents.find((candidate) => candidate.id === agentId);
+      if (!agent) throw new Error(`未知 Agent: ${agentId}`);
+      return agent;
+    });
+    const incompatibility = executionProfileAgentIncompatibility(profileId, agents);
+    if (incompatibility) throw new Error(incompatibility);
   }
 
   async moveTask(taskId: string, stage: ManualTaskStage): Promise<BoardBootstrap> {

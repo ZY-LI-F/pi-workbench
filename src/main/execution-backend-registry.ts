@@ -97,7 +97,9 @@ export class ExecutionBackendRegistry implements ExecutionBackendRegistryContrac
   }
 
   activateConfiguration(configuration: ExecutionBackendConfiguration): void {
-    if (!this.#backends.has(configuration.backendId)) throw new Error(`未注册执行 Backend: ${configuration.backendId}`);
+    const backend = this.#backends.get(configuration.backendId);
+    if (!backend) throw new Error(`未注册执行 Backend: ${configuration.backendId}`);
+    backend.activate?.(configuration);
     this.#configurations.set(configuration.backendId, Object.freeze({
       ...configuration,
       prefixArgv: configuration.prefixArgv ? Object.freeze([...configuration.prefixArgv]) : undefined,

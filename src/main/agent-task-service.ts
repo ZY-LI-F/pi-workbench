@@ -57,7 +57,7 @@ export interface ClaimedAgentTask {
 
 export interface AgentTaskResult {
   readonly output: string;
-  /** Set only when the Coordinator runtime ended without a valid terminating tool result. */
+  /** Set when a Backend exits without its required terminal protocol result. */
   readonly protocolError?: string;
   readonly session?: ExecutionSessionReference;
   readonly backendVersion?: string;
@@ -65,6 +65,8 @@ export interface AgentTaskResult {
   readonly outputTokens?: number;
   readonly cost?: number;
 }
+
+export type AgentTaskFailureResult = Omit<AgentTaskResult, "protocolError">;
 
 interface AgentTaskResultFields {
   readonly runtimeToken: undefined;
@@ -747,13 +749,21 @@ export class AgentTaskService {
     });
   }
 
-  async fail(agentTaskId: string, runtimeToken: string, cause: unknown): Promise<BoardBootstrap> {
+  async fail(agentTaskId: string, runtimeToken: string, cause: unknown, result?: AgentTaskFailureResult): Promise<BoardBootstrap> {
     const message = cause instanceof Error ? cause.message : String(cause);
     const now = this.#now();
     return this.#commit((current) => {
       const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
       const task = this.#task(current, agentTask.taskId);
-      const recovered = this.#recoverCoordinatorChildFailure(current, task, agentTask, message, now);
+      const failureFields = result ? Object.freeze({
+        output: normalizedRequired(result.output, "Agent 部分输出"),
+        session: result.session,
+        backendVersion: result.backendVersion,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        cost: result.cost,
+      }) : undefined;
+      const recovered = this.#recoverCoordinatorChildFailure(current, task, agentTask, message, now, failureFields);
       if (recovered) return recovered;
       const rootId = this.#rootAgentTaskId(current, agentTask);
       const groupIds = this.#agentTaskGroupIds(current, rootId);
@@ -763,7 +773,7 @@ export class AgentTaskService {
           ? finishExecutionLifecycle(task, { type: "execution-failed", reason: message }, now)
           : candidate),
         agentTasks: current.agentTasks.map((candidate) => {
-          if (candidate.id === agentTask.id) return Object.freeze({ ...candidate, status: "failed" as const, runtimeToken: undefined, error: message, updatedAt: now, completedAt: now });
+          if (candidate.id === agentTask.id) return Object.freeze({ ...candidate, ...failureFields, status: "failed" as const, runtimeToken: undefined, error: message, updatedAt: now, completedAt: now });
           if (!groupIds.has(candidate.id) || isTerminalAgentTaskStatus(candidate.status)) return candidate;
           if (candidate.id === rootId) return Object.freeze({ ...candidate, status: "failed" as const, runtimeToken: undefined, error: `子任务失败：${message}`, updatedAt: now, completedAt: now });
           return Object.freeze({ ...candidate, status: "cancelled" as const, runtimeToken: undefined, error: "同组 AgentTask 已失败", updatedAt: now, completedAt: now });
@@ -944,6 +954,7 @@ export class AgentTaskService {
     agentTask: AgentTask,
     message: string,
     now: string,
+    failureFields?: Partial<AgentTask>,
   ): BoardState | undefined {
     if (agentTask.kind !== "delegated" || !agentTask.parentAgentTaskId) return undefined;
     const parent = state.agentTasks.find((candidate) => candidate.id === agentTask.parentAgentTaskId);
@@ -951,6 +962,7 @@ export class AgentTaskService {
 
     const failed: AgentTask = Object.freeze({
       ...agentTask,
+      ...failureFields,
       status: "failed",
       runtimeToken: undefined,
       error: message,

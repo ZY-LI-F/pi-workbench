@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Bot, Check, Folder, GitBranch, MessageSquareShare, Sparkles, UserRound, Users } from "lucide-react";
 import type {
   AgentDefinition,
@@ -13,7 +13,8 @@ import type {
 import type { ProjectMeta } from "@shared/contracts";
 import { Modal } from "../../components/Modal";
 import type { PiTaskDraft } from "./pi-task-draft";
-import { executionProfile, type ExecutionProfileId } from "@shared/execution-profile";
+import type { ExecutionBackendCatalogSnapshot, ExecutionProfileId } from "@shared/execution-profile";
+import { ExecutionProfilePicker, executionProfileOptions } from "./ExecutionProfilePicker";
 
 interface TaskEditorDialogProps {
   readonly task?: KanbanTask;
@@ -23,6 +24,8 @@ interface TaskEditorDialogProps {
   readonly agents: readonly AgentDefinition[];
   readonly squads: readonly Squad[];
   readonly automationEnabled?: boolean;
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
+  readonly piExecutionEnabled?: boolean;
   readonly busy: boolean;
   readonly onClose: () => void;
   readonly onCreate: (input: CreateTaskInput) => Promise<void>;
@@ -43,7 +46,21 @@ function targetId(target: ExecutionTarget | undefined): string {
   return target.squadId;
 }
 
-export function TaskEditorDialog({ task, draft, project, workflows, agents, squads, automationEnabled = true, busy, onClose, onCreate, onUpdate }: TaskEditorDialogProps) {
+export function TaskEditorDialog({
+  task,
+  draft,
+  project,
+  workflows,
+  agents,
+  squads,
+  automationEnabled = true,
+  executionBackends,
+  piExecutionEnabled = true,
+  busy,
+  onClose,
+  onCreate,
+  onUpdate,
+}: TaskEditorDialogProps) {
   const [title, setTitle] = useState(task?.title ?? draft?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? draft?.description ?? "");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(task?.acceptanceCriteria ?? draft?.acceptanceCriteria ?? "");
@@ -53,6 +70,46 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
   const [executionProfileId, setExecutionProfileId] = useState<ExecutionProfileId>(task?.executionProfileId ?? "pi.rpc");
   const [error, setError] = useState("");
   const showAutomationChoices = automationEnabled || (task !== undefined && task.executionTarget.kind !== "manual");
+  const executionTarget: ExecutionTarget = useMemo(() => executionKind === "manual"
+    ? { kind: "manual" }
+    : executionKind === "workflow"
+      ? { kind: "workflow", workflowId: executionId }
+      : executionKind === "agent"
+        ? { kind: "agent", agentId: executionId }
+        : { kind: "squad", squadId: executionId }, [executionId, executionKind]);
+  const targetAgents = useMemo(() => {
+    const ids = executionTarget.kind === "agent"
+      ? [executionTarget.agentId]
+      : executionTarget.kind === "workflow"
+        ? workflows.find((workflow) => workflow.id === executionTarget.workflowId)?.steps.flatMap((step) => step.kind === "agent" ? [step.agentId] : []) ?? []
+        : executionTarget.kind === "squad"
+          ? (() => {
+              const squad = squads.find((candidate) => candidate.id === executionTarget.squadId);
+              return squad ? [squad.leaderAgentId, ...squad.memberAgentIds] : [];
+            })()
+          : [];
+    return Object.freeze([...new Set(ids)].flatMap((id) => agents.find((agent) => agent.id === id) ?? []));
+  }, [agents, executionTarget, squads, workflows]);
+  const profileOptions = useMemo(() => executionTarget.kind === "manual" ? Object.freeze([]) : executionProfileOptions({
+    target: executionTarget,
+    agents: targetAgents,
+    gitRepository: Boolean(project.branch),
+    snapshot: executionBackends,
+    piExecutionEnabled,
+  }), [executionBackends, executionTarget, piExecutionEnabled, project.branch, targetAgents]);
+  const targetSignature = `${executionKind}:${executionId}`;
+  const initialTargetSignature = useRef(targetSignature);
+
+  useEffect(() => {
+    const current = profileOptions.find((option) => option.id === executionProfileId);
+    const preservesUnavailableHistory = Boolean(task)
+      && targetSignature === initialTargetSignature.current
+      && executionProfileId === task?.executionProfileId;
+    if (!current?.selectable && !preservesUnavailableHistory) {
+      const fallback = profileOptions.find((option) => option.selectable);
+      if (fallback) setExecutionProfileId(fallback.id);
+    }
+  }, [executionProfileId, profileOptions, targetSignature, task]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -64,13 +121,14 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
       setError("请选择执行目标");
       return;
     }
-    const executionTarget: ExecutionTarget = executionKind === "manual"
-      ? { kind: "manual" }
-      : executionKind === "workflow"
-        ? { kind: "workflow", workflowId: executionId }
-        : executionKind === "agent"
-          ? { kind: "agent", agentId: executionId }
-          : { kind: "squad", squadId: executionId };
+    const selectedProfile = profileOptions.find((option) => option.id === executionProfileId);
+    const preservesUnavailableHistory = Boolean(task)
+      && targetSignature === initialTargetSignature.current
+      && executionProfileId === task?.executionProfileId;
+    if (executionKind !== "manual" && !selectedProfile?.selectable && !preservesUnavailableHistory) {
+      setError(selectedProfile?.reason ?? "当前没有可用的执行环境");
+      return;
+    }
     const selectedProfileId = executionKind === "manual" ? undefined : executionProfileId;
     setError("");
     try {
@@ -191,13 +249,11 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
         </div>
 
         {executionKind !== "manual" && (
-          <label className="kanban-field">
+          <div className="kanban-field">
             <span>执行环境</span>
-            <select aria-label="执行环境" value={executionProfileId} onChange={(event) => setExecutionProfileId(event.target.value as ExecutionProfileId)}>
-              <option value="pi.rpc">{executionProfile("pi.rpc").label}</option>
-            </select>
-            <small>当前基线继续使用 Stella 内置 Pi RPC；其他 CLI 会在对应适配器就绪后出现在这里。</small>
-          </label>
+            <ExecutionProfilePicker options={profileOptions} value={executionProfileId} onChange={setExecutionProfileId} />
+            <small>环境只决定实际 CLI；推进方式、任务生命周期和人工验收仍由 Stella 管理。</small>
+          </div>
         )}
 
         {error && <p className="kanban-form-error" role="alert">{error}</p>}

@@ -765,6 +765,7 @@ export function App({ api }: AppProps) {
           controller={kanban}
           project={bootstrap?.project}
           executionEnabled={piReady}
+          executionBackends={executionBackends.state.snapshot}
           teamFeaturesEnabled={teamFeaturesEnabled}
           taskCapabilityError={taskHealth?.error}
           taskCapabilityRetrying={capabilities.state.retrying.includes("task")}

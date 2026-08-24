@@ -69,10 +69,11 @@ function entry(value: Omit<TaskTimelineEntry, "provenance"> & { readonly provena
 
 function artifactFromAgentTask(agentTask: AgentTask | undefined): AgentArtifact | undefined {
   if (!agentTask?.output) return undefined;
+  const profileLabel = agentTask.executionProfile?.label ?? "Pi RPC";
   return Object.freeze({
-    title: "Agent 最终产物与运行指标",
+    title: `Agent 最终产物与运行指标 · ${profileLabel}`,
     content: agentTask.output,
-    sessionPath: agentTask.session?.sessionPath,
+    session: agentTask.session,
     inputTokens: agentTask.inputTokens,
     outputTokens: agentTask.outputTokens,
     cost: agentTask.cost,
@@ -133,12 +134,13 @@ function activityEntry(activity: TaskActivity): TaskTimelineEntry {
 }
 
 function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
+  const profileLabel = run.executionProfile?.label ?? "Pi RPC";
   const runEntry = entry({
     id: `workflow-run:${run.id}`,
     kind: "execution",
     createdAt: run.updatedAt,
     title: `工作流执行 · ${run.workflow.name}`,
-    detail: `Run ${run.id}`,
+    detail: `Run ${run.id} · ${profileLabel}`,
     status: run.status,
     acceptance: run.acceptance,
     provenance: { source: "workflow-run", sourceId: run.id, runId: run.id },
@@ -150,6 +152,9 @@ function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
       createdAt: step.completedAt ?? step.startedAt ?? run.startedAt,
       title: `${step.stepKind === "human-gate" ? "人工关卡" : "工作流步骤"} · ${step.name}`,
       body: step.error,
+      detail: step.stepKind === "agent"
+        ? `${profileLabel}${step.backendVersion ? ` · ${step.backendVersion}` : ""}`
+        : undefined,
       status: step.status,
       sessionPath: step.session?.sessionPath,
       provenance: { source: "workflow-step", sourceId: step.id, runId: run.id, stepId: step.stepId },
@@ -161,7 +166,7 @@ function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
         id: `workflow-step:${step.id}:artifact`,
         kind: "artifact",
         createdAt: step.completedAt ?? step.startedAt ?? run.startedAt,
-        title: step.artifact.title,
+        title: `${step.artifact.title} · ${profileLabel}`,
         artifact: Object.freeze({ ...step.artifact, startedAt: step.startedAt, completedAt: step.completedAt }),
         sessionPath: step.artifact.session?.sessionPath ?? step.session?.sessionPath,
         provenance: { source: "workflow-step", sourceId: step.id, runId: run.id, stepId: step.stepId },
@@ -172,13 +177,14 @@ function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
 }
 
 function agentTaskEntries(agentTask: AgentTask, reportMessageAgentTaskIds: ReadonlySet<string>): readonly TaskTimelineEntry[] {
+  const profileLabel = agentTask.executionProfile?.label ?? "Pi RPC";
   const execution = entry({
     id: `agent-task:${agentTask.id}`,
     kind: "execution",
     createdAt: agentTask.updatedAt,
     title: `${agentTask.parentAgentTaskId ? "委派执行" : "Agent 执行"} · ${agentTask.agentSnapshot.name}`,
     body: agentTask.error,
-    detail: `@${agentTask.agentSnapshot.id} · ${agentTask.agentSnapshot.workspaceAccess === "write" ? "可写工作区" : "只读工作区"}`,
+    detail: `@${agentTask.agentSnapshot.id} · ${agentTask.agentSnapshot.workspaceAccess === "write" ? "可写工作区" : "只读工作区"} · ${profileLabel}${agentTask.backendVersion ? ` · ${agentTask.backendVersion}` : ""}`,
     status: agentTask.status,
     acceptance: agentTask.parentAgentTaskId ? undefined : agentTask.acceptance,
     sessionPath: agentTask.session?.sessionPath,
@@ -194,9 +200,9 @@ function agentTaskEntries(agentTask: AgentTask, reportMessageAgentTaskIds: Reado
       title: `@${agentTask.agentSnapshot.id} 返回结果`,
       authorAgentId: agentTask.agentSnapshot.id,
       artifact: Object.freeze({
-        title: "Agent 最终产物",
+        title: `Agent 最终产物 · ${profileLabel}`,
         content: agentTask.output,
-        sessionPath: agentTask.session?.sessionPath,
+        session: agentTask.session,
         inputTokens: agentTask.inputTokens,
         outputTokens: agentTask.outputTokens,
         cost: agentTask.cost,

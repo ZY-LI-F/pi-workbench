@@ -34,13 +34,14 @@ import { TaskCard } from "./TaskCard";
 import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskEditorDialog } from "./TaskEditorDialog";
 import type { PiTaskDraft } from "./pi-task-draft";
-import { executionProfile } from "@shared/execution-profile";
+import { executionProfile, type ExecutionBackendCatalogSnapshot } from "@shared/execution-profile";
 
 interface KanbanWorkspaceProps {
   readonly api: StellaDesktopApi;
   readonly controller: KanbanController;
   readonly project?: ProjectMeta;
   readonly executionEnabled: boolean;
+  readonly executionBackends?: ExecutionBackendCatalogSnapshot;
   readonly teamFeaturesEnabled: boolean;
   readonly taskCapabilityError?: string;
   readonly taskCapabilityRetrying: boolean;
@@ -94,6 +95,7 @@ export function KanbanWorkspace({
   controller,
   project,
   executionEnabled,
+  executionBackends,
   teamFeaturesEnabled,
   taskCapabilityError,
   taskCapabilityRetrying,
@@ -144,15 +146,30 @@ export function KanbanWorkspace({
   const editorTask = editorTaskId && editorTaskId !== "new"
     ? board?.tasks.find((task) => task.id === editorTaskId)
     : undefined;
-  const editorProject: ProjectMeta | undefined = editorTask ? Object.freeze({
-    cwd: editorTask.projectPath,
-    name: editorTask.projectName,
-    trusted: editorTask.trusted,
-    requiresTrust: false,
-    requiresSelection: false,
-  }) : project;
+  const editorProject: ProjectMeta | undefined = editorTask
+    ? sameProjectPath(editorTask.projectPath, project?.cwd)
+      ? project
+      : Object.freeze({
+          cwd: editorTask.projectPath,
+          name: editorTask.projectName,
+          trusted: editorTask.trusted,
+          requiresTrust: false,
+          requiresSelection: false,
+        })
+    : project;
   const draggingTask = board?.tasks.find((task) => task.id === draggingTaskId);
   const selectedTaskReadOnly = Boolean(selectedTask && !sameProjectPath(selectedTask.projectPath, project?.cwd));
+  const executionAvailability = (task: KanbanTask): { readonly enabled: boolean; readonly reason?: string } => {
+    if (!task.executionProfileId) return { enabled: false, reason: "任务未选择执行环境" };
+    const profile = executionProfile(task.executionProfileId);
+    if (profile.backendId === "pi") return executionEnabled
+      ? { enabled: true }
+      : { enabled: false, reason: "Pi Runtime 当前不可用" };
+    const availability = executionBackends?.profiles.find((item) => item.profile.id === task.executionProfileId);
+    return availability?.available
+      ? { enabled: true }
+      : { enabled: false, reason: availability?.reason ?? `${profile.label} 尚未完成探测` };
+  };
 
   useEffect(() => {
     if (selectedTaskId && board && !board.tasks.some((task) => task.id === selectedTaskId)) setSelectedTaskId(undefined);
@@ -327,6 +344,7 @@ export function KanbanWorkspace({
                     const agentTask = agentTasks.find((candidate) => candidate.id === task.activeAgentTaskId)
                       ?? [...agentTasks].reverse().find((candidate) => !candidate.parentAgentTaskId);
                     const workflow = workflowForTask(task, catalog);
+                    const availability = executionAvailability(task);
                     return (
                       <TaskCard
                         key={task.id}
@@ -339,7 +357,8 @@ export function KanbanWorkspace({
                         liveEvent={task.activeRunId && run ? state.liveEvents[run.id] : undefined}
                         liveAgentTaskEvent={agentTask ? state.liveAgentTaskEvents[agentTask.id] : undefined}
                         busy={state.pending.includes(task.id)}
-                        executionEnabled={executionEnabled}
+                        executionEnabled={availability.enabled}
+                        executionDisabledReason={availability.reason}
                         readOnly={!sameProjectPath(task.projectPath, project?.cwd)}
                         onOpen={() => setSelectedTaskId(task.id)}
                         onDispatch={() => void dispatch(task.id).catch(() => undefined)}
@@ -371,7 +390,7 @@ export function KanbanWorkspace({
             comments={taskComments(selectedTask.id)}
             activities={taskActivities(selectedTask.id)}
             busy={state.pending.includes(selectedTask.id)}
-            executionEnabled={executionEnabled}
+            executionEnabled={executionAvailability(selectedTask).enabled}
             readOnly={selectedTaskReadOnly}
             onOpenProject={() => onOpenProject(selectedTask.projectPath, selectedTask.trusted)}
             onClose={() => setSelectedTaskId(undefined)}
@@ -415,6 +434,8 @@ export function KanbanWorkspace({
           agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === editorProject.cwd)}
           squads={board.squads.filter((squad) => squad.scope === "global" || sameProjectPath(squad.projectPath, editorProject.cwd))}
           automationEnabled={teamFeaturesEnabled}
+          executionBackends={executionBackends}
+          piExecutionEnabled={executionEnabled}
           busy={state.pending.includes(editorTaskId === "new" ? "create" : editorTaskId)}
           onClose={() => setEditorTaskId(undefined)}
           onCreate={async (input) => { await controller.createTask(input); }}

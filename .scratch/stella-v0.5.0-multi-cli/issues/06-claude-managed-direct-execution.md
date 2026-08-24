@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend；04 — 外部 CLI 探测、配置与进程基础设施。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Profile picker 展示 Claude 健康状态与兼容性原因。
 - [ ] stream-json reducer 处理 system/session、assistant、tool、result、usage、错误和未知事件。

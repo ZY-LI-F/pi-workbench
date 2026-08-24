@@ -64,6 +64,7 @@ import { AgentTaskRunner } from "./agent-task-runner";
 import { ExecutionBackendRegistry } from "./execution-backend-registry";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./execution-adapters/pi-rpc-execution-adapter";
 import { CliProbeExecutionAdapter } from "./execution-adapters/cli-probe-execution-adapter";
+import { CodexExecExecutionAdapter } from "./execution-adapters/codex-exec-execution-adapter";
 import { ExecutionBackendSettingsService } from "./execution-backend-settings-service";
 import { AgentTaskService } from "./agent-task-service";
 import { AgentSkillService } from "./agent-skill-service";
@@ -678,7 +679,15 @@ async function dispatchBoardTask(taskId: string): Promise<BoardBootstrap> {
   const task = state.tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error(`找不到任务: ${taskId}`);
   if (task.executionTarget.kind === "manual") throw new Error("手工任务由用户推进；如需自动执行，请编辑任务并选择 Workflow、Agent 或 Squad");
-  assertPiExecutionCapability();
+  if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+  const useCase = task.executionTarget.kind === "workflow"
+    ? "workflow-step"
+    : task.executionTarget.kind === "squad"
+      ? "squad"
+      : task.executionTarget.agentId === "lead" ? "coordinator" : "direct-agent";
+  if (task.executionProfileId === "pi.rpc") assertPiExecutionCapability();
+  executionBackendRegistry.assertCompatible(task.executionProfileId, useCase);
+  executionBackendRegistry.resolve(task.executionProfileId);
   if (task.executionTarget.kind === "workflow") return workflowOrchestrator.dispatch(taskId);
   if (task.executionTarget.kind === "agent") {
     const bootstrap = await agentTaskService.dispatchDirect(taskId);
@@ -1340,7 +1349,7 @@ async function initializeTaskCapability(): Promise<void> {
           skills: agentSkillService,
           backendVersion: () => piBackendVersion,
         }),
-        new CliProbeExecutionAdapter({ backendId: "codex" }),
+        new CodexExecExecutionAdapter({ copyText: (value) => clipboard.writeText(value) }),
         new CliProbeExecutionAdapter({ backendId: "claude" }),
       ],
     });
@@ -1630,7 +1639,6 @@ function registerIpcHandlers(): void {
   );
   ipcMain.handle("stella:board:resolve-gate", async (_event, input: unknown) => {
     assertTaskCapability();
-    assertPiExecutionCapability();
     const validated = validatedGate(input);
     await currentProjectTask(validated.taskId);
     return workflowOrchestrator.resolveGate(validated);

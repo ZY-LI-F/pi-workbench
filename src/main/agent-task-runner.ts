@@ -252,15 +252,19 @@ export class AgentTaskRunner {
     } catch (cause) {
       if (this.#active !== active || active.abortRequested || cause instanceof ExecutionAbortedError) return;
       if (cause instanceof ExecutionProtocolError) {
-        await this.#service.complete(active.agentTaskId, active.runtimeToken, {
+        const result = {
           output: cause.output,
-          protocolError: cause.message,
           session: cause.session,
           backendVersion: cause.backendVersion,
           inputTokens: cause.usage?.inputTokens,
           outputTokens: cause.usage?.outputTokens,
           cost: cause.usage?.cost,
-        });
+        };
+        if (expectedResult === "coordinator-action") {
+          await this.#service.complete(active.agentTaskId, active.runtimeToken, { ...result, protocolError: cause.message });
+        } else {
+          await this.#service.fail(active.agentTaskId, active.runtimeToken, cause, result);
+        }
       } else {
         try {
           await this.#service.fail(active.agentTaskId, active.runtimeToken, cause);
