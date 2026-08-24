@@ -45,7 +45,7 @@ export function ArtifactDetails({ artifact, onRevealPath }: ArtifactDetailsProps
       <summary>{artifact.title}<span>查看产物</span></summary>
       <div className="artifact-card__actions">
         <button type="button" onClick={() => void navigator.clipboard.writeText(artifact.content)}><Clipboard size={12} />复制</button>
-        {artifact.sessionPath && <button type="button" onClick={() => onRevealPath(artifact.sessionPath ?? "")}><ExternalLink size={12} />会话文件</button>}
+        {artifact.session?.sessionPath && <button type="button" onClick={() => onRevealPath(artifact.session?.sessionPath ?? "")}><ExternalLink size={12} />会话文件</button>}
       </div>
       <div className="artifact-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content}</ReactMarkdown></div>
       {usage.length > 0 && <footer>{usage.join(" · ")}</footer>}

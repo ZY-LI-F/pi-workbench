@@ -63,7 +63,7 @@ export function projectWorkflowDag(run: WorkflowRun): WorkflowDagProjection {
       agent: agentForStep(run, step),
       artifact: stepRun?.artifact ? Object.freeze({ ...stepRun.artifact, startedAt: stepRun.startedAt, completedAt: stepRun.completedAt }) : undefined,
       error: stepRun?.error,
-      sessionPath: stepRun?.sessionPath ?? stepRun?.artifact?.sessionPath,
+      sessionPath: stepRun?.session?.sessionPath ?? stepRun?.artifact?.session?.sessionPath,
     });
   });
   const edges = nodes.slice(1).map((node, index): WorkflowDagEdge => {

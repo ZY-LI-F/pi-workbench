@@ -15,6 +15,7 @@ export function snapshotTaskSpec(task: KanbanTask): TaskSpecSnapshot {
     acceptanceCriteria: task.acceptanceCriteria,
     priority: task.priority,
     executionTarget: Object.freeze({ ...task.executionTarget }),
+    executionProfileId: task.executionProfileId,
   });
 }
 

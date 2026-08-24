@@ -19,6 +19,8 @@ import {
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { supersedePendingExecutions } from "../shared/execution-state";
+import { assertExecutionProfileTarget, type ExecutionProfileId } from "../shared/execution-profile";
+import { cloneExecutionSessionReference } from "../shared/execution-session";
 
 interface BoardServiceDependencies {
   readonly repository: BoardRepository;
@@ -104,6 +106,7 @@ export class BoardService {
     const now = this.#now();
     return this.#commit((current) => {
       this.#assertExecutionTarget(current, input.executionTarget, input.projectPath);
+      const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
       const task: KanbanTask = Object.freeze({
         id: this.#id(),
         title: normalizedText(input.title, "任务标题", true),
@@ -114,11 +117,15 @@ export class BoardService {
         projectName: normalizedText(input.projectName, "项目名称", true),
         trusted: input.trusted,
         executionTarget: Object.freeze({ ...input.executionTarget }),
+        executionProfileId,
         stage: "planned",
         specRevision: 1,
         executionAttempt: 0,
-        sourcePiSessionPath: input.sourcePiSessionPath,
-        sourcePiSessionId: input.sourcePiSessionId,
+        sourceSession: cloneExecutionSessionReference(input.sourceSession),
+        externalOrigin: input.externalOrigin ? Object.freeze({
+          ...input.externalOrigin,
+          session: cloneExecutionSessionReference(input.externalOrigin.session),
+        }) : undefined,
         createdAt: now,
         updatedAt: now,
       });
@@ -138,10 +145,12 @@ export class BoardService {
       if (task.activeRunId || task.activeAgentTaskId) throw new Error("运行中的任务不能编辑；请先中止执行");
       if (task.awaitingReviewExecution) throw new Error("任务正在等待验收；请先验收或退回本次执行，再修改任务规格");
       this.#assertExecutionTarget(current, input.executionTarget, task.projectPath);
+      const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
       const title = normalizedText(input.title, "任务标题", true);
       const description = normalizedText(input.description, "任务说明", false);
       const acceptanceCriteria = normalizedText(input.acceptanceCriteria, "验收标准", false);
       const targetChanged = JSON.stringify(task.executionTarget) !== JSON.stringify(input.executionTarget);
+      const profileChanged = task.executionProfileId !== executionProfileId;
       const resetManualProgress = task.executionTarget.kind === "manual"
         && input.executionTarget.kind !== "manual"
         && (task.stage === "running" || task.stage === "review");
@@ -149,7 +158,8 @@ export class BoardService {
         || task.description !== description
         || task.acceptanceCriteria !== acceptanceCriteria
         || task.priority !== input.priority
-        || targetChanged;
+        || targetChanged
+        || profileChanged;
       const nextTask: KanbanTask = Object.freeze({
         ...task,
         title,
@@ -157,6 +167,7 @@ export class BoardService {
         acceptanceCriteria,
         priority: input.priority,
         executionTarget: Object.freeze({ ...input.executionTarget }),
+        executionProfileId,
         stage: resetManualProgress ? "planned" : task.stage,
         blockedReason: resetManualProgress ? undefined : task.blockedReason,
         specRevision: specChanged ? task.specRevision + 1 : task.specRevision,
@@ -172,6 +183,12 @@ export class BoardService {
         ],
       };
     });
+  }
+
+  #executionProfileId(target: ExecutionTarget, requested: ExecutionProfileId | undefined): ExecutionProfileId | undefined {
+    const profileId = target.kind === "manual" ? undefined : requested ?? "pi.rpc";
+    assertExecutionProfileTarget(target, profileId);
+    return profileId;
   }
 
   async moveTask(taskId: string, stage: ManualTaskStage): Promise<BoardBootstrap> {

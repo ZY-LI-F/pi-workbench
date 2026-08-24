@@ -38,8 +38,7 @@ describe("createPiTaskDraft", () => {
       description: "## 当前请求\n实现可视化任务房间\n\n## 最近答复\n我建议使用纯投影。",
       acceptanceCriteria: "",
       priority: "medium",
-      sourcePiSessionPath: "C:/sessions/pi-session-1.jsonl",
-      sourcePiSessionId: "pi-session-1",
+      sourceSession: { backendId: "pi", sessionPath: "C:/sessions/pi-session-1.jsonl", sessionId: "pi-session-1" },
     });
     expect(Object.isFrozen(draft)).toBe(true);
   });

@@ -13,6 +13,7 @@ import type {
 import type { ProjectMeta } from "@shared/contracts";
 import { Modal } from "../../components/Modal";
 import type { PiTaskDraft } from "./pi-task-draft";
+import { executionProfile, type ExecutionProfileId } from "@shared/execution-profile";
 
 interface TaskEditorDialogProps {
   readonly task?: KanbanTask;
@@ -49,6 +50,7 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
   const [priority, setPriority] = useState<TaskPriority>(task?.priority ?? draft?.priority ?? "medium");
   const [executionKind, setExecutionKind] = useState<ExecutionTarget["kind"]>(task?.executionTarget.kind ?? "manual");
   const [executionId, setExecutionId] = useState(targetId(task?.executionTarget));
+  const [executionProfileId, setExecutionProfileId] = useState<ExecutionProfileId>(task?.executionProfileId ?? "pi.rpc");
   const [error, setError] = useState("");
   const showAutomationChoices = automationEnabled || (task !== undefined && task.executionTarget.kind !== "manual");
 
@@ -69,10 +71,11 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
         : executionKind === "agent"
           ? { kind: "agent", agentId: executionId }
           : { kind: "squad", squadId: executionId };
+    const selectedProfileId = executionKind === "manual" ? undefined : executionProfileId;
     setError("");
     try {
       if (task) {
-        await onUpdate({ taskId: task.id, title, description, acceptanceCriteria, priority, executionTarget });
+        await onUpdate({ taskId: task.id, title, description, acceptanceCriteria, priority, executionTarget, executionProfileId: selectedProfileId });
       } else {
         await onCreate({
           title,
@@ -80,11 +83,11 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
           acceptanceCriteria,
           priority,
           executionTarget,
+          executionProfileId: selectedProfileId,
           projectPath: project.cwd,
           projectName: project.name,
           trusted: project.trusted,
-          sourcePiSessionPath: draft?.sourcePiSessionPath,
-          sourcePiSessionId: draft?.sourcePiSessionId,
+          sourceSession: draft?.sourceSession,
         });
       }
       onClose();
@@ -186,6 +189,16 @@ export function TaskEditorDialog({ task, draft, project, workflows, agents, squa
             </div>
           </div>
         </div>
+
+        {executionKind !== "manual" && (
+          <label className="kanban-field">
+            <span>执行环境</span>
+            <select aria-label="执行环境" value={executionProfileId} onChange={(event) => setExecutionProfileId(event.target.value as ExecutionProfileId)}>
+              <option value="pi.rpc">{executionProfile("pi.rpc").label}</option>
+            </select>
+            <small>当前基线继续使用 Stella 内置 Pi RPC；其他 CLI 会在对应适配器就绪后出现在这里。</small>
+          </label>
+        )}
 
         {error && <p className="kanban-form-error" role="alert">{error}</p>}
         <div className="modal-actions">

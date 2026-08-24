@@ -15,6 +15,7 @@ import {
   type TaskPriority,
   type UpdateAutopilotInput,
 } from "@shared/kanban";
+import { executionProfile, type ExecutionProfileId } from "@shared/execution-profile";
 
 interface AutopilotPanelProps {
   readonly project: ProjectMeta;
@@ -43,6 +44,7 @@ interface AutopilotDraft {
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
   readonly target: string;
+  readonly executionProfileId: ExecutionProfileId;
 }
 
 function localDateTime(iso: string): string {
@@ -90,6 +92,7 @@ function emptyDraft(catalog: OrchestrationCatalog): AutopilotDraft {
     acceptanceCriteria: "",
     priority: "medium",
     target,
+    executionProfileId: "pi.rpc",
   });
 }
 
@@ -105,6 +108,7 @@ function draftFromAutopilot(autopilot: Autopilot): AutopilotDraft {
     acceptanceCriteria: autopilot.taskTemplate.acceptanceCriteria,
     priority: autopilot.taskTemplate.priority,
     target: targetValue(autopilot.executionTarget),
+    executionProfileId: autopilot.executionProfileId,
   });
 }
 
@@ -186,6 +190,7 @@ export function AutopilotPanel({
     projectName: project.name,
     trusted: project.trusted,
     executionTarget: parseTarget(draft.target),
+    executionProfileId: draft.executionProfileId,
   });
 
   const submit = async (event: FormEvent) => {
@@ -320,6 +325,7 @@ export function AutopilotPanel({
                 <optgroup label="单 Agent">{catalog.agents.map((agent) => <option value={`agent:${agent.id}`} key={agent.id}>{agent.name} · @{agent.id}</option>)}</optgroup>
                 {squads.length > 0 && <optgroup label="动态 Squad">{squads.map((squad) => <option value={`squad:${squad.id}`} key={squad.id}>{squad.name}</option>)}</optgroup>}
               </select></label>
+              <label className="kanban-field"><span>执行环境</span><select aria-label="Autopilot 执行环境" value={draft.executionProfileId} onChange={(event) => update("executionProfileId", event.target.value as ExecutionProfileId)}><option value="pi.rpc">{executionProfile("pi.rpc").label}</option></select></label>
             </div>
           </section>
 

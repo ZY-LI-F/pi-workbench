@@ -72,7 +72,7 @@ function artifactFromAgentTask(agentTask: AgentTask | undefined): AgentArtifact 
   return Object.freeze({
     title: "Agent 最终产物与运行指标",
     content: agentTask.output,
-    sessionPath: agentTask.sessionPath,
+    sessionPath: agentTask.session?.sessionPath,
     inputTokens: agentTask.inputTokens,
     outputTokens: agentTask.outputTokens,
     cost: agentTask.cost,
@@ -151,7 +151,7 @@ function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
       title: `${step.stepKind === "human-gate" ? "人工关卡" : "工作流步骤"} · ${step.name}`,
       body: step.error,
       status: step.status,
-      sessionPath: step.sessionPath,
+      sessionPath: step.session?.sessionPath,
       provenance: { source: "workflow-step", sourceId: step.id, runId: run.id, stepId: step.stepId },
     });
     if (!step.artifact) return Object.freeze([stepEntry]);
@@ -163,7 +163,7 @@ function runEntries(run: WorkflowRun): readonly TaskTimelineEntry[] {
         createdAt: step.completedAt ?? step.startedAt ?? run.startedAt,
         title: step.artifact.title,
         artifact: Object.freeze({ ...step.artifact, startedAt: step.startedAt, completedAt: step.completedAt }),
-        sessionPath: step.artifact.sessionPath ?? step.sessionPath,
+        sessionPath: step.artifact.session?.sessionPath ?? step.session?.sessionPath,
         provenance: { source: "workflow-step", sourceId: step.id, runId: run.id, stepId: step.stepId },
       }),
     ]);
@@ -181,7 +181,7 @@ function agentTaskEntries(agentTask: AgentTask, reportMessageAgentTaskIds: Reado
     detail: `@${agentTask.agentSnapshot.id} · ${agentTask.agentSnapshot.workspaceAccess === "write" ? "可写工作区" : "只读工作区"}`,
     status: agentTask.status,
     acceptance: agentTask.parentAgentTaskId ? undefined : agentTask.acceptance,
-    sessionPath: agentTask.sessionPath,
+    sessionPath: agentTask.session?.sessionPath,
     provenance: { source: "agent-task", sourceId: agentTask.id, agentTaskId: agentTask.id },
   });
   if (!agentTask.output || reportMessageAgentTaskIds.has(agentTask.id)) return Object.freeze([execution]);
@@ -196,14 +196,14 @@ function agentTaskEntries(agentTask: AgentTask, reportMessageAgentTaskIds: Reado
       artifact: Object.freeze({
         title: "Agent 最终产物",
         content: agentTask.output,
-        sessionPath: agentTask.sessionPath,
+        sessionPath: agentTask.session?.sessionPath,
         inputTokens: agentTask.inputTokens,
         outputTokens: agentTask.outputTokens,
         cost: agentTask.cost,
         startedAt: agentTask.startedAt,
         completedAt: agentTask.completedAt,
       }),
-      sessionPath: agentTask.sessionPath,
+      sessionPath: agentTask.session?.sessionPath,
       provenance: { source: "agent-task", sourceId: agentTask.id, agentTaskId: agentTask.id },
     }),
   ]);
@@ -233,7 +233,7 @@ export function projectTaskTimeline(input: ProjectTaskTimelineInput): readonly T
     title: "任务目标已创建",
     body: input.task.description || "未填写补充说明。",
     detail: `验收标准：${input.task.acceptanceCriteria || "未填写补充标准。"}`,
-    sessionPath: input.task.sourcePiSessionPath,
+    sessionPath: input.task.sourceSession?.sessionPath,
     provenance: { source: "task", sourceId: input.task.id },
   });
   const entries = [

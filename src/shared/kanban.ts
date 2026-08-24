@@ -1,4 +1,26 @@
-export const BOARD_SCHEMA_VERSION = 7 as const;
+import {
+  assertExecutionProfileTarget,
+  cloneExecutionProfileSnapshot,
+  executionProfileRevision,
+  isExecutionBackendId,
+  isExecutionProfileId,
+  snapshotExecutionProfile,
+  type ExecutionProfileId,
+  type ExecutionProfileSnapshot,
+} from "./execution-profile";
+import {
+  cloneExecutionSessionReference,
+  hasExecutionSessionIdentity,
+  piExecutionSession,
+  type ExecutionSessionReference,
+} from "./execution-session";
+import {
+  isExternalExecutionSourceId,
+  type ExternalExecutionOrigin,
+} from "./external-execution";
+
+export const BOARD_SCHEMA_VERSION = 8 as const;
+export const BOARD_SCHEMA_V7 = 7 as const;
 export const BOARD_SCHEMA_V6 = 6 as const;
 export const BOARD_SCHEMA_V5 = 5 as const;
 export const BOARD_SCHEMA_V4 = 4 as const;
@@ -147,6 +169,7 @@ export interface TaskSpecSnapshot {
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
   readonly executionTarget: ExecutionTarget;
+  readonly executionProfileId?: ExecutionProfileId;
 }
 
 export interface KanbanTask {
@@ -159,6 +182,7 @@ export interface KanbanTask {
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
+  readonly executionProfileId?: ExecutionProfileId;
   readonly stage: TaskStage;
   /** Increases whenever user-editable execution requirements change. */
   readonly specRevision: number;
@@ -169,8 +193,8 @@ export interface KanbanTask {
   readonly activeRunId?: string;
   readonly activeAgentTaskId?: string;
   readonly blockedReason?: string;
-  readonly sourcePiSessionPath?: string;
-  readonly sourcePiSessionId?: string;
+  readonly sourceSession?: ExecutionSessionReference;
+  readonly externalOrigin?: ExternalExecutionOrigin;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -178,7 +202,7 @@ export interface KanbanTask {
 export interface AgentArtifact {
   readonly title: string;
   readonly content: string;
-  readonly sessionPath?: string;
+  readonly session?: ExecutionSessionReference;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly cost?: number;
@@ -195,7 +219,8 @@ export interface StepRun {
   /** Identifies the concrete Pi process allowed to settle this step. */
   readonly runtimeToken?: string;
   readonly agentId?: string;
-  readonly sessionPath?: string;
+  readonly backendVersion?: string;
+  readonly session?: ExecutionSessionReference;
   readonly artifact?: AgentArtifact;
   readonly error?: string;
   readonly startedAt?: string;
@@ -207,6 +232,7 @@ export interface WorkflowRun {
   readonly taskId: string;
   readonly executionAttempt: number;
   readonly taskSpec: TaskSpecSnapshot;
+  readonly executionProfile: ExecutionProfileSnapshot;
   readonly workflow: WorkflowDefinition;
   readonly agents: readonly AgentDefinition[];
   readonly status: WorkflowRunStatus;
@@ -271,6 +297,7 @@ export interface AgentTask {
   readonly taskId: string;
   readonly executionAttempt: number;
   readonly taskSpec: TaskSpecSnapshot;
+  readonly executionProfile: ExecutionProfileSnapshot;
   readonly agentSnapshot: AgentDefinition;
   readonly kind: AgentTaskKind;
   readonly status: AgentTaskStatus;
@@ -284,7 +311,8 @@ export interface AgentTask {
   readonly squadId?: string;
   readonly executionPlan?: AgentExecutionPlanSnapshot;
   readonly runtimeToken?: string;
-  readonly sessionPath?: string;
+  readonly backendVersion?: string;
+  readonly session?: ExecutionSessionReference;
   readonly output?: string;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
@@ -348,6 +376,7 @@ export interface Autopilot {
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: AutomatedExecutionTarget;
+  readonly executionProfileId: ExecutionProfileId;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -432,8 +461,9 @@ export interface CreateTaskInput {
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
-  readonly sourcePiSessionPath?: string;
-  readonly sourcePiSessionId?: string;
+  readonly executionProfileId?: ExecutionProfileId;
+  readonly sourceSession?: ExecutionSessionReference;
+  readonly externalOrigin?: ExternalExecutionOrigin;
 }
 
 export interface UpdateTaskInput {
@@ -443,6 +473,7 @@ export interface UpdateTaskInput {
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
   readonly executionTarget: ExecutionTarget;
+  readonly executionProfileId?: ExecutionProfileId;
 }
 
 export interface CreateTaskCommentInput {
@@ -505,6 +536,7 @@ export interface CreateAutopilotInput {
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: AutomatedExecutionTarget;
+  readonly executionProfileId: ExecutionProfileId;
 }
 
 export interface UpdateAutopilotInput extends Omit<CreateAutopilotInput, "trigger"> {
@@ -685,6 +717,44 @@ function assertExecutionTarget(value: unknown, path: string): asserts value is E
   if (value.kind === "squad") assertString(value.squadId, `${path}.squadId`);
 }
 
+function assertExecutionProfileId(value: unknown, path: string): asserts value is ExecutionProfileId {
+  if (!isExecutionProfileId(value)) throw new Error(`${path} 的值 ${String(value)} 无效`);
+}
+
+function assertExecutionProfileSnapshot(value: unknown, path: string): asserts value is ExecutionProfileSnapshot {
+  if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
+  assertExecutionProfileId(value.id, `${path}.id`);
+  assertPositiveInteger(value.revision, `${path}.revision`);
+  if (!isExecutionBackendId(value.backendId)) throw new Error(`${path}.backendId 的值 ${String(value.backendId)} 无效`);
+  assertString(value.label, `${path}.label`);
+  assertOneOf(value.commandMode, ["rpc", "exec", "review", "print"] as const, `${path}.commandMode`);
+  if (!Array.isArray(value.capabilities) || !value.capabilities.every((capability) => typeof capability === "string")) {
+    throw new Error(`${path}.capabilities 必须是字符串数组`);
+  }
+  const definition = executionProfileRevision(value.id, value.revision);
+  if (definition.backendId !== value.backendId) throw new Error(`${path}.backendId 与 Profile ID 不匹配`);
+  if (definition.commandMode !== value.commandMode) throw new Error(`${path}.commandMode 与 Profile 版本不匹配`);
+}
+
+function assertExecutionSessionReference(value: unknown, path: string): asserts value is ExecutionSessionReference {
+  if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
+  if (!isExecutionBackendId(value.backendId)) throw new Error(`${path}.backendId 的值 ${String(value.backendId)} 无效`);
+  assertOptionalString(value.sessionId, `${path}.sessionId`);
+  assertOptionalString(value.sessionPath, `${path}.sessionPath`);
+  if (!hasExecutionSessionIdentity(value as unknown as ExecutionSessionReference)) {
+    throw new Error(`${path} 至少需要 sessionId 或 sessionPath`);
+  }
+}
+
+function assertExternalOrigin(value: unknown, path: string): asserts value is ExternalExecutionOrigin {
+  if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
+  if (!isExternalExecutionSourceId(value.sourceId)) throw new Error(`${path}.sourceId 的值 ${String(value.sourceId)} 无效`);
+  assertString(value.externalId, `${path}.externalId`);
+  if (value.session !== undefined) assertExecutionSessionReference(value.session, `${path}.session`);
+  assertString(value.projectPath, `${path}.projectPath`);
+  assertIsoDate(value.importedAt, `${path}.importedAt`);
+}
+
 function assertExecutionReference(value: unknown, path: string): asserts value is ExecutionReference {
   if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
   assertOneOf(value.kind, ["workflow", "agent-task"] as const, `${path}.kind`);
@@ -700,6 +770,8 @@ function assertTaskSpecSnapshot(value: unknown, path: string): asserts value is 
   assertString(value.acceptanceCriteria, `${path}.acceptanceCriteria`, true);
   assertOneOf(value.priority, TASK_PRIORITIES, `${path}.priority`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
+  if (value.executionProfileId !== undefined) assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
+  assertExecutionProfileTarget(value.executionTarget, value.executionProfileId as ExecutionProfileId | undefined, `${path}.executionProfileId`);
 }
 
 function assertTaskBase(value: Record<string, unknown>, path: string, requireSpecRevision = true): void {
@@ -714,8 +786,8 @@ function assertTaskBase(value: Record<string, unknown>, path: string, requireSpe
   assertOptionalString(value.activeRunId, `${path}.activeRunId`);
   assertOptionalString(value.activeAgentTaskId, `${path}.activeAgentTaskId`);
   assertOptionalString(value.blockedReason, `${path}.blockedReason`);
-  assertOptionalString(value.sourcePiSessionPath, `${path}.sourcePiSessionPath`);
-  assertOptionalString(value.sourcePiSessionId, `${path}.sourcePiSessionId`);
+  if (value.sourceSession !== undefined) assertExecutionSessionReference(value.sourceSession, `${path}.sourceSession`);
+  if (value.externalOrigin !== undefined) assertExternalOrigin(value.externalOrigin, `${path}.externalOrigin`);
   assertIsoDate(value.createdAt, `${path}.createdAt`);
   assertIsoDate(value.updatedAt, `${path}.updatedAt`);
 }
@@ -725,6 +797,8 @@ function assertTask(value: unknown, path: string): asserts value is KanbanTask {
   assertTaskBase(value, path);
   assertOneOf(value.stage, TASK_STAGES, `${path}.stage`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
+  if (value.executionProfileId !== undefined) assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
+  assertExecutionProfileTarget(value.executionTarget, value.executionProfileId as ExecutionProfileId | undefined, `${path}.executionProfileId`);
   if (value.activeRunId !== undefined && value.activeAgentTaskId !== undefined) {
     throw new Error(`${path} 不能同时拥有 activeRunId 和 activeAgentTaskId`);
   }
@@ -745,7 +819,7 @@ function assertArtifact(value: unknown, path: string): asserts value is AgentArt
   if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
   assertString(value.title, `${path}.title`);
   assertString(value.content, `${path}.content`, true);
-  assertOptionalString(value.sessionPath, `${path}.sessionPath`);
+  if (value.session !== undefined) assertExecutionSessionReference(value.session, `${path}.session`);
   assertOptionalIsoDate(value.startedAt, `${path}.startedAt`);
   assertOptionalIsoDate(value.completedAt, `${path}.completedAt`);
   for (const key of ["inputTokens", "outputTokens", "cost"] as const) assertOptionalFiniteNumber(value[key], `${path}.${key}`);
@@ -758,7 +832,8 @@ function assertStepRun(value: unknown, path: string): asserts value is StepRun {
   assertOneOf(value.status, STEP_RUN_STATUSES, `${path}.status`);
   assertOptionalString(value.runtimeToken, `${path}.runtimeToken`);
   assertOptionalString(value.agentId, `${path}.agentId`);
-  assertOptionalString(value.sessionPath, `${path}.sessionPath`);
+  assertOptionalString(value.backendVersion, `${path}.backendVersion`);
+  if (value.session !== undefined) assertExecutionSessionReference(value.session, `${path}.session`);
   assertOptionalString(value.error, `${path}.error`);
   if (value.artifact !== undefined) assertArtifact(value.artifact, `${path}.artifact`);
   assertOptionalIsoDate(value.startedAt, `${path}.startedAt`);
@@ -773,6 +848,10 @@ function assertRun(value: unknown, path: string): asserts value is WorkflowRun {
   assertString(value.taskId, `${path}.taskId`);
   assertPositiveInteger(value.executionAttempt, `${path}.executionAttempt`);
   assertTaskSpecSnapshot(value.taskSpec, `${path}.taskSpec`);
+  assertExecutionProfileSnapshot(value.executionProfile, `${path}.executionProfile`);
+  if (value.taskSpec.executionProfileId !== value.executionProfile.id) {
+    throw new Error(`${path}.executionProfile 与任务规格 Profile 不匹配`);
+  }
   assertWorkflow(value.workflow, `${path}.workflow`);
   if (!Array.isArray(value.agents)) throw new Error(`${path}.agents 必须是数组`);
   value.agents.forEach((agent, index) => assertAgent(agent, `${path}.agents[${index}]`));
@@ -783,6 +862,17 @@ function assertRun(value: unknown, path: string): asserts value is WorkflowRun {
   assertOptionalString(value.currentStepId, `${path}.currentStepId`);
   if (!Array.isArray(value.steps)) throw new Error(`${path}.steps 必须是数组`);
   value.steps.forEach((step, index) => assertStepRun(step, `${path}.steps[${index}]`));
+  const backendId = value.executionProfile.backendId;
+  value.steps.forEach((step, index) => {
+    if ((step as StepRun).session?.backendId !== undefined
+      && (step as StepRun).session?.backendId !== backendId) {
+      throw new Error(`${path}.steps[${index}].session.backendId 与执行 Profile 不匹配`);
+    }
+    if ((step as StepRun).artifact?.session?.backendId !== undefined
+      && (step as StepRun).artifact?.session?.backendId !== backendId) {
+      throw new Error(`${path}.steps[${index}].artifact.session.backendId 与执行 Profile 不匹配`);
+    }
+  });
   assertIsoDate(value.startedAt, `${path}.startedAt`);
   assertIsoDate(value.updatedAt, `${path}.updatedAt`);
   assertOptionalIsoDate(value.completedAt, `${path}.completedAt`);
@@ -858,6 +948,10 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   assertString(value.taskId, `${path}.taskId`);
   assertPositiveInteger(value.executionAttempt, `${path}.executionAttempt`);
   assertTaskSpecSnapshot(value.taskSpec, `${path}.taskSpec`);
+  assertExecutionProfileSnapshot(value.executionProfile, `${path}.executionProfile`);
+  if (value.taskSpec.executionProfileId !== value.executionProfile.id) {
+    throw new Error(`${path}.executionProfile 与任务规格 Profile 不匹配`);
+  }
   assertAgent(value.agentSnapshot, `${path}.agentSnapshot`);
   assertOneOf(value.kind, AGENT_TASK_KINDS, `${path}.kind`);
   assertOneOf(value.status, AGENT_TASK_STATUSES, `${path}.status`);
@@ -870,7 +964,13 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   assertOptionalString(value.squadId, `${path}.squadId`);
   if (value.executionPlan !== undefined) assertAgentExecutionPlan(value.executionPlan, `${path}.executionPlan`);
   assertOptionalString(value.runtimeToken, `${path}.runtimeToken`);
-  assertOptionalString(value.sessionPath, `${path}.sessionPath`);
+  assertOptionalString(value.backendVersion, `${path}.backendVersion`);
+  if (value.session !== undefined) {
+    assertExecutionSessionReference(value.session, `${path}.session`);
+    if (value.session.backendId !== value.executionProfile.backendId) {
+      throw new Error(`${path}.session.backendId 与执行 Profile 不匹配`);
+    }
+  }
   assertOptionalString(value.output, `${path}.output`);
   assertOptionalString(value.error, `${path}.error`);
   for (const key of ["inputTokens", "outputTokens", "cost"] as const) assertOptionalFiniteNumber(value[key], `${path}.${key}`);
@@ -953,6 +1053,9 @@ function assertAutopilot(value: unknown, path: string): asserts value is Autopil
   if (typeof value.trusted !== "boolean") throw new Error(`${path}.trusted 必须是布尔值`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
   if (value.executionTarget.kind === "manual") throw new Error(`${path}.executionTarget 不能是手工执行`);
+  assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
+  assertExecutionProfileTarget(value.executionTarget, value.executionProfileId, `${path}.executionProfileId`);
+  if (value.executionProfileId === "codex.review") throw new Error(`${path}.executionProfileId 不允许使用 codex.review`);
   assertIsoDate(value.createdAt, `${path}.createdAt`);
   assertIsoDate(value.updatedAt, `${path}.updatedAt`);
 }
@@ -1011,6 +1114,13 @@ function cloneTaskSpec(taskSpec: TaskSpecSnapshot): TaskSpecSnapshot {
   });
 }
 
+function cloneArtifact(artifact: AgentArtifact | undefined): AgentArtifact | undefined {
+  return artifact ? Object.freeze({
+    ...artifact,
+    session: cloneExecutionSessionReference(artifact.session),
+  }) : undefined;
+}
+
 function cloneWorkflow(workflow: WorkflowDefinition): WorkflowDefinition {
   return Object.freeze({ ...workflow, steps: Object.freeze(workflow.steps.map((step) => Object.freeze({ ...step }))) });
 }
@@ -1019,11 +1129,13 @@ function cloneRun(run: WorkflowRun): WorkflowRun {
   return Object.freeze({
     ...run,
     taskSpec: cloneTaskSpec(run.taskSpec),
+    executionProfile: cloneExecutionProfileSnapshot(run.executionProfile),
     workflow: cloneWorkflow(run.workflow),
     agents: Object.freeze(run.agents.map(cloneAgent)),
     steps: Object.freeze(run.steps.map((step) => Object.freeze({
       ...step,
-      artifact: step.artifact ? Object.freeze({ ...step.artifact }) : undefined,
+      session: cloneExecutionSessionReference(step.session),
+      artifact: cloneArtifact(step.artifact),
     }))),
   });
 }
@@ -1119,6 +1231,7 @@ function validateReferences(state: BoardState): void {
 
   for (const run of state.runs) {
     if (!taskIds.has(run.taskId)) throw new Error(`流程实例 ${run.id} 引用了未知任务`);
+    if (run.executionProfile.id === "codex.review") throw new Error(`流程实例 ${run.id} 不能使用 codex.review`);
     if (run.status === "reported" && run.acceptance === "pending") {
       const awaiting = tasksById.get(run.taskId)?.awaitingReviewExecution;
       if (awaiting?.kind !== "workflow" || awaiting.id !== run.id) {
@@ -1188,6 +1301,13 @@ function validateReferences(state: BoardState): void {
       }
       if (parent.executionAttempt !== agentTask.executionAttempt || parent.taskSpec.revision !== agentTask.taskSpec.revision) {
         throw new Error(`AgentTask ${agentTask.id} 与父任务的执行身份不一致`);
+      }
+      if (parent.executionProfile.id !== agentTask.executionProfile.id
+        || parent.executionProfile.revision !== agentTask.executionProfile.revision) {
+        throw new Error(`AgentTask ${agentTask.id} 与父任务的执行 Profile 不一致`);
+      }
+      if (agentTask.executionProfile.id === "codex.review") {
+        throw new Error(`子 AgentTask ${agentTask.id} 不能使用 codex.review`);
       }
       if (agentTask.delegationRound !== undefined && parent.kind !== "coordinator" && parent.kind !== "squad-leader") {
         throw new Error(`AgentTask ${agentTask.id} 的 delegationRound 只允许 Coordinator 执行树使用`);
@@ -1265,6 +1385,11 @@ export function parseBoardState(value: unknown): BoardState {
       ...task,
       executionAttempt: task.executionAttempt ?? 0,
       executionTarget: Object.freeze({ ...task.executionTarget }),
+      sourceSession: cloneExecutionSessionReference(task.sourceSession),
+      externalOrigin: task.externalOrigin ? Object.freeze({
+        ...task.externalOrigin,
+        session: cloneExecutionSessionReference(task.externalOrigin.session),
+      }) : undefined,
       awaitingReviewExecution: task.awaitingReviewExecution ? Object.freeze({ ...task.awaitingReviewExecution }) : undefined,
     }))),
     runs: Object.freeze(runs.map(cloneRun)),
@@ -1273,6 +1398,8 @@ export function parseBoardState(value: unknown): BoardState {
     agentTasks: Object.freeze(agentTasks.map((agentTask) => Object.freeze({
       ...agentTask,
       taskSpec: cloneTaskSpec(agentTask.taskSpec),
+      executionProfile: cloneExecutionProfileSnapshot(agentTask.executionProfile),
+      session: cloneExecutionSessionReference(agentTask.session),
       agentSnapshot: cloneAgent(agentTask.agentSnapshot),
       executionPlan: cloneAgentExecutionPlan(agentTask.executionPlan),
     }))),
@@ -1655,9 +1782,9 @@ export function migrateBoardStateV5(value: unknown): BoardState {
       }]
     : []);
 
-  return parseBoardState({
+  return migrateBoardStateV6({
     ...value,
-    version: BOARD_SCHEMA_VERSION,
+    version: BOARD_SCHEMA_V6,
     tasks,
     runs,
     agentTasks,
@@ -1671,17 +1798,107 @@ export function migrateBoardStateV5(value: unknown): BoardState {
 export function migrateBoardStateV6(value: unknown): BoardState {
   if (!isRecord(value)) throw new Error("schema v6 看板文件根节点必须是对象");
   if (value.version !== BOARD_SCHEMA_V6) throw new Error(`无法从版本 ${String(value.version)} 迁移看板`);
-  return parseBoardState({ ...value, version: BOARD_SCHEMA_VERSION });
+  return migrateBoardStateV7({ ...value, version: BOARD_SCHEMA_V7 });
+}
+
+function migrateTaskSpecV8(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const target = value.executionTarget;
+  const automated = isRecord(target) && target.kind !== "manual";
+  return {
+    ...value,
+    executionProfileId: automated ? (value.executionProfileId ?? "pi.rpc") : undefined,
+  };
+}
+
+function migrateArtifactV8(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const { sessionPath, ...artifact } = value;
+  return {
+    ...artifact,
+    session: value.session ?? piExecutionSession({ sessionPath: typeof sessionPath === "string" ? sessionPath : undefined }),
+  };
+}
+
+function migrateStepRunV8(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const { sessionPath, ...step } = value;
+  return {
+    ...step,
+    session: value.session ?? piExecutionSession({ sessionPath: typeof sessionPath === "string" ? sessionPath : undefined }),
+    artifact: value.artifact === undefined ? undefined : migrateArtifactV8(value.artifact),
+  };
+}
+
+/** Adds execution Profile ownership and backend-neutral session references. */
+export function migrateBoardStateV7(value: unknown): BoardState {
+  if (!isRecord(value)) throw new Error("schema v7 看板文件根节点必须是对象");
+  if (value.version !== BOARD_SCHEMA_V7) throw new Error(`无法从版本 ${String(value.version)} 迁移看板`);
+  const collections = ["tasks", "runs", "activities", "comments", "agentTasks", "customAgents", "squads", "autopilots", "autopilotRuns"] as const;
+  for (const collection of collections) {
+    if (!Array.isArray(value[collection])) throw new Error(`schema v7 看板文件缺少 ${collection} 数组`);
+  }
+
+  const tasks = (value.tasks as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v7 tasks[${index}] 必须是对象`);
+    const { sourcePiSessionId, sourcePiSessionPath, ...task } = candidate;
+    const automated = isRecord(candidate.executionTarget) && candidate.executionTarget.kind !== "manual";
+    return {
+      ...task,
+      executionProfileId: automated ? (candidate.executionProfileId ?? "pi.rpc") : undefined,
+      sourceSession: candidate.sourceSession ?? piExecutionSession({
+        sessionId: typeof sourcePiSessionId === "string" ? sourcePiSessionId : undefined,
+        sessionPath: typeof sourcePiSessionPath === "string" ? sourcePiSessionPath : undefined,
+      }),
+    };
+  });
+
+  const executionProfile = snapshotExecutionProfile("pi.rpc");
+  const runs = (value.runs as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v7 runs[${index}] 必须是对象`);
+    return {
+      ...candidate,
+      taskSpec: migrateTaskSpecV8(candidate.taskSpec),
+      executionProfile: candidate.executionProfile ?? executionProfile,
+      steps: Array.isArray(candidate.steps) ? candidate.steps.map(migrateStepRunV8) : candidate.steps,
+    };
+  });
+  const agentTasks = (value.agentTasks as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v7 agentTasks[${index}] 必须是对象`);
+    const { sessionPath, ...agentTask } = candidate;
+    return {
+      ...agentTask,
+      taskSpec: migrateTaskSpecV8(candidate.taskSpec),
+      executionProfile: candidate.executionProfile ?? executionProfile,
+      session: candidate.session ?? piExecutionSession({ sessionPath: typeof sessionPath === "string" ? sessionPath : undefined }),
+    };
+  });
+  const autopilots = (value.autopilots as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v7 autopilots[${index}] 必须是对象`);
+    return { ...candidate, executionProfileId: candidate.executionProfileId ?? "pi.rpc" };
+  });
+
+  return parseBoardState({
+    ...value,
+    version: BOARD_SCHEMA_VERSION,
+    tasks,
+    runs,
+    agentTasks,
+    autopilots,
+  });
 }
 
 export interface ParsedBoardFile {
   readonly state: BoardState;
-  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6;
+  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6 | typeof BOARD_SCHEMA_V7;
 }
 
 export function parseBoardFile(value: unknown): ParsedBoardFile {
   if (!isRecord(value)) throw new Error("看板文件根节点必须是对象");
   if (value.version === BOARD_SCHEMA_VERSION) return Object.freeze({ state: parseBoardState(value) });
+  if (value.version === BOARD_SCHEMA_V7) {
+    return Object.freeze({ state: migrateBoardStateV7(value), migratedFrom: BOARD_SCHEMA_V7 });
+  }
   if (value.version === BOARD_SCHEMA_V6) {
     return Object.freeze({ state: migrateBoardStateV6(value), migratedFrom: BOARD_SCHEMA_V6 });
   }

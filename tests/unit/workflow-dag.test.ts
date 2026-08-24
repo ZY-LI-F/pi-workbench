@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WorkflowRun } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { projectWorkflowDag } from "../../src/shared/workflow-dag";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const WORKFLOW = BUILTIN_ORCHESTRATION_CATALOG.workflows.find((workflow) => workflow.steps.length >= 3);
 if (!WORKFLOW) throw new Error("测试目录缺少多步骤 Workflow");
@@ -11,9 +12,9 @@ const AGENTS = Object.freeze(WORKFLOW.steps.flatMap((step) => step.kind === "age
 
 function run(): WorkflowRun {
   return Object.freeze({
-    id: "run-dag", taskId: "task-1", workflow: WORKFLOW, agents: AGENTS, status: "running", acceptance: "not-ready",
+    id: "run-dag", taskId: "task-1", executionAttempt: 1, taskSpec: Object.freeze({ revision: 1, title: "任务", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: Object.freeze({ kind: "workflow", workflowId: WORKFLOW.id }), executionProfileId: "pi.rpc" }), executionProfile: snapshotExecutionProfile("pi.rpc"), workflow: WORKFLOW, agents: AGENTS, status: "running", acceptance: "not-ready",
     steps: Object.freeze([
-      Object.freeze({ id: "step-run-1", stepId: WORKFLOW.steps[0]?.id ?? "one", stepKind: WORKFLOW.steps[0]?.kind ?? "agent", name: WORKFLOW.steps[0]?.name ?? "一", status: "succeeded", artifact: Object.freeze({ title: "报告", content: "完成" }), sessionPath: "C:/sessions/one.jsonl", startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" }),
+      Object.freeze({ id: "step-run-1", stepId: WORKFLOW.steps[0]?.id ?? "one", stepKind: WORKFLOW.steps[0]?.kind ?? "agent", name: WORKFLOW.steps[0]?.name ?? "一", status: "succeeded", artifact: Object.freeze({ title: "报告", content: "完成" }), session: Object.freeze({ backendId: "pi", sessionPath: "C:/sessions/one.jsonl" }), startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" }),
       Object.freeze({ id: "step-run-2", stepId: WORKFLOW.steps[1]?.id ?? "two", stepKind: WORKFLOW.steps[1]?.kind ?? "agent", name: WORKFLOW.steps[1]?.name ?? "二", status: "failed", error: "真实失败", startedAt: "2026-07-18T00:01:00.000Z", completedAt: "2026-07-18T00:02:00.000Z" }),
     ]),
     startedAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:02:00.000Z",

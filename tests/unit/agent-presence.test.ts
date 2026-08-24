@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { deriveAgentPresences } from "../../src/shared/agent-presence";
 import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, parseBoardState, type AgentTask, type KanbanTask, type ProjectAgentDefinition } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG, catalogForBoard } from "../../src/shared/orchestration-catalog";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const NOW = "2026-07-18T03:00:00.000Z";
 const builder = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
@@ -34,15 +35,15 @@ describe("Agent Presence projection", () => {
     const state = parseBoardState({
       version: BOARD_SCHEMA_VERSION,
       tasks: [
-        { id: "task-running", title: "实现", description: "", acceptanceCriteria: "", priority: "high", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "builder" }, stage: "running", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "builder-task", createdAt: NOW, updatedAt: NOW },
-        { id: "task-waiting", title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "lead" }, stage: "review", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "lead-task", createdAt: NOW, updatedAt: NOW },
+        { id: "task-running", title: "实现", description: "", acceptanceCriteria: "", priority: "high", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "builder" }, executionProfileId: "pi.rpc", stage: "running", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "builder-task", createdAt: NOW, updatedAt: NOW },
+        { id: "task-waiting", title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", projectPath: "C:/one", projectName: "one", trusted: true, executionTarget: { kind: "agent", agentId: "lead" }, executionProfileId: "pi.rpc", stage: "review", specRevision: 1, executionAttempt: 1, activeAgentTaskId: "lead-task", createdAt: NOW, updatedAt: NOW },
       ],
       runs: [],
       activities: [],
       comments: [],
       agentTasks: [
-        { id: "builder-task", taskId: "task-running", executionAttempt: 1, taskSpec: { revision: 1, title: "实现", description: "", acceptanceCriteria: "", priority: "high", executionTarget: { kind: "agent", agentId: "builder" } }, agentSnapshot: builder, kind: "direct", status: "running", acceptance: "not-ready", prompt: "执行", runtimeToken: "runtime", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
-        { id: "lead-task", taskId: "task-waiting", executionAttempt: 1, taskSpec: { revision: 1, title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "lead" } }, agentSnapshot: lead, kind: "coordinator", status: "waiting_human", acceptance: "not-ready", prompt: "规划", output: "{}", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
+        { id: "builder-task", taskId: "task-running", executionAttempt: 1, taskSpec: { revision: 1, title: "实现", description: "", acceptanceCriteria: "", priority: "high", executionTarget: { kind: "agent", agentId: "builder" }, executionProfileId: "pi.rpc" }, executionProfile: snapshotExecutionProfile("pi.rpc"), agentSnapshot: builder, kind: "direct", status: "running", acceptance: "not-ready", prompt: "执行", runtimeToken: "runtime", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
+        { id: "lead-task", taskId: "task-waiting", executionAttempt: 1, taskSpec: { revision: 1, title: "范围决定", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "lead" }, executionProfileId: "pi.rpc" }, executionProfile: snapshotExecutionProfile("pi.rpc"), agentSnapshot: lead, kind: "coordinator", status: "waiting_human", acceptance: "not-ready", prompt: "规划", output: "{}", createdAt: NOW, updatedAt: NOW, startedAt: NOW },
       ],
       customAgents: [customAgent("custom-one", "C:/one"), customAgent("custom-two", "C:/two")],
       squads: [],
@@ -62,12 +63,13 @@ describe("Agent Presence projection", () => {
     const task: KanbanTask = Object.freeze({
       id: "task", title: "协调失败", description: "", acceptanceCriteria: "可核查", priority: "high",
       projectPath: "C:/one", projectName: "one", trusted: true,
-      executionTarget: Object.freeze({ kind: "agent", agentId: "lead" }), stage: "blocked", blockedReason: "协议无效",
+      executionTarget: Object.freeze({ kind: "agent", agentId: "lead" }), executionProfileId: "pi.rpc", stage: "blocked", blockedReason: "协议无效",
       specRevision: 1, executionAttempt: 2, createdAt: NOW, updatedAt: NOW,
     });
     const failed: AgentTask = Object.freeze({
       id: "failed", taskId: task.id, executionAttempt: 2,
-      taskSpec: Object.freeze({ revision: 1, title: task.title, description: "", acceptanceCriteria: "可核查", priority: "high", executionTarget: task.executionTarget }),
+      taskSpec: Object.freeze({ revision: 1, title: task.title, description: "", acceptanceCriteria: "可核查", priority: "high", executionTarget: task.executionTarget, executionProfileId: "pi.rpc" }),
+      executionProfile: snapshotExecutionProfile("pi.rpc"),
       agentSnapshot: lead, kind: "coordinator", status: "protocol-invalid", acceptance: "not-ready", prompt: "规划",
       error: "未调用 coordinator_action", createdAt: NOW, updatedAt: NOW, completedAt: NOW,
     });

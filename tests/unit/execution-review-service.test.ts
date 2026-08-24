@@ -10,6 +10,7 @@ import {
 } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { snapshotTaskSpec } from "../../src/shared/execution-state";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const CREATED_AT = "2026-07-18T00:00:00.000Z";
 const REVIEWED_AT = "2026-07-18T01:00:00.000Z";
@@ -28,6 +29,7 @@ const TASK: KanbanTask = Object.freeze({
   projectName: "project",
   trusted: true,
   executionTarget: Object.freeze({ kind: "workflow", workflowId: workflow.id }),
+  executionProfileId: "pi.rpc",
   stage: "review",
   specRevision: 1,
   executionAttempt: 1,
@@ -53,6 +55,7 @@ function initialState(awaiting: "workflow" | "agent-task" = "workflow"): BoardSt
       taskId: TASK.id,
       executionAttempt: 1,
       taskSpec: snapshotTaskSpec(TASK),
+      executionProfile: snapshotExecutionProfile("pi.rpc"),
       workflow,
       agents: BUILTIN_ORCHESTRATION_CATALOG.agents.filter((agent) => workflowAgentIds.has(agent.id)),
       status: "reported",
@@ -79,6 +82,7 @@ function initialState(awaiting: "workflow" | "agent-task" = "workflow"): BoardSt
       taskId: TASK.id,
       executionAttempt: 1,
       taskSpec: snapshotTaskSpec(TASK),
+      executionProfile: snapshotExecutionProfile("pi.rpc"),
       agentSnapshot: builder,
       kind: "direct",
       status: "reported",
@@ -167,7 +171,7 @@ describe("ExecutionReviewService", () => {
         ...base.agentTasks,
         {
           id: "agent-active", taskId: TASK.id, agentSnapshot: builder, kind: "direct", status: "queued",
-          executionAttempt: 2, taskSpec: snapshotTaskSpec(TASK), acceptance: "not-ready", prompt: "新一轮执行", createdAt: REVIEWED_AT, updatedAt: REVIEWED_AT,
+          executionAttempt: 2, taskSpec: snapshotTaskSpec(TASK), executionProfile: snapshotExecutionProfile("pi.rpc"), acceptance: "not-ready", prompt: "新一轮执行", createdAt: REVIEWED_AT, updatedAt: REVIEWED_AT,
         },
       ],
     }));

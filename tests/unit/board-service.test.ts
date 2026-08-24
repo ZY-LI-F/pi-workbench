@@ -13,7 +13,7 @@ function initialState(): BoardState {
     tasks: [{
       id: "task-autopilot", title: "Autopilot 产出任务", description: "", acceptanceCriteria: "", priority: "medium",
       projectPath: "C:/project", projectName: "project", trusted: true,
-      executionTarget: { kind: "agent", agentId: "builder" }, stage: "planned", specRevision: 1, createdAt: NOW, updatedAt: NOW,
+      executionTarget: { kind: "agent", agentId: "builder" }, executionProfileId: "pi.rpc", stage: "planned", specRevision: 1, createdAt: NOW, updatedAt: NOW,
     }],
     runs: [],
     activities: [],
@@ -25,7 +25,7 @@ function initialState(): BoardState {
       id: "autopilot-1", name: "自动规则", enabled: true, trigger: { kind: "manual" },
       taskTemplate: { title: "模板", description: "", acceptanceCriteria: "", priority: "medium" },
       projectPath: "C:/project", projectName: "project", trusted: true,
-      executionTarget: { kind: "agent", agentId: "builder" }, createdAt: NOW, updatedAt: NOW,
+      executionTarget: { kind: "agent", agentId: "builder" }, executionProfileId: "pi.rpc", createdAt: NOW, updatedAt: NOW,
     }],
     autopilotRuns: [{
       id: "autopilot-run-1", autopilotId: "autopilot-1", triggerKind: "manual", status: "succeeded",

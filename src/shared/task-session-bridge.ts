@@ -15,9 +15,12 @@ export function resolveTaskSessionTarget(
   const task = state.tasks.find((candidate) => candidate.id === input.taskId);
   if (!task) throw new Error(`找不到任务: ${input.taskId}`);
   const sessionPaths = [
-    task.sourcePiSessionPath,
-    ...state.runs.filter((run) => run.taskId === task.id).flatMap((run) => run.steps.flatMap((step) => [step.sessionPath, step.artifact?.sessionPath])),
-    ...state.agentTasks.filter((agentTask) => agentTask.taskId === task.id).map((agentTask) => agentTask.sessionPath),
+    task.sourceSession?.backendId === "pi" ? task.sourceSession.sessionPath : undefined,
+    ...state.runs.filter((run) => run.taskId === task.id).flatMap((run) => run.steps.flatMap((step) => [
+      step.session?.backendId === "pi" ? step.session.sessionPath : undefined,
+      step.artifact?.session?.backendId === "pi" ? step.artifact.session.sessionPath : undefined,
+    ])),
+    ...state.agentTasks.filter((agentTask) => agentTask.taskId === task.id).map((agentTask) => agentTask.session?.backendId === "pi" ? agentTask.session.sessionPath : undefined),
   ].filter((path): path is string => typeof path === "string");
   const requested = canonicalizePath(input.sessionPath);
   const persisted = sessionPaths.find((path) => canonicalizePath(path) === requested);

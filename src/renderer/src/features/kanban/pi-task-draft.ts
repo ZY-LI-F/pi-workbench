@@ -1,5 +1,6 @@
 import type { RuntimeBootstrap, SerializableContentBlock, SerializableMessage } from "@shared/contracts";
 import type { TaskPriority } from "@shared/kanban";
+import type { ExecutionSessionReference } from "@shared/execution-session";
 import { isBackgroundSessionName } from "@shared/session-policy";
 
 export interface PiTaskDraft {
@@ -7,8 +8,7 @@ export interface PiTaskDraft {
   readonly description: string;
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
-  readonly sourcePiSessionPath: string;
-  readonly sourcePiSessionId: string;
+  readonly sourceSession: ExecutionSessionReference;
 }
 
 function textBlocks(blocks: readonly SerializableContentBlock[]): string {
@@ -53,7 +53,6 @@ export function createPiTaskDraft(bootstrap: RuntimeBootstrap): PiTaskDraft {
     description: context,
     acceptanceCriteria: "",
     priority: "medium",
-    sourcePiSessionPath: sessionPath,
-    sourcePiSessionId: bootstrap.state.sessionId,
+    sourceSession: Object.freeze({ backendId: "pi", sessionPath, sessionId: bootstrap.state.sessionId }),
   });
 }

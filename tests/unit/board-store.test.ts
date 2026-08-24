@@ -5,12 +5,14 @@ import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { BoardStore } from "../../src/main/board-store";
 import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, type AgentDefinition, type BoardState } from "../../src/shared/kanban";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const TEST_AGENT: AgentDefinition = Object.freeze({
   id: "agent", version: 1, name: "Agent", callsign: "A", responsibility: "测试", instructions: "测试",
   workspaceAccess: "read", allowedTools: Object.freeze(["read"]), thinking: "off",
   disableExtensions: true, disableSkills: true, disablePromptTemplates: true, disableContextFiles: true,
 });
+const PI_PROFILE = snapshotExecutionProfile("pi.rpc");
 
 const temporaryDirectories: string[] = [];
 
@@ -59,12 +61,13 @@ describe("BoardStore", () => {
       tasks: [{
         id: "task-1", title: "运行中任务", description: "", acceptanceCriteria: "", priority: "medium",
         projectPath: "C:/project", projectName: "project", trusted: true,
-        executionTarget: { kind: "workflow", workflowId: "flow" }, stage: "queued",
+        executionTarget: { kind: "workflow", workflowId: "flow" }, executionProfileId: "pi.rpc", stage: "queued",
         specRevision: 1, executionAttempt: 1, activeRunId: "run-1", createdAt: now, updatedAt: now,
       }],
       runs: [{
         id: "run-1", taskId: "task-1", executionAttempt: 1,
-        taskSpec: { revision: 1, title: "运行中任务", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" } },
+        taskSpec: { revision: 1, title: "运行中任务", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" }, executionProfileId: "pi.rpc" },
+        executionProfile: PI_PROFILE,
         status: "queued", acceptance: "not-ready", startedAt: now, updatedAt: now,
         workflow: { id: "flow", version: 1, name: "流程", shortName: "流程", summary: "测试", teamId: "team", steps: [{ kind: "agent", id: "step", name: "步骤", summary: "", agentId: "agent", objective: "执行" }] },
         agents: [TEST_AGENT],
@@ -93,7 +96,7 @@ describe("BoardStore", () => {
         id: "autopilot-1", name: "自动规则", enabled: true, trigger: { kind: "manual" },
         taskTemplate: { title: "模板", description: "", acceptanceCriteria: "", priority: "medium" },
         projectPath: "C:/project", projectName: "project", trusted: true,
-        executionTarget: { kind: "agent", agentId: "agent" }, createdAt: now, updatedAt: now,
+        executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc", createdAt: now, updatedAt: now,
       }],
       autopilotRuns: [{ id: "autopilot-run-1", autopilotId: "autopilot-1", triggerKind: "webhook", status: "running", startedAt: now }],
     };
@@ -252,26 +255,28 @@ describe("BoardStore", () => {
         {
           id: "task-running", title: "运行中", description: "", acceptanceCriteria: "", priority: "medium",
           projectPath: "C:/project", projectName: "project", trusted: true,
-          executionTarget: { kind: "agent", agentId: "agent" }, stage: "running", activeAgentTaskId: "agent-task-running",
+          executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc", stage: "running", activeAgentTaskId: "agent-task-running",
           specRevision: 1, executionAttempt: 1, createdAt: now, updatedAt: now,
         },
         {
           id: "task-queued", title: "排队中", description: "", acceptanceCriteria: "", priority: "medium",
           projectPath: "C:/project", projectName: "project", trusted: true,
-          executionTarget: { kind: "agent", agentId: "agent" }, stage: "queued", activeAgentTaskId: "agent-task-queued",
+          executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc", stage: "queued", activeAgentTaskId: "agent-task-queued",
           specRevision: 1, executionAttempt: 1, createdAt: now, updatedAt: now,
         },
       ],
       agentTasks: [
         {
           id: "agent-task-running", taskId: "task-running", executionAttempt: 1,
-          taskSpec: { revision: 1, title: "运行中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" } },
+          taskSpec: { revision: 1, title: "运行中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc" },
+          executionProfile: PI_PROFILE,
           agentSnapshot: TEST_AGENT, kind: "direct", status: "running", acceptance: "not-ready",
           prompt: "执行", runtimeToken: "runtime", createdAt: now, updatedAt: now, startedAt: now,
         },
         {
           id: "agent-task-queued", taskId: "task-queued", executionAttempt: 1,
-          taskSpec: { revision: 1, title: "排队中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" } },
+          taskSpec: { revision: 1, title: "排队中", description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc" },
+          executionProfile: PI_PROFILE,
           agentSnapshot: TEST_AGENT, kind: "direct", status: "queued", acceptance: "not-ready",
           prompt: "等待", createdAt: now, updatedAt: now,
         },
@@ -305,7 +310,7 @@ function capTask(id: string): BoardState["tasks"][number] {
   return {
     id, title: `任务 ${id}`, description: "", acceptanceCriteria: "", priority: "medium",
     projectPath: "C:/project", projectName: "project", trusted: true,
-    executionTarget: { kind: "workflow", workflowId: "flow" }, stage: "planned",
+    executionTarget: { kind: "workflow", workflowId: "flow" }, executionProfileId: "pi.rpc", stage: "planned",
     specRevision: 1, executionAttempt: 1,
     createdAt: CAP_NOW, updatedAt: CAP_NOW,
   };
@@ -322,7 +327,8 @@ function capComment(id: string, taskId: string): BoardState["comments"][number] 
 function capRun(id: string, taskId: string): BoardState["runs"][number] {
   return {
     id, taskId, executionAttempt: 1,
-    taskSpec: { revision: 1, title: `任务 ${taskId}`, description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" } },
+    taskSpec: { revision: 1, title: `任务 ${taskId}`, description: "", acceptanceCriteria: "", priority: "medium", executionTarget: { kind: "workflow", workflowId: "flow" }, executionProfileId: "pi.rpc" },
+    executionProfile: PI_PROFILE,
     status: "reported", acceptance: "accepted", reviewedAt: CAP_NOW, startedAt: CAP_NOW, updatedAt: CAP_NOW, completedAt: CAP_NOW,
     workflow: { id: "flow", version: 1, name: "流程", shortName: "流程", summary: "测试", teamId: "team", steps: [{ kind: "agent", id: "step", name: "步骤", summary: "", agentId: "agent", objective: "执行" }] },
     agents: [TEST_AGENT],
@@ -334,7 +340,7 @@ const CAP_AUTOPILOT: BoardState["autopilots"][number] = {
   id: "autopilot-1", name: "自动规则", enabled: true, trigger: { kind: "manual" },
   taskTemplate: { title: "模板", description: "", acceptanceCriteria: "", priority: "medium" },
   projectPath: "C:/project", projectName: "project", trusted: true,
-  executionTarget: { kind: "agent", agentId: "agent" }, createdAt: CAP_NOW, updatedAt: CAP_NOW,
+  executionTarget: { kind: "agent", agentId: "agent" }, executionProfileId: "pi.rpc", createdAt: CAP_NOW, updatedAt: CAP_NOW,
 };
 
 function capAutopilotRun(id: string, status: BoardState["autopilotRuns"][number]["status"] = "succeeded"): BoardState["autopilotRuns"][number] {

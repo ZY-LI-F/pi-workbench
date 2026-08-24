@@ -108,8 +108,7 @@ describe("Kanban automation interactions", () => {
           description: "仍可编辑的上下文",
           acceptanceCriteria: "由用户补充",
           priority: "medium",
-          sourcePiSessionPath: "C:/sessions/source.jsonl",
-          sourcePiSessionId: "source-session",
+          sourceSession: { backendId: "pi", sessionPath: "C:/sessions/source.jsonl", sessionId: "source-session" },
         }}
         project={PROJECT}
         workflows={BUILTIN_ORCHESTRATION_CATALOG.workflows}
@@ -133,8 +132,7 @@ describe("Kanban automation interactions", () => {
     await waitFor(() => expect(onCreate).toHaveBeenCalledWith(expect.objectContaining({
       title: "用户确认后的任务",
       executionTarget: { kind: "manual" },
-      sourcePiSessionPath: "C:/sessions/source.jsonl",
-      sourcePiSessionId: "source-session",
+      sourceSession: { backendId: "pi", sessionPath: "C:/sessions/source.jsonl", sessionId: "source-session" },
     })));
   });
 
@@ -446,7 +444,7 @@ describe("Kanban automation interactions", () => {
     const onContinueInPi = vi.fn(async () => undefined);
     render(
       <TaskDetailPanel
-        task={{ ...TASK, sourcePiSessionPath: "C:/sessions/source.jsonl", sourcePiSessionId: "source" }}
+        task={{ ...TASK, sourceSession: { backendId: "pi", sessionPath: "C:/sessions/source.jsonl", sessionId: "source" } }}
         catalog={BUILTIN_ORCHESTRATION_CATALOG}
         squads={[]}
         runs={[]}

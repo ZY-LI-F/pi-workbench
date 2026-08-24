@@ -48,6 +48,7 @@ import { WorkflowDag } from "./WorkflowDag";
 import { useMediaQuery } from "../../hooks/use-media-query";
 import { AgentExecutionGraph } from "./AgentExecutionGraph";
 import { TaskCollaborationBadge, taskCollaborationScope } from "./TaskCollaborationBadge";
+import { executionProfile } from "@shared/execution-profile";
 
 interface TaskDetailPanelProps {
   readonly task: KanbanTask;
@@ -297,6 +298,7 @@ export function TaskDetailPanel({
           <span className={`priority-badge priority-badge--${task.priority}`}>{PRIORITY_LABEL[task.priority]}优先级</span>
           <TaskCollaborationBadge scope={collaborationScope} />
           <span className={isManual ? "manual-mode-badge" : undefined}>{executionLabel}</span>
+          {task.executionProfileId && <span>{executionProfile(task.executionProfileId).label}</span>}
         </div>
         {executionTruth && (
           <div className="task-detail__execution-truth">

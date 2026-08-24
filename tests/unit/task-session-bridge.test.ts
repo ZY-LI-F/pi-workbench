@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, type AgentTask, type KanbanTask, type WorkflowRun } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { resolveTaskSessionTarget } from "../../src/shared/task-session-bridge";
+import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const AGENT = BUILTIN_ORCHESTRATION_CATALOG.agents[0];
 const WORKFLOW = BUILTIN_ORCHESTRATION_CATALOG.workflows[0];
@@ -10,24 +11,26 @@ if (!AGENT || !WORKFLOW) throw new Error("测试编排目录为空");
 const TASK: KanbanTask = Object.freeze({
   id: "task-1", title: "桥接", description: "", acceptanceCriteria: "", priority: "medium",
   projectPath: "C:/Project", projectName: "Project", trusted: true,
-  executionTarget: Object.freeze({ kind: "agent", agentId: AGENT.id }), stage: "planned", specRevision: 1,
-  sourcePiSessionPath: "C:/Sessions/source.jsonl", sourcePiSessionId: "source",
+  executionTarget: Object.freeze({ kind: "agent", agentId: AGENT.id }), executionProfileId: "pi.rpc", stage: "planned", specRevision: 1,
+  sourceSession: Object.freeze({ backendId: "pi", sessionPath: "C:/Sessions/source.jsonl", sessionId: "source" }),
   createdAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:00:00.000Z",
 });
 
 const RUN: WorkflowRun = Object.freeze({
   id: "run-1", taskId: TASK.id, executionAttempt: 1,
-  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget, executionProfileId: "pi.rpc" }),
+  executionProfile: snapshotExecutionProfile("pi.rpc"),
   workflow: WORKFLOW, agents: Object.freeze([AGENT]), status: "reported", acceptance: "pending",
-  steps: Object.freeze([Object.freeze({ id: "step-run-1", stepId: "step-1", stepKind: "agent", name: "实现", status: "succeeded", sessionPath: "C:/Sessions/workflow.jsonl", startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" })]),
+  steps: Object.freeze([Object.freeze({ id: "step-run-1", stepId: "step-1", stepKind: "agent", name: "实现", status: "succeeded", session: Object.freeze({ backendId: "pi", sessionPath: "C:/Sessions/workflow.jsonl" }), startedAt: "2026-07-18T00:00:00.000Z", completedAt: "2026-07-18T00:01:00.000Z" })]),
   startedAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:01:00.000Z",
 });
 
 const AGENT_TASK: AgentTask = Object.freeze({
   id: "agent-task-1", taskId: TASK.id, executionAttempt: 1,
-  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+  taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget, executionProfileId: "pi.rpc" }),
+  executionProfile: snapshotExecutionProfile("pi.rpc"),
   agentSnapshot: AGENT, kind: "direct", status: "reported", acceptance: "pending", prompt: "执行",
-  sessionPath: "C:/Sessions/agent.jsonl", createdAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:01:00.000Z",
+  session: Object.freeze({ backendId: "pi", sessionPath: "C:/Sessions/agent.jsonl" }), createdAt: "2026-07-18T00:00:00.000Z", updatedAt: "2026-07-18T00:01:00.000Z",
 });
 
 const STATE = Object.freeze({ ...EMPTY_BOARD_STATE, version: BOARD_SCHEMA_VERSION, tasks: Object.freeze([TASK]), runs: Object.freeze([RUN]), agentTasks: Object.freeze([AGENT_TASK]) });

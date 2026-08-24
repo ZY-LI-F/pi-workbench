@@ -18,6 +18,7 @@ import {
 } from "../shared/kanban";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { applyTaskLifecycle } from "../shared/task-lifecycle";
+import { assertExecutionProfileTarget } from "../shared/execution-profile";
 
 interface AutopilotServiceDependencies {
   readonly repository: BoardRepository;
@@ -215,6 +216,7 @@ export class AutopilotService {
         projectName: autopilot.projectName,
         trusted: autopilot.trusted,
         executionTarget: Object.freeze({ ...autopilot.executionTarget }),
+        executionProfileId: autopilot.executionProfileId,
         stage: "planned",
         specRevision: 1,
         executionAttempt: 0,
@@ -272,6 +274,9 @@ export class AutopilotService {
   ): Omit<Autopilot, "id" | "createdAt" | "updatedAt" | "trigger"> & { readonly trigger: CreateAutopilotInput["trigger"] | AutopilotTrigger } {
     if (!TASK_PRIORITIES.includes(input.taskTemplate.priority)) throw new Error(`无效优先级: ${String(input.taskTemplate.priority)}`);
     this.#assertExecutionTarget(state, input.executionTarget, input.projectPath);
+    const executionProfileId = input.executionProfileId ?? "pi.rpc";
+    assertExecutionProfileTarget(input.executionTarget, executionProfileId);
+    if (executionProfileId === "codex.review") throw new Error("Autopilot 不能使用 codex.review");
     if (input.trigger.kind === "schedule") {
       if (!Number.isInteger(input.trigger.intervalMinutes) || input.trigger.intervalMinutes <= 0) throw new Error("计划间隔必须是正整数分钟");
       if (Number.isNaN(Date.parse(input.trigger.nextRunAt))) throw new Error("nextRunAt 不是有效日期");
@@ -291,6 +296,7 @@ export class AutopilotService {
       projectName: required(input.projectName, "项目名称"),
       trusted: input.trusted,
       executionTarget: Object.freeze({ ...input.executionTarget }),
+      executionProfileId,
     });
   }
 

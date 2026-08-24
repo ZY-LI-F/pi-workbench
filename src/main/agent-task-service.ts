@@ -29,6 +29,8 @@ import {
   type TaskActivity,
   type TaskComment,
 } from "../shared/kanban";
+import { snapshotExecutionProfile, type ExecutionProfileSnapshot } from "../shared/execution-profile";
+import { piExecutionSession, type ExecutionSessionReference } from "../shared/execution-session";
 
 export interface TeamLaunchContext extends LaunchTeamTaskInput {
   readonly projectPath: string;
@@ -66,7 +68,7 @@ export interface AgentTaskResult {
 interface AgentTaskResultFields {
   readonly runtimeToken: undefined;
   readonly output: string;
-  readonly sessionPath?: string;
+  readonly session?: ExecutionSessionReference;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly cost?: number;
@@ -216,12 +218,14 @@ export class AgentTaskService {
       const rootId = this.#id();
       const executionAttempt = nextExecutionAttempt(task);
       const taskSpec = snapshotTaskSpec(task);
+      const executionProfile = this.#executionProfile(task);
       const squadId = task.executionTarget.kind === "squad" ? task.executionTarget.squadId : undefined;
       const root: AgentTask = Object.freeze({
         id: rootId,
         taskId: task.id,
         executionAttempt,
         taskSpec,
+        executionProfile,
         agentSnapshot: cloneAgent(rootAgent),
         kind: rootAgent.id === "lead" ? "coordinator" : mentions.length > 1 ? "mention-root" : "direct",
         status: "queued",
@@ -239,6 +243,7 @@ export class AgentTaskService {
         taskId: task.id,
         executionAttempt,
         taskSpec,
+        executionProfile,
         agentSnapshot: cloneAgent(agent),
         kind: "delegated" as const,
         status: "queued" as const,
@@ -302,6 +307,7 @@ export class AgentTaskService {
         projectName,
         trusted: input.trusted,
         executionTarget: Object.freeze({ kind: "agent", agentId: target.id }),
+        executionProfileId: "pi.rpc",
         stage: "planned",
         specRevision: 1,
         executionAttempt: 0,
@@ -623,7 +629,7 @@ export class AgentTaskService {
       const resultFields: AgentTaskResultFields = Object.freeze({
         runtimeToken: undefined,
         output,
-        sessionPath: result.sessionPath,
+        session: piExecutionSession({ sessionPath: result.sessionPath }),
         inputTokens: result.inputTokens,
         outputTokens: result.outputTokens,
         cost: result.cost,
@@ -861,8 +867,13 @@ export class AgentTaskService {
   ): AgentTask {
     const executionAttempt = nextExecutionAttempt(task);
     return Object.freeze({
-      id: this.#id(), taskId: task.id, executionAttempt, taskSpec: snapshotTaskSpec(task), agentSnapshot: cloneAgent(agent), kind, status: "queued", acceptance: "not-ready", prompt, squadId, executionPlan, createdAt: now, updatedAt: now,
+      id: this.#id(), taskId: task.id, executionAttempt, taskSpec: snapshotTaskSpec(task), executionProfile: this.#executionProfile(task), agentSnapshot: cloneAgent(agent), kind, status: "queued", acceptance: "not-ready", prompt, squadId, executionPlan, createdAt: now, updatedAt: now,
     });
+  }
+
+  #executionProfile(task: KanbanTask): ExecutionProfileSnapshot {
+    if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+    return snapshotExecutionProfile(task.executionProfileId);
   }
 
   #withDispatchedRoot(
@@ -1177,6 +1188,7 @@ export class AgentTaskService {
       taskId: task.id,
       executionAttempt: root.executionAttempt,
       taskSpec: root.taskSpec,
+      executionProfile: root.executionProfile,
       agentSnapshot: cloneAgent(agent),
       kind: "delegated",
       status: "queued",
@@ -1203,6 +1215,7 @@ export class AgentTaskService {
       taskId: task.id,
       executionAttempt: root.executionAttempt,
       taskSpec: root.taskSpec,
+      executionProfile: root.executionProfile,
       agentSnapshot: cloneAgent(root.agentSnapshot),
       kind: "coordinator-review",
       status: "queued",

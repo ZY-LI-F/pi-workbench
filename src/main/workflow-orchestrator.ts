@@ -36,6 +36,8 @@ import {
   type WorkspaceLease,
 } from "./workspace-admission";
 import { resolveAgentRuntimeModel, type RuntimeModelSelection } from "../shared/runtime-model";
+import { snapshotExecutionProfile } from "../shared/execution-profile";
+import { piExecutionSession } from "../shared/execution-session";
 
 export interface WorkflowAgentRuntime {
   readonly running: boolean;
@@ -184,6 +186,8 @@ export class WorkflowOrchestrator {
       const workflow = cloneWorkflow(workflowDefinition);
       const agentIds = new Set(workflow.steps.filter((step) => step.kind === "agent").map((step) => step.agentId));
       const agents = Object.freeze([...agentIds].map((id) => cloneAgent(this.#agent(id))));
+      if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+      const executionProfile = snapshotExecutionProfile(task.executionProfileId);
       runId = this.#id();
       const executionAttempt = nextExecutionAttempt(task);
       const run: WorkflowRun = Object.freeze({
@@ -191,6 +195,7 @@ export class WorkflowOrchestrator {
         taskId: task.id,
         executionAttempt,
         taskSpec: snapshotTaskSpec(task),
+        executionProfile,
         workflow,
         agents,
         status: "queued",
@@ -681,7 +686,7 @@ export class WorkflowOrchestrator {
       const artifact: AgentArtifact = Object.freeze({
         title: `${step.name} · Agent 产物`,
         content: text,
-        sessionPath: state.sessionFile,
+        session: piExecutionSession({ sessionPath: state.sessionFile }),
         inputTokens: stats.tokens?.input,
         outputTokens: stats.tokens?.output,
         cost: stats.cost,
@@ -697,7 +702,7 @@ export class WorkflowOrchestrator {
           return current;
         }
         applied = true;
-        const completedStep: StepRun = Object.freeze({ ...step, status: "succeeded", runtimeToken: undefined, completedAt: now, sessionPath: state.sessionFile, artifact });
+        const completedStep: StepRun = Object.freeze({ ...step, status: "succeeded", runtimeToken: undefined, completedAt: now, session: piExecutionSession({ sessionPath: state.sessionFile }), artifact });
         return {
           ...current,
           runs: current.runs.map((candidate) => candidate.id === active.runId

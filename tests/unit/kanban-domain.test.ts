@@ -19,6 +19,7 @@ const task: KanbanTask = Object.freeze({
   projectName: "project",
   trusted: true,
   executionTarget: { kind: "workflow", workflowId: "feature-delivery" },
+  executionProfileId: "pi.rpc",
   stage: "planned",
   specRevision: 1,
   createdAt: "2026-07-17T00:00:00.000Z",
@@ -80,7 +81,7 @@ describe("kanban domain", () => {
   });
 
   it("lets user-managed tasks enter progress and review without fabricating an execution", () => {
-    const manualTask: KanbanTask = Object.freeze({ ...task, id: "manual-task", executionTarget: Object.freeze({ kind: "manual" }) });
+    const manualTask: KanbanTask = Object.freeze({ ...task, id: "manual-task", executionTarget: Object.freeze({ kind: "manual" }), executionProfileId: undefined });
     expect(canMoveTaskManually(manualTask, "running")).toBe(true);
     expect(canMoveTaskManually(manualTask, "review")).toBe(true);
     expect(canMoveTaskManually(manualTask, "queued")).toBe(false);

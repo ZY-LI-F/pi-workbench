@@ -80,6 +80,14 @@ import { WebhookServer, webhookMaxBytesFromEnvironment, webhookPortFromEnvironme
 import { WorkspaceAdmission } from "./workspace-admission";
 import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
+import {
+  assertExecutionProfileTarget,
+  isExecutionBackendId,
+  isExecutionProfileId,
+  type ExecutionProfileId,
+} from "../shared/execution-profile";
+import type { ExecutionSessionReference } from "../shared/execution-session";
+import { isExternalExecutionSourceId, type ExternalExecutionOrigin } from "../shared/external-execution";
 import { isSkinId, type SkinArtworkDescriptor, type SkinId } from "../shared/skin-artwork";
 import { SkinArtworkService, type StoredSkinArtwork } from "./skin-artwork-service";
 import {
@@ -325,10 +333,43 @@ function validatedAutomatedExecutionTarget(value: unknown): AutomatedExecutionTa
   return target;
 }
 
+function validatedExecutionProfileId(value: unknown, target: ExecutionTarget): ExecutionProfileId | undefined {
+  const profileId = target.kind === "manual"
+    ? undefined
+    : value === undefined ? "pi.rpc" : textValue(value, "executionProfileId");
+  if (profileId !== undefined && !isExecutionProfileId(profileId)) throw new Error(`无效执行 Profile: ${profileId}`);
+  assertExecutionProfileTarget(target, profileId);
+  return profileId;
+}
+
+function validatedExecutionSession(value: unknown, label: string): ExecutionSessionReference {
+  const session = objectValue(value, label);
+  if (!isExecutionBackendId(session.backendId)) throw new Error(`${label}.backendId 无效`);
+  const sessionId = session.sessionId === undefined ? undefined : textValue(session.sessionId, `${label}.sessionId`);
+  const sessionPath = session.sessionPath === undefined ? undefined : textValue(session.sessionPath, `${label}.sessionPath`);
+  if (!sessionId?.trim() && !sessionPath?.trim()) throw new Error(`${label} 至少需要 sessionId 或 sessionPath`);
+  return Object.freeze({ backendId: session.backendId, sessionId, sessionPath });
+}
+
+function validatedExternalOrigin(value: unknown): ExternalExecutionOrigin {
+  const origin = objectValue(value, "externalOrigin");
+  if (!isExternalExecutionSourceId(origin.sourceId)) throw new Error("externalOrigin.sourceId 无效");
+  const importedAt = textValue(origin.importedAt, "externalOrigin.importedAt");
+  if (Number.isNaN(Date.parse(importedAt))) throw new Error("externalOrigin.importedAt 不是有效日期");
+  return Object.freeze({
+    sourceId: origin.sourceId,
+    externalId: requiredString(origin.externalId, "externalOrigin.externalId"),
+    session: origin.session === undefined ? undefined : validatedExecutionSession(origin.session, "externalOrigin.session"),
+    projectPath: requiredString(origin.projectPath, "externalOrigin.projectPath"),
+    importedAt,
+  });
+}
+
 function validatedCreateTask(value: unknown): CreateTaskInput {
   const input = objectValue(value, "创建任务参数");
   const priority = textValue(input.priority, "priority");
   if (!TASK_PRIORITIES.includes(priority as CreateTaskInput["priority"])) throw new Error(`无效优先级: ${priority}`);
+  const executionTarget = validatedExecutionTarget(input.executionTarget);
   return Object.freeze({
     title: textValue(input.title, "title"),
     description: textValue(input.description, "description"),
@@ -337,9 +378,10 @@ function validatedCreateTask(value: unknown): CreateTaskInput {
     projectPath: textValue(input.projectPath, "projectPath"),
     projectName: textValue(input.projectName, "projectName"),
     trusted: booleanValue(input.trusted, "trusted"),
-    executionTarget: validatedExecutionTarget(input.executionTarget),
-    sourcePiSessionPath: input.sourcePiSessionPath === undefined ? undefined : textValue(input.sourcePiSessionPath, "sourcePiSessionPath"),
-    sourcePiSessionId: input.sourcePiSessionId === undefined ? undefined : textValue(input.sourcePiSessionId, "sourcePiSessionId"),
+    executionTarget,
+    executionProfileId: validatedExecutionProfileId(input.executionProfileId, executionTarget),
+    sourceSession: input.sourceSession === undefined ? undefined : validatedExecutionSession(input.sourceSession, "sourceSession"),
+    externalOrigin: input.externalOrigin === undefined ? undefined : validatedExternalOrigin(input.externalOrigin),
   });
 }
 
@@ -355,13 +397,15 @@ function validatedUpdateTask(value: unknown): UpdateTaskInput {
   const input = objectValue(value, "更新任务参数");
   const priority = textValue(input.priority, "priority");
   if (!TASK_PRIORITIES.includes(priority as UpdateTaskInput["priority"])) throw new Error(`无效优先级: ${priority}`);
+  const executionTarget = validatedExecutionTarget(input.executionTarget);
   return Object.freeze({
     taskId: requiredString(input.taskId, "taskId"),
     title: textValue(input.title, "title"),
     description: textValue(input.description, "description"),
     acceptanceCriteria: textValue(input.acceptanceCriteria, "acceptanceCriteria"),
     priority: priority as UpdateTaskInput["priority"],
-    executionTarget: validatedExecutionTarget(input.executionTarget),
+    executionTarget,
+    executionProfileId: validatedExecutionProfileId(input.executionProfileId, executionTarget),
   });
 }
 
@@ -511,6 +555,10 @@ function validatedCreateAutopilotTrigger(value: unknown): CreateAutopilotInput["
 
 function validatedCreateAutopilot(value: unknown): CreateAutopilotInput {
   const input = objectValue(value, "创建 Autopilot 参数");
+  const executionTarget = validatedAutomatedExecutionTarget(input.executionTarget);
+  const executionProfileId = validatedExecutionProfileId(input.executionProfileId, executionTarget);
+  if (!executionProfileId) throw new Error("Autopilot 必须选择执行 Profile");
+  if (executionProfileId === "codex.review") throw new Error("Autopilot 不能使用 codex.review");
   return Object.freeze({
     name: textValue(input.name, "name"),
     enabled: booleanValue(input.enabled, "enabled"),
@@ -519,7 +567,8 @@ function validatedCreateAutopilot(value: unknown): CreateAutopilotInput {
     projectPath: textValue(input.projectPath, "projectPath"),
     projectName: textValue(input.projectName, "projectName"),
     trusted: booleanValue(input.trusted, "trusted"),
-    executionTarget: validatedAutomatedExecutionTarget(input.executionTarget),
+    executionTarget,
+    executionProfileId,
   });
 }
 

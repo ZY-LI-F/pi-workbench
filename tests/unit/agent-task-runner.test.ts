@@ -184,7 +184,7 @@ describe("AgentTaskRunner", () => {
     runtimeFactory.runtimes[0]?.settle();
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
     const first = repository.state.agentTasks.find((task) => task.taskId === firstTaskId);
-    expect(first).toMatchObject({ status: "reported", acceptance: "pending", output: "真实 Agent 产物", sessionPath: "C:/agent-task.jsonl", inputTokens: 12, outputTokens: 34, cost: 0.02 });
+    expect(first).toMatchObject({ status: "reported", acceptance: "pending", output: "真实 Agent 产物", session: { backendId: "pi", sessionPath: "C:/agent-task.jsonl" }, inputTokens: 12, outputTokens: 34, cost: 0.02 });
     expect(repository.state.tasks.find((task) => task.id === firstTaskId)?.stage).toBe("review");
     expect(repository.state.comments.some((comment) => comment.taskId === firstTaskId && comment.author === "agent" && comment.body === "真实 Agent 产物")).toBe(true);
     expect(repository.state.agentTasks.find((task) => task.taskId === secondTaskId)?.status).toBe("running");
@@ -541,7 +541,7 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
     expect(repository.state.agentTasks.find((task) => task.kind === "coordinator")).toMatchObject({
       output: "请让 @builder 开始工作",
-      sessionPath: "C:/agent-task.jsonl",
+      session: { backendId: "pi", sessionPath: "C:/agent-task.jsonl" },
       inputTokens: 12,
       outputTokens: 34,
       error: expect.stringContaining("未调用必需的 coordinator_action 工具"),

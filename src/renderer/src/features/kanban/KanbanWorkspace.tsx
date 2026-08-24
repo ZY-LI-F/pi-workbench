@@ -34,6 +34,7 @@ import { TaskCard } from "./TaskCard";
 import { TaskDetailPanel } from "./TaskDetailPanel";
 import { TaskEditorDialog } from "./TaskEditorDialog";
 import type { PiTaskDraft } from "./pi-task-draft";
+import { executionProfile } from "@shared/execution-profile";
 
 interface KanbanWorkspaceProps {
   readonly api: StellaDesktopApi;
@@ -71,9 +72,10 @@ function workflowForTask(task: KanbanTask, catalog: OrchestrationCatalog): Workf
 function executionLabelForTask(task: KanbanTask, catalog: OrchestrationCatalog, squads: readonly Squad[]): string {
   const target = task.executionTarget;
   if (target.kind === "manual") return "手工任务 · 由你推进";
-  if (target.kind === "workflow") return catalog.workflows.find((workflow) => workflow.id === target.workflowId)?.shortName ?? target.workflowId;
-  if (target.kind === "agent") return catalog.agents.find((agent) => agent.id === target.agentId)?.name ?? target.agentId;
-  return squads.find((squad) => squad.id === target.squadId)?.name ?? target.squadId;
+  const profileLabel = task.executionProfileId ? executionProfile(task.executionProfileId).label : "未选择环境";
+  if (target.kind === "workflow") return `${catalog.workflows.find((workflow) => workflow.id === target.workflowId)?.shortName ?? target.workflowId} · ${profileLabel}`;
+  if (target.kind === "agent") return `${catalog.agents.find((agent) => agent.id === target.agentId)?.name ?? target.agentId} · ${profileLabel}`;
+  return `${squads.find((squad) => squad.id === target.squadId)?.name ?? target.squadId} · ${profileLabel}`;
 }
 
 function sameProjectPath(left: string | undefined, right: string | undefined): boolean {
