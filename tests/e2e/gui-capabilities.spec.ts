@@ -183,6 +183,48 @@ test("persists the optional team surface while keeping the generic task board av
   }
 });
 
+test("keeps Pi and the board ready when Codex and Claude are unavailable", async ({}, testInfo) => {
+  const paths = await createIsolatedAppPaths(testInfo);
+  const missingCliDirectory = testInfo.outputPath("missing-cli");
+  await mkdir(missingCliDirectory, { recursive: true });
+  await writeFile(join(paths.userData, "stella-state.json"), `${JSON.stringify({
+    lastProject: paths.project,
+    recentProjects: [{ path: paths.project, trusted: false, lastOpened: "2026-08-25T00:00:00.000Z" }],
+    executionBackends: {
+      codex: { executablePath: join(missingCliDirectory, "codex-missing") },
+      claude: { executablePath: join(missingCliDirectory, "claude-missing") },
+    },
+  }, null, 2)}\n`, "utf8");
+
+  const { electronApp, window, pageErrors } = await launchIsolatedApp(paths);
+  try {
+    const backends = await window.evaluate(() => window.stella.executionBackendsInitialize());
+    expect(backends.health.find((item) => item.backendId === "pi")?.state).toBe("ready");
+    expect(backends.health.find((item) => item.backendId === "codex")?.state).toBe("unavailable");
+    expect(backends.health.find((item) => item.backendId === "claude")?.state).toBe("unavailable");
+    expect(backends.profiles.find((item) => item.profile.id === "pi.rpc")?.available).toBe(true);
+    expect(backends.profiles.filter((item) => item.profile.backendId !== "pi").every((item) => !item.available)).toBe(true);
+
+    await window.getByRole("button", { name: "任务看板", exact: true }).click();
+    await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
+    await expect(window.getByRole("tab", { name: "Stella Tasks", exact: true })).toBeVisible();
+    await window.getByRole("tab", { name: "CLI Tasks", exact: true }).click();
+    await expect(window.getByRole("region", { name: "外部 CLI 任务" })).toBeVisible();
+    await expect(window.locator(".external-source-health")).toHaveCount(2);
+    await expect(window.getByText("Codex Threads", { exact: true })).toBeVisible();
+    await expect(window.getByText("Claude Agents", { exact: true })).toBeVisible();
+
+    await window.getByRole("tab", { name: "全部", exact: true }).click();
+    await expect(window.getByRole("region", { name: "外部 CLI 活动" })).toBeVisible();
+    await expect(window.getByLabel("任务看板")).toBeVisible();
+    const state = await sessionState(window);
+    expect(state.sessionId).toBeTruthy();
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await electronApp.close();
+  }
+});
+
 test("imports a Skill folder and hot-loads it into the current Pi session", async ({}, testInfo) => {
   const paths = await createIsolatedAppPaths(testInfo);
   const skillFolder = testInfo.outputPath("e2e-hot-skill");

@@ -2,9 +2,9 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-> **A native Pi desktop workbench with an optional local Agent team control plane.** Use real Pi conversations, model routing, artifact previews, Kanban tasks, structured multi-Agent delegation, execution graphs, human approval, and local automation in one installable application.
+> **A native Pi desktop workbench with a local multi-CLI Agent control plane.** Use real Pi conversations, route managed tasks through Pi/Codex/Claude, inspect external CLI activity, and keep Kanban, human approval, artifacts, and automation in one installable application.
 
-Stella is a local-first Electron workbench for [earendil-works/pi](https://github.com/earendil-works/pi). It launches the bundled Pi JSONL RPC runtime directly: it does not simulate Agent responses and does not bypass Pi's sessions, models, Skills, extensions, or user configuration. The native Pi workbench remains independently usable, while Team, Kanban, Workflow, and Autopilot form an optional second capability surface with a separate failure boundary.
+Stella is a local-first Electron workbench for [earendil-works/pi](https://github.com/earendil-works/pi). It launches the bundled Pi JSONL RPC runtime directly: it does not simulate Agent responses and does not bypass Pi's sessions, models, Skills, extensions, or user configuration. The native Pi workbench remains independently usable, while Team, Kanban, Workflow, Autopilot, and optional locally installed Codex/Claude CLIs form a second capability surface with separate failure boundaries.
 
 This is no longer a "Pi skin" project. Eight replaceable visual themes remain part of the desktop experience, but the product itself is an installable, auditable, and recoverable local AI workbench. Stella does not reproduce the server stacks of Multica or AgentTeams/HiClaw; it applies their Issue/Attempt, Room/Leader/Worker, explicit-trigger, dependency-scheduling, and result-acceptance ideas within a deliberately small single-machine architecture.
 
@@ -13,7 +13,7 @@ This is no longer a "Pi skin" project. Eight replaceable visual themes remain pa
 | Surface | What users get | Architectural boundary |
 | --- | --- | --- |
 | **Native Pi workbench** | Chat, session tree, model and Provider configuration, thinking level, extensions, Skills, terminal, attachments, and local artifact previews | Uses the real Pi RPC runtime directly; no Task or Team setup is required |
-| **Agent team control plane** | Task Launchpad, Task Room, Kanban, LEAD/Worker delegation, Squads, Workflow DAGs, execution graphs, human acceptance, and Autopilot | Stella owns deterministic state, scheduling, and audit; every Agent still runs through an isolated Pi runtime |
+| **Agent team control plane** | Task Launchpad, Task Room, Kanban, LEAD/Worker delegation, Squads, Workflow DAGs, execution graphs, human acceptance, Autopilot, and Pi/Codex/Claude execution Profiles | Stella owns deterministic state, scheduling, and audit; managed execution runs through a typed backend while external CLI sessions remain read-only projections |
 | **Desktop experience** | Windows/macOS installers, globally visible model selection, responsive three-column layouts, eight themes, and replaceable artwork | Presentation never enters the domain model or changes execution semantics |
 
 Team features are hidden by default and can be enabled under **Preferences → Feature Pages**. Disabling the surface hides its navigation without deleting existing tasks. Data remains local, credentials stay in Pi's standard configuration directory, and the application does not require PostgreSQL, Redis, a remote control plane, or a resident daemon.
@@ -63,9 +63,32 @@ Compaction has a dedicated ten-minute RPC timeout instead of sharing the ordinar
 | --- | --- | --- |
 | `STELLA_PI_COMPACTION_TIMEOUT_MS` | `600000` | Manual compaction RPC timeout; set to `0` to disable this timeout |
 
+## Multi-CLI Tasks and External Activity · v0.5.0
+
+Automated Tasks now select an execution Profile independently from their workflow or Agent target:
+
+| Profile | Managed use | Boundary |
+| --- | --- | --- |
+| `pi.rpc` | Direct Agent, Workflow steps, Worker mentions, LEAD/Coordinator, Squad, and Pi Skills | Bundled and always uses Pi's native RPC/session semantics |
+| `codex.exec` | Direct Agent, ordinary Workflow steps, and Worker mentions | Runs `codex exec --json`; captures Thread ID, tool events, final message, usage, exit, and interruption |
+| `codex.review` | A read-only direct review Agent in a Git repository | Runs Codex review mode; not available to write Agents, Workflow, Squad, or Coordinator |
+| `claude.print` | Direct Agent, ordinary Workflow steps, and Worker mentions | Runs Claude print mode with `stream-json`; captures session, tools, result, usage, exit, and interruption |
+
+LEAD, Coordinator, Squad, and Agents that require Pi Skills remain on `pi.rpc`. Codex and Claude executables are optional user installations: Preferences shows their resolved path, version, authentication state, and a retry/configure action. A missing or logged-out CLI disables only its Profiles and Source; Pi and the Task board continue to work.
+
+The Kanban header provides **Stella Tasks**, **CLI Tasks**, and **All**:
+
+- **CLI Tasks** reads Claude `agents --json --all` and Codex App Server `thread/list` as source-owned, read-only activity. Cards cannot be dragged, edited, commented on, dispatched, or accepted.
+- Codex CLI, Exec, App Server, and Sub-agent Threads expose status, waiting flags, cwd, parent identity, and lazy Turn details. Claude background/interactive Agents expose their official state and process shape.
+- Source refreshes run only while an external view is visible. A failed refresh preserves that Source's last successful snapshot as stale and never clears the other Source.
+- “Import as Task” creates an independent manual Task with immutable external origin. External completion never moves the imported Task. Managed or already imported sessions link to the existing Task instead of acquiring a second state owner.
+- The **All** view places a compact external activity strip above the normal lanes and removes cards already managed by Stella; the pure external view keeps them for native-status reconciliation.
+
+Stella does not bundle Codex or Claude, parse their private state directories, or treat an external CLI's `done` as Task acceptance. Existing Pi context compaction remains Pi-native and unchanged by the multi-CLI layer.
+
 ## A Small, Explicit Architecture
 
-Stella keeps the native Pi workbench and Task Control as two first-class capability surfaces. It does not duplicate Pi or add a second Agent runtime.
+Stella keeps the native Pi workbench and Task Control as two first-class capability surfaces. It does not duplicate Pi; additional CLIs are isolated behind typed execution and discovery adapters.
 
 - **Independent capability health:** Pi, Task, Schedule, and Webhook independently report `loading / ready / degraded / error`. A damaged Board cannot block Pi chat, and a Webhook port conflict only stops Webhook.
 - **Deterministic Task lifecycle:** persisted Stella events move tasks through `planned / queued / running / review / blocked / completed`. Model prose cannot move cards.
@@ -73,10 +96,10 @@ Stella keeps the native Pi workbench and Task Control as two first-class capabil
 - **Explicit result acceptance:** a successful Agent or Workflow result becomes `reported + pending acceptance`. Only an explicit user acceptance completes the task.
 - **Frozen plans:** Agent, Squad, and Workflow definitions are snapshotted at dispatch. Editing a catalog entry affects the next run, not history.
 - **Shared workspace admission:** interactive Pi, Workflow, and AgentTask writers share a canonical-path write lease. Background writers wait FIFO; users can see the current owner and cancel queued work.
-- **Live trust resolution:** every background execution re-reads the project's current trust before starting Pi. A stale Task snapshot never grants permissions.
+- **Live trust resolution:** every background execution re-reads the project's current trust before starting its selected backend. A stale Task snapshot never grants permissions.
 - **Explicit Pi↔Task bridge:** a Pi session becomes a Task only through the visible “Save as Task” draft. A Task session returns to Pi only after the selected `sessionFile` is validated against that Task.
 - **One durable conversation:** Task Room is a projection of Task, Message, Activity, Workflow Run, Step Run, AgentTask, and Artifact facts. Team Chat does not create a second message database.
-- **One execution engine:** Workflow DAG and Agent execution graph are read-only projections of persisted runtime facts; selecting a node never changes execution state.
+- **One execution lifecycle:** Pi, Codex, and Claude adapters feed the same AgentTask/Workflow lifecycle. Workflow DAG and Agent execution graph remain read-only projections of persisted facts.
 
 ## Team Workspace and Task Launchpad
 
@@ -145,7 +168,7 @@ The graph is a read-only projection of `parentAgentTaskId`, `delegationRound`, s
 
 ## Kanban, Fixed Agents, and Workflow DAGs
 
-The Kanban board is a durable process controller, not a card-shaped chat transcript. Stella owns recoverable state, while isolated Pi RPC sessions execute individual steps and write tool activity, output, failures, usage, and artifacts back to the same Task Room.
+The Kanban board is a durable process controller, not a card-shaped chat transcript. Stella owns recoverable state, while the selected Pi/Codex/Claude Profile executes compatible steps and writes normalized tool activity, output, failures, usage, session identity, and artifacts back to the same Task Room.
 
 Built-in general-purpose roles include:
 
@@ -249,7 +272,7 @@ npm run preview
 
 ## Windows and macOS Installers
 
-Installers bundle `@earendil-works/pi-coding-agent@0.84.2` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path.
+Installers bundle `@earendil-works/pi-coding-agent@0.84.2` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path. Codex and Claude are optional external CLIs and are deliberately not bundled.
 
 Recipient configuration is still read from Pi's standard directory:
 
@@ -259,7 +282,7 @@ Recipient configuration is still read from Pi's standard directory:
 
 Do not package a developer's API Keys, OAuth credentials, or `.pi/agent` directory. A recipient without a separate Pi CLI can launch Stella, but must configure their own Provider credentials before the first model request.
 
-Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v7 chain. Built-in roles never hardcode an API Key, model, or machine-specific Pi path.
+Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v8 chain. v8 adds immutable execution Profile/session snapshots and external origins without rewriting prior Pi history. Built-in roles never hardcode an API Key, model, or machine-specific CLI path.
 
 ### Local packaging
 
@@ -284,9 +307,9 @@ npm run dist:mac:arm64
 Artifacts are written to `release/` and include version, OS, and architecture in the file name:
 
 ```text
-Stella Pi Workbench-0.4.0-win-x64.exe
-Stella Pi Workbench-0.4.0-mac-x64.dmg
-Stella Pi Workbench-0.4.0-mac-arm64.dmg
+Stella Pi Workbench-0.5.0-win-x64.exe
+Stella Pi Workbench-0.5.0-mac-x64.dmg
+Stella Pi Workbench-0.5.0-mac-arm64.dmg
 ```
 
 Formal macOS signing must run on macOS. The repository includes [a GitHub Actions release workflow](.github/workflows/release.yml) for Windows x64, macOS Apple Silicon, and macOS Intel. Manual workflow runs may produce explicitly unsigned internal-test artifacts. A matching version tag requires signing, Apple notarization for macOS, and successful builds on every platform before creating the GitHub Release.
@@ -300,7 +323,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic suite contains **76 Vitest files and 336 tests**. It covers Team feature gating, schema migrations and backups, specification/execution-attempt isolation, live trust, typed Coordinator tools, Skill preflight and hot loading, frozen plans, delegation rounds, Worker failure recovery and serial handoff, dependency-aware fair scheduling, stale Runtime/session/Board response isolation, Presence and human-attention projections, execution graphs, dedicated compaction timeouts, capability isolation, workspace leases, explicit result acceptance, cross-project read-only Task views, Task Room projection, Pi session bridging, Workflow DAGs, Autopilot, Webhook, extension UI, font scaling, terminal cancellation, resizable composer behavior, session-address diagnostics, multi-file session previews, preview IPC, and a real ten-slide PPTX relationship-path regression.
+The current deterministic suite contains **96 Vitest files and 421 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v8 migration, Profile compatibility, backend probing, managed Codex/Claude success/failure/interruption, cross-backend workflows and Worker mentions, App Server pagination/restart/timeout, Claude Agent state mapping, external last-good snapshots, polling visibility, managed-session association, import independence, lazy details, all-view de-duplication, and the dedicated Pi compaction timeout/mutual-exclusion behavior.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 
@@ -326,7 +349,7 @@ src/
 │  ├─ assets/skins/      Original replaceable theme artwork
 │  ├─ lib/               Immutable runtime reducers and theme definitions
 │  └─ styles/            Design tokens, layouts, themes, and responsive behavior
-└─ shared/               Protocols, v7 domain model, scheduling, attention/presence/timeline/DAG projections, and catalog
+└─ shared/               Protocols, v8 domain model, Profiles/sessions, scheduling, external projections, and catalogs
 ```
 
 The main process launches Pi with Electron's Node runtime and `ELECTRON_RUN_AS_NODE=1`. The renderer uses `contextIsolation` and sandboxing and only reaches local capabilities through the preload allowlist. External links are restricted to HTTP(S), and paths and IPC commands are validated in the main process.

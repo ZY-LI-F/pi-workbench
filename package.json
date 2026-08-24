@@ -1,9 +1,9 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "productName": "Stella Pi Workbench",
   "private": true,
-  "description": "A local-first Pi desktop workbench with native chat, model routing, inspectable agent teams, Kanban, DAG workflows, and artifact previews.",
+  "description": "A local-first Pi desktop workbench with native chat, multi-CLI task execution, external agent activity, Kanban, workflows, and artifact previews.",
   "author": "Stella",
   "license": "MIT",
   "repository": {

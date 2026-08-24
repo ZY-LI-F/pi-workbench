@@ -46,6 +46,10 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
   writeFileSync(join(userData, "stella-state.json"), `${JSON.stringify({
     lastProject: projectPath,
     recentProjects: [{ path: projectPath, trusted: false, lastOpened: "2026-07-26T00:00:00.000Z" }],
+    executionBackends: {
+      codex: { executablePath: join(emptyExecutableSearchPath, "codex-missing") },
+      claude: { executablePath: join(emptyExecutableSearchPath, "claude-missing") },
+    },
   }, null, 2)}\n`, "utf8");
 
   const electronApp = await electron.launch({
@@ -78,6 +82,10 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
       () => window.evaluate(() => window.stella.capabilities().then((health) => health.task.state)),
       { timeout: 15_000, message: "Task Control capability should be ready" },
     ).toBe("ready");
+    const externalBackends = await window.evaluate(() => window.stella.executionBackendsInitialize());
+    expect(externalBackends.health.find((item) => item.backendId === "pi")?.state).toBe("ready");
+    expect(externalBackends.health.find((item) => item.backendId === "codex")?.state).toBe("unavailable");
+    expect(externalBackends.health.find((item) => item.backendId === "claude")?.state).toBe("unavailable");
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
     const composerResize = window.getByRole("separator", { name: "调整输入区高度" });
     await expect(composerResize).toBeVisible();
@@ -103,6 +111,12 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     await window.getByRole("button", { name: "任务看板", exact: true }).click();
     await expect(window.getByRole("button", { name: "新建看板任务" })).toBeVisible();
     await expect(window.getByRole("heading", { name: "任务星图" })).toBeVisible();
+    await window.getByRole("tab", { name: "CLI Tasks", exact: true }).click();
+    await expect(window.getByRole("region", { name: "外部 CLI 任务" })).toBeVisible();
+    await expect(window.locator(".external-source-health")).toHaveCount(2);
+    await window.getByRole("tab", { name: "全部", exact: true }).click();
+    await expect(window.getByRole("region", { name: "外部 CLI 活动" })).toBeVisible();
+    await window.getByRole("tab", { name: "Stella Tasks", exact: true }).click();
     expect(await window.evaluate(() => window.location.protocol)).toBe("file:");
 
     await window.evaluate(() => window.stella.modelConfigurationUpsertProvider({
