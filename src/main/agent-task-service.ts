@@ -198,7 +198,7 @@ export class AgentTaskService {
           tasks: current.tasks.map((candidate) => candidate.id === task.id ? queuedTask : candidate),
           comments: [...current.comments, comment],
           agentTasks: [...current.agentTasks.map((candidate) => candidate.id === activeRoot.id ? waitingRoot : candidate), review],
-          activities: [...current.activities, ...activities, this.#activity(task.id, "dispatch", "用户回复已交给 LEAD 继续决策", body, now, review.id)],
+          activities: [...current.activities, ...activities, this.#activity(task.id, "dispatch", `用户回复已交给 ${coordinatorRole(activeRoot)} 继续决策`, body, now, review.id)],
         };
       }
       if (mentions.length === 0) {

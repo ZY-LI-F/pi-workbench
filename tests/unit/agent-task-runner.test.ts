@@ -695,6 +695,7 @@ describe("AgentTaskRunner", () => {
     }));
     await agentTaskService.addComment({ taskId, body: "继续缩小范围执行。", dispatchMentions: false });
     expect(repository.state.agentTasks.find((task) => task.kind === "coordinator-review" && task.status === "queued")).toBeDefined();
+    expect(repository.state.activities.at(-1)?.summary).toBe("用户回复已交给 Squad Leader 继续决策");
   });
 
   it("continues the remaining Squad work when startup recovery finds an interrupted child", async () => {
