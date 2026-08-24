@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Workflow Run 冻结 Profile snapshot，每个 Step 记录实际 backend version 与 session。
 - [ ] Agent step 通过 Backend Interface 运行，human gate 不调用后端。

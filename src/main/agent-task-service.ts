@@ -30,7 +30,7 @@ import {
   type TaskComment,
 } from "../shared/kanban";
 import { snapshotExecutionProfile, type ExecutionProfileSnapshot } from "../shared/execution-profile";
-import { piExecutionSession, type ExecutionSessionReference } from "../shared/execution-session";
+import type { ExecutionSessionReference } from "../shared/execution-session";
 
 export interface TeamLaunchContext extends LaunchTeamTaskInput {
   readonly projectPath: string;
@@ -59,7 +59,8 @@ export interface AgentTaskResult {
   readonly output: string;
   /** Set only when the Coordinator runtime ended without a valid terminating tool result. */
   readonly protocolError?: string;
-  readonly sessionPath?: string;
+  readonly session?: ExecutionSessionReference;
+  readonly backendVersion?: string;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly cost?: number;
@@ -69,6 +70,7 @@ interface AgentTaskResultFields {
   readonly runtimeToken: undefined;
   readonly output: string;
   readonly session?: ExecutionSessionReference;
+  readonly backendVersion?: string;
   readonly inputTokens?: number;
   readonly outputTokens?: number;
   readonly cost?: number;
@@ -629,7 +631,8 @@ export class AgentTaskService {
       const resultFields: AgentTaskResultFields = Object.freeze({
         runtimeToken: undefined,
         output,
-        session: piExecutionSession({ sessionPath: result.sessionPath }),
+        session: result.session,
+        backendVersion: result.backendVersion,
         inputTokens: result.inputTokens,
         outputTokens: result.outputTokens,
         cost: result.cost,
@@ -639,7 +642,7 @@ export class AgentTaskService {
         id: this.#id(), taskId: task.id, author: "agent", authorAgentId: agentTask.agentSnapshot.id,
         messageKind: "execution-report", agentTaskId: agentTask.id, body: output, createdAt: now,
       });
-      const baseActivities = [...current.activities, this.#activity(task.id, "artifact", `${agentTask.agentSnapshot.name}已产出结果`, result.sessionPath, now, agentTask.id)];
+      const baseActivities = [...current.activities, this.#activity(task.id, "artifact", `${agentTask.agentSnapshot.name}已产出结果`, result.session?.sessionPath, now, agentTask.id)];
 
       if (agentTask.kind === "coordinator" || agentTask.kind === "coordinator-review" || agentTask.kind === "squad-leader") {
         const plan = agentTask.executionPlan;

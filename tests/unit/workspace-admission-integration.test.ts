@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import type { PiCommand, PiResponse, RuntimeSignal } from "../../src/shared/contracts";
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type OrchestrationCatalog, type WorkflowDefinition } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
-import { AgentTaskRunner, type AgentTaskRuntime, type AgentTaskRuntimeFactory } from "../../src/main/agent-task-runner";
+import { AgentTaskRunner } from "../../src/main/agent-task-runner";
+import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
+import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime as AgentTaskRuntime, type PiRpcExecutionRuntimeFactory as AgentTaskRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
@@ -98,14 +100,20 @@ describe("shared WorkspaceAdmission integration", () => {
     });
     const runner = new AgentTaskRunner({
       service: agentTaskService,
-      runtimeFactory: agentFactory,
+      backendRegistry: new ExecutionBackendRegistry({
+        backends: [new PiRpcExecutionAdapter({
+          runtimeFactory: agentFactory,
+          globalModel: () => undefined,
+          coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+          skills: READY_AGENT_SKILLS,
+          now,
+        })],
+        now,
+      }),
       admission,
       emitBoardEvent: () => undefined,
-      globalModel: () => undefined,
       resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
-      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
-      skills: READY_AGENT_SKILLS,
     });
 
     await boardService.createTask({

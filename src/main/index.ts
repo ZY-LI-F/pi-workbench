@@ -60,7 +60,9 @@ import {
 } from "../shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../shared/orchestration-catalog";
 import { runtimeModelSelectionFromSession, type RuntimeModelSelection } from "../shared/runtime-model";
-import { AgentTaskRunner, type AgentTaskRuntimeFactory } from "./agent-task-runner";
+import { AgentTaskRunner } from "./agent-task-runner";
+import { ExecutionBackendRegistry } from "./execution-backend-registry";
+import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./execution-adapters/pi-rpc-execution-adapter";
 import { AgentTaskService } from "./agent-task-service";
 import { AgentSkillService } from "./agent-skill-service";
 import { AutopilotService } from "./autopilot-service";
@@ -197,6 +199,7 @@ let agentTaskService: AgentTaskService;
 let agentSkillService: AgentSkillService;
 let piSkillInstaller: PiSkillInstaller;
 let agentTaskRunner: AgentTaskRunner;
+let executionBackendRegistry: ExecutionBackendRegistry;
 let executionReviewService: ExecutionReviewService;
 let squadService: SquadService;
 let autopilotService: AutopilotService;
@@ -279,8 +282,8 @@ const workflowRuntimeFactory: WorkflowRuntimeFactory = Object.freeze({
   }),
 });
 
-const agentTaskRuntimeFactory: AgentTaskRuntimeFactory = Object.freeze({
-  create: (callbacks: Parameters<AgentTaskRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
+const agentTaskRuntimeFactory: PiRpcExecutionRuntimeFactory = Object.freeze({
+  create: (callbacks: Parameters<PiRpcExecutionRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
     executablePath: process.execPath,
     rpcEntryPath,
     spawnProcess: (command, args, options) => spawn(command, [...args], options),
@@ -1370,14 +1373,18 @@ async function initializeTaskCapability(): Promise<void> {
     });
     agentTaskRunner = new AgentTaskRunner({
       service: agentTaskService,
-      runtimeFactory: agentTaskRuntimeFactory,
+      backendRegistry: executionBackendRegistry = new ExecutionBackendRegistry({
+        backends: [new PiRpcExecutionAdapter({
+          runtimeFactory: agentTaskRuntimeFactory,
+          globalModel: () => globalModelSelection,
+          coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
+          skills: agentSkillService,
+        })],
+      }),
       emitBoardEvent: (event) => broadcast("board", event),
       admission: workspaceAdmission,
-      globalModel: () => globalModelSelection,
       resolveProjectTrust,
       resolveProjectPath: canonicalExecutionProjectPath,
-      coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
-      skills: agentSkillService,
     });
     if (currentProject) await boardService.updateProjectTrust(currentProject.cwd, currentProject.trusted);
     agentTaskRunner.start();

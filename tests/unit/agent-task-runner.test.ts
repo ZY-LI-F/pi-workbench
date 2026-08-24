@@ -4,7 +4,9 @@ import type { PiCommand, PiResponse, RuntimeSignal } from "../../src/shared/cont
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type ExecutionTarget } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, LEGACY_SQUAD_LEADER_INSTRUCTIONS } from "../../src/shared/coordinator-protocol";
-import { AgentTaskRunner, type AgentTaskRuntime, type AgentTaskRuntimeFactory } from "../../src/main/agent-task-runner";
+import { AgentTaskRunner } from "../../src/main/agent-task-runner";
+import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
+import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime as AgentTaskRuntime, type PiRpcExecutionRuntimeFactory as AgentTaskRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
@@ -75,6 +77,22 @@ function idFactory(): () => string {
   return () => `id-${String(++value).padStart(3, "0")}`;
 }
 
+function backendRegistry(
+  runtimeFactory: AgentTaskRuntimeFactory,
+  globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
+): ExecutionBackendRegistry {
+  return new ExecutionBackendRegistry({
+    backends: [new PiRpcExecutionAdapter({
+      runtimeFactory,
+      globalModel,
+      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+      skills: READY_AGENT_SKILLS,
+      now: () => "2026-07-18T00:00:00.000Z",
+    })],
+    now: () => "2026-07-18T00:00:00.000Z",
+  });
+}
+
 async function setup(
   runtimeFactory = new FakeAgentRuntimeFactory(),
   globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined = () => undefined,
@@ -92,14 +110,11 @@ async function setup(
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
   const runner = new AgentTaskRunner({
     service: agentTaskService,
-    runtimeFactory,
+    backendRegistry: backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
     admission,
-    globalModel,
     resolveProjectTrust,
     resolveProjectPath,
-    coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
-    skills: READY_AGENT_SKILLS,
   });
 
   const createTask = async (title: string, executionTarget: ExecutionTarget = { kind: "agent", agentId: "builder" }) => {
@@ -737,14 +752,11 @@ describe("AgentTaskRunner", () => {
     ]);
     const recoveredRunner = new AgentTaskRunner({
       service: agentTaskService,
-      runtimeFactory: recoveredFactory,
+      backendRegistry: backendRegistry(recoveredFactory),
       emitBoardEvent: () => undefined,
       admission: new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") }),
-      globalModel: () => undefined,
       resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
-      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
-      skills: READY_AGENT_SKILLS,
     });
     recoveredRunner.start();
     await vi.waitFor(() => expect(recoveredFactory.runtimes).toHaveLength(1));

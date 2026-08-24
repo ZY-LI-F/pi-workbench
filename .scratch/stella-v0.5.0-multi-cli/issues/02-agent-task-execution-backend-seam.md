@@ -4,10 +4,10 @@
 
 **Blocked by:** 01 — 建立 Board v8 与 Pi Profile 基线。
 
-**Status:** IN PROGRESS
+**Status:** DONE
 
-- [ ] Backend Interface、Registry、Profile snapshot 与 Fake Adapter 形成稳定契约。
-- [ ] Pi Adapter 完整封装现有 RPC、Skill 预检、结构化 Coordinator 和统计读取。
-- [ ] Runner 不再解析 Pi RPC 细节，只消费统一事件和结果。
-- [ ] runtimeToken、workspace lease、中止、shutdown 与迟到事件语义无回归。
-- [ ] 所有 AgentTask kind 的 Pi 路径和 contract tests 通过。
+- [x] Backend Interface、Registry、Profile snapshot 与 Fake Adapter 形成稳定契约。
+- [x] Pi Adapter 完整封装现有 RPC、Skill 预检、结构化 Coordinator 和统计读取。
+- [x] Runner 不再解析 Pi RPC 细节，只消费统一事件和结果。
+- [x] runtimeToken、workspace lease、中止、shutdown 与迟到事件语义无回归。
+- [x] 所有 AgentTask kind 的 Pi 路径和 contract tests 通过。
