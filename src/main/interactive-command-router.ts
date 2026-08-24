@@ -31,6 +31,7 @@ export class InteractiveCommandRouter {
   readonly #id: () => string;
   #active?: InteractiveLeaseState;
   #compacting = false;
+  #runtimeMaintenance = false;
 
   constructor(dependencies: InteractiveCommandRouterDependencies) {
     this.#runtime = dependencies.runtime;
@@ -39,10 +40,26 @@ export class InteractiveCommandRouter {
   }
 
   async send(command: PiCommand, workspacePath: string): Promise<PiResponse> {
+    if (this.#runtimeMaintenance) {
+      throw new Error("Pi Runtime 正在重载模型配置；请等待重载完成后再发送命令");
+    }
     if (TURN_COMMANDS.has(command.type)) return this.#sendTurn(command, workspacePath);
     if (command.type === "bash") return this.#sendBash(command, workspacePath);
     if (command.type === "compact") return this.#sendCompaction(command);
     return this.#runtime.send(command);
+  }
+
+  async runRuntimeMaintenance<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.#runtimeMaintenance) throw new Error("Pi Runtime 模型配置重载已在进行中");
+    if (this.#active || this.#compacting) {
+      throw new Error("Pi 正在生成、压缩上下文或处理队列消息；请等待当前操作完成后再修改模型配置");
+    }
+    this.#runtimeMaintenance = true;
+    try {
+      return await operation();
+    } finally {
+      this.#runtimeMaintenance = false;
+    }
   }
 
   handlePiEvent(event: unknown): void {
@@ -71,6 +88,10 @@ export class InteractiveCommandRouter {
         kind: "interactive",
         label: "Interactive Pi",
       });
+      if (this.#runtimeMaintenance) {
+        lease.release();
+        throw new Error("Pi Runtime 正在重载模型配置；请等待重载完成后再发送命令");
+      }
       this.#active = Object.freeze({ workspacePath, lease });
     }
     try {
@@ -89,6 +110,9 @@ export class InteractiveCommandRouter {
       label: "Interactive Pi Bash",
     });
     try {
+      if (this.#runtimeMaintenance) {
+        throw new Error("Pi Runtime 正在重载模型配置；请等待重载完成后再发送命令");
+      }
       return await this.#runtime.send(command);
     } finally {
       lease.release();

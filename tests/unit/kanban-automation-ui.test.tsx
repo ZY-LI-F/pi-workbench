@@ -51,6 +51,8 @@ const WEBHOOK_AUTOPILOT: Autopilot = Object.freeze({
 
 const BUILDER = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
 if (!BUILDER) throw new Error("测试目录缺少 builder");
+const PLANNER = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "planner");
+if (!PLANNER) throw new Error("测试目录缺少 planner");
 const REPORTED_AGENT_TASK: AgentTask = Object.freeze({
   id: "agent-reported",
   taskId: TASK.id,
@@ -252,6 +254,64 @@ describe("Kanban automation interactions", () => {
 
     await user.click(screen.getByRole("button", { name: "发送评论" }));
     await waitFor(() => expect(onAddComment).toHaveBeenCalledWith("@builder 实现后交给 @VERIFY 验证"));
+  });
+
+  it("labels a waiting legacy Squad coordinator as Squad Leader when previewing its resume", async () => {
+    const user = userEvent.setup();
+    const waitingTask = Object.freeze({ ...TASK, stage: "review" as const, activeAgentTaskId: "legacy-squad-root" });
+    const waitingRoot: AgentTask = Object.freeze({
+      id: "legacy-squad-root",
+      taskId: TASK.id,
+      executionAttempt: 1,
+      taskSpec: Object.freeze({ revision: 1, title: TASK.title, description: TASK.description, acceptanceCriteria: TASK.acceptanceCriteria, priority: TASK.priority, executionTarget: TASK.executionTarget }),
+      agentSnapshot: PLANNER,
+      kind: "squad-leader",
+      status: "waiting_human",
+      acceptance: "not-ready",
+      prompt: "等待用户决定",
+      squadId: "legacy-squad",
+      executionPlan: Object.freeze({
+        kind: "squad",
+        squadId: "legacy-squad",
+        squadVersion: 1,
+        squadName: "兼容小队",
+        leaderInstructions: "通过结构化行动协调",
+        delegates: Object.freeze([BUILDER]),
+      }),
+      createdAt: "2026-07-18T00:00:00.000Z",
+      updatedAt: "2026-07-18T00:01:00.000Z",
+      startedAt: "2026-07-18T00:00:00.000Z",
+    });
+
+    render(
+      <TaskDetailPanel
+        task={waitingTask}
+        catalog={BUILTIN_ORCHESTRATION_CATALOG}
+        squads={[]}
+        runs={[]}
+        agentTasks={[waitingRoot]}
+        comments={[]}
+        activities={[]}
+        busy={false}
+        executionEnabled={true}
+        onClose={() => undefined}
+        onEdit={() => undefined}
+        onDispatch={async () => undefined}
+        onAbort={async () => undefined}
+        onDelete={async () => undefined}
+        onAddComment={async () => undefined}
+        onMove={async () => undefined}
+        onResolveGate={async () => undefined}
+        onReviewExecution={async () => undefined}
+        onRevealPath={() => undefined}
+        onContinueInPi={async () => undefined}
+      />,
+    );
+
+    const composer = screen.getByPlaceholderText("回复 Squad Leader 的问题；提交后自动进入下一决策回合…");
+    await user.type(composer, "按缩小范围继续。");
+    expect(screen.getByRole("status").textContent).toContain("提交后将唤醒 Squad Leader");
+    expect(screen.getByRole("status").textContent).not.toContain("@lead");
   });
 
   it("opens the Agent roster for a Chinese @ query and inserts the stable callsign", async () => {

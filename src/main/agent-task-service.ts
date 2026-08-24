@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { BoardRepository } from "./board-repository";
 import { availableMentionAgentsForTask, parseAgentMentions } from "../shared/agent-mentions";
-import { coordinatorActionMessage, normalizeSquadLeaderInstructions, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
+import { coordinatorActionMessage, isCoordinatorRootAgentTask, normalizeSquadLeaderInstructions, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import { applyTaskLifecycle } from "../shared/task-lifecycle";
 import {
@@ -123,10 +123,6 @@ function normalizedRequired(value: unknown, label: string): string {
   return normalized;
 }
 
-function isCoordinatorRoot(agentTask: AgentTask): boolean {
-  return agentTask.kind === "coordinator" || agentTask.kind === "squad-leader";
-}
-
 function agentTaskRound(agentTask: AgentTask): number {
   return agentTask.delegationRound ?? 1;
 }
@@ -172,7 +168,7 @@ export class AgentTaskService {
     const previewAgents = dispatchMentions ? availableMentionAgentsForTask(previewTask, this.#catalogFor(preview), preview.squads) : Object.freeze([]);
     const previewMentions = dispatchMentions ? parseAgentMentions(body, previewAgents).agents : Object.freeze([]);
     const previewRoot = previewTask.activeAgentTaskId ? preview.agentTasks.find((candidate) => candidate.id === previewTask.activeAgentTaskId) : undefined;
-    const previewResumesCoordinator = previewMentions.length === 0 && previewRoot !== undefined && isCoordinatorRoot(previewRoot) && previewRoot.status === "waiting_human";
+    const previewResumesCoordinator = previewMentions.length === 0 && previewRoot !== undefined && isCoordinatorRootAgentTask(previewRoot) && previewRoot.status === "waiting_human";
     if (previewMentions.length > 0 || previewResumesCoordinator) this.#assertExecutionAvailable();
     await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
     const now = this.#now();
@@ -181,7 +177,7 @@ export class AgentTaskService {
       const availableAgents = dispatchMentions ? availableMentionAgentsForTask(task, this.#catalogFor(current), current.squads) : Object.freeze([]);
       const mentions = dispatchMentions ? parseAgentMentions(body, availableAgents).agents : Object.freeze([]);
       const activeRoot = task.activeAgentTaskId ? this.#agentTask(current, task.activeAgentTaskId) : undefined;
-      const resumingCoordinator = mentions.length === 0 && activeRoot !== undefined && isCoordinatorRoot(activeRoot) && activeRoot.status === "waiting_human";
+      const resumingCoordinator = mentions.length === 0 && activeRoot !== undefined && isCoordinatorRootAgentTask(activeRoot) && activeRoot.status === "waiting_human";
       if (mentions.length > 0 || resumingCoordinator) this.#assertExecutionAvailable();
       if (mentions.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         throw new Error("任务正在执行；请先中止或等待完成后再使用 @mention 分发");
@@ -550,7 +546,7 @@ export class AgentTaskService {
     const failedStatus = (candidate: AgentTask): boolean => candidate.status === "failed" || candidate.status === "interrupted" || candidate.status === "cancelled" || candidate.status === "protocol-invalid";
     const waitingParents = current.agentTasks.filter((candidate) => candidate.status === "waiting_children");
     const recoverableParents = waitingParents.filter((parent) => {
-      if (!isCoordinatorRoot(parent)) return false;
+      if (!isCoordinatorRootAgentTask(parent)) return false;
       const delegated = current.agentTasks.filter((child) => child.parentAgentTaskId === parent.id && child.kind === "delegated");
       if (delegated.length === 0) return false;
       const latestRound = Math.max(...delegated.map(agentTaskRound));
@@ -562,7 +558,7 @@ export class AgentTaskService {
     });
     const brokenParents = waitingParents.filter((parent) => {
       const children = current.agentTasks.filter((child) => child.parentAgentTaskId === parent.id);
-      if (!isCoordinatorRoot(parent)) return children.some(failedStatus);
+      if (!isCoordinatorRootAgentTask(parent)) return children.some(failedStatus);
       return children.some((child) => child.kind === "coordinator-review" && failedStatus(child));
     });
     if (recoverableParents.length === 0 && brokenParents.length === 0) return undefined;
@@ -572,7 +568,7 @@ export class AgentTaskService {
       const reviews = recoverableParents.flatMap((snapshot) => {
         const parent = state.agentTasks.find((candidate) => candidate.id === snapshot.id);
         const task = state.tasks.find((candidate) => candidate.id === snapshot.taskId);
-        if (!parent || !task || parent.status !== "waiting_children" || !isCoordinatorRoot(parent)) return [];
+        if (!parent || !task || parent.status !== "waiting_children" || !isCoordinatorRootAgentTask(parent)) return [];
         const delegated = state.agentTasks.filter((child) => child.parentAgentTaskId === parent.id && child.kind === "delegated");
         if (delegated.length === 0) return [];
         const latestRound = Math.max(...delegated.map(agentTaskRound));
@@ -680,7 +676,7 @@ export class AgentTaskService {
       if (agentTask.kind === "delegated") {
         const parent = this.#agentTask(current, agentTask.parentAgentTaskId ?? "");
         if (parent.status !== "waiting_children") throw new Error(`父 AgentTask ${parent.id} 未在等待子任务`);
-        if (isCoordinatorRoot(parent)) {
+        if (isCoordinatorRootAgentTask(parent)) {
           const round = agentTaskRound(agentTask);
           const workers = current.agentTasks
             .filter((candidate) => candidate.parentAgentTaskId === parent.id
@@ -937,7 +933,7 @@ export class AgentTaskService {
   ): BoardState | undefined {
     if (agentTask.kind !== "delegated" || !agentTask.parentAgentTaskId) return undefined;
     const parent = state.agentTasks.find((candidate) => candidate.id === agentTask.parentAgentTaskId);
-    if (!parent || !isCoordinatorRoot(parent) || parent.status !== "waiting_children" || task.activeAgentTaskId !== parent.id) return undefined;
+    if (!parent || !isCoordinatorRootAgentTask(parent) || parent.status !== "waiting_children" || task.activeAgentTaskId !== parent.id) return undefined;
 
     const failed: AgentTask = Object.freeze({
       ...agentTask,
@@ -1017,8 +1013,8 @@ export class AgentTaskService {
     activities: readonly TaskActivity[],
     now: string,
   ): BoardState {
-    const root = isCoordinatorRoot(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
-    if (!isCoordinatorRoot(root)) throw new Error(`Coordinator review ${attempt.id} 的父任务不是 Coordinator`);
+    const root = isCoordinatorRootAgentTask(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
+    if (!isCoordinatorRootAgentTask(root)) throw new Error(`Coordinator review ${attempt.id} 的父任务不是 Coordinator`);
     const completedAttempt: AgentTask | undefined = attempt.id === root.id ? undefined : Object.freeze({
       ...attempt,
       ...resultFields,
@@ -1116,7 +1112,7 @@ export class AgentTaskService {
     cause: unknown,
     now: string,
   ): BoardState {
-    const root = isCoordinatorRoot(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
+    const root = isCoordinatorRootAgentTask(attempt) ? attempt : this.#agentTask(state, attempt.parentAgentTaskId ?? "");
     const validationError = cause instanceof Error ? cause.message : String(cause);
     const message = `${coordinatorRole(root)} 协议无效：${validationError}`;
     const groupIds = this.#agentTaskGroupIds(state, root.id);
@@ -1276,7 +1272,7 @@ export class AgentTaskService {
     const delegates = plan?.delegates.map((agent) => `- ${agent.id} / @${agent.callsign}：${agent.responsibility}；workspace=${agent.workspaceAccess}`).join("\n");
     return [
       "# Stella Coordinator 验收回合", "", `任务：${task.title}`,
-      ...(plan?.kind === "squad" ? ["", "## Squad 范围", `Squad：${plan.squadName}`, `Leader 固定指令：${plan.leaderInstructions}`] : []),
+      ...(plan?.kind === "squad" ? ["", "## Squad 范围", `Squad：${plan.squadName}`, `Leader 固定指令：${normalizeSquadLeaderInstructions(plan.leaderInstructions)}`] : []),
       "", "## 任务验收标准", task.acceptanceCriteria || "（未提供补充标准）",
       "", "## 成员真实报告与失败", reports.join("\n\n") || "（本回合没有成员报告）",
       ...(reply ? ["", "## 用户刚刚的回复", reply] : []),
@@ -1319,7 +1315,7 @@ export class AgentTaskService {
       "# Stella Squad Coordinator 回合", "", `Squad：${plan.squadName}`, `Leader：${leader.name}`, `任务：${task.title}`,
       "", "## 任务说明", task.description || "（未提供补充说明）", "", "## 验收标准",
       task.acceptanceCriteria || "（未提供补充标准）", "", "## 任务讨论", discussion || "（暂无评论）",
-      "", "## 可委派成员（严格限定）", memberList || "（没有可委派成员；只能 complete 或 ask_human）", "", "## Leader 指令", plan.leaderInstructions,
+      "", "## 可委派成员（严格限定）", memberList || "（没有可委派成员；只能 complete 或 ask_human）", "", "## Leader 指令", normalizeSquadLeaderInstructions(plan.leaderInstructions),
       "", "## Leader 角色固定指令", leader.instructions,
       "", "## 严格行动协议", ...coordinatorProtocolInstructions(),
     ].join("\n");

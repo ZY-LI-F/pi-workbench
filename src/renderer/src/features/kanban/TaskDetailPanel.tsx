@@ -26,6 +26,7 @@ import { availableMentionAgentsForTask, parseAgentMentions } from "@shared/agent
 import type { AgentMentionQuery } from "@shared/agent-mentions";
 import type { AgentPresence } from "@shared/agent-presence";
 import type { AgentTaskQueueEntry } from "@shared/agent-task-scheduler";
+import { isCoordinatorRootAgentTask } from "@shared/coordinator-protocol";
 import { manualMoveStagesForTask } from "@shared/kanban";
 import type {
   AgentTask,
@@ -82,12 +83,8 @@ interface TaskDetailPanelProps {
 interface MentionPreview {
   readonly agents: readonly { readonly id: string; readonly name: string; readonly callsign: string }[];
   readonly coordinator?: boolean;
-  readonly resumesLead?: boolean;
+  readonly resumesCoordinator?: boolean;
   readonly error?: string;
-}
-
-function isCoordinatorRoot(agentTask: AgentTask | undefined): boolean {
-  return agentTask?.kind === "coordinator" || agentTask?.kind === "squad-leader";
 }
 
 function timelineIcon(kind: TaskTimelineKind) {
@@ -184,7 +181,8 @@ export function TaskDetailPanel({
         : squads.find((squad) => squad.id === executionTarget.squadId)?.name ?? executionTarget.squadId;
   const isRedispatch = task.stage === "blocked";
   const activeAgentTask = agentTasks.find((candidate) => candidate.id === task.activeAgentTaskId);
-  const waitingCoordinator = isCoordinatorRoot(activeAgentTask) && activeAgentTask?.status === "waiting_human";
+  const waitingCoordinator = isCoordinatorRootAgentTask(activeAgentTask) && activeAgentTask?.status === "waiting_human";
+  const waitingCoordinatorLabel = activeAgentTask?.executionPlan?.kind === "squad" ? "Squad Leader" : "LEAD";
   const mentionAgents = useMemo(() => mentionsEnabled ? availableMentionAgentsForTask(task, catalog, squads) : Object.freeze([]), [catalog, mentionsEnabled, squads, task]);
   const mentionsDisabledReason = !mentionsEnabled
     ? "开启团队功能后可在任务记录中 @Agent 分发工作"
@@ -192,7 +190,7 @@ export function TaskDetailPanel({
       ? "Pi Runtime 不可用；仍可记录普通消息，但暂时不能创建 AgentTask"
     : task.activeRunId || task.activeAgentTaskId
     ? waitingCoordinator
-      ? "LEAD 正在等待你的普通回复；当前不能并行创建新的 mention"
+      ? `${waitingCoordinatorLabel} 正在等待你的普通回复；当前不能并行创建新的 mention`
       : "任务正在执行；请先中止或等待完成后再使用 @mention 分发"
     : task.stage === "completed"
       ? "已完成任务需先移回待规划列才能使用 @mention 分发"
@@ -218,8 +216,8 @@ export function TaskDetailPanel({
     if (!commentBody.trim()) return Object.freeze({ agents: Object.freeze([]) });
     if (!mentionsEnabled) {
       if (!waitingCoordinator) return Object.freeze({ agents: Object.freeze([]) });
-      if (!executionEnabled) return Object.freeze({ agents: Object.freeze([]), error: "Pi Runtime 不可用，当前无法唤醒等待中的 LEAD" });
-      return Object.freeze({ agents: Object.freeze([]), resumesLead: true });
+      if (!executionEnabled) return Object.freeze({ agents: Object.freeze([]), error: `Pi Runtime 不可用，当前无法唤醒等待中的 ${waitingCoordinatorLabel}` });
+      return Object.freeze({ agents: Object.freeze([]), resumesCoordinator: true });
     }
     try {
       const previewBody = activeMentionQuery
@@ -227,9 +225,9 @@ export function TaskDetailPanel({
         : commentBody;
       const agents = parseAgentMentions(previewBody, mentionAgents).agents.map((agent) => Object.freeze({ id: agent.id, name: agent.name, callsign: agent.callsign }));
       if (!executionEnabled && (agents.length > 0 || waitingCoordinator)) {
-        return Object.freeze({ agents: Object.freeze(agents), error: "Pi Runtime 不可用；普通记录仍可提交，但 Agent 分发和 LEAD 恢复已暂停" });
+        return Object.freeze({ agents: Object.freeze(agents), error: `Pi Runtime 不可用；普通记录仍可提交，但 Agent 分发和 ${waitingCoordinatorLabel} 恢复已暂停` });
       }
-      if (agents.length === 0 && waitingCoordinator) return Object.freeze({ agents: Object.freeze([]), resumesLead: true });
+      if (agents.length === 0 && waitingCoordinator) return Object.freeze({ agents: Object.freeze([]), resumesCoordinator: true });
       if (agents.length > 0 && (task.activeRunId || task.activeAgentTaskId)) {
         return Object.freeze({ agents: Object.freeze(agents), error: "任务正在执行；请先中止或等待完成后再使用 @mention 分发" });
       }
@@ -248,7 +246,7 @@ export function TaskDetailPanel({
     } catch (cause) {
       return Object.freeze({ agents: Object.freeze([]), error: cause instanceof Error ? cause.message : String(cause) });
     }
-  }, [activeMentionQuery, commentBody, executionEnabled, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator]);
+  }, [activeMentionQuery, commentBody, executionEnabled, mentionAgents, mentionsEnabled, task.activeAgentTaskId, task.activeRunId, task.stage, waitingCoordinator, waitingCoordinatorLabel]);
 
   useEffect(() => {
     setCommentBody("");
@@ -414,7 +412,7 @@ export function TaskDetailPanel({
               mentionsDisabled={Boolean(mentionsDisabledReason)}
               mentionsDisabledReason={mentionsDisabledReason}
               rows={3}
-              placeholder={waitingCoordinator ? "回复 LEAD 的问题；提交后自动进入下一决策回合…" : !mentionsEnabled ? "记录进展、决定或阻塞…" : isManual ? "记录进展、决定或阻塞；需要协助时可输入 @ 选择 Agent…" : "补充上下文；输入 @ 选择 Agent，或直接发送普通消息…"}
+              placeholder={waitingCoordinator ? `回复 ${waitingCoordinatorLabel} 的问题；提交后自动进入下一决策回合…` : !mentionsEnabled ? "记录进展、决定或阻塞…" : isManual ? "记录进展、决定或阻塞；需要协助时可输入 @ 选择 Agent…" : "补充上下文；输入 @ 选择 Agent，或直接发送普通消息…"}
               onChange={setCommentBody}
               onQueryChange={setActiveMentionQuery}
               onRequestError={setError}
@@ -423,8 +421,8 @@ export function TaskDetailPanel({
               <div className={`mention-impact ${mentionPreview.error ? "is-error" : mentionPreview.agents.length > 0 ? "is-dispatch" : "is-comment"}`} role={mentionPreview.error ? "alert" : "status"}>
                 {mentionPreview.error
                   ? <><XCircle size={13} /><span>{mentionPreview.error}</span></>
-                  : mentionPreview.resumesLead
-                    ? <><GitBranch size={13} /><span>提交后将唤醒 @lead，创建新的 Coordinator 验收回合。</span></>
+                  : mentionPreview.resumesCoordinator
+                    ? <><GitBranch size={13} /><span>提交后将唤醒 {waitingCoordinatorLabel}，创建新的 Coordinator 验收回合。</span></>
                     : mentionPreview.agents.length > 0
                     ? <><GitBranch size={13} /><span>{mentionPreview.coordinator ? "提交后将创建 1 个 Coordinator AgentTask" : `提交后将创建 ${mentionPreview.agents.length} 个 AgentTask`}：{mentionPreview.agents.map((agent) => `${agent.name} (@${agent.callsign})`).join(" → ")}</span></>
                     : <><MessageCircle size={13} /><span>提交后仅追加用户消息，不创建 AgentTask。</span></>}

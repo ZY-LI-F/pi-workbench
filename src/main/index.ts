@@ -1168,17 +1168,20 @@ async function chooseInstallAndReloadPiSkill(event: IpcMainInvokeEvent, scopeVal
 }
 
 async function mutateModelConfiguration(mutation: () => Promise<void>) {
-  return executeModelConfigurationTransaction(
-    {
-      createCheckpoint: () => modelConfigurationService.createCheckpoint(),
-      restoreCheckpoint: (checkpoint, expectedCurrent) =>
-        modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
-      captureSession: captureCurrentSession,
-      restartRuntime: restartRuntimeAfterModelConfigurationChange,
-      snapshot: () => modelConfigurationService.snapshot(),
-    },
-    mutation,
-  );
+  if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
+  return interactiveCommandRouter.runRuntimeMaintenance(() => (
+    executeModelConfigurationTransaction(
+      {
+        createCheckpoint: () => modelConfigurationService.createCheckpoint(),
+        restoreCheckpoint: (checkpoint, expectedCurrent) =>
+          modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
+        captureSession: captureCurrentSession,
+        restartRuntime: restartRuntimeAfterModelConfigurationChange,
+        snapshot: () => modelConfigurationService.snapshot(),
+      },
+      mutation,
+    )
+  ));
 }
 
 function allowedRevealRoots(): readonly string[] {

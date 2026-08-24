@@ -84,4 +84,25 @@ describe("executeModelConfigurationTransaction", () => {
     expect(restoreCheckpoint).toHaveBeenCalledWith(BEFORE, APPLIED);
     expect(restartRuntime).toHaveBeenCalledWith({ sessionId: "unsaved-session" });
   });
+
+  it("recovers the previous Runtime when an unchanged configuration fails to activate", async () => {
+    const restartRuntime = vi.fn()
+      .mockRejectedValueOnce(new Error("activation failed after stop"))
+      .mockResolvedValueOnce(undefined);
+    const restoreCheckpoint = vi.fn(async () => undefined);
+
+    await expect(executeModelConfigurationTransaction({
+      createCheckpoint: vi.fn()
+        .mockResolvedValueOnce(BEFORE)
+        .mockResolvedValueOnce(BEFORE),
+      restoreCheckpoint,
+      captureSession: vi.fn(async () => ({ sessionId: "same-config-session" })),
+      restartRuntime,
+      snapshot: vi.fn(async () => ({ providers: 2 })),
+    }, vi.fn(async () => undefined))).rejects.toThrow("旧 Pi Runtime 已恢复");
+
+    expect(restoreCheckpoint).not.toHaveBeenCalled();
+    expect(restartRuntime).toHaveBeenCalledTimes(2);
+    expect(restartRuntime).toHaveBeenNthCalledWith(2, { sessionId: "same-config-session" });
+  });
 });

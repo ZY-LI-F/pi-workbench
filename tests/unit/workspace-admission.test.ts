@@ -138,4 +138,22 @@ describe("InteractiveCommandRouter", () => {
     finishCompaction?.({ id: "compact", type: "response", command: "compact", success: true, data: {} });
     await expect(first).resolves.toMatchObject({ command: "compact", success: true });
   });
+
+  it("keeps new Interactive commands out for the full model configuration reload window", async () => {
+    let releaseMaintenance: (() => void) | undefined;
+    const maintenance = new Promise<void>((resolve) => { releaseMaintenance = resolve; });
+    const admission = new WorkspaceAdmission({ canonicalize });
+    const runtime = { send: vi.fn(async (command: PiCommand): Promise<PiResponse> => ({ id: "1", type: "response", command: command.type, success: true })) };
+    const router = new InteractiveCommandRouter({ runtime, admission });
+
+    const reloading = router.runRuntimeMaintenance(() => maintenance);
+    await expect(router.send({ type: "prompt", message: "late turn" }, "C:/repo")).rejects.toThrow("正在重载模型配置");
+    await expect(router.send({ type: "compact" }, "C:/repo")).rejects.toThrow("正在重载模型配置");
+    await expect(router.runRuntimeMaintenance(async () => undefined)).rejects.toThrow("重载已在进行中");
+    expect(runtime.send).not.toHaveBeenCalled();
+
+    releaseMaintenance?.();
+    await reloading;
+    await expect(router.send({ type: "prompt", message: "after reload" }, "C:/repo")).resolves.toMatchObject({ command: "prompt" });
+  });
 });

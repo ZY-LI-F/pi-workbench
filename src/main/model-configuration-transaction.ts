@@ -60,7 +60,19 @@ export async function executeModelConfigurationTransaction<TSnapshot>(
     }
 
     if (sameCheckpoint(checkpoint, currentCheckpoint)) {
-      throw new Error(`模型配置未生效：${errorMessage(transactionCause)}`, { cause: transactionCause });
+      if (phase === "activation") {
+        try {
+          await dependencies.restartRuntime(session);
+        } catch (recoveryCause) {
+          throw new AggregateError(
+            [transactionCause, recoveryCause],
+            `模型配置未变化，但旧 Pi Runtime 恢复失败：${errorMessage(recoveryCause)}`,
+          );
+        }
+        throw new Error(`模型配置加载失败；配置未变化，旧 Pi Runtime 已恢复：${errorMessage(transactionCause)}`, { cause: transactionCause });
+      }
+      const label = phase === "snapshot" ? "刷新" : "保存";
+      throw new Error(`模型配置${label}失败，配置未变化：${errorMessage(transactionCause)}`, { cause: transactionCause });
     }
 
     try {

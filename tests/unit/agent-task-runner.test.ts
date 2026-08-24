@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PiCommand, PiResponse, RuntimeSignal } from "../../src/shared/contracts";
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type ExecutionTarget } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
+import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, LEGACY_SQUAD_LEADER_INSTRUCTIONS } from "../../src/shared/coordinator-protocol";
 import { AgentTaskRunner, type AgentTaskRuntime, type AgentTaskRuntimeFactory } from "../../src/main/agent-task-runner";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
@@ -628,7 +629,14 @@ describe("AgentTaskRunner", () => {
     await repository.update((current) => ({
       ...current,
       agentTasks: current.agentTasks.map((task) => task.id === root.id
-        ? Object.freeze({ ...task, kind: "squad-leader" as const, prompt: "旧版：最终文本使用 @mention 委派" })
+        ? Object.freeze({
+            ...task,
+            kind: "squad-leader" as const,
+            prompt: "旧版：最终文本使用 @mention 委派",
+            executionPlan: task.executionPlan?.kind === "squad"
+              ? Object.freeze({ ...task.executionPlan, leaderInstructions: LEGACY_SQUAD_LEADER_INSTRUCTIONS })
+              : task.executionPlan,
+          })
         : task),
     }));
 
@@ -636,6 +644,8 @@ describe("AgentTaskRunner", () => {
 
     expect(claimed?.agentTask).toMatchObject({ kind: "squad-leader", status: "running" });
     expect(claimed?.agentTask.prompt).toContain("严格行动协议");
+    expect(claimed?.agentTask.prompt).toContain(DEFAULT_SQUAD_LEADER_INSTRUCTIONS);
+    expect(claimed?.agentTask.prompt).not.toContain(LEGACY_SQUAD_LEADER_INSTRUCTIONS);
     expect(claimed?.agentTask.prompt).not.toContain("最终文本使用 @mention 委派");
   });
 
