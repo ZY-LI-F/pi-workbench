@@ -88,11 +88,11 @@ export class CliBackendProbe {
       stdout: "json",
       timeoutMs: 10_000,
     }, { onJson: (value) => { payload = value; } });
-    if (result.exitCode !== 0) throw new Error(compactFailure(result.stdoutTail, result.stderrTail, "claude auth status 失败"));
-    if (typeof payload !== "object" || payload === null || Array.isArray(payload) || typeof (payload as Record<string, unknown>).loggedIn !== "boolean") {
-      throw new Error("claude auth status --json 未返回 loggedIn");
+    if (typeof payload === "object" && payload !== null && !Array.isArray(payload) && typeof (payload as Record<string, unknown>).loggedIn === "boolean") {
+      return (payload as Record<string, unknown>).loggedIn ? "ready" : "required";
     }
-    return (payload as Record<string, unknown>).loggedIn ? "ready" : "required";
+    if (result.exitCode !== 0) throw new Error(compactFailure(result.stdoutTail, result.stderrTail, "claude auth status 失败"));
+    throw new Error("claude auth status --json 未返回 loggedIn");
   }
 
   #health(

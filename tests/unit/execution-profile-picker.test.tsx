@@ -59,4 +59,40 @@ describe("ExecutionProfilePicker", () => {
     await user.click(screen.getByRole("radio", { name: /Codex Review/ }));
     expect(onChange).toHaveBeenCalledWith("codex.review");
   });
+
+  it("makes Claude selectable when its probe is healthy and the Agent has no Pi Skill dependency", () => {
+    const snapshot: ExecutionBackendCatalogSnapshot = Object.freeze({
+      health: Object.freeze(SNAPSHOT.health.map((health) => health.backendId === "claude"
+        ? Object.freeze({ backendId: "claude" as const, state: "ready" as const, authState: "ready" as const, version: "2.1.220", updatedAt: NOW })
+        : health)),
+      profiles: Object.freeze(SNAPSHOT.profiles.map((availability) => availability.profile.id === "claude.print"
+        ? Object.freeze({ profile: availability.profile, available: true })
+        : availability)),
+    });
+    const options = executionProfileOptions({
+      target: { kind: "agent", agentId: "builder" },
+      agents: [agent("builder")],
+      gitRepository: true,
+      snapshot,
+      piExecutionEnabled: true,
+    });
+
+    expect(options.find((option) => option.id === "claude.print")).toMatchObject({ selectable: true, version: "2.1.220" });
+    const skillBoundAgent = Object.freeze({
+      ...agent("builder"),
+      requiredSkills: Object.freeze(["project-specific-skill"]),
+      disableSkills: false,
+    });
+    const incompatible = executionProfileOptions({
+      target: { kind: "agent", agentId: skillBoundAgent.id },
+      agents: [skillBoundAgent],
+      gitRepository: true,
+      snapshot,
+      piExecutionEnabled: true,
+    });
+    expect(incompatible.find((option) => option.id === "claude.print")).toMatchObject({
+      selectable: false,
+      reason: "Claude CLI 不支持依赖 Pi Skills 的 Agent",
+    });
+  });
 });

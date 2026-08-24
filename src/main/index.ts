@@ -63,8 +63,8 @@ import { runtimeModelSelectionFromSession, type RuntimeModelSelection } from "..
 import { AgentTaskRunner } from "./agent-task-runner";
 import { ExecutionBackendRegistry } from "./execution-backend-registry";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./execution-adapters/pi-rpc-execution-adapter";
-import { CliProbeExecutionAdapter } from "./execution-adapters/cli-probe-execution-adapter";
 import { CodexExecExecutionAdapter } from "./execution-adapters/codex-exec-execution-adapter";
+import { ClaudePrintExecutionAdapter } from "./execution-adapters/claude-print-execution-adapter";
 import { ExecutionBackendSettingsService } from "./execution-backend-settings-service";
 import { AgentTaskService } from "./agent-task-service";
 import { AgentSkillService } from "./agent-skill-service";
@@ -1350,7 +1350,7 @@ async function initializeTaskCapability(): Promise<void> {
           backendVersion: () => piBackendVersion,
         }),
         new CodexExecExecutionAdapter({ copyText: (value) => clipboard.writeText(value) }),
-        new CliProbeExecutionAdapter({ backendId: "claude" }),
+        new ClaudePrintExecutionAdapter({ copyText: (value) => clipboard.writeText(value) }),
       ],
     });
     executionBackendSettingsService = new ExecutionBackendSettingsService({

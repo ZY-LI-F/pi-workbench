@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 — WorkflowOrchestrator 接入 ExecutionBackend；05 — Codex Exec/Review 直接任务；06 — Claude Print 直接任务。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Workflow 编辑/分发只允许所有 Agent step 都兼容的 Profile。
 - [ ] Codex Exec 与 Claude Print step 保存独立 session、version、usage 和 Artifact。

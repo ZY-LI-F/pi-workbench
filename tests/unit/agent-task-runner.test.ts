@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import type { PiCommand, PiResponse, RuntimeSignal } from "../../src/shared/contracts";
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type ExecutionTarget } from "../../src/shared/kanban";
@@ -14,6 +15,8 @@ import {
   type ExecutionRequest,
 } from "../../src/main/execution-backend";
 import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime as AgentTaskRuntime, type PiRpcExecutionRuntimeFactory as AgentTaskRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
+import { ClaudePrintExecutionAdapter } from "../../src/main/execution-adapters/claude-print-execution-adapter";
+import { CliProcess } from "../../src/main/cli-process";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
@@ -21,6 +24,8 @@ import { SquadService } from "../../src/main/squad-service";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 import type { ExecutionBackendHealth, ExecutionProfileId } from "../../src/shared/execution-profile";
+
+const CLI_PROCESS_SHIM = fileURLToPath(new URL("../fixtures/cli-process-shim.mjs", import.meta.url));
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -254,7 +259,7 @@ describe("AgentTaskRunner", () => {
     const { repository, agentTaskService, runner, createTask } = await setup(
       new FakeAgentRuntimeFactory(),
       () => undefined,
-      async (projectPath) => projectPath,
+      async () => process.cwd(),
       async () => true,
       () => undefined,
       registry,
@@ -275,6 +280,48 @@ describe("AgentTaskRunner", () => {
     });
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");
     expect(repository.state.comments.some((comment) => comment.taskId === taskId && comment.author === "agent")).toBe(false);
+  });
+
+  it("runs a Claude stream-json shim end to end through the shared AgentTaskRunner", async () => {
+    const backend = new ClaudePrintExecutionAdapter({ process: new CliProcess({ abortGraceMs: 20 }) });
+    const configuration = Object.freeze({
+      backendId: "claude" as const,
+      executable: process.execPath,
+      prefixArgv: Object.freeze([CLI_PROCESS_SHIM, "claude-print", "success"]),
+      displayPath: "/fake/claude",
+      executableSource: "path" as const,
+    });
+    backend.activate(configuration);
+    const registry = new ExecutionBackendRegistry({
+      backends: [backend],
+      configurations: [configuration],
+      now: () => "2026-07-18T00:00:00.000Z",
+    });
+    const { repository, agentTaskService, runner, createTask } = await setup(
+      new FakeAgentRuntimeFactory(),
+      () => undefined,
+      async () => process.cwd(),
+      async () => true,
+      () => undefined,
+      registry,
+    );
+    const taskId = await createTask("Claude Runner 集成", { kind: "agent", agentId: "builder" }, "claude.print");
+    await agentTaskService.dispatchDirect(taskId);
+
+    runner.start();
+
+    await vi.waitFor(() => expect(repository.state.agentTasks.find((task) => task.taskId === taskId)?.status).toBe("reported"));
+    expect(repository.state.agentTasks.find((task) => task.taskId === taskId)).toMatchObject({
+      status: "reported",
+      output: expect.stringContaining("Claude 完成："),
+      session: { backendId: "claude", sessionId: "claude-session-shim" },
+      backendVersion: "8.7.6",
+      inputTokens: 12,
+      outputTokens: 12,
+      cost: 0.04,
+      acceptance: "pending",
+    });
+    expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("review");
   });
 
   it("rejects a stale queued execution without corrupting the task's current root", async () => {
