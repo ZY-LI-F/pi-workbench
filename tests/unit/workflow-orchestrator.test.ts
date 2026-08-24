@@ -5,9 +5,15 @@ import { EMPTY_BOARD_STATE, parseBoardState, type BoardBridgeEvent, type BoardSt
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
-import { WorkflowOrchestrator, type WorkflowAgentRuntime, type WorkflowRuntimeFactory } from "../../src/main/workflow-orchestrator";
+import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
+import {
+  PiRpcExecutionAdapter,
+  type PiRpcExecutionRuntime,
+  type PiRpcExecutionRuntimeFactory,
+} from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
+import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
-import { READY_AGENT_SKILLS } from "./test-doubles";
+import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
@@ -38,16 +44,21 @@ class HoldUpdateRepository extends MemoryRepository {
   }
 }
 
-class FakeRuntime implements WorkflowAgentRuntime {
+class FakeRuntime implements PiRpcExecutionRuntime {
   running = false;
   readonly commands: PiCommand[] = [];
   readonly start = vi.fn(async () => { await this.startBehavior(); this.running = true; });
   readonly stop = vi.fn(async () => { this.running = false; });
+  readonly abortAndStop = vi.fn(async () => {
+    this.running = false;
+    this.abortBehavior();
+  });
 
   constructor(
     readonly callbacks: { readonly emitPiEvent: (event: unknown) => void; readonly emitRuntimeSignal: (signal: RuntimeSignal) => void },
     readonly output: string = "步骤产物",
     readonly startBehavior: () => Promise<void> = async () => undefined,
+    readonly abortBehavior: () => void = () => undefined,
   ) {}
 
   async send(command: PiCommand): Promise<PiResponse> {
@@ -64,14 +75,34 @@ class FakeRuntime implements WorkflowAgentRuntime {
   exit(): void { this.callbacks.emitRuntimeSignal({ type: "runtime_exit", code: 1, signal: null }); }
 }
 
-class FakeRuntimeFactory implements WorkflowRuntimeFactory {
+class FakeRuntimeFactory implements PiRpcExecutionRuntimeFactory {
   readonly runtimes: FakeRuntime[] = [];
-  constructor(readonly startBehavior: () => Promise<void> = async () => undefined) {}
-  create(callbacks: ConstructorParameters<typeof FakeRuntime>[0]): WorkflowAgentRuntime {
-    const runtime = new FakeRuntime(callbacks, "步骤产物", this.startBehavior);
+  constructor(
+    readonly startBehavior: () => Promise<void> = async () => undefined,
+    readonly abortBehavior: () => void = () => undefined,
+  ) {}
+  create(callbacks: ConstructorParameters<typeof FakeRuntime>[0]): PiRpcExecutionRuntime {
+    const runtime = new FakeRuntime(callbacks, "步骤产物", this.startBehavior, this.abortBehavior);
     this.runtimes.push(runtime);
     return runtime;
   }
+}
+
+function backendRegistry(
+  runtimeFactory: PiRpcExecutionRuntimeFactory,
+  globalModel: () => Readonly<{ readonly provider: string; readonly model: string }> | undefined,
+): ExecutionBackendRegistry {
+  return new ExecutionBackendRegistry({
+    backends: [new PiRpcExecutionAdapter({
+      runtimeFactory,
+      globalModel,
+      coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+      skills: READY_AGENT_SKILLS,
+      backendVersion: () => "test-pi-1.0.0",
+      now: () => "2026-07-17T00:00:00.000Z",
+    })],
+    now: () => "2026-07-17T00:00:00.000Z",
+  });
 }
 
 function idFactory(): () => string {
@@ -100,13 +131,11 @@ async function setup(
   const orchestrator = new WorkflowOrchestrator({
     repository,
     catalog: BUILTIN_ORCHESTRATION_CATALOG,
-    runtimeFactory,
+    backendRegistry: backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
     admission,
-    globalModel,
     resolveProjectTrust,
     resolveProjectPath,
-    skills: READY_AGENT_SKILLS,
     id,
     now: () => "2026-07-17T00:00:00.000Z",
   });
@@ -172,6 +201,11 @@ describe("WorkflowOrchestrator", () => {
     runtimeFactory.runtimes[0]?.settle();
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
     expect(repository.state.runs[0]?.steps[0]?.status).toBe("succeeded");
+    expect(repository.state.runs[0]?.steps[0]).toMatchObject({
+      backendVersion: "test-pi-1.0.0",
+      session: { backendId: "pi", sessionId: "session", sessionPath: "C:/session.jsonl" },
+      artifact: { inputTokens: 10, outputTokens: 20, cost: 0.01 },
+    });
 
     runtimeFactory.runtimes[1]?.settle();
     await vi.waitFor(() => expect(repository.state.runs[0]?.status).toBe("review"));
@@ -219,13 +253,14 @@ describe("WorkflowOrchestrator", () => {
   it("does not send a prompt when abort wins a runtime-start race", async () => {
     let releaseStart: (() => void) | undefined;
     const startGate = new Promise<void>((resolve) => { releaseStart = resolve; });
-    const runtimeFactory = new FakeRuntimeFactory(() => startGate);
+    const runtimeFactory = new FakeRuntimeFactory(() => startGate, () => releaseStart?.());
     const { repository, orchestrator, taskId } = await setup(runtimeFactory);
     await orchestrator.dispatch(taskId);
     await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.start).toHaveBeenCalledOnce());
     await orchestrator.abort(taskId);
     releaseStart?.();
-    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.stop).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.abortAndStop).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.stop).toHaveBeenCalledOnce());
     expect(runtimeFactory.runtimes[0]?.running).toBe(false);
     expect(runtimeFactory.runtimes[0]?.commands.some((command) => command.type === "prompt")).toBe(false);
     expect(repository.state.tasks[0]?.stage).toBe("blocked");
@@ -278,6 +313,6 @@ describe("WorkflowOrchestrator", () => {
     await orchestrator.shutdown();
     expect(repository.state.tasks[0]?.stage).toBe("blocked");
     expect(repository.state.runs[0]?.status).toBe("interrupted");
-    expect(runtimeFactory.runtimes[0]?.stop).toHaveBeenCalled();
+    expect(runtimeFactory.runtimes[0]?.abortAndStop).toHaveBeenCalled();
   });
 });

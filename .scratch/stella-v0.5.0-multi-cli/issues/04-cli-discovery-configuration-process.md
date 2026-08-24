@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend。
 
-**Status:** ready-for-agent
+**Status:** IN PROGRESS
 
 - [ ] Codex/Claude 自动发现、版本和登录探测不发起模型请求。
 - [ ] 候选路径先探测后原子保存，失败时继续使用旧配置。

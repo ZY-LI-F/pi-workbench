@@ -5,11 +5,11 @@ import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type Orchestration
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { AgentTaskRunner } from "../../src/main/agent-task-runner";
 import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
-import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime as AgentTaskRuntime, type PiRpcExecutionRuntimeFactory as AgentTaskRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
+import { PiRpcExecutionAdapter, type PiRpcExecutionRuntime, type PiRpcExecutionRuntimeFactory } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
 import { AgentTaskService } from "../../src/main/agent-task-service";
 import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
-import { WorkflowOrchestrator, type WorkflowAgentRuntime, type WorkflowRuntimeFactory } from "../../src/main/workflow-orchestrator";
+import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
@@ -22,7 +22,7 @@ class MemoryRepository implements BoardRepository {
   }
 }
 
-class FakeRuntime implements AgentTaskRuntime, WorkflowAgentRuntime {
+class FakeRuntime implements PiRpcExecutionRuntime {
   running = false;
   readonly commands: PiCommand[] = [];
   readonly start = vi.fn(async () => { this.running = true; });
@@ -44,7 +44,7 @@ class FakeRuntime implements AgentTaskRuntime, WorkflowAgentRuntime {
   settle(): void { this.callbacks.emitPiEvent({ type: "agent_settled" }); }
 }
 
-class SharedRuntimeFactory implements WorkflowRuntimeFactory, AgentTaskRuntimeFactory {
+class SharedRuntimeFactory implements PiRpcExecutionRuntimeFactory {
   readonly runtimes: FakeRuntime[] = [];
   create(callbacks: ConstructorParameters<typeof FakeRuntime>[0]): FakeRuntime {
     const runtime = new FakeRuntime(callbacks);
@@ -88,13 +88,20 @@ describe("shared WorkspaceAdmission integration", () => {
     const workflow = new WorkflowOrchestrator({
       repository,
       catalog: CATALOG,
-      runtimeFactory: workflowFactory,
+      backendRegistry: new ExecutionBackendRegistry({
+        backends: [new PiRpcExecutionAdapter({
+          runtimeFactory: workflowFactory,
+          globalModel: () => undefined,
+          coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+          skills: READY_AGENT_SKILLS,
+          now,
+        })],
+        now,
+      }),
       admission,
       emitBoardEvent: () => undefined,
-      globalModel: () => undefined,
       resolveProjectTrust: async () => true,
       resolveProjectPath: async (projectPath) => projectPath,
-      skills: READY_AGENT_SKILLS,
       id,
       now,
     });

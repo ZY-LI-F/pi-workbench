@@ -4,10 +4,10 @@
 
 **Blocked by:** 02 — AgentTaskRunner 接入 ExecutionBackend。
 
-**Status:** IN PROGRESS
+**Status:** DONE
 
-- [ ] Workflow Run 冻结 Profile snapshot，每个 Step 记录实际 backend version 与 session。
-- [ ] Agent step 通过 Backend Interface 运行，human gate 不调用后端。
-- [ ] step runtimeToken、租约、中止和迟到事件保持当前可靠性约束。
-- [ ] 已持久化 Artifact 继续作为后续步骤输入。
-- [ ] 旧 Pi 专用 Workflow Factory 契约完成收缩，Workflow 全量测试通过。
+- [x] Workflow Run 冻结 Profile snapshot，每个 Step 记录实际 backend version 与 session。
+- [x] Agent step 通过 Backend Interface 运行，human gate 不调用后端。
+- [x] step runtimeToken、租约、中止和迟到事件保持当前可靠性约束。
+- [x] 已持久化 Artifact 继续作为后续步骤输入。
+- [x] 旧 Pi 专用 Workflow Factory 契约完成收缩，Workflow 全量测试通过。

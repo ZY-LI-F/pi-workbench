@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-import type { PiCommand, PiResponse, RuntimeSignal } from "../shared/contracts";
 import { backgroundSessionName } from "../shared/session-policy";
 import {
   type AgentArtifact,
@@ -26,8 +25,6 @@ import {
   supersedePendingExecutions,
 } from "../shared/execution-state";
 import { catalogForBoard } from "../shared/orchestration-catalog";
-import { assertRequiredAgentSkills, requiredSkillsPrompt } from "./required-agent-skills";
-import { finalAssistantResult } from "./pi-execution-result";
 import {
   WorkspaceAdmission,
   WorkspaceAdmissionAbortError,
@@ -35,49 +32,18 @@ import {
   assertAgentWorkspacePolicy,
   type WorkspaceLease,
 } from "./workspace-admission";
-import { resolveAgentRuntimeModel, type RuntimeModelSelection } from "../shared/runtime-model";
 import { snapshotExecutionProfile } from "../shared/execution-profile";
-import { piExecutionSession } from "../shared/execution-session";
-
-export interface WorkflowAgentRuntime {
-  readonly running: boolean;
-  start(options: {
-    readonly cwd: string;
-    readonly trusted: boolean;
-    readonly sessionName: string;
-    readonly provider?: string;
-    readonly model?: string;
-    readonly thinking: AgentDefinition["thinking"];
-    readonly allowedTools: readonly string[];
-    readonly appendSystemPrompt: string;
-    readonly disableExtensions: boolean;
-    readonly disableSkills: boolean;
-    readonly disablePromptTemplates: boolean;
-    readonly disableContextFiles: boolean;
-  }): Promise<void>;
-  send(command: PiCommand): Promise<PiResponse>;
-  stop(): Promise<void>;
-}
-
-export interface WorkflowRuntimeFactory {
-  create(callbacks: {
-    readonly emitPiEvent: (event: unknown) => void;
-    readonly emitRuntimeSignal: (signal: RuntimeSignal) => void;
-  }): WorkflowAgentRuntime;
-}
+import { ExecutionAbortedError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
+import type { ExecutionBackendRegistryContract } from "./execution-backend-registry";
 
 interface OrchestratorDependencies {
   readonly repository: BoardRepository;
   readonly catalog: OrchestrationCatalog;
-  readonly runtimeFactory: WorkflowRuntimeFactory;
+  readonly backendRegistry: ExecutionBackendRegistryContract;
   readonly emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly admission: WorkspaceAdmission;
-  readonly globalModel: () => RuntimeModelSelection | undefined;
   readonly resolveProjectTrust: (projectPath: string) => Promise<boolean>;
   readonly resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
-  readonly skills: {
-    assertAgentsReady(projectPath: string, trusted: boolean, agents: readonly AgentDefinition[]): Promise<void>;
-  };
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -87,40 +53,16 @@ interface ActiveAgentRun {
   readonly runId: string;
   readonly stepId: string;
   readonly runtimeToken: string;
-  readonly runtime: WorkflowAgentRuntime;
+  readonly controller: AbortController;
   readonly lease?: WorkspaceLease;
-  settling: boolean;
+  abortRequested: boolean;
+  released: boolean;
+  done?: Promise<void>;
 }
 
 interface WaitingAdmission {
   readonly taskId: string;
   readonly controller: AbortController;
-}
-
-interface RpcStateData {
-  readonly sessionFile?: string;
-}
-
-interface RpcStatsData {
-  readonly tokens?: { readonly input?: number; readonly output?: number };
-  readonly cost?: number;
-}
-
-function responseData<T>(response: PiResponse, command: string): T {
-  if (!response.success) throw new Error(response.error);
-  if (!("data" in response)) throw new Error(`Pi RPC 命令 ${command} 没有返回 data`);
-  return response.data as T;
-}
-
-function record(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : undefined;
-}
-
-function stringField(value: unknown, key: string): string | undefined {
-  const found = record(value)?.[key];
-  return typeof found === "string" ? found : undefined;
 }
 
 function cloneAgent(definition: AgentDefinition): AgentDefinition {
@@ -137,13 +79,11 @@ function cloneWorkflow(definition: WorkflowDefinition): WorkflowDefinition {
 export class WorkflowOrchestrator {
   readonly #repository: BoardRepository;
   readonly #catalog: OrchestrationCatalog;
-  readonly #runtimeFactory: WorkflowRuntimeFactory;
+  readonly #backendRegistry: ExecutionBackendRegistryContract;
   readonly #emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly #admission: WorkspaceAdmission;
-  readonly #globalModel: () => RuntimeModelSelection | undefined;
   readonly #resolveProjectTrust: (projectPath: string) => Promise<boolean>;
   readonly #resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
-  readonly #skills: OrchestratorDependencies["skills"];
   readonly #now: () => string;
   readonly #id: () => string;
   readonly #activeAgents = new Map<string, ActiveAgentRun>();
@@ -153,13 +93,11 @@ export class WorkflowOrchestrator {
   constructor(dependencies: OrchestratorDependencies) {
     this.#repository = dependencies.repository;
     this.#catalog = dependencies.catalog;
-    this.#runtimeFactory = dependencies.runtimeFactory;
+    this.#backendRegistry = dependencies.backendRegistry;
     this.#emitBoardEvent = dependencies.emitBoardEvent;
     this.#admission = dependencies.admission;
-    this.#globalModel = dependencies.globalModel;
     this.#resolveProjectTrust = dependencies.resolveProjectTrust;
     this.#resolveProjectPath = dependencies.resolveProjectPath;
-    this.#skills = dependencies.skills;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -169,12 +107,14 @@ export class WorkflowOrchestrator {
     const preview = await this.#repository.read();
     const previewTask = this.#task(preview, taskId);
     if (previewTask.executionTarget.kind !== "workflow") throw new Error("任务的执行目标不是固定流程");
-    const previewWorkflow = this.#workflow(previewTask.executionTarget.workflowId);
-    const previewAgents = [...new Set(previewWorkflow.steps.filter((step) => step.kind === "agent").map((step) => step.agentId))]
-      .map((id) => this.#agent(id));
+    if (this.#backendRegistry.snapshot().health.some((health) => health.state === "checking")) {
+      await this.#backendRegistry.initialize();
+    }
+    if (!previewTask.executionProfileId) throw new Error(`任务 ${previewTask.id} 未选择执行 Profile`);
+    this.#backendRegistry.assertCompatible(previewTask.executionProfileId, "workflow-step");
+    this.#backendRegistry.resolve(previewTask.executionProfileId);
     const previewTrusted = await this.#resolveProjectTrust(previewTask.projectPath);
-    const previewProjectPath = await this.#resolveProjectPath(previewTask.projectPath, previewTrusted);
-    await this.#skills.assertAgentsReady(previewProjectPath, previewTrusted, Object.freeze(previewAgents));
+    await this.#resolveProjectPath(previewTask.projectPath, previewTrusted);
     const now = this.#now();
     let runId = "";
     const bootstrap = await this.#commit((current) => {
@@ -187,6 +127,8 @@ export class WorkflowOrchestrator {
       const agentIds = new Set(workflow.steps.filter((step) => step.kind === "agent").map((step) => step.agentId));
       const agents = Object.freeze([...agentIds].map((id) => cloneAgent(this.#agent(id))));
       if (!task.executionProfileId) throw new Error(`任务 ${task.id} 未选择执行 Profile`);
+      this.#backendRegistry.assertCompatible(task.executionProfileId, "workflow-step");
+      this.#backendRegistry.resolve(task.executionProfileId);
       const executionProfile = snapshotExecutionProfile(task.executionProfileId);
       runId = this.#id();
       const executionAttempt = nextExecutionAttempt(task);
@@ -320,13 +262,10 @@ export class WorkflowOrchestrator {
         activities: [...current.activities, this.#activity(taskId, "status", "流程已由用户中止", undefined, now, runId)],
       };
     });
-    this.#activeAgents.delete(runId);
     if (active) {
-      try {
-        await active.runtime.stop();
-      } finally {
-        active.lease?.release();
-      }
+      active.abortRequested = true;
+      active.controller.abort();
+      await active.done;
     }
     return bootstrap;
   }
@@ -373,15 +312,12 @@ export class WorkflowOrchestrator {
         };
       });
     }
-    this.#activeAgents.clear();
+    for (const entry of active) {
+      entry.abortRequested = true;
+      entry.controller.abort();
+    }
+    await Promise.all(active.map((entry) => entry.done));
     this.#waitingAdmissions.clear();
-    await Promise.all(active.map(async (entry) => {
-      try {
-        await entry.runtime.stop();
-      } finally {
-        entry.lease?.release();
-      }
-    }));
   }
 
   async #advance(runId: string): Promise<void> {
@@ -405,9 +341,10 @@ export class WorkflowOrchestrator {
     const agent = run.agents.find((candidate) => candidate.id === definition.agentId);
     if (!agent) throw new Error(`流程快照缺少 Agent: ${definition.agentId}`);
     assertAgentWorkspacePolicy(agent);
-    const skillTrusted = await this.#resolveProjectTrust(task.projectPath);
-    const skillProjectPath = await this.#resolveProjectPath(task.projectPath, skillTrusted);
-    await this.#skills.assertAgentsReady(skillProjectPath, skillTrusted, Object.freeze([agent]));
+    this.#backendRegistry.assertCompatible(run.executionProfile.id, "workflow-step");
+    const resolvedBackend = this.#backendRegistry.resolve(run.executionProfile.id);
+    const trusted = await this.#resolveProjectTrust(task.projectPath);
+    const projectPath = await this.#resolveProjectPath(task.projectPath, trusted);
     let lease: WorkspaceLease | undefined;
     if (agentRequiresWorkspaceLease(agent)) {
       const controller = new AbortController();
@@ -417,7 +354,7 @@ export class WorkflowOrchestrator {
         lease = await this.#admission.acquireBackground(task.projectPath, {
           id: `workflow:${run.id}:${step.stepId}`,
           kind: "workflow",
-          label: `Workflow · ${run.workflow.shortName} / ${agent.name}`,
+          label: `Workflow · ${run.workflow.shortName} / ${agent.name} · ${resolvedBackend.profile.label}`,
           taskId: task.id,
           executionId: run.id,
         }, {
@@ -443,7 +380,18 @@ export class WorkflowOrchestrator {
         return;
       }
     }
-    await this.#startAgent(run, task, step, definition.objective, agent, lease);
+    await this.#startAgent(
+      run,
+      task,
+      step,
+      definition.objective,
+      agent,
+      resolvedBackend.backend,
+      projectPath,
+      trusted,
+      resolvedBackend.health.version,
+      lease,
+    );
   }
 
   async #waitAtGate(run: WorkflowRun, task: KanbanTask, step: StepRun): Promise<void> {
@@ -497,137 +445,126 @@ export class WorkflowOrchestrator {
     step: StepRun,
     objective: string,
     agent: AgentDefinition,
+    backend: ExecutionBackend,
+    projectPath: string,
+    trusted: boolean,
+    backendVersion: string | undefined,
     lease?: WorkspaceLease,
   ): Promise<void> {
     const runtimeToken = this.#id();
-    const runtime = this.#runtimeFactory.create({
-      emitPiEvent: (event) => void this.#handlePiEvent(run.id, runtimeToken, event).catch((error) => this.#failRun(run.id, error, runtimeToken)).catch((error) => this.#reportError(error)),
-      emitRuntimeSignal: (signal) => this.#handleRuntimeSignal(run.id, runtimeToken, signal),
-    });
     const active: ActiveAgentRun = {
       taskId: task.id,
       runId: run.id,
       stepId: step.stepId,
       runtimeToken,
-      runtime,
+      controller: new AbortController(),
       lease,
-      settling: false,
+      abortRequested: false,
+      released: false,
     };
     this.#activeAgents.set(run.id, active);
-    const selectedModel = resolveAgentRuntimeModel(agent, this.#globalModel());
-    try {
-      const trusted = await this.#resolveProjectTrust(task.projectPath);
-      const projectPath = await this.#resolveProjectPath(task.projectPath, trusted);
-      await runtime.start({
-        cwd: projectPath,
-        trusted,
-        sessionName: backgroundSessionName({
-          taskId: task.id,
-          executionKind: "workflow-step",
-          executionId: step.id,
-          label: `${task.title} · ${step.name}`,
-        }),
-        provider: selectedModel.provider,
-        model: selectedModel.model,
-        thinking: agent.thinking,
-        allowedTools: agent.allowedTools,
-        appendSystemPrompt: requiredSkillsPrompt(agent),
-        disableExtensions: agent.disableExtensions,
-        disableSkills: agent.disableSkills,
-        disablePromptTemplates: agent.disablePromptTemplates,
-        disableContextFiles: agent.disableContextFiles,
-      });
-      if (this.#activeAgents.get(run.id) !== active) {
-        try {
-          await runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      await assertRequiredAgentSkills(runtime, agent);
-      if (this.#activeAgents.get(run.id) !== active) {
-        try {
-          await runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      const startedAt = this.#now();
-      let applied = false;
-      await this.#commit((current) => {
-        const latestRun = this.#run(current, run.id);
-        const latestTask = this.#task(current, task.id);
-        applied = latestTask.activeRunId === run.id && !["blocked", "failed", "interrupted", "reported"].includes(latestRun.status);
-        if (!applied) return current;
-        const runningStep: StepRun = Object.freeze({ ...step, status: "running", runtimeToken, startedAt });
-        return {
-          ...current,
-          tasks: current.tasks.map((candidate) => candidate.id === task.id
-            ? applyTaskLifecycle(candidate, { type: "execution-started" }, startedAt)
-            : candidate),
-          runs: current.runs.map((candidate) => candidate.id === run.id
-            ? Object.freeze({
-                ...latestRun,
-                status: "running" as const,
-                currentStepId: step.stepId,
-                steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? runningStep : item)),
-                updatedAt: startedAt,
-              })
-            : candidate),
-          activities: [...current.activities, this.#activity(task.id, "agent", `${agent.name}开始执行「${step.name}」`, agent.callsign, startedAt, run.id, step.stepId)],
-        };
-      });
-      if (!applied) {
-        if (this.#activeAgents.get(run.id) === active) this.#activeAgents.delete(run.id);
-        try {
-          await runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      await runtime.send({ type: "prompt", message: this.#promptFor(run, task, step, objective, agent) });
-    } catch (error) {
-      await this.#failRun(run.id, error, runtimeToken);
+    const startedAt = this.#now();
+    let applied = false;
+    await this.#commit((current) => {
+      const latestRun = this.#run(current, run.id);
+      const latestTask = this.#task(current, task.id);
+      applied = latestTask.activeRunId === run.id && !["blocked", "failed", "interrupted", "reported"].includes(latestRun.status);
+      if (!applied) return current;
+      const runningStep: StepRun = Object.freeze({ ...step, status: "running", runtimeToken, backendVersion, startedAt });
+      return {
+        ...current,
+        tasks: current.tasks.map((candidate) => candidate.id === task.id
+          ? applyTaskLifecycle(candidate, { type: "execution-started" }, startedAt)
+          : candidate),
+        runs: current.runs.map((candidate) => candidate.id === run.id
+          ? Object.freeze({
+              ...latestRun,
+              status: "running" as const,
+              currentStepId: step.stepId,
+              steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? runningStep : item)),
+              updatedAt: startedAt,
+            })
+          : candidate),
+        activities: [...current.activities, this.#activity(task.id, "agent", `${agent.name}开始执行「${step.name}」`, agent.callsign, startedAt, run.id, step.stepId)],
+      };
+    });
+    if (!applied) {
+      this.#finalizeActive(active);
+      return;
     }
+    const done = this.#executeAgent(active, backend, run, task, step, objective, agent, projectPath, trusted);
+    active.done = done;
+    void done.catch((error) => this.#reportError(error));
   }
 
-  async #handlePiEvent(runId: string, runtimeToken: string, event: unknown): Promise<void> {
-    const active = this.#activeAgents.get(runId);
-    if (!active || active.runtimeToken !== runtimeToken) return;
-    const eventType = stringField(event, "type") ?? "unknown";
-    const toolName = stringField(event, "toolName") ?? stringField(event, "name");
+  async #executeAgent(
+    active: ActiveAgentRun,
+    backend: ExecutionBackend,
+    run: WorkflowRun,
+    task: KanbanTask,
+    step: StepRun,
+    objective: string,
+    agent: AgentDefinition,
+    projectPath: string,
+    trusted: boolean,
+  ): Promise<void> {
+    let shouldAdvance = false;
+    try {
+      const outcome = await backend.run({
+        executionId: step.id,
+        runtimeToken: active.runtimeToken,
+        profile: run.executionProfile,
+        cwd: projectPath,
+        trusted,
+        sessionName: backgroundSessionName({ taskId: task.id, executionKind: "workflow-step", executionId: step.id, label: `${task.title} · ${step.name}` }),
+        prompt: this.#promptFor(run, task, step, objective, agent),
+        agent,
+        expectedResult: "report",
+      }, (event) => void this.#handleExecutionEvent(active, event).catch((error) => this.#failRun(active.runId, error, active.runtimeToken)).catch((error) => this.#reportError(error)), active.controller.signal);
+      if (this.#activeAgents.get(active.runId) !== active || active.abortRequested) return;
+      shouldAdvance = await this.#completeAgentStep(active, outcome);
+    } catch (cause) {
+      if (this.#activeAgents.get(active.runId) !== active || active.abortRequested || cause instanceof ExecutionAbortedError) return;
+      await this.#failRun(active.runId, cause, active.runtimeToken);
+    } finally {
+      this.#finalizeActive(active);
+    }
+    if (shouldAdvance && !active.abortRequested && !this.#stopping) await this.#advance(active.runId);
+  }
+
+  async #handleExecutionEvent(active: ActiveAgentRun, event: ExecutionEvent): Promise<void> {
+    if (this.#activeAgents.get(active.runId) !== active || active.abortRequested) return;
+    const eventType = event.type === "tool-start"
+      ? "tool_execution_start"
+      : event.type === "tool-end"
+        ? "tool_execution_end"
+        : event.type;
+    const toolName = event.type === "tool-start" || event.type === "tool-end" ? event.name : undefined;
+    const message = event.type === "stderr" ? event.message : event.type === "assistant-output" ? event.text : undefined;
     this.#emitBoardEvent({
       type: "agent-event",
       taskId: active.taskId,
-      runId,
+      runId: active.runId,
       stepId: active.stepId,
       eventType,
       toolName,
+      message,
     });
-    if (eventType === "agent_settled") {
-      if (active.settling) return;
-      active.settling = true;
-      await this.#settleAgent(active);
-      return;
-    }
-    if (eventType === "tool_execution_start" || eventType === "tool_execution_end") {
+    if (event.type === "tool-start" || event.type === "tool-end") {
       const now = this.#now();
       await this.#commit((current) => {
-        const latestRun = current.runs.find((candidate) => candidate.id === runId);
+        const latestRun = current.runs.find((candidate) => candidate.id === active.runId);
         const latestStep = latestRun?.steps.find((candidate) => candidate.stepId === active.stepId);
-        if (this.#activeAgents.get(runId) !== active || latestStep?.runtimeToken !== runtimeToken) return current;
+        if (this.#activeAgents.get(active.runId) !== active || latestStep?.runtimeToken !== active.runtimeToken) return current;
         return {
           ...current,
           activities: [...current.activities, this.#activity(
             active.taskId,
             "tool",
-            `${toolName ?? "工具"}${eventType === "tool_execution_start" ? "开始运行" : "运行结束"}`,
+            `${event.name}${event.type === "tool-start" ? "开始运行" : "运行结束"}`,
             undefined,
             now,
-            runId,
+            active.runId,
             active.stepId,
           )],
         };
@@ -635,107 +572,74 @@ export class WorkflowOrchestrator {
     }
   }
 
-  #handleRuntimeSignal(runId: string, runtimeToken: string, signal: RuntimeSignal): void {
-    const active = this.#activeAgents.get(runId);
-    if (!active || active.runtimeToken !== runtimeToken) return;
-    this.#emitBoardEvent({
-      type: "agent-event",
-      taskId: active.taskId,
-      runId,
-      stepId: active.stepId,
-      eventType: signal.type,
-      message: signal.type === "runtime_stderr" || signal.type === "protocol_error" ? signal.message : undefined,
+  async #completeAgentStep(active: ActiveAgentRun, outcome: ExecutionOutcome): Promise<boolean> {
+    if (outcome.result.kind !== "report") throw new Error("Workflow Agent Backend 返回了非报告结果");
+    const board = await this.#repository.read();
+    const run = this.#run(board, active.runId);
+    if (["failed", "blocked", "interrupted", "reported"].includes(run.status)) return false;
+    const step = run.steps.find((candidate) => candidate.stepId === active.stepId && candidate.runtimeToken === active.runtimeToken);
+    if (!step) throw new Error(`找不到运行步骤: ${active.stepId}`);
+    const now = this.#now();
+    const artifact: AgentArtifact = Object.freeze({
+      title: `${step.name} · Agent 产物`,
+      content: outcome.result.output,
+      session: outcome.session,
+      inputTokens: outcome.usage?.inputTokens,
+      outputTokens: outcome.usage?.outputTokens,
+      cost: outcome.usage?.cost,
+      startedAt: step.startedAt,
+      completedAt: now,
     });
-    if (signal.type === "runtime_exit") {
-      void this.#failRun(runId, new Error(`Pi RPC 意外退出 (code=${String(signal.code)}, signal=${String(signal.signal)})`), runtimeToken).catch((error) => this.#reportError(error));
-    }
+    let applied = false;
+    await this.#commit((current) => {
+      const latestRun = this.#run(current, active.runId);
+      const latestTask = this.#task(current, active.taskId);
+      const latestStep = latestRun.steps.find((candidate) => candidate.stepId === active.stepId);
+      if (this.#activeAgents.get(active.runId) !== active || latestTask.activeRunId !== active.runId || latestRun.status !== "running"
+        || latestStep?.runtimeToken !== active.runtimeToken) {
+        return current;
+      }
+      applied = true;
+      const completedStep: StepRun = Object.freeze({
+        ...latestStep,
+        status: "succeeded",
+        runtimeToken: undefined,
+        backendVersion: outcome.backendVersion ?? latestStep.backendVersion,
+        session: outcome.session,
+        artifact,
+        completedAt: now,
+      });
+      return {
+        ...current,
+        runs: current.runs.map((candidate) => candidate.id === active.runId
+          ? Object.freeze({
+              ...latestRun,
+              status: "running" as const,
+              currentStepId: undefined,
+              steps: Object.freeze(latestRun.steps.map((item) => item.id === completedStep.id ? completedStep : item)),
+              updatedAt: now,
+            })
+          : candidate),
+        activities: [...current.activities, this.#activity(
+          active.taskId,
+          "artifact",
+          `${step.name}已产出结果`,
+          outcome.session?.sessionPath ?? outcome.session?.sessionId,
+          now,
+          active.runId,
+          active.stepId,
+        )],
+      };
+    });
+    return applied;
   }
 
-  async #settleAgent(active: ActiveAgentRun): Promise<void> {
-    try {
-      const [textResponse, stateResponse, statsResponse, messagesResponse] = await Promise.all([
-        active.runtime.send({ type: "get_last_assistant_text" }),
-        active.runtime.send({ type: "get_state" }),
-        active.runtime.send({ type: "get_session_stats" }),
-        active.runtime.send({ type: "get_messages" }),
-      ]);
-      const { output: text } = finalAssistantResult(textResponse, messagesResponse);
-      const state = responseData<RpcStateData>(stateResponse, "get_state");
-      const stats = responseData<RpcStatsData>(statsResponse, "get_session_stats");
-      if (this.#activeAgents.get(active.runId) !== active) {
-        try {
-          await active.runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      const board = await this.#repository.read();
-      const run = this.#run(board, active.runId);
-      if (["failed", "blocked", "interrupted", "reported"].includes(run.status)) {
-        if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
-        try {
-          await active.runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      const step = run.steps.find((candidate) => candidate.stepId === active.stepId && candidate.runtimeToken === active.runtimeToken);
-      if (!step) throw new Error(`找不到运行步骤: ${active.stepId}`);
-      const artifact: AgentArtifact = Object.freeze({
-        title: `${step.name} · Agent 产物`,
-        content: text,
-        session: piExecutionSession({ sessionPath: state.sessionFile }),
-        inputTokens: stats.tokens?.input,
-        outputTokens: stats.tokens?.output,
-        cost: stats.cost,
-      });
-      const now = this.#now();
-      let applied = false;
-      await this.#commit((current) => {
-        const latestRun = this.#run(current, active.runId);
-        const latestTask = this.#task(current, active.taskId);
-        const latestStep = latestRun.steps.find((candidate) => candidate.stepId === active.stepId);
-        if (this.#activeAgents.get(active.runId) !== active || latestTask.activeRunId !== active.runId || latestRun.status !== "running"
-          || latestStep?.runtimeToken !== active.runtimeToken) {
-          return current;
-        }
-        applied = true;
-        const completedStep: StepRun = Object.freeze({ ...step, status: "succeeded", runtimeToken: undefined, completedAt: now, session: piExecutionSession({ sessionPath: state.sessionFile }), artifact });
-        return {
-          ...current,
-          runs: current.runs.map((candidate) => candidate.id === active.runId
-            ? Object.freeze({
-                ...latestRun,
-                status: "running" as const,
-                currentStepId: undefined,
-                steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? completedStep : item)),
-                updatedAt: now,
-              })
-            : candidate),
-          activities: [...current.activities, this.#activity(active.taskId, "artifact", `${step.name}已产出结果`, state.sessionFile, now, active.runId, active.stepId)],
-        };
-      });
-      if (!applied) {
-        if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
-        try {
-          await active.runtime.stop();
-        } finally {
-          active.lease?.release();
-        }
-        return;
-      }
-      if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
-      try {
-        await active.runtime.stop();
-      } finally {
-        active.lease?.release();
-      }
-      await this.#advance(active.runId);
-    } catch (error) {
-      await this.#failRun(active.runId, error, active.runtimeToken);
+  #finalizeActive(active: ActiveAgentRun): void {
+    if (!active.released) {
+      active.released = true;
+      active.lease?.release();
     }
+    if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
   }
 
   async #completeRun(run: WorkflowRun, task: KanbanTask): Promise<void> {
@@ -761,16 +665,12 @@ export class WorkflowOrchestrator {
     const message = cause instanceof Error ? cause.message : String(cause);
     const active = this.#activeAgents.get(runId);
     if (runtimeToken !== undefined && active && active.runtimeToken !== runtimeToken) return;
-    const ownedActive = runtimeToken === undefined || active?.runtimeToken === runtimeToken ? active : undefined;
-    const ownedUnpersistedRuntime = runtimeToken !== undefined && ownedActive?.runtimeToken === runtimeToken;
-    if (ownedActive && this.#activeAgents.get(runId) === ownedActive) this.#activeAgents.delete(runId);
+    const ownedActive = active && (runtimeToken === undefined || active.runtimeToken === runtimeToken) ? active : undefined;
+    const ownedExecution = runtimeToken !== undefined && ownedActive?.runtimeToken === runtimeToken;
     if (runtimeToken === undefined) this.#waitingAdmissions.get(runId)?.controller.abort();
-    if (ownedActive) {
-      try {
-        await ownedActive.runtime.stop();
-      } finally {
-        ownedActive.lease?.release();
-      }
+    if (ownedActive && !ownedActive.abortRequested) {
+      ownedActive.abortRequested = true;
+      ownedActive.controller.abort();
     }
     const now = this.#now();
     await this.#commit((current) => {
@@ -778,7 +678,7 @@ export class WorkflowOrchestrator {
       if (!latestRun || ["failed", "blocked", "interrupted", "reported"].includes(latestRun.status)) return current;
       const latestTask = this.#task(current, latestRun.taskId);
       if (latestTask.activeRunId !== runId) return current;
-      if (runtimeToken && !ownedUnpersistedRuntime
+      if (runtimeToken && !ownedExecution
         && !latestRun.steps.some((step) => step.status === "running" && step.runtimeToken === runtimeToken)) return current;
       const failedStepId = latestRun.steps.find((step) => step.stepId === latestRun.currentStepId && step.status === "running")?.stepId
         ?? latestRun.steps.find((step) => step.status === "running" || step.status === "pending")?.stepId;
@@ -800,6 +700,7 @@ export class WorkflowOrchestrator {
         activities: [...current.activities, this.#activity(latestTask.id, "error", "流程执行失败", message, now, runId, latestRun.currentStepId)],
       };
     });
+    if (ownedActive && ownedActive.done === undefined) this.#finalizeActive(ownedActive);
   }
 
   #reportError(cause: unknown): void {

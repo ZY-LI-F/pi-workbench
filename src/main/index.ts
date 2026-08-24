@@ -77,7 +77,7 @@ import { mainWindowBounds } from "./window-bounds";
 import { ScheduleRunner } from "./schedule-runner";
 import { StateStore } from "./state-store";
 import { SquadService } from "./squad-service";
-import { WorkflowOrchestrator, type WorkflowRuntimeFactory } from "./workflow-orchestrator";
+import { WorkflowOrchestrator } from "./workflow-orchestrator";
 import { WebhookServer, webhookMaxBytesFromEnvironment, webhookPortFromEnvironment } from "./webhook-server";
 import { WorkspaceAdmission } from "./workspace-admission";
 import { visibleInteractiveSessions } from "../shared/session-policy";
@@ -268,19 +268,6 @@ const runtime = new PiRpcRuntime({
 });
 
 interactiveCommandRouter = new InteractiveCommandRouter({ runtime, admission: workspaceAdmission });
-
-const workflowRuntimeFactory: WorkflowRuntimeFactory = Object.freeze({
-  create: (callbacks: Parameters<WorkflowRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
-    executablePath: process.execPath,
-    rpcEntryPath,
-    spawnProcess: (command, args, options) => spawn(command, [...args], options),
-    emitPiEvent: callbacks.emitPiEvent,
-    emitRuntimeSignal: callbacks.emitRuntimeSignal,
-    requestTimeoutMs: piRpcRequestTimeoutMs,
-    compactionTimeoutMs: piRpcCompactionTimeoutMs,
-    maxProtocolRecordBytes: piRpcMaxRecordBytes,
-  }),
-});
 
 const agentTaskRuntimeFactory: PiRpcExecutionRuntimeFactory = Object.freeze({
   create: (callbacks: Parameters<PiRpcExecutionRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
@@ -1325,16 +1312,25 @@ async function initializeTaskCapability(): Promise<void> {
       emitChanged: emitSnapshot,
       projectIdentity: pathComparisonKey,
     });
+    const piBackendVersion = await getPiVersion();
+    executionBackendRegistry = new ExecutionBackendRegistry({
+      backends: [new PiRpcExecutionAdapter({
+        runtimeFactory: agentTaskRuntimeFactory,
+        globalModel: () => globalModelSelection,
+        coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
+        skills: agentSkillService,
+        backendVersion: () => piBackendVersion,
+      })],
+    });
+    await executionBackendRegistry.initialize();
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
-      runtimeFactory: workflowRuntimeFactory,
+      backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
       admission: workspaceAdmission,
-      globalModel: () => globalModelSelection,
       resolveProjectTrust,
       resolveProjectPath: canonicalExecutionProjectPath,
-      skills: agentSkillService,
     });
     agentTaskService = new AgentTaskService({
       repository: boardStore,
@@ -1373,14 +1369,7 @@ async function initializeTaskCapability(): Promise<void> {
     });
     agentTaskRunner = new AgentTaskRunner({
       service: agentTaskService,
-      backendRegistry: executionBackendRegistry = new ExecutionBackendRegistry({
-        backends: [new PiRpcExecutionAdapter({
-          runtimeFactory: agentTaskRuntimeFactory,
-          globalModel: () => globalModelSelection,
-          coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
-          skills: agentSkillService,
-        })],
-      }),
+      backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
       admission: workspaceAdmission,
       resolveProjectTrust,
