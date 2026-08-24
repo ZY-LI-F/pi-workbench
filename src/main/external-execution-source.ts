@@ -1,5 +1,6 @@
 import type {
   ContinueExternalExecutionResult,
+  ExternalExecutionDetails,
   ExternalExecutionItem,
   ExternalExecutionScope,
   ExternalExecutionSourceDefinition,
@@ -8,6 +9,7 @@ import type {
 export interface ExternalExecutionSource {
   readonly definition: ExternalExecutionSourceDefinition;
   refresh(scope: ExternalExecutionScope): Promise<readonly ExternalExecutionItem[]>;
+  details?(item: ExternalExecutionItem): Promise<ExternalExecutionDetails>;
   continue?(item: ExternalExecutionItem): Promise<ContinueExternalExecutionResult>;
   shutdown?(): Promise<void>;
 }

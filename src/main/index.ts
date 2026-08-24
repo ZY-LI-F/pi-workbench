@@ -102,6 +102,7 @@ import {
   type ExternalExecutionOrigin,
   type ExternalExecutionScope,
   type ImportExternalExecutionInput,
+  type ReadExternalExecutionDetailsInput,
 } from "../shared/external-execution";
 import { isSkinId, type SkinArtworkDescriptor, type SkinId } from "../shared/skin-artwork";
 import { SkinArtworkService, type StoredSkinArtwork } from "./skin-artwork-service";
@@ -122,6 +123,7 @@ import { LocalPathService } from "./local-path-service";
 import { LocalFilePreviewService } from "./local-file-preview-service";
 import { ComposerDraftStore } from "./composer-draft-store";
 import { ClaudeExternalExecutionSource } from "./claude-external-execution-source";
+import { CodexExternalExecutionSource } from "./codex-external-execution-source";
 import { ExternalExecutionService } from "./external-execution-service";
 import { isPiSkillInstallScope, type PiSkillInstallResult } from "../shared/pi-skill";
 import { PiSkillInstaller } from "./pi-skill-installer";
@@ -324,7 +326,7 @@ function validatedExternalExecutionScope(value: unknown): ExternalExecutionScope
   throw new Error(`无效外部执行 scope: ${String(scope.kind)}`);
 }
 
-function validatedExternalExecutionReference(value: unknown): ImportExternalExecutionInput & ContinueExternalExecutionInput {
+function validatedExternalExecutionReference(value: unknown): ImportExternalExecutionInput & ContinueExternalExecutionInput & ReadExternalExecutionDetailsInput {
   const reference = objectValue(value, "外部执行引用");
   if (!isExternalExecutionSourceId(reference.sourceId)) throw new Error(`无效外部执行 Source: ${String(reference.sourceId)}`);
   return Object.freeze({ sourceId: reference.sourceId, externalId: requiredString(reference.externalId, "externalId") });
@@ -1411,15 +1413,26 @@ async function initializeTaskCapability(): Promise<void> {
     const executionBackendSnapshot = await executionBackendSettingsService.initialize();
     broadcast("execution-backend", executionBackendSnapshot);
     externalExecutionService = new ExternalExecutionService({
-      sources: [new ClaudeExternalExecutionSource({
-        configuration: () => {
-          const settings = executionBackendSettingsService;
-          if (!settings) throw new Error("Claude CLI 设置尚未初始化");
-          return settings.configuration("claude");
-        },
-        copyText: (value) => clipboard.writeText(value),
-        cwd: app.getPath("home"),
-      })],
+      sources: [
+        new ClaudeExternalExecutionSource({
+          configuration: () => {
+            const settings = executionBackendSettingsService;
+            if (!settings) throw new Error("Claude CLI 设置尚未初始化");
+            return settings.configuration("claude");
+          },
+          copyText: (value) => clipboard.writeText(value),
+          cwd: app.getPath("home"),
+        }),
+        new CodexExternalExecutionSource({
+          configuration: () => {
+            const settings = executionBackendSettingsService;
+            if (!settings) throw new Error("Codex CLI 设置尚未初始化");
+            return settings.configuration("codex");
+          },
+          copyText: (value) => clipboard.writeText(value),
+          cwd: app.getPath("home"),
+        }),
+      ],
       repository: boardStore,
       boardService,
       resolveProjectTrust,
@@ -1546,6 +1559,10 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:external-executions:continue", async (_event, value: unknown) => {
     assertTaskCapability();
     return externalExecutionService.continue(validatedExternalExecutionReference(value));
+  });
+  ipcMain.handle("stella:external-executions:details", async (_event, value: unknown) => {
+    assertTaskCapability();
+    return externalExecutionService.details(validatedExternalExecutionReference(value));
   });
   ipcMain.handle("stella:initialize", () => initializeRuntime());
   ipcMain.handle("stella:refresh", () => refreshPiCapability());

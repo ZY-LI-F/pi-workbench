@@ -44,6 +44,7 @@ import type {
   ContinueExternalExecutionInput,
   ExternalExecutionScope,
   ImportExternalExecutionInput,
+  ReadExternalExecutionDetailsInput,
 } from "../shared/external-execution";
 
 const api: StellaDesktopApi = Object.freeze({
@@ -60,6 +61,8 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:external-executions:import", input) as ReturnType<StellaDesktopApi["externalExecutionImport"]>,
   externalExecutionContinue: (input: ContinueExternalExecutionInput) =>
     ipcRenderer.invoke("stella:external-executions:continue", input) as ReturnType<StellaDesktopApi["externalExecutionContinue"]>,
+  externalExecutionDetails: (input: ReadExternalExecutionDetailsInput) =>
+    ipcRenderer.invoke("stella:external-executions:details", input) as ReturnType<StellaDesktopApi["externalExecutionDetails"]>,
   initialize: () => ipcRenderer.invoke("stella:initialize") as Promise<RuntimeBootstrap>,
   command: (command: PiCommand) => ipcRenderer.invoke("stella:command", command),
   refresh: () => ipcRenderer.invoke("stella:refresh") as Promise<RuntimeBootstrap>,

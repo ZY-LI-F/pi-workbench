@@ -6,12 +6,14 @@ import {
   type ContinueExternalExecutionInput,
   type ContinueExternalExecutionResult,
   type ExternalExecutionCatalogSnapshot,
+  type ExternalExecutionDetails,
   type ExternalExecutionItem,
   type ExternalExecutionScope,
   type ExternalExecutionSourceId,
   type ExternalExecutionSourceSnapshot,
   type ImportExternalExecutionInput,
   type ImportExternalExecutionResult,
+  type ReadExternalExecutionDetailsInput,
 } from "../shared/external-execution";
 import type { BoardState, KanbanTask } from "../shared/kanban";
 import type { ExecutionSessionReference } from "../shared/execution-session";
@@ -212,6 +214,13 @@ export class ExternalExecutionService {
     const source = this.#sources.get(input.sourceId);
     if (!source?.continue) throw new Error(`${input.sourceId} Source 不支持继续 session`);
     return source.continue(item);
+  }
+
+  async details(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails> {
+    const item = this.#findItem(input.sourceId, input.externalId);
+    const source = this.#sources.get(input.sourceId);
+    if (!source?.details) throw new Error(`${input.sourceId} Source 不支持读取详情`);
+    return source.details(item);
   }
 
   async shutdown(): Promise<void> {

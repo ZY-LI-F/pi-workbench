@@ -28,16 +28,17 @@ function item(association?: ExternalExecutionItem["association"]): ExternalExecu
 }
 
 function snapshot(execution = item()): ExternalExecutionCatalogSnapshot {
+  const codex = execution.sourceId === "codex";
   return Object.freeze({
     epoch: 1,
     scope: Object.freeze({ kind: "all" }),
     capturedAt: NOW,
     sources: Object.freeze([Object.freeze({
       source: Object.freeze({
-        id: "claude",
-        label: "Claude Agents",
+        id: execution.sourceId,
+        label: codex ? "Codex Threads" : "Claude Agents",
         description: "fixture",
-        supportsDetails: false,
+        supportsDetails: codex,
         supportsImport: true,
         supportsContinue: true,
       }),
@@ -62,10 +63,12 @@ describe("ExternalExecutionBoard", () => {
       loading={false}
       refreshing={false}
       busy={[]}
+      details={{}}
       query=""
       onRefresh={async () => snapshot()}
       onImport={onImport}
       onContinue={onContinue}
+      onLoadDetails={async () => { throw new Error("not supported"); }}
       onOpenTask={onOpenTask}
     />);
 
@@ -92,15 +95,102 @@ describe("ExternalExecutionBoard", () => {
       loading={false}
       refreshing={false}
       busy={[]}
+      details={{}}
       query=""
       onRefresh={async () => snapshot()}
       onImport={async () => ({ taskId: "unexpected", created: true })}
       onContinue={async () => ({ kind: "command-copied", message: "continue" })}
+      onLoadDetails={async () => { throw new Error("not supported"); }}
       onOpenTask={onOpenTask}
     />);
 
     expect(screen.queryByRole("button", { name: /导入为 Task/u })).toBeNull();
     await user.click(screen.getByRole("button", { name: "打开受管 Task" }));
     expect(onOpenTask).toHaveBeenCalledWith("task-managed");
+  });
+
+  it("reads Codex Turn details only after the user opens them", async () => {
+    const execution = Object.freeze({
+      ...item(),
+      sourceId: "codex" as const,
+      externalId: "thread-1",
+      nativeId: "thread-1",
+      kind: "exec",
+      title: "Codex 外部 Thread",
+      session: Object.freeze({ backendId: "codex" as const, sessionId: "thread-1" }),
+      state: "idle" as const,
+      needsInput: false,
+      waitingFor: undefined,
+      process: undefined,
+    });
+    const detail = Object.freeze({
+      sourceId: "codex" as const,
+      externalId: "thread-1",
+      title: execution.title,
+      projectPath: "/repo",
+      fetchedAt: NOW,
+      turns: Object.freeze([Object.freeze({
+        id: "turn-1",
+        status: "completed",
+        items: Object.freeze([Object.freeze({ id: "message-1", type: "agentMessage", label: "Codex", text: "实现已完成" })]),
+      })]),
+    });
+    const onLoadDetails = vi.fn(async () => detail);
+    const user = userEvent.setup();
+    const view = render(<ExternalExecutionBoard
+      snapshot={snapshot(execution)}
+      loading={false}
+      refreshing={false}
+      busy={[]}
+      details={{}}
+      query=""
+      onRefresh={async () => snapshot(execution)}
+      onImport={async () => ({ taskId: "task", created: true })}
+      onContinue={async () => ({ message: "codex resume thread-1" })}
+      onLoadDetails={onLoadDetails}
+      onOpenTask={() => undefined}
+    />);
+
+    expect(onLoadDetails).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "查看详情" }));
+    expect(onLoadDetails).toHaveBeenCalledWith(expect.objectContaining({ externalId: "thread-1" }));
+
+    view.rerender(<ExternalExecutionBoard
+      snapshot={snapshot(execution)}
+      loading={false}
+      refreshing={false}
+      busy={[]}
+      details={{ "codex:thread-1": detail }}
+      query=""
+      onRefresh={async () => snapshot(execution)}
+      onImport={async () => ({ taskId: "task", created: true })}
+      onContinue={async () => ({ message: "codex resume thread-1" })}
+      onLoadDetails={onLoadDetails}
+      onOpenTask={() => undefined}
+    />);
+    expect(screen.getByText("实现已完成")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "收起详情" })).toBeTruthy();
+  });
+
+  it("removes Stella-managed sessions from the compact all view", () => {
+    render(<ExternalExecutionBoard
+      compact
+      hideManaged
+      snapshot={snapshot(item({ taskId: "task-managed", relation: "managed" }))}
+      loading={false}
+      refreshing={false}
+      busy={[]}
+      details={{}}
+      query=""
+      onRefresh={async () => snapshot()}
+      onImport={async () => ({ taskId: "task", created: false })}
+      onContinue={async () => ({ message: "continue" })}
+      onLoadDetails={async () => { throw new Error("not supported"); }}
+      onOpenTask={() => undefined}
+    />);
+
+    expect(screen.queryByText("Claude 后台修复")).toBeNull();
+    expect(screen.getByText("当前筛选没有外部任务")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "外部 CLI 活动" }).classList.contains("is-compact")).toBe(true);
   });
 });

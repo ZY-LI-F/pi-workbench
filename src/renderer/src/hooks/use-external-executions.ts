@@ -5,9 +5,11 @@ import {
   type ContinueExternalExecutionInput,
   type ContinueExternalExecutionResult,
   type ExternalExecutionCatalogSnapshot,
+  type ExternalExecutionDetails,
   type ExternalExecutionScope,
   type ImportExternalExecutionInput,
   type ImportExternalExecutionResult,
+  type ReadExternalExecutionDetailsInput,
 } from "@shared/external-execution";
 
 const POLL_INTERVAL_MS = 10_000;
@@ -18,9 +20,11 @@ export interface ExternalExecutionsController {
   readonly refreshing: boolean;
   readonly error?: string;
   readonly busy: readonly string[];
+  readonly details: Readonly<Record<string, ExternalExecutionDetails>>;
   refresh(): Promise<ExternalExecutionCatalogSnapshot>;
   importExecution(input: ImportExternalExecutionInput): Promise<ImportExternalExecutionResult>;
   continueExecution(input: ContinueExternalExecutionInput): Promise<ContinueExternalExecutionResult>;
+  loadDetails(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails>;
 }
 
 export function useExternalExecutions(
@@ -33,6 +37,8 @@ export function useExternalExecutions(
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState<readonly string[]>(Object.freeze([]));
+  const [details, setDetails] = useState<Readonly<Record<string, ExternalExecutionDetails>>>(Object.freeze({}));
+  const [documentVisible, setDocumentVisible] = useState(() => typeof document === "undefined" || document.visibilityState !== "hidden");
   const requestSequence = useRef(0);
   const scopeKey = externalExecutionScopeKey(scope);
 
@@ -57,10 +63,21 @@ export function useExternalExecutions(
   }, [api, scope, scopeKey]);
 
   useEffect(() => {
+    const updateVisibility = () => setDocumentVisible(document.visibilityState !== "hidden");
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => document.removeEventListener("visibilitychange", updateVisibility);
+  }, []);
+
+  useEffect(() => {
     requestSequence.current += 1;
     setSnapshot(undefined);
+    setDetails(Object.freeze({}));
     setError(undefined);
-    if (!enabled) {
+  }, [scopeKey]);
+
+  useEffect(() => {
+    requestSequence.current += 1;
+    if (!enabled || !documentVisible) {
       setLoading(false);
       setRefreshing(false);
       return;
@@ -72,7 +89,7 @@ export function useExternalExecutions(
       requestSequence.current += 1;
       window.clearInterval(timer);
     };
-  }, [enabled, refresh, scopeKey]);
+  }, [documentVisible, enabled, refresh, scopeKey]);
 
   const runBusy = useCallback(async <T,>(key: string, action: () => Promise<T>): Promise<T> => {
     setBusy((current) => Object.freeze([...current, key]));
@@ -101,5 +118,14 @@ export function useExternalExecutions(
     () => api.externalExecutionContinue(input),
   ), [api, runBusy]);
 
-  return Object.freeze({ snapshot, loading, refreshing, error, busy, refresh, importExecution, continueExecution });
+  const loadDetails = useCallback((input: ReadExternalExecutionDetailsInput) => runBusy(
+    `details:${input.sourceId}:${input.externalId}`,
+    async () => {
+      const result = await api.externalExecutionDetails(input);
+      setDetails((current) => Object.freeze({ ...current, [`${input.sourceId}:${input.externalId}`]: result }));
+      return result;
+    },
+  ), [api, runBusy]);
+
+  return Object.freeze({ snapshot, loading, refreshing, error, busy, details, refresh, importExecution, continueExecution, loadDetails });
 }

@@ -112,6 +112,93 @@ if (mode === "jsonl") {
   } else {
     process.exitCode = 2;
   }
+} else if (mode === "codex-app-server") {
+  const thread = (id, source, status, parentThreadId) => ({
+    id,
+    sessionId: "session-tree-1",
+    name: id === "thread-cli" ? "CLI 功能开发" : null,
+    preview: `Preview for ${id}`,
+    cwd: "/repo",
+    path: `/tmp/${id}.jsonl`,
+    source,
+    status,
+    parentThreadId: parentThreadId ?? null,
+    forkedFromId: null,
+    cliVersion: "0.149.0",
+    modelProvider: "openai",
+    ephemeral: false,
+    projectId: null,
+    turns: [],
+    createdAt: 1787554800,
+    updatedAt: 1787558400,
+  });
+  const response = (id, result) => process.stdout.write(`${JSON.stringify({ id, result })}\n`);
+  let pending = "";
+  process.stdin.setEncoding("utf8");
+  process.stdin.on("data", (chunk) => {
+    pending += chunk;
+    let newline = pending.indexOf("\n");
+    while (newline >= 0) {
+      const line = pending.slice(0, newline);
+      pending = pending.slice(newline + 1);
+      newline = pending.indexOf("\n");
+      if (!line) continue;
+      const message = JSON.parse(line);
+      if (message.method === "initialize") {
+        response(message.id, { codexHome: "/tmp/codex-home", platformFamily: "unix", platformOs: "macos", userAgent: "codex-shim" });
+      } else if (message.method === "initialized") {
+        process.stdout.write(`${JSON.stringify({ method: "thread/status/changed", params: { threadId: "thread-cli", status: { type: "active", activeFlags: ["waitingOnUserInput"] } } })}\n`);
+      } else if (message.method === "thread/list") {
+        if (message.params?.cursor === "page-2") {
+          response(message.id, {
+            data: [thread("thread-sub", { subAgent: { thread_spawn: { depth: 1, parent_thread_id: "thread-cli" } } }, { type: "idle" }, "thread-cli")],
+            nextCursor: null,
+          });
+        } else {
+          response(message.id, {
+            data: [
+              thread("thread-cli", "cli", { type: "idle" }),
+              thread("thread-exec", "exec", { type: "active", activeFlags: [] }),
+              thread("thread-app", "appServer", { type: "systemError" }),
+            ],
+            nextCursor: "page-2",
+          });
+        }
+      } else if (message.method === "thread/read") {
+        response(message.id, { thread: thread(message.params.threadId, "cli", { type: "idle" }) });
+      } else if (message.method === "thread/turns/list") {
+        if (message.params?.cursor === "turn-page-2") {
+          response(message.id, {
+            data: [{ id: "turn-older", status: "completed", startedAt: 1787554700, completedAt: 1787554750, items: [{ id: "compact-1", type: "contextCompaction" }] }],
+            nextCursor: null,
+          });
+        } else {
+          response(message.id, {
+            data: [{
+              id: "turn-current",
+              status: "completed",
+              startedAt: 1787554800,
+              completedAt: 1787554860,
+              items: [
+                { id: "user-1", type: "userMessage", content: [{ type: "text", text: "实现功能" }] },
+                { id: "command-1", type: "commandExecution", command: "npm test", aggregatedOutput: "all passed", status: "completed", commandActions: [], cwd: "/repo" },
+                { id: "agent-1", type: "agentMessage", text: "功能已完成" },
+              ],
+            }],
+            nextCursor: "turn-page-2",
+          });
+        }
+      } else if (message.method === "test/error") {
+        process.stdout.write(`${JSON.stringify({ id: message.id, error: { code: -32000, message: "fixture failure" } })}\n`);
+      } else if (message.method === "test/exit") {
+        process.exit(0);
+      } else if (message.method === "test/malformed") {
+        process.stdout.write("{invalid-json}\n");
+      } else if (message.method !== "test/timeout") {
+        response(message.id, {});
+      }
+    }
+  });
 } else {
   process.stderr.write(`unknown mode: ${String(mode)}\n`);
   process.exitCode = 2;

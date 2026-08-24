@@ -51,9 +51,11 @@ import type {
   ContinueExternalExecutionInput,
   ContinueExternalExecutionResult,
   ExternalExecutionCatalogSnapshot,
+  ExternalExecutionDetails,
   ExternalExecutionScope,
   ImportExternalExecutionInput,
   ImportExternalExecutionResult,
+  ReadExternalExecutionDetailsInput,
 } from "./external-execution";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
@@ -240,6 +242,7 @@ export interface StellaDesktopApi {
   externalExecutionsRefresh(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot>;
   externalExecutionImport(input: ImportExternalExecutionInput): Promise<ImportExternalExecutionResult>;
   externalExecutionContinue(input: ContinueExternalExecutionInput): Promise<ContinueExternalExecutionResult>;
+  externalExecutionDetails(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails>;
   initialize(): Promise<RuntimeBootstrap>;
   command(command: PiCommand): Promise<PiResponse>;
   refresh(): Promise<RuntimeBootstrap>;

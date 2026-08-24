@@ -76,4 +76,25 @@ describe("useExternalExecutions", () => {
     expect(screen.getByText("project-result")).toBeTruthy();
     expect(screen.queryByText("late-all-result")).toBeNull();
   });
+
+  it("pauses polling while the document is hidden and refreshes when it becomes visible", async () => {
+    vi.useFakeTimers();
+    let visibility: DocumentVisibilityState = "hidden";
+    const visibilityState = vi.spyOn(document, "visibilityState", "get").mockImplementation(() => visibility);
+    const refresh = vi.fn(async (scope: ExternalExecutionScope) => snapshot(scope, "visible-result"));
+    const api = { externalExecutionsRefresh: refresh } as unknown as StellaDesktopApi;
+    render(<Harness api={api} scope={{ kind: "all" }} />);
+    await act(async () => { await Promise.resolve(); });
+    expect(refresh).not.toHaveBeenCalled();
+
+    visibility = "visible";
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); await Promise.resolve(); });
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    visibility = "hidden";
+    await act(async () => { document.dispatchEvent(new Event("visibilitychange")); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    visibilityState.mockRestore();
+  });
 });

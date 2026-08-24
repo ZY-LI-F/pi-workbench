@@ -104,6 +104,36 @@ export interface ContinueExternalExecutionResult {
   readonly message: string;
 }
 
+export interface ExternalExecutionDetailItem {
+  readonly id: string;
+  readonly type: string;
+  readonly label: string;
+  readonly text?: string;
+  readonly status?: string;
+}
+
+export interface ExternalExecutionDetailTurn {
+  readonly id: string;
+  readonly status: string;
+  readonly startedAt?: string;
+  readonly completedAt?: string;
+  readonly items: readonly ExternalExecutionDetailItem[];
+}
+
+export interface ExternalExecutionDetails {
+  readonly sourceId: ExternalExecutionSourceId;
+  readonly externalId: string;
+  readonly title: string;
+  readonly projectPath: string;
+  readonly fetchedAt: string;
+  readonly turns: readonly ExternalExecutionDetailTurn[];
+}
+
+export interface ReadExternalExecutionDetailsInput {
+  readonly sourceId: ExternalExecutionSourceId;
+  readonly externalId: string;
+}
+
 export function isExternalExecutionSourceId(value: unknown): value is ExternalExecutionSourceId {
   return typeof value === "string" && EXTERNAL_EXECUTION_SOURCE_IDS.includes(value as ExternalExecutionSourceId);
 }

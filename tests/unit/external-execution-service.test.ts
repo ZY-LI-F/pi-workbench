@@ -143,9 +143,12 @@ describe("ExternalExecutionService", () => {
     expect(refreshed.sources[0]?.items[0]?.association).toEqual({ taskId: first.taskId, relation: "imported" });
   });
 
-  it("associates a managed backend session without importing another Task", async () => {
-    const claude = new FakeSource("claude", [execution("claude", "managed-session")]);
-    const { repository, boardService, service } = fixture([claude]);
+  it.each([
+    ["claude", "claude.print"],
+    ["codex", "codex.exec"],
+  ] as const)("associates a managed %s session without importing another Task", async (sourceId, profileId) => {
+    const source = new FakeSource(sourceId, [execution(sourceId, "managed-session")]);
+    const { repository, boardService, service } = fixture([source]);
     await boardService.createTask({
       title: "Managed Task",
       description: "",
@@ -155,7 +158,7 @@ describe("ExternalExecutionService", () => {
       projectName: "repo",
       trusted: true,
       executionTarget: { kind: "agent", agentId: "builder" },
-      executionProfileId: "claude.print",
+      executionProfileId: profileId,
     });
     const task = repository.state.tasks[0];
     const builder = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
@@ -173,15 +176,15 @@ describe("ExternalExecutionService", () => {
           acceptanceCriteria: task.acceptanceCriteria,
           priority: task.priority,
           executionTarget: task.executionTarget,
-          executionProfileId: "claude.print",
+          executionProfileId: profileId,
         },
-        executionProfile: snapshotExecutionProfile("claude.print"),
+        executionProfile: snapshotExecutionProfile(profileId),
         agentSnapshot: builder,
         kind: "direct",
         status: "failed",
         acceptance: "not-ready",
         prompt: "execute",
-        session: { backendId: "claude", sessionId: "managed-session" },
+        session: { backendId: sourceId, sessionId: "managed-session" },
         createdAt: NOW,
         updatedAt: NOW,
         completedAt: NOW,

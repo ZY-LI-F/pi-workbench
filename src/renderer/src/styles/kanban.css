@@ -300,6 +300,22 @@
   overflow: hidden;
 }
 
+.kanban-task-stage {
+  display: contents;
+}
+
+.kanban-combined-stage {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-rows: minmax(164px, 34%) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.kanban-combined-stage > .kanban-stage {
+  border-top: 1px solid var(--border);
+}
+
 .external-execution-board {
   display: flex;
   min-width: 0;
@@ -310,6 +326,75 @@
   overflow: auto;
   scrollbar-color: color-mix(in srgb, var(--accent) 24%, transparent) transparent;
   scrollbar-width: thin;
+}
+
+.external-execution-board.is-compact {
+  padding: 8px 12px 10px;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.external-execution-board.is-compact .external-execution-board__header {
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+}
+
+.external-execution-board.is-compact .external-execution-board__header h2 {
+  display: inline;
+  margin-left: 7px;
+  font-size: 0.78rem;
+}
+
+.external-execution-board.is-compact .external-execution-board__header p,
+.external-execution-board.is-compact .external-execution-board__filters {
+  display: none;
+}
+
+.external-execution-board.is-compact .external-source-health {
+  padding: 5px 8px;
+}
+
+.external-execution-board.is-compact .external-source-health small {
+  display: none;
+}
+
+.external-execution-board.is-compact .external-execution-grid {
+  display: flex;
+  min-height: 0;
+  padding-bottom: 3px;
+  overflow: auto;
+}
+
+.external-execution-board.is-compact .external-execution-card {
+  width: 290px;
+  min-width: 290px;
+  min-height: 128px;
+  padding: 9px;
+  box-shadow: none;
+}
+
+.external-execution-board.is-compact .external-execution-card h3 {
+  margin-top: 7px;
+}
+
+.external-execution-board.is-compact .external-execution-card > p,
+.external-execution-board.is-compact .external-execution-card dl div:nth-child(n + 3),
+.external-execution-board.is-compact .external-execution-card__waiting {
+  display: none;
+}
+
+.external-execution-board.is-compact .external-execution-card dl {
+  margin: 7px 0;
+}
+
+.external-execution-board.is-compact .external-execution-card > footer {
+  padding-top: 6px;
+}
+
+.external-execution-board.is-compact .external-execution-empty {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px;
 }
 
 .external-execution-board__header {
@@ -577,6 +662,84 @@
   gap: 4px;
   color: var(--text-faint);
   font-size: 0.75rem;
+}
+
+.external-execution-card__details {
+  display: grid;
+  max-height: 360px;
+  margin-top: 10px;
+  padding: 8px;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--canvas) 72%, transparent);
+  overflow: auto;
+}
+
+.external-execution-card__details > div {
+  display: flex;
+  padding: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+}
+
+.external-execution-card__details > article {
+  display: grid;
+  gap: 5px;
+}
+
+.external-execution-card__details > article + article {
+  padding-top: 7px;
+  border-top: 1px solid var(--border);
+}
+
+.external-execution-card__details article > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.external-execution-card__details article > header strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.external-execution-card__details article > div {
+  min-width: 0;
+  padding: 6px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.external-execution-card__details article b,
+.external-execution-card__details article em {
+  color: var(--text-soft);
+  font-size: 0.75rem;
+}
+
+.external-execution-card__details article em {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-style: normal;
+}
+
+.external-execution-card__details pre {
+  max-height: 180px;
+  margin: 5px 0 0;
+  overflow: auto;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .external-execution-empty {
