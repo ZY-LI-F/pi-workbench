@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Stella Companion</string>
+    <string name="title_activity_main">Stella Companion</string>
+    <string name="package_name">ai.stably.stella.companion</string>
+    <string name="custom_url_scheme">ai.stably.stella.companion</string>
+</resources>

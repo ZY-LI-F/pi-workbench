@@ -43,6 +43,11 @@
     "test:e2e:pharma:live": "npm run build && playwright test --config playwright.live.config.ts",
     "test:e2e:qwen:live": "npm run build && playwright test --config playwright.live.config.ts tests/e2e/aliyun-qwen.live.ts",
     "test:packaged": "playwright test tests/e2e/packaged.spec.ts",
+    "companion:install": "npm ci --prefix apps/companion",
+    "companion:build": "npm run build --prefix apps/companion",
+    "companion:test": "npm test --prefix apps/companion",
+    "companion:sync": "npm run cap:sync --prefix apps/companion",
+    "companion:apk:debug": "bash scripts/build-companion-android.sh",
     "release:checksums": "node scripts/write-release-checksums.mjs",
     "check": "npm run typecheck && npm run lint && npm test"
   },

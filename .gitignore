@@ -5,6 +5,10 @@ release/
 coverage/
 test-results/
 playwright-report/
+apps/companion/dist/
+apps/companion/android/.gradle/
+apps/companion/android/local.properties
+apps/companion/android/app/build/
 examples/pharma-early-research/evidence/e2e/*.json
 *.log
 *.tsbuildinfo
