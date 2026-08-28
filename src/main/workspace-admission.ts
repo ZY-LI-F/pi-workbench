@@ -72,7 +72,7 @@ export async function canonicalWorkspaceKey(workspacePath: string): Promise<stri
   return process.platform === "win32" ? canonical.toLocaleLowerCase("en-US") : canonical;
 }
 
-type WorkspacePolicyAgent = Pick<AgentDefinition,
+export type WorkspacePolicyAgent = Pick<AgentDefinition,
   "id" | "workspaceAccess" | "allowedTools" | "disableExtensions" | "disableSkills" | "disablePromptTemplates" | "disableContextFiles"
 >;
 

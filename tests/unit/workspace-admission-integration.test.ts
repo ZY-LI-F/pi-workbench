@@ -11,6 +11,7 @@ import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
@@ -81,6 +82,11 @@ describe("shared WorkspaceAdmission integration", () => {
     const id = idFactory();
     const now = () => "2026-07-18T00:00:00.000Z";
     const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.replaceAll("\\", "/").toLocaleLowerCase("en-US") });
+    const workspace = new CurrentFolderExecutionWorkspace({
+      admission,
+      resolveProjectTrust: async () => true,
+      resolveProjectPath: async (projectPath) => projectPath,
+    });
     const workflowFactory = new SharedRuntimeFactory();
     const agentFactory = new SharedRuntimeFactory();
     const boardService = new BoardService({ repository, catalog: CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
@@ -98,10 +104,8 @@ describe("shared WorkspaceAdmission integration", () => {
         })],
         now,
       }),
-      admission,
       emitBoardEvent: () => undefined,
-      resolveProjectTrust: async () => true,
-      resolveProjectPath: async (projectPath) => projectPath,
+      workspace,
       id,
       now,
     });
@@ -117,10 +121,8 @@ describe("shared WorkspaceAdmission integration", () => {
         })],
         now,
       }),
-      admission,
       emitBoardEvent: () => undefined,
-      resolveProjectTrust: async () => true,
-      resolveProjectPath: async (projectPath) => projectPath,
+      workspace,
     });
 
     await boardService.createTask({

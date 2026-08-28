@@ -13,6 +13,7 @@ import {
 } from "../../src/main/execution-adapters/pi-rpc-execution-adapter";
 import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
@@ -119,6 +120,7 @@ async function setup(
 ) {
   const events: BoardBridgeEvent[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
+  const workspace = new CurrentFolderExecutionWorkspace({ admission, resolveProjectTrust, resolveProjectPath });
   const id = idFactory();
   const service = new BoardService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now: () => "2026-07-17T00:00:00.000Z" });
   await service.createTask({
@@ -133,9 +135,7 @@ async function setup(
     catalog: BUILTIN_ORCHESTRATION_CATALOG,
     backendRegistry: backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
-    admission,
-    resolveProjectTrust,
-    resolveProjectPath,
+    workspace,
     id,
     now: () => "2026-07-17T00:00:00.000Z",
   });

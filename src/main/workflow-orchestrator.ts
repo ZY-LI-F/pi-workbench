@@ -26,12 +26,10 @@ import {
 } from "../shared/execution-state";
 import { catalogForBoard } from "../shared/orchestration-catalog";
 import {
-  WorkspaceAdmission,
-  WorkspaceAdmissionAbortError,
-  agentRequiresWorkspaceLease,
-  assertAgentWorkspacePolicy,
-  type WorkspaceLease,
-} from "./workspace-admission";
+  ExecutionWorkspaceAbortError,
+  type ExecutionWorkspaceHandle,
+  type ExecutionWorkspaceProvider,
+} from "./execution-workspace";
 import { executionProfileAgentIncompatibility, snapshotExecutionProfile, type ExecutionProfileId } from "../shared/execution-profile";
 import { ExecutionAbortedError, ExecutionProtocolError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
 import type { ExecutionBackendRegistryContract } from "./execution-backend-registry";
@@ -41,9 +39,7 @@ interface OrchestratorDependencies {
   readonly catalog: OrchestrationCatalog;
   readonly backendRegistry: ExecutionBackendRegistryContract;
   readonly emitBoardEvent: (event: BoardBridgeEvent) => void;
-  readonly admission: WorkspaceAdmission;
-  readonly resolveProjectTrust: (projectPath: string) => Promise<boolean>;
-  readonly resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly workspace: ExecutionWorkspaceProvider;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -54,9 +50,8 @@ interface ActiveAgentRun {
   readonly stepId: string;
   readonly runtimeToken: string;
   readonly controller: AbortController;
-  readonly lease?: WorkspaceLease;
+  readonly workspace: ExecutionWorkspaceHandle;
   abortRequested: boolean;
-  released: boolean;
   done?: Promise<void>;
 }
 
@@ -85,9 +80,7 @@ export class WorkflowOrchestrator {
   readonly #catalog: OrchestrationCatalog;
   readonly #backendRegistry: ExecutionBackendRegistryContract;
   readonly #emitBoardEvent: (event: BoardBridgeEvent) => void;
-  readonly #admission: WorkspaceAdmission;
-  readonly #resolveProjectTrust: (projectPath: string) => Promise<boolean>;
-  readonly #resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly #workspace: ExecutionWorkspaceProvider;
   readonly #now: () => string;
   readonly #id: () => string;
   readonly #activeAgents = new Map<string, ActiveAgentRun>();
@@ -99,9 +92,7 @@ export class WorkflowOrchestrator {
     this.#catalog = dependencies.catalog;
     this.#backendRegistry = dependencies.backendRegistry;
     this.#emitBoardEvent = dependencies.emitBoardEvent;
-    this.#admission = dependencies.admission;
-    this.#resolveProjectTrust = dependencies.resolveProjectTrust;
-    this.#resolveProjectPath = dependencies.resolveProjectPath;
+    this.#workspace = dependencies.workspace;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -120,8 +111,7 @@ export class WorkflowOrchestrator {
     const previewAgents = Object.freeze([...previewAgentIds].map((agentId) => this.#agent(agentId)));
     this.#assertWorkflowProfile(previewTask.executionProfileId, previewAgents);
     this.#backendRegistry.resolve(previewTask.executionProfileId);
-    const previewTrusted = await this.#resolveProjectTrust(previewTask.projectPath);
-    await this.#resolveProjectPath(previewTask.projectPath, previewTrusted);
+    await this.#workspace.resolve(previewTask.projectPath);
     const now = this.#now();
     let runId = "";
     const bootstrap = await this.#commit((current) => {
@@ -347,45 +337,43 @@ export class WorkflowOrchestrator {
     }
     const agent = run.agents.find((candidate) => candidate.id === definition.agentId);
     if (!agent) throw new Error(`流程快照缺少 Agent: ${definition.agentId}`);
-    assertAgentWorkspacePolicy(agent);
     this.#assertWorkflowProfile(run.executionProfile.id, run.agents);
     const resolvedBackend = this.#backendRegistry.resolve(run.executionProfile.id);
-    const trusted = await this.#resolveProjectTrust(task.projectPath);
-    const projectPath = await this.#resolveProjectPath(task.projectPath, trusted);
-    let lease: WorkspaceLease | undefined;
-    if (agentRequiresWorkspaceLease(agent)) {
-      const controller = new AbortController();
-      const waiting = Object.freeze({ taskId: task.id, controller });
-      this.#waitingAdmissions.set(run.id, waiting);
-      try {
-        lease = await this.#admission.acquireBackground(task.projectPath, {
+    const controller = new AbortController();
+    const waiting = Object.freeze({ taskId: task.id, controller });
+    this.#waitingAdmissions.set(run.id, waiting);
+    let workspace: ExecutionWorkspaceHandle;
+    try {
+      workspace = await this.#workspace.acquire({
+        projectPath: task.projectPath,
+        agent,
+        owner: {
           id: `workflow:${run.id}:${step.stepId}`,
           kind: "workflow",
           label: `Workflow · ${run.workflow.shortName} / ${agent.name} · ${resolvedBackend.profile.label}`,
           taskId: task.id,
           executionId: run.id,
-        }, {
-          signal: controller.signal,
-          onQueued: (owner) => this.#queueForWriter(run, task, step, agent, owner.label),
-        });
-      } catch (cause) {
-        if (cause instanceof WorkspaceAdmissionAbortError) return;
-        throw cause;
-      } finally {
-        if (this.#waitingAdmissions.get(run.id) === waiting) this.#waitingAdmissions.delete(run.id);
-      }
-      if (this.#stopping) {
-        lease.release();
-        return;
-      }
-      const latest = await this.#repository.read();
-      const latestTask = latest.tasks.find((candidate) => candidate.id === task.id);
-      const latestRun = latest.runs.find((candidate) => candidate.id === run.id);
-      const latestStep = latestRun?.steps.find((candidate) => candidate.id === step.id);
-      if (latestTask?.activeRunId !== run.id || !latestRun || !latestStep || latestStep.status !== "pending" || ["failed", "blocked", "interrupted", "reported"].includes(latestRun.status)) {
-        lease.release();
-        return;
-      }
+        },
+        signal: controller.signal,
+        onQueued: (owner) => this.#queueForWriter(run, task, step, agent, owner.label),
+      });
+    } catch (cause) {
+      if (cause instanceof ExecutionWorkspaceAbortError) return;
+      throw cause;
+    } finally {
+      if (this.#waitingAdmissions.get(run.id) === waiting) this.#waitingAdmissions.delete(run.id);
+    }
+    if (this.#stopping) {
+      workspace.release();
+      return;
+    }
+    const latest = await this.#repository.read();
+    const latestTask = latest.tasks.find((candidate) => candidate.id === task.id);
+    const latestRun = latest.runs.find((candidate) => candidate.id === run.id);
+    const latestStep = latestRun?.steps.find((candidate) => candidate.id === step.id);
+    if (latestTask?.activeRunId !== run.id || !latestRun || !latestStep || latestStep.status !== "pending" || ["failed", "blocked", "interrupted", "reported"].includes(latestRun.status)) {
+      workspace.release();
+      return;
     }
     await this.#startAgent(
       run,
@@ -394,10 +382,8 @@ export class WorkflowOrchestrator {
       definition.objective,
       agent,
       resolvedBackend.backend,
-      projectPath,
-      trusted,
       resolvedBackend.health.version,
-      lease,
+      workspace,
     );
   }
 
@@ -453,10 +439,8 @@ export class WorkflowOrchestrator {
     objective: string,
     agent: AgentDefinition,
     backend: ExecutionBackend,
-    projectPath: string,
-    trusted: boolean,
     backendVersion: string | undefined,
-    lease?: WorkspaceLease,
+    workspace: ExecutionWorkspaceHandle,
   ): Promise<void> {
     const runtimeToken = this.#id();
     const active: ActiveAgentRun = {
@@ -465,41 +449,45 @@ export class WorkflowOrchestrator {
       stepId: step.stepId,
       runtimeToken,
       controller: new AbortController(),
-      lease,
+      workspace,
       abortRequested: false,
-      released: false,
     };
     this.#activeAgents.set(run.id, active);
     const startedAt = this.#now();
     let applied = false;
-    await this.#commit((current) => {
-      const latestRun = this.#run(current, run.id);
-      const latestTask = this.#task(current, task.id);
-      applied = latestTask.activeRunId === run.id && !["blocked", "failed", "interrupted", "reported"].includes(latestRun.status);
-      if (!applied) return current;
-      const runningStep: StepRun = Object.freeze({ ...step, status: "running", runtimeToken, backendVersion, startedAt });
-      return {
-        ...current,
-        tasks: current.tasks.map((candidate) => candidate.id === task.id
-          ? applyTaskLifecycle(candidate, { type: "execution-started" }, startedAt)
-          : candidate),
-        runs: current.runs.map((candidate) => candidate.id === run.id
-          ? Object.freeze({
-              ...latestRun,
-              status: "running" as const,
-              currentStepId: step.stepId,
-              steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? runningStep : item)),
-              updatedAt: startedAt,
-            })
-          : candidate),
-        activities: [...current.activities, this.#activity(task.id, "agent", `${agent.name}开始执行「${step.name}」`, agent.callsign, startedAt, run.id, step.stepId)],
-      };
-    });
+    try {
+      await this.#commit((current) => {
+        const latestRun = this.#run(current, run.id);
+        const latestTask = this.#task(current, task.id);
+        applied = latestTask.activeRunId === run.id && !["blocked", "failed", "interrupted", "reported"].includes(latestRun.status);
+        if (!applied) return current;
+        const runningStep: StepRun = Object.freeze({ ...step, status: "running", runtimeToken, backendVersion, startedAt });
+        return {
+          ...current,
+          tasks: current.tasks.map((candidate) => candidate.id === task.id
+            ? applyTaskLifecycle(candidate, { type: "execution-started" }, startedAt)
+            : candidate),
+          runs: current.runs.map((candidate) => candidate.id === run.id
+            ? Object.freeze({
+                ...latestRun,
+                status: "running" as const,
+                currentStepId: step.stepId,
+                steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? runningStep : item)),
+                updatedAt: startedAt,
+              })
+            : candidate),
+          activities: [...current.activities, this.#activity(task.id, "agent", `${agent.name}开始执行「${step.name}」`, agent.callsign, startedAt, run.id, step.stepId)],
+        };
+      });
+    } catch (cause) {
+      this.#finalizeActive(active);
+      throw cause;
+    }
     if (!applied) {
       this.#finalizeActive(active);
       return;
     }
-    const done = this.#executeAgent(active, backend, run, task, step, objective, agent, projectPath, trusted);
+    const done = this.#executeAgent(active, backend, run, task, step, objective, agent);
     active.done = done;
     void done.catch((error) => this.#reportError(error));
   }
@@ -512,8 +500,6 @@ export class WorkflowOrchestrator {
     step: StepRun,
     objective: string,
     agent: AgentDefinition,
-    projectPath: string,
-    trusted: boolean,
   ): Promise<void> {
     let shouldAdvance = false;
     try {
@@ -521,8 +507,8 @@ export class WorkflowOrchestrator {
         executionId: step.id,
         runtimeToken: active.runtimeToken,
         profile: run.executionProfile,
-        cwd: projectPath,
-        trusted,
+        cwd: active.workspace.cwd,
+        trusted: active.workspace.trusted,
         sessionName: backgroundSessionName({ taskId: task.id, executionKind: "workflow-step", executionId: step.id, label: `${task.title} · ${step.name}` }),
         prompt: this.#promptFor(run, task, step, objective, agent),
         agent,
@@ -642,10 +628,7 @@ export class WorkflowOrchestrator {
   }
 
   #finalizeActive(active: ActiveAgentRun): void {
-    if (!active.released) {
-      active.released = true;
-      active.lease?.release();
-    }
+    active.workspace.release();
     if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
   }
 

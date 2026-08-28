@@ -83,6 +83,7 @@ import { SquadService } from "./squad-service";
 import { WorkflowOrchestrator } from "./workflow-orchestrator";
 import { WebhookServer, webhookMaxBytesFromEnvironment, webhookPortFromEnvironment } from "./webhook-server";
 import { WorkspaceAdmission } from "./workspace-admission";
+import { CurrentFolderExecutionWorkspace } from "./execution-workspace";
 import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
 import {
@@ -1437,14 +1438,17 @@ async function initializeTaskCapability(): Promise<void> {
       boardService,
       resolveProjectTrust,
     });
+    const executionWorkspace = new CurrentFolderExecutionWorkspace({
+      admission: workspaceAdmission,
+      resolveProjectTrust,
+      resolveProjectPath: canonicalExecutionProjectPath,
+    });
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
-      admission: workspaceAdmission,
-      resolveProjectTrust,
-      resolveProjectPath: canonicalExecutionProjectPath,
+      workspace: executionWorkspace,
     });
     agentTaskService = new AgentTaskService({
       repository: boardStore,
@@ -1486,9 +1490,7 @@ async function initializeTaskCapability(): Promise<void> {
       service: agentTaskService,
       backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
-      admission: workspaceAdmission,
-      resolveProjectTrust,
-      resolveProjectPath: canonicalExecutionProjectPath,
+      workspace: executionWorkspace,
     });
     if (currentProject) await boardService.updateProjectTrust(currentProject.cwd, currentProject.trusted);
     agentTaskRunner.start();

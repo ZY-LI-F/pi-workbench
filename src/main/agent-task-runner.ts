@@ -4,20 +4,16 @@ import { AgentTaskRuntimeExpiredError, AgentTaskService, type ClaimedAgentTask }
 import { ExecutionAbortedError, ExecutionProtocolError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
 import type { ExecutionBackendRegistryContract, ExecutionUseCase } from "./execution-backend-registry";
 import {
-  WorkspaceAdmission,
-  WorkspaceAdmissionAbortError,
-  agentRequiresWorkspaceLease,
-  assertAgentWorkspacePolicy,
-  type WorkspaceLease,
-} from "./workspace-admission";
+  ExecutionWorkspaceAbortError,
+  type ExecutionWorkspaceHandle,
+  type ExecutionWorkspaceProvider,
+} from "./execution-workspace";
 
 interface AgentTaskRunnerDependencies {
   readonly service: AgentTaskService;
   readonly backendRegistry: ExecutionBackendRegistryContract;
   readonly emitBoardEvent: (event: BoardBridgeEvent) => void;
-  readonly admission: WorkspaceAdmission;
-  readonly resolveProjectTrust: (projectPath: string) => Promise<boolean>;
-  readonly resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly workspace: ExecutionWorkspaceProvider;
 }
 
 interface ActiveExecution {
@@ -25,9 +21,8 @@ interface ActiveExecution {
   readonly agentTaskId: string;
   readonly runtimeToken: string;
   readonly controller: AbortController;
-  readonly lease?: WorkspaceLease;
+  readonly workspace: ExecutionWorkspaceHandle;
   abortRequested: boolean;
-  released: boolean;
   done?: Promise<void>;
 }
 
@@ -52,9 +47,7 @@ export class AgentTaskRunner {
   readonly #service: AgentTaskService;
   readonly #backendRegistry: ExecutionBackendRegistryContract;
   readonly #emitBoardEvent: (event: BoardBridgeEvent) => void;
-  readonly #admission: WorkspaceAdmission;
-  readonly #resolveProjectTrust: (projectPath: string) => Promise<boolean>;
-  readonly #resolveProjectPath: (projectPath: string, trusted: boolean) => Promise<string>;
+  readonly #workspace: ExecutionWorkspaceProvider;
   #active?: ActiveExecution;
   #waiting?: WaitingExecution;
   #drainPromise?: Promise<void>;
@@ -66,9 +59,7 @@ export class AgentTaskRunner {
     this.#service = dependencies.service;
     this.#backendRegistry = dependencies.backendRegistry;
     this.#emitBoardEvent = dependencies.emitBoardEvent;
-    this.#admission = dependencies.admission;
-    this.#resolveProjectTrust = dependencies.resolveProjectTrust;
-    this.#resolveProjectPath = dependencies.resolveProjectPath;
+    this.#workspace = dependencies.workspace;
   }
 
   start(): void {
@@ -133,65 +124,62 @@ export class AgentTaskRunner {
       foundWork = true;
       const agent = queued.agentTask.agentSnapshot;
       let backend: ExecutionBackend;
-      let projectPath: string;
-      let trusted: boolean;
       let profileLabel: string;
       try {
-        assertAgentWorkspacePolicy(agent);
         this.#backendRegistry.assertCompatible(queued.agentTask.executionProfile.id, useCaseForAgentTask(queued.agentTask));
         const resolved = this.#backendRegistry.resolve(queued.agentTask.executionProfile.id);
         backend = resolved.backend;
         profileLabel = resolved.profile.label;
-        trusted = await this.#resolveProjectTrust(queued.task.projectPath);
-        projectPath = await this.#resolveProjectPath(queued.task.projectPath, trusted);
       } catch (cause) {
         await this.#service.rejectQueued(queued.agentTask.id, cause);
         return;
       }
 
-      let lease: WorkspaceLease | undefined;
-      if (agentRequiresWorkspaceLease(agent)) {
-        const controller = new AbortController();
-        const waiting = Object.freeze({ taskId: queued.task.id, agentTaskId: queued.agentTask.id, controller });
-        this.#waiting = waiting;
-        try {
-          lease = await this.#admission.acquireBackground(queued.task.projectPath, {
+      const controller = new AbortController();
+      const waiting = Object.freeze({ taskId: queued.task.id, agentTaskId: queued.agentTask.id, controller });
+      this.#waiting = waiting;
+      let workspace: ExecutionWorkspaceHandle;
+      try {
+        workspace = await this.#workspace.acquire({
+          projectPath: queued.task.projectPath,
+          agent,
+          owner: {
             id: `agent-task:${queued.agentTask.id}`,
             kind: "agent-task",
             label: `AgentTask · ${agent.name} · ${profileLabel}`,
             taskId: queued.task.id,
             executionId: queued.agentTask.id,
-          }, {
-            signal: controller.signal,
-            onQueued: (owner) => this.#service.recordWorkspaceWait(queued.agentTask.id, owner.label).then(() => undefined),
-          });
-        } catch (cause) {
-          if (cause instanceof WorkspaceAdmissionAbortError) return;
-          throw cause;
-        } finally {
-          if (this.#waiting === waiting) this.#waiting = undefined;
-        }
+          },
+          signal: controller.signal,
+          onQueued: (owner) => this.#service.recordWorkspaceWait(queued.agentTask.id, owner.label).then(() => undefined),
+        });
+      } catch (cause) {
+        if (cause instanceof ExecutionWorkspaceAbortError) return;
+        await this.#service.rejectQueued(queued.agentTask.id, cause);
+        return;
+      } finally {
+        if (this.#waiting === waiting) this.#waiting = undefined;
       }
       if (this.#stopping) {
-        lease?.release();
+        workspace.release();
         return;
       }
       const claimed = await this.#service.claim(queued.agentTask.id);
       if (!claimed) {
-        lease?.release();
+        workspace.release();
         return;
       }
-      this.#launch(claimed, backend, projectPath, trusted, lease);
+      this.#launch(claimed, backend, workspace);
     } finally {
       this.#draining = false;
       if (foundWork && !this.#active && !this.#stopping) this.notify();
     }
   }
 
-  #launch(claimed: ClaimedAgentTask, backend: ExecutionBackend, projectPath: string, trusted: boolean, lease?: WorkspaceLease): void {
+  #launch(claimed: ClaimedAgentTask, backend: ExecutionBackend, workspace: ExecutionWorkspaceHandle): void {
     const runtimeToken = claimed.agentTask.runtimeToken;
     if (!runtimeToken) {
-      lease?.release();
+      workspace.release();
       throw new Error(`已认领 AgentTask ${claimed.agentTask.id} 缺少 runtimeToken`);
     }
     const active: ActiveExecution = {
@@ -199,9 +187,8 @@ export class AgentTaskRunner {
       agentTaskId: claimed.agentTask.id,
       runtimeToken,
       controller: new AbortController(),
-      lease,
+      workspace,
       abortRequested: false,
-      released: false,
     };
     this.#active = active;
     const expectedResult = claimed.agentTask.kind === "coordinator"
@@ -209,7 +196,7 @@ export class AgentTaskRunner {
       || claimed.agentTask.kind === "squad-leader"
       ? "coordinator-action"
       : "report";
-    const done = this.#execute(active, backend, claimed, projectPath, trusted, expectedResult);
+    const done = this.#execute(active, backend, claimed, expectedResult);
     active.done = done;
     void done.catch((error) => this.#reportError(error));
   }
@@ -218,8 +205,6 @@ export class AgentTaskRunner {
     active: ActiveExecution,
     backend: ExecutionBackend,
     claimed: ClaimedAgentTask,
-    projectPath: string,
-    trusted: boolean,
     expectedResult: "report" | "coordinator-action",
   ): Promise<void> {
     try {
@@ -227,8 +212,8 @@ export class AgentTaskRunner {
         executionId: claimed.agentTask.id,
         runtimeToken: active.runtimeToken,
         profile: claimed.agentTask.executionProfile,
-        cwd: projectPath,
-        trusted,
+        cwd: active.workspace.cwd,
+        trusted: active.workspace.trusted,
         sessionName: backgroundSessionName({
           taskId: claimed.task.id,
           executionKind: "agent-task",
@@ -300,10 +285,7 @@ export class AgentTaskRunner {
   }
 
   #finalize(active: ActiveExecution): void {
-    if (!active.released) {
-      active.released = true;
-      active.lease?.release();
-    }
+    active.workspace.release();
     if (this.#active === active) this.#active = undefined;
     if (!this.#stopping) this.notify();
   }

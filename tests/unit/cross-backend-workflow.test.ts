@@ -9,6 +9,7 @@ import { ClaudePrintExecutionAdapter } from "../../src/main/execution-adapters/c
 import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
 import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import type { ExecutionProfileId } from "../../src/shared/execution-profile";
@@ -79,9 +80,11 @@ async function fixture(
     catalog: BUILTIN_ORCHESTRATION_CATALOG,
     backendRegistry: backendRegistry(profileId, behavior),
     emitBoardEvent: (event) => events.push(event),
-    admission: new WorkspaceAdmission({ canonicalize: async (path) => path }),
-    resolveProjectTrust: async () => true,
-    resolveProjectPath: async (path) => path,
+    workspace: new CurrentFolderExecutionWorkspace({
+      admission: new WorkspaceAdmission({ canonicalize: async (path) => path }),
+      resolveProjectTrust: async () => true,
+      resolveProjectPath: async (path) => path,
+    }),
     id,
     now: () => NOW,
   });

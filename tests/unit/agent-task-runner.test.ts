@@ -22,6 +22,7 @@ import { BoardService } from "../../src/main/board-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import { SquadService } from "../../src/main/squad-service";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
+import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 import type { ExecutionBackendHealth, ExecutionProfileId } from "../../src/shared/execution-profile";
 
@@ -158,13 +159,12 @@ async function setup(
   const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
   const events: unknown[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
+  const workspace = new CurrentFolderExecutionWorkspace({ admission, resolveProjectTrust, resolveProjectPath });
   const runner = new AgentTaskRunner({
     service: agentTaskService,
     backendRegistry: customBackendRegistry ?? backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
-    admission,
-    resolveProjectTrust,
-    resolveProjectPath,
+    workspace,
   });
 
   const createTask = async (
@@ -932,9 +932,11 @@ describe("AgentTaskRunner", () => {
       service: agentTaskService,
       backendRegistry: backendRegistry(recoveredFactory),
       emitBoardEvent: () => undefined,
-      admission: new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") }),
-      resolveProjectTrust: async () => true,
-      resolveProjectPath: async (projectPath) => projectPath,
+      workspace: new CurrentFolderExecutionWorkspace({
+        admission: new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") }),
+        resolveProjectTrust: async () => true,
+        resolveProjectPath: async (projectPath) => projectPath,
+      }),
     });
     recoveredRunner.start();
     await vi.waitFor(() => expect(recoveredFactory.runtimes).toHaveLength(1));
