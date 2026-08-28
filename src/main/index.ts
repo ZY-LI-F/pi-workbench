@@ -133,6 +133,8 @@ import { ExternalExecutionService } from "./external-execution-service";
 import { isPiSkillInstallScope, type PiSkillInstallResult } from "../shared/pi-skill";
 import { PiSkillInstaller } from "./pi-skill-installer";
 import { MainCompanionControlPlane } from "./companion-control-plane";
+import { CompanionGateway, companionPortFromEnvironment } from "./companion-gateway";
+import { CompanionPairingStore } from "./companion-pairing-store";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
@@ -237,9 +239,11 @@ let localPathService: LocalPathService;
 let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
 let companionControlPlane: MainCompanionControlPlane | undefined;
+let companionPairingStore: CompanionPairingStore | undefined;
+let companionGateway: CompanionGateway | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
-function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend", payload: unknown): void {
+function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend" | "companion", payload: unknown): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("stella:event", { source, payload });
 }
@@ -1413,12 +1417,28 @@ async function startWebhookCapability(): Promise<void> {
 async function initializeTaskCapability(): Promise<void> {
   capabilityHealth.set("task", "loading");
   try {
+    await companionGateway?.stop();
     boardStore = new BoardStore(join(app.getPath("userData"), "board", "board.json"));
     await boardStore.initialize();
+    companionPairingStore = new CompanionPairingStore(join(app.getPath("userData"), "companion", "devices.json"));
+    await companionPairingStore.initialize(hostname());
+    const companionHost = await companionPairingStore.host(app.getVersion());
     companionControlPlane = new MainCompanionControlPlane({
       repository: boardStore,
-      host: Object.freeze({ id: hostname(), name: hostname(), version: app.getVersion() }),
+      host: companionHost,
     });
+    companionGateway = new CompanionGateway({
+      controlPlane: companionControlPlane,
+      pairingStore: companionPairingStore,
+      host: companionHost,
+      port: companionPortFromEnvironment(process.env.STELLA_COMPANION_PORT),
+      emitChanged: (status) => broadcast("companion", { type: "gateway-status", status }),
+    });
+    try {
+      await companionGateway.start();
+    } catch (cause) {
+      console.error("Companion Gateway failed to start; Task Control remains available", cause);
+    }
     const emitSnapshot = (bootstrap: BoardBootstrap): void => emitBoardEvent({ type: "snapshot", bootstrap });
     boardService = new BoardService({
       repository: boardStore,
@@ -1576,6 +1596,12 @@ async function executionBackendSettings(): Promise<ExecutionBackendSettingsServi
   return executionBackendSettingsService;
 }
 
+async function companionGatewayService(): Promise<CompanionGateway> {
+  await taskCapabilityInitialization;
+  if (!companionGateway) throw new Error("Companion Gateway 尚未初始化");
+  return companionGateway;
+}
+
 function registerIpcHandlers(): void {
   ipcMain.handle("stella:capabilities", () => capabilityHealth.snapshot());
   ipcMain.handle("stella:capability:retry", (_event, name: unknown) => retryCapability(validatedCapabilityName(name)));
@@ -1590,6 +1616,15 @@ function registerIpcHandlers(): void {
     const snapshot = await (await executionBackendSettings()).retry(backendId);
     broadcast("execution-backend", snapshot);
     return snapshot;
+  });
+  ipcMain.handle("stella:companion:status", async () => (await companionGatewayService()).status());
+  ipcMain.handle("stella:companion:create-pairing-offer", async (event) => {
+    assertMainWindowFrame(event);
+    return (await companionGatewayService()).createPairingOffer();
+  });
+  ipcMain.handle("stella:companion:revoke-device", async (event, deviceId: unknown) => {
+    assertMainWindowFrame(event);
+    return (await companionGatewayService()).revokeDevice(requiredString(deviceId, "Companion deviceId"));
   });
   ipcMain.handle("stella:external-executions:refresh", async (_event, value: unknown) => {
     assertTaskCapability();
@@ -1949,7 +1984,7 @@ app.on("before-quit", (event) => {
   event.preventDefault();
   if (shutdownStarted) return;
   shutdownStarted = true;
-  void Promise.all([runtime.stop(), composerDraftStore?.drain(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop(), externalExecutionService?.shutdown()])
+  void Promise.all([runtime.stop(), composerDraftStore?.drain(), workflowOrchestrator?.shutdown(), agentTaskRunner?.shutdown(), scheduleRunner?.stop(), webhookServer?.stop(), externalExecutionService?.shutdown(), companionGateway?.stop()])
     .then(() => {
       interactiveCommandRouter?.release();
       workspaceAdmission.shutdown();

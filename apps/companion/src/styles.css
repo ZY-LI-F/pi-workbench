@@ -22,13 +22,24 @@ button { color: inherit; font: inherit; }
 .host-card h1 { margin: 3px 0; font-size: 17px; }
 .host-card p { margin: 0; color: #8d9ab0; font-size: 11px; }
 .host-card > span { position: relative; z-index: 1; padding: 5px 9px; border-radius: 99px; color: #65e4b5; background: #44d7a51a; font-size: 10px; font-weight: 700; }
-.host-card.is-offline > span { color: #f1b881; background: #e59b531a; }
+.host-card.is-offline > span, .host-card.is-reconnecting > span, .host-card.is-connecting > span, .host-card.is-pairing > span { color: #f1b881; background: #e59b531a; }
+.host-card.is-incompatible > span { color: #f18a98; background: #ef687715; }
 .host-card__signal { height: 36px; display: flex; align-items: end; gap: 3px; }
 .host-card__signal i { width: 4px; border-radius: 9px; background: #62e0b1; }
 .host-card__signal i:nth-child(1) { height: 10px; }.host-card__signal i:nth-child(2) { height: 18px; }.host-card__signal i:nth-child(3) { height: 27px; }
-.host-card.is-offline .host-card__signal i { background: #704b44; }
+.host-card.is-offline .host-card__signal i, .host-card.is-reconnecting .host-card__signal i, .host-card.is-connecting .host-card__signal i, .host-card.is-pairing .host-card__signal i, .host-card.is-unpaired .host-card__signal i { background: #704b44; }
 .stale-banner { display: grid; gap: 2px; margin-top: 10px; padding: 12px 14px; border: 1px solid #664735; border-radius: 13px; color: #edc39b; background: #241a16; font-size: 11px; }
 .stale-banner span { color: #aa8c74; }
+.error-banner { display: grid; gap: 2px; margin-top: 10px; padding: 12px 14px; border: 1px solid #6b3440; border-radius: 13px; color: #f09aa7; background: #25151a; font-size: 11px; }
+.error-banner span { color: #bd7c86; overflow-wrap: anywhere; }
+.pairing-card { display: grid; gap: 11px; margin-top: 17px; padding: 19px; border: 1px solid #26344a; border-radius: 20px; background: linear-gradient(145deg, #111a28, #0c121c); }
+.pairing-card small { color: #70829d; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
+.pairing-card h2 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+.pairing-card p { margin: 0; color: #8d9bb0; font-size: 12px; line-height: 1.6; }
+.pairing-card textarea { width: 100%; resize: vertical; padding: 11px; border: 1px solid #2c3a50; border-radius: 12px; outline: none; color: #dce7f8; background: #080e17; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pairing-card textarea:focus { border-color: #61dcb0; box-shadow: 0 0 0 3px #49d6a51a; }
+.pairing-card button { min-height: 42px; border: 0; border-radius: 12px; color: #07130f; background: #7ce4bc; font-size: 12px; font-weight: 800; }
+.pairing-card button:disabled, button:disabled { opacity: .5; }
 .scenario-strip { display: flex; gap: 7px; margin: 14px 0; overflow-x: auto; scrollbar-width: none; }
 .scenario-strip button { border: 1px solid #253148; border-radius: 99px; padding: 7px 11px; color: #9ba9be; background: #111827; font-size: 10px; white-space: nowrap; }
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 14px 0 25px; }
@@ -45,9 +56,9 @@ button { color: inherit; font: inherit; }
 .task-card > header, .task-card footer { display: flex; align-items: center; justify-content: space-between; }
 .task-card > header span { display: flex; align-items: center; gap: 7px; color: #aebbd0; font-size: 11px; font-weight: 700; }
 .status-mark { width: 7px; height: 7px; border-radius: 50%; background: #68dcaf; box-shadow: 0 0 0 4px #48d4a51a; }
-.status-mark.is-needs-input { background: #f3b66d; box-shadow: 0 0 0 4px #efaa5a18; }.status-mark.is-failed { background: #ef7283; box-shadow: 0 0 0 4px #ef687719; }.status-mark.is-completed { background: #718096; box-shadow: none; }
+.status-mark.is-attention { background: #f3b66d; box-shadow: 0 0 0 4px #efaa5a18; }.status-mark.is-recent, .status-mark.is-idle { background: #718096; box-shadow: none; }
 .task-card em { padding: 4px 7px; border-radius: 7px; color: #77dcb8; background: #52d6a513; font-size: 9px; font-style: normal; }
-.task-card.is-needs-input em { color: #ffc27e; background: #efaa5a17; }.task-card.is-failed em { color: #f18a98; background: #ef687715; }
+.task-card.is-attention em { color: #ffc27e; background: #efaa5a17; }.task-card.is-recent em, .task-card.is-idle em { color: #93a0b4; background: #71809617; }
 .task-card h3 { margin: 14px 0 6px; font-size: 16px; letter-spacing: -.02em; }
 .task-card p { margin: 0 0 15px; color: #8d9bb0; font-size: 12px; line-height: 1.55; }
 .task-card footer { padding-top: 12px; border-top: 1px solid #202a3a; color: #68768b; font-size: 10px; }

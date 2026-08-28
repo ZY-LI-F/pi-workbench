@@ -5,6 +5,7 @@ const config: CapacitorConfig = {
   appName: "Stella Companion",
   webDir: "dist",
   android: { backgroundColor: "#0b1020" },
+  server: { androidScheme: "http", cleartext: true },
 };
 
 export default config;

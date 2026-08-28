@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { Check, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, Sun } from "lucide-react";
+import QRCode from "qrcode";
+import { Check, Copy, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, Smartphone, Sun, Unplug } from "lucide-react";
 import type { RuntimeBootstrap } from "@shared/contracts";
+import type { CompanionGatewayStatus, CompanionPairingOffer } from "@shared/companion-protocol";
 import type {
   ConfigurableExecutionBackendId,
   ExecutionBackendCatalogSnapshot,
@@ -20,11 +22,19 @@ interface SettingsDialogProps {
   readonly executionBackends?: ExecutionBackendCatalogSnapshot;
   readonly executionBackendBusy: readonly ExecutionBackendId[];
   readonly executionBackendError?: string;
+  readonly companionStatus?: CompanionGatewayStatus;
+  readonly companionOffer?: CompanionPairingOffer;
+  readonly companionBusy: boolean;
+  readonly companionError?: string;
   readonly onPreferencesChange: (preferences: Preferences) => void;
   readonly onChooseSkinArtwork: (skin: SkinId) => void;
   readonly onResetSkinArtwork: (skin: SkinId) => void;
   readonly onConfigureExecutionBackend: (backendId: ConfigurableExecutionBackendId, executablePath?: string) => void;
   readonly onRetryExecutionBackend: (backendId: ExecutionBackendId) => void;
+  readonly onRefreshCompanion: () => void;
+  readonly onCreateCompanionOffer: () => void;
+  readonly onRevokeCompanionDevice: (deviceId: string) => void;
+  readonly onCopyCompanionOffer: (value: string) => void;
   readonly onAutoCompactionChange: (enabled: boolean) => void;
   readonly onSteeringModeChange: (mode: "all" | "one-at-a-time") => void;
   readonly onFollowUpModeChange: (mode: "all" | "one-at-a-time") => void;
@@ -96,6 +106,69 @@ function ExecutionBackendSetting({
   );
 }
 
+function CompanionSetting({
+  status,
+  offer,
+  busy,
+  error,
+  onRefresh,
+  onCreateOffer,
+  onRevoke,
+  onCopyOffer,
+}: {
+  readonly status?: CompanionGatewayStatus;
+  readonly offer?: CompanionPairingOffer;
+  readonly busy: boolean;
+  readonly error?: string;
+  readonly onRefresh: () => void;
+  readonly onCreateOffer: () => void;
+  readonly onRevoke: (deviceId: string) => void;
+  readonly onCopyOffer: (value: string) => void;
+}) {
+  const [qrCode, setQrCode] = useState<string>();
+  const [qrError, setQrError] = useState<string>();
+  useEffect(() => {
+    let active = true;
+    if (!offer) {
+      setQrCode(undefined);
+      setQrError(undefined);
+      return () => { active = false; };
+    }
+    void QRCode.toDataURL(offer.pairingUri, { width: 220, margin: 1, errorCorrectionLevel: "M" })
+      .then((value) => { if (active) { setQrCode(value); setQrError(undefined); } })
+      .catch((cause: unknown) => { if (active) setQrError(cause instanceof Error ? cause.message : String(cause)); });
+    return () => { active = false; };
+  }, [offer]);
+  const activeDevices = status?.devices.filter((device) => !device.revokedAt) ?? [];
+  const stateLabel = status?.state === "listening" ? "正在监听" : status?.state === "error" ? "启动失败" : "已停止";
+  return (
+    <section className="settings-section settings-section--companion">
+      <div className="settings-section__heading"><span>Android Companion</span><small>v0.5.0 · Desktop 必须保持运行</small></div>
+      <div className="companion-gateway-card">
+        <Smartphone size={19} />
+        <span><strong>{status?.host.name ?? "Stella Desktop"}</strong><small>{stateLabel}{status?.port ? ` · 端口 ${status.port}` : ""}</small></span>
+        <div><button type="button" disabled={busy} onClick={onRefresh}><RefreshCw size={12} />刷新</button><button type="button" disabled={busy || status?.state !== "listening"} onClick={onCreateOffer}>生成配对码</button></div>
+      </div>
+      {offer && (
+        <div className="companion-pairing-offer">
+          <div className="companion-pairing-offer__qr">{qrCode ? <img src={qrCode} alt="Stella Companion 配对二维码" /> : <span>{qrError ?? "正在生成二维码…"}</span>}</div>
+          <div><strong>用手机相机扫描</strong><small>配对码将在 {new Date(offer.expiresAt).toLocaleTimeString("zh-CN")} 失效，并且只能使用一次。</small><code>{offer.pairingUri}</code><button type="button" onClick={() => onCopyOffer(offer.pairingUri)}><Copy size={12} />复制配对链接</button></div>
+        </div>
+      )}
+      <div className="companion-device-list">
+        {activeDevices.map((device) => (
+          <div key={device.id}>
+            <span><strong>{device.name}</strong><small>{device.connected ? "当前在线" : device.lastSeenAt ? `上次连接 ${new Date(device.lastSeenAt).toLocaleString("zh-CN")}` : "尚未重新连接"}</small></span>
+            <button type="button" disabled={busy} onClick={() => onRevoke(device.id)}><Unplug size={12} />撤销</button>
+          </div>
+        ))}
+        {activeDevices.length === 0 && <p>尚未配对 Android 设备。</p>}
+      </div>
+      {(error || status?.error || qrError) && <p className="settings-execution-backend-error" role="alert">{error ?? status?.error ?? qrError}</p>}
+    </section>
+  );
+}
+
 export function SettingsDialog({
   bootstrap,
   preferences,
@@ -104,11 +177,19 @@ export function SettingsDialog({
   executionBackends,
   executionBackendBusy,
   executionBackendError,
+  companionStatus,
+  companionOffer,
+  companionBusy,
+  companionError,
   onPreferencesChange,
   onChooseSkinArtwork,
   onResetSkinArtwork,
   onConfigureExecutionBackend,
   onRetryExecutionBackend,
+  onRefreshCompanion,
+  onCreateCompanionOffer,
+  onRevokeCompanionDevice,
+  onCopyCompanionOffer,
   onAutoCompactionChange,
   onSteeringModeChange,
   onFollowUpModeChange,
@@ -216,6 +297,17 @@ export function SettingsDialog({
           ))}
           {executionBackendError && <p className="settings-execution-backend-error" role="alert">{executionBackendError}</p>}
         </section>
+
+        <CompanionSetting
+          status={companionStatus}
+          offer={companionOffer}
+          busy={companionBusy}
+          error={companionError}
+          onRefresh={onRefreshCompanion}
+          onCreateOffer={onCreateCompanionOffer}
+          onRevoke={onRevokeCompanionDevice}
+          onCopyOffer={onCopyCompanionOffer}
+        />
 
         <section className="settings-section">
           <div className="settings-section__heading"><span>Pi 运行方式</span><small>立即作用于当前会话</small></div>

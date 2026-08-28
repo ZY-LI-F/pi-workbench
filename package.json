@@ -47,6 +47,7 @@
     "companion:build": "npm run build --prefix apps/companion",
     "companion:test": "npm test --prefix apps/companion",
     "companion:sync": "npm run cap:sync --prefix apps/companion",
+    "companion:host:mock": "tsx scripts/run-companion-acceptance-host.ts",
     "companion:apk:debug": "bash scripts/build-companion-android.sh",
     "release:checksums": "node scripts/write-release-checksums.mjs",
     "check": "npm run typecheck && npm run lint && npm test"
@@ -61,11 +62,13 @@
     "jszip": "3.10.1",
     "lucide-react": "1.24.0",
     "proper-lockfile": "4.1.2",
+    "qrcode": "^1.5.4",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-markdown": "10.1.0",
     "remark-gfm": "4.0.1",
-    "typebox": "1.3.7"
+    "typebox": "1.3.7",
+    "ws": "^8.21.3"
   },
   "overrides": {
     "brace-expansion": "5.0.8"
@@ -75,8 +78,10 @@
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
     "@types/node": "22.20.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "5.1.4",
     "electron": "43.1.1",
     "electron-builder": "26.15.3",
@@ -84,6 +89,7 @@
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "29.1.1",
+    "tsx": "^4.23.12",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.64.0",
     "vite": "7.3.6",

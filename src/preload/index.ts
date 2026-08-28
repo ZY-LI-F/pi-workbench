@@ -55,6 +55,12 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:execution-backends:configure", input) as Promise<ExecutionBackendCatalogSnapshot>,
   executionBackendRetry: (backendId: ExecutionBackendId) =>
     ipcRenderer.invoke("stella:execution-backends:retry", backendId) as Promise<ExecutionBackendCatalogSnapshot>,
+  companionGatewayStatus: () =>
+    ipcRenderer.invoke("stella:companion:status") as ReturnType<StellaDesktopApi["companionGatewayStatus"]>,
+  companionCreatePairingOffer: () =>
+    ipcRenderer.invoke("stella:companion:create-pairing-offer") as ReturnType<StellaDesktopApi["companionCreatePairingOffer"]>,
+  companionRevokeDevice: (deviceId: string) =>
+    ipcRenderer.invoke("stella:companion:revoke-device", deviceId) as ReturnType<StellaDesktopApi["companionRevokeDevice"]>,
   externalExecutionsRefresh: (scope: ExternalExecutionScope) =>
     ipcRenderer.invoke("stella:external-executions:refresh", scope) as ReturnType<StellaDesktopApi["externalExecutionsRefresh"]>,
   externalExecutionImport: (input: ImportExternalExecutionInput) =>

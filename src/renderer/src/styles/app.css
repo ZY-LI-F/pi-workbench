@@ -3943,6 +3943,29 @@
 .execution-backend-setting__actions button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; }
 .execution-backend-setting p,
 .settings-execution-backend-error { margin: 0; color: var(--danger); font-size: 0.75rem; line-height: 1.45; overflow-wrap: anywhere; }
+.settings-section--companion { display: grid; gap: 9px; }
+.companion-gateway-card { display: flex; min-height: 58px; padding: 10px 11px; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--surface-raised) 70%, transparent); color: var(--accent); }
+.companion-gateway-card > span { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.companion-gateway-card strong { color: var(--text); font-size: 0.7857rem; }
+.companion-gateway-card small { color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; }
+.companion-gateway-card > div { display: flex; gap: 6px; }
+.companion-gateway-card button,
+.companion-pairing-offer button,
+.companion-device-list button { display: inline-flex; min-height: 31px; padding: 0 9px; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--text-muted); font-size: 0.75rem; }
+.companion-gateway-card button:last-child { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: var(--accent-soft); color: var(--text); }
+.companion-pairing-offer { display: grid; padding: 11px; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 13px; border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border)); border-radius: 10px; background: var(--accent-soft); }
+.companion-pairing-offer__qr { display: grid; width: 150px; height: 150px; place-items: center; overflow: hidden; border-radius: 8px; background: white; color: #151515; font-size: 0.75rem; text-align: center; }
+.companion-pairing-offer__qr img { width: 100%; height: 100%; }
+.companion-pairing-offer > div:last-child { display: grid; min-width: 0; justify-items: start; gap: 7px; }
+.companion-pairing-offer strong { color: var(--text); font-size: 0.8571rem; }
+.companion-pairing-offer small { color: var(--text-muted); font-size: 0.75rem; line-height: 1.5; }
+.companion-pairing-offer code { display: block; width: 100%; max-height: 64px; padding: 7px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--panel); color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; overflow-wrap: anywhere; }
+.companion-device-list { display: grid; gap: 6px; }
+.companion-device-list > div { display: flex; min-height: 48px; padding: 7px 9px; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); }
+.companion-device-list > div > span { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.companion-device-list strong { color: var(--text-soft); font-size: 0.75rem; }
+.companion-device-list small { color: var(--text-faint); font-size: 0.75rem; }
+.companion-device-list > p { margin: 0; padding: 9px; color: var(--text-faint); font-size: 0.75rem; }
 .toggle { position: relative; width: 36px; height: 20px; padding: 0; flex: 0 0 auto; border: 1px solid var(--border-strong); border-radius: 99px; background: var(--surface); }
 .toggle span { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); transition: 150ms ease; }
 .toggle.is-on { border-color: color-mix(in srgb, var(--accent) 42%, transparent); background: var(--accent-soft); }

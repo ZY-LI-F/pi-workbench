@@ -57,6 +57,10 @@ import type {
   ImportExternalExecutionResult,
   ReadExternalExecutionDetailsInput,
 } from "./external-execution";
+import type {
+  CompanionGatewayStatus,
+  CompanionPairingOffer,
+} from "./companion-protocol";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
@@ -231,7 +235,8 @@ export type BridgeEvent =
   | { readonly source: "runtime"; readonly payload: RuntimeSignal }
   | { readonly source: "board"; readonly payload: BoardBridgeEvent }
   | { readonly source: "capability"; readonly payload: { readonly type: "capability-health"; readonly snapshot: CapabilityHealthSnapshot } }
-  | { readonly source: "execution-backend"; readonly payload: ExecutionBackendCatalogSnapshot };
+  | { readonly source: "execution-backend"; readonly payload: ExecutionBackendCatalogSnapshot }
+  | { readonly source: "companion"; readonly payload: { readonly type: "gateway-status"; readonly status: CompanionGatewayStatus } };
 
 export interface StellaDesktopApi {
   capabilities(): Promise<CapabilityHealthSnapshot>;
@@ -239,6 +244,9 @@ export interface StellaDesktopApi {
   executionBackendsInitialize(): Promise<ExecutionBackendCatalogSnapshot>;
   executionBackendConfigure(input: ConfigureExecutionBackendInput): Promise<ExecutionBackendCatalogSnapshot>;
   executionBackendRetry(backendId: ExecutionBackendId): Promise<ExecutionBackendCatalogSnapshot>;
+  companionGatewayStatus(): Promise<CompanionGatewayStatus>;
+  companionCreatePairingOffer(): Promise<CompanionPairingOffer>;
+  companionRevokeDevice(deviceId: string): Promise<CompanionGatewayStatus>;
   externalExecutionsRefresh(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot>;
   externalExecutionImport(input: ImportExternalExecutionInput): Promise<ImportExternalExecutionResult>;
   externalExecutionContinue(input: ContinueExternalExecutionInput): Promise<ContinueExternalExecutionResult>;
