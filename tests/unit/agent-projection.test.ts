@@ -192,7 +192,7 @@ describe("Agent Projection", () => {
         state: "needs-input",
         needsInput: true,
         waitingFor: "Choose a plan",
-        association: Object.freeze({ taskId: "review", relation: "managed" }),
+        association: Object.freeze({ taskId: "review", relation: "imported" }),
       }),
       externalItem({ externalId: "parent", nativeId: "parent", updatedAt: EARLIER }),
     ]);
@@ -209,8 +209,22 @@ describe("Agent Projection", () => {
       waitingFor: "Choose a plan",
       freshness: { state: "error", stale: true, error: "refresh failed", lastSuccessfulAt: EARLIER },
     });
-    expect(child?.external?.association).toEqual({ taskId: "review", relation: "managed" });
+    expect(child?.external?.association).toEqual({ taskId: "review", relation: "imported" });
     expect(Object.isFrozen(child?.external)).toBe(true);
+  });
+
+  it("suppresses an external duplicate when the same session is already represented by a managed Task card", () => {
+    const result = projectAgentActivity({
+      board: board(),
+      external: external([externalItem({
+        externalId: "managed-review",
+        nativeId: "managed-review",
+        association: Object.freeze({ taskId: "review", relation: "managed" }),
+      })]),
+    });
+
+    expect(result.cards.some((card) => card.id === "managed:agent-task:agent-review")).toBe(true);
+    expect(result.cards.some((card) => card.id === "external:claude:managed-review")).toBe(false);
   });
 
   it("omits unavailable optional facts instead of inventing them", () => {

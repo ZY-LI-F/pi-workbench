@@ -15,11 +15,53 @@ import {
   parseCompanionPairingUri,
   type CompanionServerFrame,
 } from "../../src/shared/companion-protocol";
+import type { ExternalExecutionCatalogSnapshot } from "../../src/shared/external-execution";
 import { BOARD_SCHEMA_VERSION, type BoardState } from "../../src/shared/kanban";
 import { CompanionWebSocketClient, type CompanionClientStorage } from "../../apps/companion/src/companion-client";
 
 const NOW = "2026-08-28T10:00:00.000Z";
 const HOST = Object.freeze({ id: "host-1", name: "Test Desktop", version: "0.5.0" });
+
+function externalSnapshot(): ExternalExecutionCatalogSnapshot {
+  return Object.freeze({
+    epoch: 1,
+    scope: Object.freeze({ kind: "all" }),
+    capturedAt: NOW,
+    sources: Object.freeze([Object.freeze({
+      source: Object.freeze({
+        id: "claude",
+        label: "Claude Agents",
+        description: "fixture",
+        capabilities: Object.freeze({
+          discovery: "cli-json",
+          updates: Object.freeze(["poll"]),
+          details: true,
+          import: true,
+          continue: true,
+          hierarchy: true,
+          evidence: "official-structured",
+        }),
+      }),
+      state: "ready",
+      stale: false,
+      lastSuccessfulAt: NOW,
+      items: Object.freeze([Object.freeze({
+        sourceId: "claude",
+        externalId: "claude-session-1",
+        nativeId: "session-1",
+        kind: "background",
+        title: "Claude external session",
+        summary: "Running outside Stella",
+        projectPath: "/repo",
+        session: Object.freeze({ backendId: "claude", sessionId: "claude-session-1" }),
+        state: "working",
+        needsInput: false,
+        terminal: false,
+        updatedAt: NOW,
+      })]),
+    })]),
+  });
+}
 
 class MemoryBoardRepository implements BoardRepository {
   #board: BoardState;
@@ -282,6 +324,26 @@ describe("CompanionGateway", () => {
 
   it("drives the Android client against a real local WebSocket host", async () => {
     const { gateway, repository, controlPlane } = await fixture();
+    const external = externalSnapshot();
+    controlPlane.attachExternalExecutions({
+      async refresh() { return external; },
+      async snapshot() { return external; },
+      async details(input) {
+        return Object.freeze({
+          sourceId: input.sourceId,
+          externalId: input.externalId,
+          title: "Claude external session",
+          projectPath: "/repo",
+          fetchedAt: NOW,
+          turns: Object.freeze([Object.freeze({
+            id: "turn-1",
+            status: "completed",
+            items: Object.freeze([Object.freeze({ id: "item-1", type: "message", label: "Assistant", text: "External detail" })]),
+          })]),
+        });
+      },
+      subscribe() { return () => undefined; },
+    });
     const offer = await gateway.createPairingOffer();
     const storage: CompanionClientStorage & { value?: string } = {
       async get() { return this.value; },
@@ -296,7 +358,16 @@ describe("CompanionGateway", () => {
     });
     await client.pair(offer.pairingUri, "Android integration client");
     await waitFor(() => client.state().connection === "online");
-    expect(client.state()).toMatchObject({ snapshot: { tasks: [{ title: "Initial Task" }] } });
+    expect(client.state().snapshot?.tasks[0]).toMatchObject({ title: "Initial Task" });
+    expect(client.state().snapshot?.externalSources?.[0]).toMatchObject({ id: "claude", state: "ready", stale: false });
+    expect(client.state().snapshot?.agents).toContainEqual(expect.objectContaining({
+      id: "external:claude:claude-session-1",
+      external: expect.objectContaining({ sourceId: "claude", externalId: "claude-session-1", detailsAvailable: true }),
+    }));
+    await expect(client.getExternalExecutionDetail("claude", "claude-session-1")).resolves.toMatchObject({
+      sourceId: "claude",
+      turns: [{ items: [{ text: "External detail" }] }],
+    });
 
     const command = Object.freeze({
       type: "add-task-message" as const,

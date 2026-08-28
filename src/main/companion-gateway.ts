@@ -321,6 +321,24 @@ export class CompanionGateway {
       }
       return;
     }
+    if (frame.type === "get-external-detail") {
+      try {
+        this.#send(context, {
+          type: "external-detail",
+          requestId: frame.requestId,
+          detail: await this.#controlPlane.getExternalExecutionDetail(frame.sourceId, frame.externalId),
+        });
+      } catch (cause) {
+        this.#send(context, {
+          type: "error",
+          requestId: frame.requestId,
+          code: "external-detail-failed",
+          message: errorMessage(cause),
+          recoverable: true,
+        });
+      }
+      return;
+    }
     if (frame.type === "preview-command") {
       try {
         this.#send(context, {

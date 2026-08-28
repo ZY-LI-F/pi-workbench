@@ -133,6 +133,22 @@ describe("ExternalExecutionService", () => {
     expect(claude.scopes.at(-1)).toEqual({ kind: "project", projectPath: "/repo" });
   });
 
+  it("publishes each accepted refresh without letting one observer break another", async () => {
+    const claude = new FakeSource("claude", [execution("claude", "claude-1")]);
+    const { service } = fixture([claude]);
+    const epochs: number[] = [];
+    service.subscribe(() => { throw new Error("broken observer"); });
+    const unsubscribe = service.subscribe((snapshot) => { epochs.push(snapshot.epoch); });
+
+    await service.refresh({ kind: "all" });
+    claude.items = [execution("claude", "claude-2")];
+    await service.refresh({ kind: "all" });
+    unsubscribe();
+    await service.refresh({ kind: "all" });
+
+    expect(epochs).toEqual([1, 2]);
+  });
+
   it("imports exactly once as an independent manual Task with immutable origin", async () => {
     const claude = new FakeSource("claude", [execution("claude", "session-1", "needs-input")]);
     const { repository, boardService, service } = fixture([claude]);

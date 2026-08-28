@@ -9,6 +9,8 @@ import {
   type CompanionCommandPreview,
   type CompanionCommandResult,
   type CompanionDeviceSummary,
+  type CompanionExternalExecutionDetail,
+  type CompanionExternalExecutionReference,
   type CompanionHostSummary,
   type CompanionPairingUri,
   type CompanionServerFrame,
@@ -62,13 +64,13 @@ interface PendingPairing {
   readonly deviceName: string;
 }
 
-type CompanionRequestFrame = Extract<CompanionClientFrame, { readonly type: "get-task-detail" | "preview-command" | "execute-command" }>;
-type CompanionRequestResponse = CompanionTaskDetail | CompanionCommandPreview | CompanionCommandResult;
+type CompanionRequestFrame = Extract<CompanionClientFrame, { readonly type: "get-task-detail" | "get-external-detail" | "preview-command" | "execute-command" }>;
+type CompanionRequestResponse = CompanionTaskDetail | CompanionExternalExecutionDetail | CompanionCommandPreview | CompanionCommandResult;
 
 interface PendingRequest {
   readonly kind: "read" | "command";
   readonly idempotencyKey?: string;
-  readonly expected: "task-detail" | "command-preview" | "command-result";
+  readonly expected: "task-detail" | "external-detail" | "command-preview" | "command-result";
   readonly resolve: (value: CompanionRequestResponse) => void;
   readonly reject: (cause: Error) => void;
   readonly timer: ReturnType<typeof setTimeout>;
@@ -218,6 +220,17 @@ export class CompanionWebSocketClient {
     ) as Promise<CompanionTaskDetail>;
   }
 
+  getExternalExecutionDetail(
+    sourceId: CompanionExternalExecutionReference["sourceId"],
+    externalId: string,
+  ): Promise<CompanionExternalExecutionDetail> {
+    return this.#request(
+      { type: "get-external-detail", requestId: this.#requestId(), sourceId, externalId },
+      "external-detail",
+      "read",
+    ) as Promise<CompanionExternalExecutionDetail>;
+  }
+
   previewCommand(command: CompanionCommand): Promise<CompanionCommandPreview> {
     return this.#request(
       { type: "preview-command", requestId: this.#requestId(), command },
@@ -306,7 +319,7 @@ export class CompanionWebSocketClient {
       this.#handleServerError(frame);
       return;
     }
-    if (frame.type === "task-detail" || frame.type === "command-preview" || frame.type === "command-result") {
+    if (frame.type === "task-detail" || frame.type === "external-detail" || frame.type === "command-preview" || frame.type === "command-result") {
       this.#resolveRequest(frame);
       return;
     }
@@ -455,7 +468,7 @@ export class CompanionWebSocketClient {
     });
   }
 
-  #resolveRequest(frame: Extract<CompanionServerFrame, { readonly type: "task-detail" | "command-preview" | "command-result" }>): void {
+  #resolveRequest(frame: Extract<CompanionServerFrame, { readonly type: "task-detail" | "external-detail" | "command-preview" | "command-result" }>): void {
     const pending = this.#pendingRequests.get(frame.requestId);
     if (!pending) return;
     if (pending.expected !== frame.type) {
@@ -465,6 +478,7 @@ export class CompanionWebSocketClient {
     clearTimeout(pending.timer);
     this.#pendingRequests.delete(frame.requestId);
     if (frame.type === "task-detail") pending.resolve(frame.detail);
+    else if (frame.type === "external-detail") pending.resolve(frame.detail);
     else if (frame.type === "command-preview") pending.resolve(frame.preview);
     else pending.resolve(frame.result);
   }

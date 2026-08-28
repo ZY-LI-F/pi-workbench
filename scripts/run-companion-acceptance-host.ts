@@ -8,6 +8,12 @@ import { CompanionCommandReceiptStore } from "../src/main/companion-command-rece
 import { CompanionCommandService } from "../src/main/companion-command-service";
 import type { BoardRepository } from "../src/main/board-repository";
 import { snapshotExecutionProfile } from "../src/shared/execution-profile";
+import type {
+  ExternalExecutionCatalogSnapshot,
+  ExternalExecutionDetails,
+  ExternalExecutionScope,
+  ReadExternalExecutionDetailsInput,
+} from "../src/shared/external-execution";
 import { BOARD_SCHEMA_VERSION, type AgentDefinition, type BoardState } from "../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../src/shared/orchestration-catalog";
 
@@ -137,6 +143,140 @@ const commandService = new CompanionCommandService({
   },
 });
 controlPlane = new MainCompanionControlPlane({ repository, host, commands: commandService });
+let externalEpoch = 0;
+const externalListeners = new Set<(snapshot: ExternalExecutionCatalogSnapshot) => void>();
+const projectExternalExecutions = (): ExternalExecutionCatalogSnapshot => {
+  const capturedAt = new Date().toISOString();
+  return Object.freeze({
+    epoch: externalEpoch,
+    scope: Object.freeze({ kind: "all" }),
+    capturedAt,
+    sources: Object.freeze([
+      Object.freeze({
+        source: Object.freeze({
+          id: "claude" as const,
+          label: "Claude Agents",
+          description: "Acceptance Claude source",
+          capabilities: Object.freeze({
+            discovery: "cli-json" as const,
+            updates: Object.freeze(["poll" as const]),
+            details: false,
+            import: true,
+            continue: true,
+            hierarchy: true,
+            evidence: "official-structured" as const,
+          }),
+        }),
+        state: "error" as const,
+        stale: true,
+        error: "验收样例：Claude Source 暂时不可用",
+        lastSuccessfulAt: "2026-08-28T10:00:00.000Z",
+        items: Object.freeze([
+          Object.freeze({
+            sourceId: "claude" as const,
+            externalId: "claude-external-acceptance",
+            nativeId: "claude-a1",
+            kind: "background",
+            title: "Claude 外部 Agent 等待输入",
+            summary: "保留自上次成功刷新的状态",
+            projectPath: "/acceptance/claude-project",
+            session: Object.freeze({ backendId: "claude", sessionId: "claude-external-acceptance" }),
+            state: "needs-input" as const,
+            needsInput: true,
+            waitingFor: "请在 Claude CLI 中回复",
+            terminal: false,
+            updatedAt: "2026-08-28T10:00:00.000Z",
+          }),
+          Object.freeze({
+            sourceId: "claude" as const,
+            externalId: "managed-duplicate",
+            nativeId: "managed-a1",
+            kind: "background",
+            title: "不应重复显示的 managed session",
+            projectPath: "/acceptance/stella",
+            session: Object.freeze({ backendId: "claude", sessionId: "managed-duplicate" }),
+            state: "working" as const,
+            needsInput: false,
+            terminal: false,
+            updatedAt: capturedAt,
+            association: Object.freeze({ taskId: "android-acceptance-task", relation: "managed" as const }),
+          }),
+        ]),
+      }),
+      Object.freeze({
+        source: Object.freeze({
+          id: "codex" as const,
+          label: "Codex Threads",
+          description: "Acceptance Codex source",
+          capabilities: Object.freeze({
+            discovery: "app-server" as const,
+            updates: Object.freeze(["notification" as const, "poll" as const]),
+            details: true,
+            import: true,
+            continue: true,
+            hierarchy: true,
+            evidence: "official-structured" as const,
+          }),
+        }),
+        state: "ready" as const,
+        stale: false,
+        lastSuccessfulAt: capturedAt,
+        items: Object.freeze([Object.freeze({
+          sourceId: "codex" as const,
+          externalId: "codex-external-acceptance",
+          nativeId: "codex-a1",
+          kind: "subAgent",
+          title: "Codex 外部 Thread 正在实现",
+          summary: "由桌面 App Server 投影到 Android",
+          projectPath: "/acceptance/codex-project",
+          parentExternalId: "codex-parent",
+          session: Object.freeze({ backendId: "codex", sessionId: "codex-external-acceptance" }),
+          state: "working" as const,
+          needsInput: false,
+          terminal: false,
+          updatedAt: capturedAt,
+        })]),
+      }),
+    ]),
+  });
+};
+let externalSnapshot = projectExternalExecutions();
+controlPlane.attachExternalExecutions({
+  async refresh(_scope: ExternalExecutionScope) {
+    externalEpoch += 1;
+    externalSnapshot = projectExternalExecutions();
+    for (const listener of [...externalListeners]) listener(externalSnapshot);
+    return externalSnapshot;
+  },
+  async snapshot(_scope: ExternalExecutionScope) { return externalSnapshot; },
+  async details(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails> {
+    if (input.sourceId !== "codex" || input.externalId !== "codex-external-acceptance") {
+      throw new Error(`验收 Source 没有详情: ${input.sourceId}/${input.externalId}`);
+    }
+    const fetchedAt = new Date().toISOString();
+    return Object.freeze({
+      sourceId: input.sourceId,
+      externalId: input.externalId,
+      title: "Codex 外部 Thread 正在实现",
+      projectPath: "/acceptance/codex-project",
+      fetchedAt,
+      turns: Object.freeze([Object.freeze({
+        id: "codex-turn-1",
+        status: "completed",
+        startedAt: "2026-08-28T10:00:00.000Z",
+        completedAt: fetchedAt,
+        items: Object.freeze([
+          Object.freeze({ id: "codex-item-1", type: "userMessage", label: "User", text: "实现 Android 外部任务状态视图" }),
+          Object.freeze({ id: "codex-item-2", type: "agentMessage", label: "Codex", text: "已完成统一投影、筛选和只读详情。", status: "completed" }),
+        ]),
+      })]),
+    });
+  },
+  subscribe(listener) {
+    externalListeners.add(listener);
+    return () => { externalListeners.delete(listener); };
+  },
+});
 const gateway = new CompanionGateway({
   controlPlane,
   pairingStore,

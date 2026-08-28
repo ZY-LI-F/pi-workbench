@@ -224,6 +224,30 @@ describe("CompanionWebSocketClient", () => {
       dispatchMentions: true,
     });
 
+    const detailPromise = client.getExternalExecutionDetail("claude", "session-1");
+    const detailRequest = JSON.parse(socket.sent.at(-1) ?? "{}") as { requestId: string; type: string };
+    expect(detailRequest).toMatchObject({ type: "get-external-detail", sourceId: "claude", externalId: "session-1" });
+    socket.receive({
+      type: "external-detail",
+      requestId: detailRequest.requestId,
+      detail: {
+        protocolVersion: COMPANION_PROTOCOL_VERSION,
+        sequence: 2,
+        capturedAt: NOW,
+        sourceId: "claude",
+        externalId: "session-1",
+        title: "Claude session",
+        projectPath: "/repo",
+        fetchedAt: NOW,
+        turns: [{ id: "turn-1", status: "completed", items: [{ id: "item-1", type: "message", label: "Assistant", text: "Done" }] }],
+      },
+    });
+    await expect(detailPromise).resolves.toMatchObject({
+      sourceId: "claude",
+      externalId: "session-1",
+      turns: [{ items: [{ text: "Done" }] }],
+    });
+
     const previewPromise = client.previewCommand(command);
     const previewRequest = JSON.parse(socket.sent.at(-1) ?? "{}") as { requestId: string };
     socket.receive({

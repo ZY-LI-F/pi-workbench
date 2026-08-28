@@ -1521,6 +1521,7 @@ async function initializeTaskCapability(): Promise<void> {
       boardService,
       resolveProjectTrust,
     });
+    companionControlPlane.attachExternalExecutions(externalExecutionService);
     const currentFolderExecutionWorkspace = new CurrentFolderExecutionWorkspace({
       admission: workspaceAdmission,
       resolveProjectTrust,

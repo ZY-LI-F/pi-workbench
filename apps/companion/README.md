@@ -23,4 +23,6 @@ npm run companion:host:mock
 
 Agent 卡片可打开 Task Room。消息必须先查看效果预览再提交；普通消息、Agent mention 和等待中的 Coordinator 回复都交给桌面既有规则处理。人工关卡、执行验收与精确 execution 中止同样通过 typed command 执行，破坏性决定会再次确认。连接中断前未收到结果的命令会显示“结果未知”，并可使用同一 idempotency key 查询或重试。
 
+底部 `External` 页面复用桌面的 External Execution Source 和统一 Agent Projection，可按来源、项目、状态查看 Claude/Codex 原生活动。每个 Source 独立显示 ready、unavailable 或 last-good/stale；Codex 结构化详情只在用户点击时有界读取。关联到现有 managed execution 的重复 Source 记录不会再生成第二张卡。该页面只提供状态、关联 Task 跳转和真实可用的只读详情，不在 Android 上运行 Provider CLI，也不提供没有真实发送能力的回复/continue 按钮。
+
 桌面正式 Gateway 默认监听 `43821`，可通过 `STELLA_COMPANION_PORT` 修改。首个预览 APK 面向同一局域网或既有私有网络路径，Android 使用明确配置的 cleartext LAN transport；桌面关闭后 App 会显示离线快照并自动重连，不会在手机端接管 Agent Runtime。

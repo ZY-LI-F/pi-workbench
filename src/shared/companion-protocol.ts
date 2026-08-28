@@ -11,6 +11,11 @@ import type {
   TaskTimelineProvenance,
   TaskTimelineStatus,
 } from "./task-timeline";
+import {
+  isExternalExecutionSourceId,
+  type ExternalExecutionSourceId,
+  type ExternalExecutionState,
+} from "./external-execution";
 
 export const COMPANION_PROTOCOL_VERSION = 1 as const;
 export const COMPANION_MINIMUM_PROTOCOL_VERSION = 1 as const;
@@ -27,6 +32,9 @@ export const COMPANION_PROJECTION_LIMITS = Object.freeze({
   summaryText: 240,
   detailText: 2_000,
   artifactText: 8_000,
+  externalDetailText: 4_000,
+  externalDetailTurns: 20,
+  externalDetailItems: 100,
   pathText: 1_024,
 });
 
@@ -132,6 +140,31 @@ export interface CompanionAgentSummary {
   readonly attentionReason?: AgentProjectionAttentionReason;
   readonly updatedAt: string;
   readonly freshness?: AgentProjectionSourceFreshness;
+  readonly external?: CompanionExternalExecutionReference;
+}
+
+export interface CompanionExternalExecutionReference {
+  readonly sourceId: ExternalExecutionSourceId;
+  readonly externalId: string;
+  readonly nativeId: string;
+  readonly kind: string;
+  readonly state: ExternalExecutionState;
+  readonly parentExternalId?: string;
+  readonly association?: {
+    readonly taskId: string;
+    readonly relation: "managed" | "imported";
+  };
+  readonly detailsAvailable: boolean;
+}
+
+export interface CompanionExternalSourceSummary {
+  readonly id: ExternalExecutionSourceId;
+  readonly label: string;
+  readonly state: "ready" | "unavailable" | "error";
+  readonly stale: boolean;
+  readonly itemCount: number;
+  readonly lastSuccessfulAt?: string;
+  readonly error?: string;
 }
 
 export interface CompanionAttentionItem {
@@ -162,6 +195,33 @@ export interface CompanionSnapshot extends CompanionProtocolEnvelope {
   readonly agents: readonly CompanionAgentSummary[];
   readonly attention: readonly CompanionAttentionItem[];
   readonly recentTimeline: readonly CompanionRecentTimelineEntry[];
+  /** Optional for additive compatibility with snapshots persisted by the first 0.5.0 preview. */
+  readonly externalSources?: readonly CompanionExternalSourceSummary[];
+}
+
+export interface CompanionExternalDetailItem {
+  readonly id: string;
+  readonly type: string;
+  readonly label: string;
+  readonly text?: string;
+  readonly status?: string;
+}
+
+export interface CompanionExternalDetailTurn {
+  readonly id: string;
+  readonly status: string;
+  readonly startedAt?: string;
+  readonly completedAt?: string;
+  readonly items: readonly CompanionExternalDetailItem[];
+}
+
+export interface CompanionExternalExecutionDetail extends CompanionProtocolEnvelope {
+  readonly sourceId: ExternalExecutionSourceId;
+  readonly externalId: string;
+  readonly title: string;
+  readonly projectPath: string;
+  readonly fetchedAt: string;
+  readonly turns: readonly CompanionExternalDetailTurn[];
 }
 
 export interface CompanionTaskWorkspaceSummary {
@@ -331,6 +391,12 @@ export type CompanionClientFrame =
       readonly taskId: string;
     }
   | {
+      readonly type: "get-external-detail";
+      readonly requestId: string;
+      readonly sourceId: ExternalExecutionSourceId;
+      readonly externalId: string;
+    }
+  | {
       readonly type: "preview-command";
       readonly requestId: string;
       readonly command: CompanionCommand;
@@ -352,6 +418,7 @@ export type CompanionServerErrorCode =
   | "authentication-failed"
   | "not-authenticated"
   | "task-not-found"
+  | "external-detail-failed"
   | "command-preview-failed"
   | "request-failed";
 
@@ -383,6 +450,11 @@ export type CompanionServerFrame =
       readonly type: "task-detail";
       readonly requestId: string;
       readonly detail: CompanionTaskDetail;
+    }
+  | {
+      readonly type: "external-detail";
+      readonly requestId: string;
+      readonly detail: CompanionExternalExecutionDetail;
     }
   | {
       readonly type: "command-preview";
@@ -483,6 +555,15 @@ export function parseCompanionClientFrame(value: unknown): CompanionClientFrame 
   if (value.type === "get-snapshot") return Object.freeze({ type: value.type, requestId });
   if (value.type === "get-task-detail") {
     return Object.freeze({ type: value.type, requestId, taskId: requiredFrameText(value, "taskId") });
+  }
+  if (value.type === "get-external-detail") {
+    if (!isExternalExecutionSourceId(value.sourceId)) throw new Error("Companion external sourceId 无效");
+    return Object.freeze({
+      type: value.type,
+      requestId,
+      sourceId: value.sourceId,
+      externalId: requiredFrameText(value, "externalId"),
+    });
   }
   if (value.type === "preview-command" || value.type === "execute-command") {
     return Object.freeze({ type: value.type, requestId, command: parseCompanionCommand(value.command) });
@@ -627,6 +708,25 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
       detail: value.detail as unknown as CompanionTaskDetail,
     });
   }
+  if (value.type === "external-detail") {
+    if (!isRecord(value.detail)
+      || value.detail.protocolVersion !== COMPANION_PROTOCOL_VERSION
+      || !Number.isSafeInteger(value.detail.sequence)
+      || typeof value.detail.capturedAt !== "string"
+      || !isExternalExecutionSourceId(value.detail.sourceId)
+      || typeof value.detail.externalId !== "string"
+      || typeof value.detail.title !== "string"
+      || typeof value.detail.projectPath !== "string"
+      || typeof value.detail.fetchedAt !== "string"
+      || !Array.isArray(value.detail.turns)) {
+      throw new Error("Companion external-detail frame 无效");
+    }
+    return Object.freeze({
+      type: value.type,
+      requestId: requiredFrameText(value, "requestId"),
+      detail: value.detail as unknown as CompanionExternalExecutionDetail,
+    });
+  }
   if (value.type === "command-preview") {
     if (!isCommandPreview(value.preview)) throw new Error("Companion command-preview frame 无效");
     return Object.freeze({ type: value.type, requestId: requiredFrameText(value, "requestId"), preview: value.preview });
@@ -645,7 +745,7 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
   if (value.type === "error") {
     const validCodes: readonly CompanionServerErrorCode[] = [
       "malformed-frame", "protocol-incompatible", "pairing-invalid", "authentication-failed",
-      "not-authenticated", "task-not-found", "command-preview-failed", "request-failed",
+      "not-authenticated", "task-not-found", "external-detail-failed", "command-preview-failed", "request-failed",
     ];
     if (typeof value.code !== "string" || !validCodes.includes(value.code as CompanionServerErrorCode)
       || typeof value.message !== "string" || typeof value.recoverable !== "boolean") {
@@ -735,6 +835,7 @@ export function parseCompanionPairingUri(raw: string): CompanionPairingUri {
 export interface CompanionControlPlane {
   getSnapshot(): Promise<CompanionSnapshot>;
   getTaskDetail(taskId: string): Promise<CompanionTaskDetail>;
+  getExternalExecutionDetail(sourceId: ExternalExecutionSourceId, externalId: string): Promise<CompanionExternalExecutionDetail>;
   previewCommand(deviceId: string, command: CompanionCommand): Promise<CompanionCommandPreview>;
   executeCommand(deviceId: string, command: CompanionCommand): Promise<CompanionCommandResult>;
   subscribe(listener: CompanionProjectedEventListener): () => void;

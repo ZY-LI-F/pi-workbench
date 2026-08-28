@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MainCompanionControlPlane } from "../../src/main/companion-control-plane";
 import type { BoardRepository } from "../../src/main/board-repository";
+import { projectAgentActivity } from "../../src/shared/agent-projection";
 import {
   COMPANION_PROJECTION_LIMITS,
   COMPANION_PROTOCOL_VERSION,
@@ -8,6 +9,14 @@ import {
   type CompanionSnapshot,
 } from "../../src/shared/companion-protocol";
 import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
+import type {
+  ExternalExecutionCatalogSnapshot,
+  ExternalExecutionDetails,
+  ExternalExecutionItem,
+  ExternalExecutionScope,
+  ExternalExecutionSourceDefinition,
+  ReadExternalExecutionDetailsInput,
+} from "../../src/shared/external-execution";
 import {
   BOARD_SCHEMA_VERSION,
   type AgentDefinition,
@@ -135,6 +144,101 @@ function controlPlane(repository: BoardRepository): MainCompanionControlPlane {
   });
 }
 
+const EXTERNAL_SOURCE: ExternalExecutionSourceDefinition = Object.freeze({
+  id: "claude",
+  label: "Claude Agents",
+  description: "fixture",
+  capabilities: Object.freeze({
+    discovery: "cli-json",
+    updates: Object.freeze(["poll"]),
+    details: true,
+    import: true,
+    continue: true,
+    hierarchy: true,
+    evidence: "official-structured",
+  }),
+});
+
+function externalItem(overrides: Partial<ExternalExecutionItem> = {}): ExternalExecutionItem {
+  return Object.freeze({
+    sourceId: "claude",
+    externalId: "external-only",
+    nativeId: "native-1",
+    kind: "background",
+    title: "Claude external execution",
+    summary: "Read-only external status",
+    projectPath: "/workspace/external",
+    session: Object.freeze({ backendId: "claude", sessionId: "external-only" }),
+    state: "working",
+    needsInput: false,
+    terminal: false,
+    updatedAt: UPDATED_AT,
+    ...overrides,
+  });
+}
+
+function externalCatalog(items: readonly ExternalExecutionItem[], overrides: Partial<ExternalExecutionCatalogSnapshot> = {}): ExternalExecutionCatalogSnapshot {
+  return Object.freeze({
+    epoch: 1,
+    scope: Object.freeze({ kind: "all" }),
+    capturedAt: UPDATED_AT,
+    sources: Object.freeze([Object.freeze({
+      source: EXTERNAL_SOURCE,
+      state: "error" as const,
+      stale: true,
+      error: "Claude refresh failed",
+      lastSuccessfulAt: CREATED_AT,
+      items: Object.freeze(items),
+    })]),
+    ...overrides,
+  });
+}
+
+class FakeExternalProvider {
+  refreshCount = 0;
+  snapshotValue: ExternalExecutionCatalogSnapshot;
+  readonly listeners = new Set<(snapshot: ExternalExecutionCatalogSnapshot) => void>();
+
+  constructor(snapshot: ExternalExecutionCatalogSnapshot) {
+    this.snapshotValue = snapshot;
+  }
+
+  async refresh(_scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot> {
+    this.refreshCount += 1;
+    for (const listener of [...this.listeners]) listener(this.snapshotValue);
+    return this.snapshotValue;
+  }
+
+  async snapshot(_scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot> {
+    return this.snapshotValue;
+  }
+
+  async details(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails> {
+    return Object.freeze({
+      sourceId: input.sourceId,
+      externalId: input.externalId,
+      title: "External detail",
+      projectPath: "/workspace/external",
+      fetchedAt: UPDATED_AT,
+      turns: Object.freeze(Array.from({ length: 25 }, (_, turnIndex) => Object.freeze({
+        id: `turn-${turnIndex}`,
+        status: "completed",
+        items: Object.freeze(Array.from({ length: 10 }, (_, itemIndex) => Object.freeze({
+          id: `item-${turnIndex}-${itemIndex}`,
+          type: "message",
+          label: "Assistant",
+          text: "x".repeat(COMPANION_PROJECTION_LIMITS.externalDetailText + 50),
+        }))),
+      }))),
+    });
+  }
+
+  subscribe(listener: (snapshot: ExternalExecutionCatalogSnapshot) => void): () => void {
+    this.listeners.add(listener);
+    return () => { this.listeners.delete(listener); };
+  }
+}
+
 describe("MainCompanionControlPlane", () => {
   it("returns a compact authoritative snapshot with attention, managed Agents, and freshness", async () => {
     const control = controlPlane(new MemoryBoardRepository(board()));
@@ -245,5 +349,87 @@ describe("MainCompanionControlPlane", () => {
     const control = controlPlane(new MemoryBoardRepository(board()));
 
     await expect(control.getTaskDetail("missing")).rejects.toThrow("Companion Task 不存在: missing");
+  });
+
+  it("uses the desktop projection for external cards, preserves source freshness, and removes managed duplicates", async () => {
+    const repository = new MemoryBoardRepository(board());
+    const external = externalCatalog([
+      externalItem(),
+      externalItem({
+        externalId: "managed-duplicate",
+        nativeId: "managed-duplicate",
+        projectPath: "/workspace/stella",
+        session: Object.freeze({ backendId: "claude", sessionId: "managed-duplicate" }),
+        association: Object.freeze({ taskId: "task-1", relation: "managed" }),
+      }),
+      externalItem({
+        externalId: "imported",
+        nativeId: "imported",
+        projectPath: "/workspace/stella",
+        session: Object.freeze({ backendId: "claude", sessionId: "imported" }),
+        association: Object.freeze({ taskId: "task-1", relation: "imported" }),
+        state: "needs-input",
+        needsInput: true,
+      }),
+    ]);
+    const provider = new FakeExternalProvider(external);
+    const control = controlPlane(repository);
+    control.attachExternalExecutions(provider);
+
+    const snapshot = await control.getSnapshot();
+    const desktopIds = projectAgentActivity({ board: await repository.read(), external }).cards
+      .filter((card) => card.kind === "external")
+      .map((card) => card.id);
+    const mobileExternal = snapshot.agents.filter((agent) => agent.kind === "external");
+
+    expect(mobileExternal.map((agent) => agent.id)).toEqual(desktopIds);
+    expect(mobileExternal.map((agent) => agent.id)).not.toContain("external:claude:managed-duplicate");
+    expect(mobileExternal.find((agent) => agent.id === "external:claude:imported")).toMatchObject({
+      taskId: "task-1",
+      external: { association: { taskId: "task-1", relation: "imported" }, detailsAvailable: true },
+      freshness: { state: "error", stale: true, lastSuccessfulAt: CREATED_AT },
+    });
+    expect(snapshot.externalSources).toEqual([expect.objectContaining({
+      id: "claude",
+      state: "error",
+      stale: true,
+      itemCount: 3,
+      error: "Claude refresh failed",
+    })]);
+  });
+
+  it("bounds lazy external details and polls only while a realtime consumer is subscribed", async () => {
+    vi.useFakeTimers();
+    try {
+      const provider = new FakeExternalProvider(externalCatalog([externalItem()]));
+      const control = new MainCompanionControlPlane({
+        repository: new MemoryBoardRepository(board()),
+        host: HOST,
+        externalPollIntervalMs: 100,
+        now: () => UPDATED_AT,
+      });
+      control.attachExternalExecutions(provider);
+      await control.getSnapshot();
+      expect(provider.refreshCount).toBe(0);
+
+      const delivered: CompanionProjectedEvent[] = [];
+      const unsubscribe = control.subscribe((event) => { delivered.push(event); });
+      await vi.advanceTimersByTimeAsync(250);
+      expect(provider.refreshCount).toBe(3);
+      expect(delivered.length).toBeGreaterThanOrEqual(3);
+      const stoppedAt = provider.refreshCount;
+      unsubscribe();
+      await vi.advanceTimersByTimeAsync(500);
+      expect(provider.refreshCount).toBe(stoppedAt);
+
+      const detail = await control.getExternalExecutionDetail("claude", "external-only");
+      expect(detail.turns).toHaveLength(COMPANION_PROJECTION_LIMITS.externalDetailTurns);
+      expect(detail.turns[0]?.id).toBe("turn-5");
+      expect(detail.turns.flatMap((turn) => turn.items)).toHaveLength(COMPANION_PROJECTION_LIMITS.externalDetailItems);
+      expect(Math.max(...detail.turns.flatMap((turn) => turn.items.map((item) => item.text?.length ?? 0))))
+        .toBe(COMPANION_PROJECTION_LIMITS.externalDetailText);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

@@ -5,6 +5,8 @@ import type {
   CompanionCommand,
   CompanionCommandPreview,
   CompanionCommandResult,
+  CompanionExternalExecutionDetail,
+  CompanionExternalExecutionReference,
   CompanionTaskAction,
   CompanionTaskDetail,
 } from "../../../src/shared/companion-protocol";
@@ -198,11 +200,78 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
   </section>;
 }
 
+const EXTERNAL_STATE_LABEL: Readonly<Record<CompanionExternalExecutionReference["state"], string>> = Object.freeze({
+  working: "执行中",
+  "needs-input": "等待输入",
+  idle: "空闲",
+  completed: "已完成",
+  failed: "失败",
+  stopped: "已停止",
+  unknown: "未知",
+});
+
+function ExternalActivity({ state, onOpenTask }: {
+  readonly state: CompanionClientState;
+  readonly onOpenTask: (taskId: string) => void;
+}) {
+  const snapshot = state.snapshot;
+  const externalAgents = useMemo(() => (snapshot?.agents ?? []).filter((agent) => agent.kind === "external" && agent.external), [snapshot]);
+  const [source, setSource] = useState<CompanionExternalExecutionReference["sourceId"] | "all">("all");
+  const [project, setProject] = useState("all");
+  const [executionState, setExecutionState] = useState<CompanionExternalExecutionReference["state"] | "all">("all");
+  const [details, setDetails] = useState<Readonly<Record<string, CompanionExternalExecutionDetail>>>(Object.freeze({}));
+  const [loadingDetail, setLoadingDetail] = useState<string>();
+  const [error, setError] = useState<string>();
+  const projects = useMemo(() => [...new Set(externalAgents.map((agent) => agent.projectPath))].sort(), [externalAgents]);
+  const visible = externalAgents
+    .filter((agent) => source === "all" || agent.external?.sourceId === source)
+    .filter((agent) => project === "all" || agent.projectPath === project)
+    .filter((agent) => executionState === "all" || agent.external?.state === executionState);
+
+  const loadDetail = async (external: CompanionExternalExecutionReference) => {
+    const key = `${external.sourceId}:${external.externalId}`;
+    if (details[key]) {
+      setDetails((current) => {
+        const next = { ...current };
+        delete next[key];
+        return Object.freeze(next);
+      });
+      return;
+    }
+    setLoadingDetail(key);
+    setError(undefined);
+    try {
+      const detail = await client.getExternalExecutionDetail(external.sourceId, external.externalId);
+      setDetails((current) => Object.freeze({ ...current, [key]: detail }));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoadingDetail(undefined);
+    }
+  };
+
+  return <section className="external-activity">
+    <header><div><small>EXTERNAL EXECUTIONS</small><h2>Claude / Codex 只读活动</h2><p>状态由桌面 Source 读取；手机不会运行 CLI，也不显示伪造的回复或 continue 控件。</p></div></header>
+    <div className="external-filters"><label>来源<select value={source} onChange={(event) => setSource(event.target.value as typeof source)}><option value="all">全部来源</option>{snapshot?.externalSources?.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label><label>项目<select value={project} onChange={(event) => setProject(event.target.value)}><option value="all">全部项目</option>{projects.map((path) => <option value={path} key={path}>{path}</option>)}</select></label><label>状态<select value={executionState} onChange={(event) => setExecutionState(event.target.value as typeof executionState)}><option value="all">全部状态</option>{Object.entries(EXTERNAL_STATE_LABEL).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+    {snapshot?.externalSources
+      ?.filter((item) => source === "all" || item.id === source)
+      .map((item) => item.state !== "ready" || item.stale ? <aside className={`external-source-state is-${item.state}`} key={item.id}><b>{item.label} · {item.stale ? "Last good" : item.state}</b><span>{item.stale ? `保留上次成功快照${item.lastSuccessfulAt ? ` · ${relativeTime(item.lastSuccessfulAt)}` : ""}` : item.error}</span>{item.stale && item.error && <small>{item.error}</small>}</aside> : null)}
+    {error && <aside className="error-banner"><b>外部详情读取失败</b><span>{error}</span></aside>}
+    <div className="external-list">{visible.map((agent) => {
+      const external = agent.external as CompanionExternalExecutionReference;
+      const key = `${external.sourceId}:${external.externalId}`;
+      const detail = details[key];
+      return <article className={`external-card is-${external.state}`} key={agent.id}><header><span>{agent.sourceLabel ?? external.sourceId}</span><em>{EXTERNAL_STATE_LABEL[external.state]}</em></header><h3>{agent.title}</h3>{agent.summary && <p>{agent.summary}</p>}<dl><div><dt>项目</dt><dd>{agent.projectPath}</dd></div><div><dt>Session</dt><dd>{external.nativeId}</dd></div>{external.parentExternalId && <div><dt>Parent</dt><dd>{external.parentExternalId.slice(0, 16)}</dd></div>}<div><dt>更新</dt><dd>{relativeTime(agent.updatedAt)}</dd></div></dl>{agent.freshness?.stale && <aside>该 Source 当前 stale，正在显示 last-good 状态。</aside>}<footer>{external.association && <button type="button" onClick={() => onOpenTask(external.association?.taskId ?? "")}>打开{external.association.relation === "imported" ? "已导入" : "受管"} Task</button>}{external.detailsAvailable && <button type="button" disabled={state.connection !== "online" || loadingDetail === key} onClick={() => void loadDetail(external)}>{loadingDetail === key ? "读取中…" : detail ? "收起只读详情" : "查看只读详情"}</button>}<span>只读</span></footer>{detail && <section className="external-detail">{detail.turns.map((turn) => <article key={turn.id}><header><b>{turn.status}</b><time>{turn.completedAt ? relativeTime(turn.completedAt) : turn.startedAt ? relativeTime(turn.startedAt) : ""}</time></header>{turn.items.map((item) => <div key={item.id}><strong>{item.label}</strong>{item.status && <em>{item.status}</em>}{item.text && <pre>{item.text}</pre>}</div>)}</article>)}{detail.turns.length === 0 && <p>该 execution 暂无可显示的记录。</p>}</section>}</article>;
+    })}{visible.length === 0 && <div className="empty-state"><div>◌</div><strong>当前筛选没有外部活动</strong><p>Source 尚未刷新、CLI 当前没有任务，或关联的 managed session 已在统一 Agent 视图中去重。</p></div>}</div>
+  </section>;
+}
+
 export function App() {
   const [state, setState] = useState<CompanionClientState>(() => client.state());
   const [pairingUri, setPairingUri] = useState("");
   const [pairingError, setPairingError] = useState<string>();
   const [tab, setTab] = useState<"attention" | "activity">("attention");
+  const [mainView, setMainView] = useState<"agents" | "external">("agents");
   const [taskRoomId, setTaskRoomId] = useState<string>();
   useEffect(() => {
     const unsubscribe = client.subscribe(setState);
@@ -276,7 +345,7 @@ export function App() {
           <article><span>Host 序列</span><strong>{snapshot.sequence}</strong><small>{stale ? "Last good" : "Live updates"}</small></article>
         </section>
 
-        <section className="task-section">
+        {mainView === "agents" ? <section className="task-section">
           <header><div><small>AGENT ACTIVITY</small><h2>任务动态</h2></div><div className="segmented"><button className={tab === "attention" ? "is-active" : ""} onClick={() => setTab("attention")}>Attention</button><button className={tab === "activity" ? "is-active" : ""} onClick={() => setTab("activity")}>全部</button></div></header>
           <div className="task-list">
             {visible.map((agent) => <article className={`task-card is-${agent.bucket}`} key={agent.id}>
@@ -287,10 +356,10 @@ export function App() {
             </article>)}
             {visible.length === 0 && <div className="empty-state"><div>✓</div><strong>当前没有{tab === "attention" ? "待处理" : " Agent"}事项</strong><p>{tab === "attention" ? "切换到“全部”查看正在执行与最近完成的任务。" : "桌面有 Agent 活动后会自动显示。"}</p></div>}
           </div>
-        </section>
+        </section> : <ExternalActivity state={state} onOpenTask={setTaskRoomId} />}
       </>}
 
-      <footer className="bottom-nav"><button className="is-active"><span>⌁</span>Attention</button><button><span>▦</span>Tasks</button><button><span>◌</span>Hosts</button></footer>
+      <footer className="bottom-nav"><button className={mainView === "agents" && tab === "attention" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("attention"); }}><span>⌁</span>Attention</button><button className={mainView === "agents" && tab === "activity" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("activity"); }}><span>▦</span>Tasks</button><button className={mainView === "external" ? "is-active" : ""} onClick={() => setMainView("external")}><span>◌</span>External</button></footer>
       {taskRoomId && snapshot && <TaskRoom taskId={taskRoomId} sequence={snapshot.sequence} online={state.connection === "online"} onClose={() => setTaskRoomId(undefined)} />}
     </main>
   );

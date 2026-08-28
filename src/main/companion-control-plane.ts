@@ -8,6 +8,8 @@ import {
   type CompanionCommandPreview,
   type CompanionCommandResult,
   type CompanionControlPlane,
+  type CompanionExternalExecutionDetail,
+  type CompanionExternalSourceSummary,
   type CompanionHostSummary,
   type CompanionProjectedEventListener,
   type CompanionProjectSummary,
@@ -19,6 +21,13 @@ import {
   type CompanionTaskSummary,
   type CompanionTaskTimelineEntry,
 } from "../shared/companion-protocol";
+import type {
+  ExternalExecutionCatalogSnapshot,
+  ExternalExecutionDetails,
+  ExternalExecutionScope,
+  ExternalExecutionSourceId,
+  ReadExternalExecutionDetailsInput,
+} from "../shared/external-execution";
 import {
   CURRENT_FOLDER_EXECUTION_WORKSPACE,
   type BoardState,
@@ -34,7 +43,15 @@ interface MainCompanionControlPlaneDependencies {
     preview(command: CompanionCommand): Promise<CompanionCommandPreview>;
     execute(deviceId: string, command: CompanionCommand): Promise<CompanionCommandResult>;
   };
+  readonly externalPollIntervalMs?: number;
   readonly now?: () => string;
+}
+
+interface CompanionExternalExecutionProvider {
+  refresh(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot>;
+  snapshot(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot>;
+  details(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails>;
+  subscribe(listener: (snapshot: ExternalExecutionCatalogSnapshot) => void): () => void;
 }
 
 function compactText(value: string | undefined, limit: number): string | undefined {
@@ -63,7 +80,10 @@ function activeExecution(task: KanbanTask): CompanionTaskSummary["activeExecutio
   return undefined;
 }
 
-function compactAgent(card: AgentProjectionCard): CompanionAgentSummary {
+function compactAgent(
+  card: AgentProjectionCard,
+  detailsBySource: ReadonlyMap<ExternalExecutionSourceId, boolean>,
+): CompanionAgentSummary {
   const summary = compactText(card.summary, COMPANION_PROJECTION_LIMITS.summaryText);
   const taskTitle = compactText(card.taskTitle, COMPANION_PROJECTION_LIMITS.titleText);
   const waitingFor = compactText(card.waitingFor, COMPANION_PROJECTION_LIMITS.summaryText);
@@ -71,6 +91,18 @@ function compactAgent(card: AgentProjectionCard): CompanionAgentSummary {
     ? Object.freeze({
         ...card.freshness,
         error: compactText(card.freshness.error, COMPANION_PROJECTION_LIMITS.summaryText),
+      })
+    : undefined;
+  const external = card.external
+    ? Object.freeze({
+        sourceId: card.external.sourceId,
+        externalId: card.external.externalId,
+        nativeId: requiredCompactText(card.external.nativeId, COMPANION_PROJECTION_LIMITS.titleText),
+        kind: requiredCompactText(card.external.kind, COMPANION_PROJECTION_LIMITS.titleText),
+        state: card.external.state,
+        ...(card.external.parentExternalId ? { parentExternalId: card.external.parentExternalId } : {}),
+        ...(card.external.association ? { association: Object.freeze({ ...card.external.association }) } : {}),
+        detailsAvailable: detailsBySource.get(card.external.sourceId) ?? false,
       })
     : undefined;
   return Object.freeze({
@@ -95,6 +127,7 @@ function compactAgent(card: AgentProjectionCard): CompanionAgentSummary {
     ...(card.attentionReason ? { attentionReason: card.attentionReason } : {}),
     updatedAt: card.updatedAt,
     ...(freshness ? { freshness } : {}),
+    ...(external ? { external } : {}),
   });
 }
 
@@ -137,19 +170,20 @@ function increment(counts: Map<string, number>, key: string | undefined): void {
   counts.set(key, (counts.get(key) ?? 0) + 1);
 }
 
-function projectSummaries(board: BoardState): {
+function projectSummaries(board: BoardState, external?: ExternalExecutionCatalogSnapshot): {
   readonly allAgents: readonly CompanionAgentSummary[];
   readonly tasks: readonly CompanionTaskSummary[];
   readonly attention: readonly CompanionAttentionItem[];
 } {
-  const projectedCards = projectAgentActivity({ board }).cards;
+  const projectedCards = projectAgentActivity({ board, ...(external ? { external } : {}) }).cards;
+  const detailsBySource = new Map(external?.sources.map((source) => [source.source.id, source.source.capabilities.details] as const) ?? []);
   const agentCounts = new Map<string, number>();
   const attentionCounts = new Map<string, number>();
   for (const card of projectedCards) {
     increment(agentCounts, card.taskId);
     if (card.bucket === "attention") increment(attentionCounts, card.taskId);
   }
-  const allAgents = Object.freeze(projectedCards.map(compactAgent));
+  const allAgents = Object.freeze(projectedCards.map((card) => compactAgent(card, detailsBySource)));
   const tasks = Object.freeze(
     board.tasks
       .map((task) => taskSummary(task, agentCounts, attentionCounts))
@@ -163,6 +197,21 @@ function projectSummaries(board: BoardState): {
       .slice(0, COMPANION_PROJECTION_LIMITS.attention),
   );
   return Object.freeze({ allAgents, tasks, attention });
+}
+
+function externalSourceSummaries(snapshot: ExternalExecutionCatalogSnapshot | undefined): readonly CompanionExternalSourceSummary[] {
+  if (!snapshot) return Object.freeze([]);
+  return Object.freeze(snapshot.sources.map((source) => Object.freeze({
+    id: source.source.id,
+    label: requiredCompactText(source.source.label, COMPANION_PROJECTION_LIMITS.titleText),
+    state: source.state,
+    stale: source.stale,
+    itemCount: source.items.length,
+    ...(source.lastSuccessfulAt ? { lastSuccessfulAt: source.lastSuccessfulAt } : {}),
+    ...(compactText(source.error, COMPANION_PROJECTION_LIMITS.summaryText)
+      ? { error: compactText(source.error, COMPANION_PROJECTION_LIMITS.summaryText) }
+      : {}),
+  })));
 }
 
 function projectProjects(
@@ -321,8 +370,13 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
   readonly #host: CompanionHostSummary;
   readonly #commands: MainCompanionControlPlaneDependencies["commands"];
   readonly #now: () => string;
+  readonly #externalPollIntervalMs: number;
   readonly #listeners = new Set<CompanionProjectedEventListener>();
   #board: BoardState | undefined;
+  #externalProvider: CompanionExternalExecutionProvider | undefined;
+  #externalSnapshot: ExternalExecutionCatalogSnapshot | undefined;
+  #externalUnsubscribe: (() => void) | undefined;
+  #externalPollTimer: ReturnType<typeof setInterval> | undefined;
   #sequence = 0;
   #queue: Promise<void> = Promise.resolve();
 
@@ -331,19 +385,24 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
     this.#host = Object.freeze({ ...dependencies.host });
     this.#commands = dependencies.commands;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
+    this.#externalPollIntervalMs = dependencies.externalPollIntervalMs ?? 10_000;
   }
 
   getSnapshot(): Promise<CompanionSnapshot> {
-    return this.#enqueue(async () => this.#projectSnapshot(await this.#currentBoard()));
+    return this.#enqueue(async () => {
+      await this.#ensureExternalSnapshot();
+      return this.#projectSnapshot(await this.#currentBoard());
+    });
   }
 
   getTaskDetail(taskId: string): Promise<CompanionTaskDetail> {
     return this.#enqueue(async () => {
       const board = await this.#currentBoard();
+      await this.#ensureExternalSnapshot();
       const task = board.tasks.find((candidate) => candidate.id === taskId);
       if (!task) throw new Error(`Companion Task 不存在: ${taskId}`);
       const capturedAt = this.#now();
-      const projection = projectSummaries(board);
+      const projection = projectSummaries(board, this.#externalSnapshot);
       const taskAgents = projection.allAgents.filter((agent) => agent.taskId === taskId);
       const taskAttention = taskAgents.filter((agent) => agent.bucket === "attention");
       const summary = taskSummary(
@@ -389,6 +448,59 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
     });
   }
 
+  async getExternalExecutionDetail(
+    sourceId: ExternalExecutionSourceId,
+    externalId: string,
+  ): Promise<CompanionExternalExecutionDetail> {
+    const provider = this.#externalProvider;
+    if (!provider) throw new Error("External Execution Source 尚未接入 Companion");
+    const raw = await provider.details({ sourceId, externalId });
+    if (raw.sourceId !== sourceId || raw.externalId !== externalId) throw new Error("External Execution detail 身份不一致");
+    let remainingItems = COMPANION_PROJECTION_LIMITS.externalDetailItems;
+    const turns = raw.turns.slice(-COMPANION_PROJECTION_LIMITS.externalDetailTurns).map((turn) => {
+      const items = turn.items.slice(0, remainingItems).map((item) => Object.freeze({
+        id: item.id,
+        type: requiredCompactText(item.type, COMPANION_PROJECTION_LIMITS.titleText),
+        label: requiredCompactText(item.label, COMPANION_PROJECTION_LIMITS.titleText),
+        ...(compactText(item.text, COMPANION_PROJECTION_LIMITS.externalDetailText)
+          ? { text: compactText(item.text, COMPANION_PROJECTION_LIMITS.externalDetailText) }
+          : {}),
+        ...(compactText(item.status, COMPANION_PROJECTION_LIMITS.titleText)
+          ? { status: compactText(item.status, COMPANION_PROJECTION_LIMITS.titleText) }
+          : {}),
+      }));
+      remainingItems -= items.length;
+      return Object.freeze({
+        id: turn.id,
+        status: requiredCompactText(turn.status, COMPANION_PROJECTION_LIMITS.titleText),
+        ...(turn.startedAt ? { startedAt: turn.startedAt } : {}),
+        ...(turn.completedAt ? { completedAt: turn.completedAt } : {}),
+        items: Object.freeze(items),
+      });
+    });
+    const capturedAt = this.#now();
+    return Object.freeze({
+      protocolVersion: COMPANION_PROTOCOL_VERSION,
+      sequence: this.#sequence,
+      capturedAt,
+      sourceId,
+      externalId,
+      title: requiredCompactText(raw.title, COMPANION_PROJECTION_LIMITS.titleText),
+      projectPath: requiredCompactText(raw.projectPath, COMPANION_PROJECTION_LIMITS.pathText),
+      fetchedAt: raw.fetchedAt,
+      turns: Object.freeze(turns),
+    });
+  }
+
+  attachExternalExecutions(provider: CompanionExternalExecutionProvider): void {
+    this.#stopExternalPolling();
+    this.#externalUnsubscribe?.();
+    this.#externalProvider = provider;
+    this.#externalSnapshot = undefined;
+    this.#externalUnsubscribe = provider.subscribe((snapshot) => this.#acceptExternalSnapshot(snapshot));
+    if (this.#listeners.size > 0) this.#startExternalPolling();
+  }
+
   previewCommand(_deviceId: string, command: CompanionCommand): Promise<CompanionCommandPreview> {
     if (!this.#commands) return Promise.reject(new Error("Companion command control plane 尚未配置"));
     return this.#commands.preview(command);
@@ -400,14 +512,20 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
   }
 
   subscribe(listener: CompanionProjectedEventListener): () => void {
+    const wasEmpty = this.#listeners.size === 0;
     this.#listeners.add(listener);
-    return () => { this.#listeners.delete(listener); };
+    if (wasEmpty) this.#startExternalPolling();
+    return () => {
+      this.#listeners.delete(listener);
+      if (this.#listeners.size === 0) this.#stopExternalPolling();
+    };
   }
 
   /** Called only after a Board repository transaction has committed. */
   publishCommitted(board: BoardState): Promise<CompanionSnapshotEvent> {
     return this.#enqueue(async () => {
       this.#board = board;
+      if (this.#externalProvider) this.#externalSnapshot = await this.#externalProvider.snapshot({ kind: "all" });
       this.#sequence = this.#sequence === 0 ? 1 : this.#sequence + 1;
       const snapshot = this.#projectSnapshot(board);
       const event = Object.freeze({
@@ -437,7 +555,7 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
   #projectSnapshot(board: BoardState): CompanionSnapshot {
     if (this.#sequence === 0) this.#sequence = 1;
     const capturedAt = this.#now();
-    const projection = projectSummaries(board);
+    const projection = projectSummaries(board, this.#externalSnapshot);
     const agents = Object.freeze(projection.allAgents.slice(0, COMPANION_PROJECTION_LIMITS.agents));
     return Object.freeze({
       protocolVersion: COMPANION_PROTOCOL_VERSION,
@@ -450,6 +568,46 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
       agents,
       attention: projection.attention,
       recentTimeline: projectRecentTimeline(board),
+      externalSources: externalSourceSummaries(this.#externalSnapshot),
+    });
+  }
+
+  async #ensureExternalSnapshot(): Promise<void> {
+    if (!this.#externalSnapshot && this.#externalProvider) {
+      this.#externalSnapshot = await this.#externalProvider.snapshot({ kind: "all" });
+    }
+  }
+
+  #startExternalPolling(): void {
+    if (!this.#externalProvider || this.#externalPollTimer) return;
+    const refresh = () => { void this.#externalProvider?.refresh({ kind: "all" }).catch(() => undefined); };
+    refresh();
+    this.#externalPollTimer = setInterval(refresh, this.#externalPollIntervalMs);
+  }
+
+  #stopExternalPolling(): void {
+    if (!this.#externalPollTimer) return;
+    clearInterval(this.#externalPollTimer);
+    this.#externalPollTimer = undefined;
+  }
+
+  #acceptExternalSnapshot(snapshot: ExternalExecutionCatalogSnapshot): void {
+    void this.#enqueue(async () => {
+      this.#externalSnapshot = snapshot;
+      if (this.#listeners.size === 0) return;
+      const board = await this.#currentBoard();
+      this.#sequence = this.#sequence === 0 ? 1 : this.#sequence + 1;
+      const projected = this.#projectSnapshot(board);
+      const event = Object.freeze({
+        type: "snapshot" as const,
+        protocolVersion: COMPANION_PROTOCOL_VERSION,
+        sequence: projected.sequence,
+        capturedAt: projected.capturedAt,
+        snapshot: projected,
+      });
+      for (const listener of [...this.#listeners]) {
+        try { listener(event); } catch { /* One transport cannot block another. */ }
+      }
     });
   }
 

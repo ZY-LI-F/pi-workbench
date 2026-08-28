@@ -270,7 +270,14 @@ export function projectAgentActivity(input: ProjectAgentActivityInput): AgentPro
     const card = projectWorkflowRun(run, taskById.get(run.taskId));
     if (card) cards.push(card);
   }
-  for (const source of input.external?.sources ?? []) cards.push(...projectExternalSource(source, taskById));
+  const managedTaskIds = new Set(cards.flatMap((card) => card.taskId ? [card.taskId] : []));
+  for (const source of input.external?.sources ?? []) {
+    cards.push(...projectExternalSource(source, taskById).filter((card) => !(
+      card.external?.association?.relation === "managed"
+      && card.taskId
+      && managedTaskIds.has(card.taskId)
+    )));
+  }
   cards.sort(compareCards);
   const frozenCards = Object.freeze(cards);
   const buckets = Object.freeze(Object.fromEntries(AGENT_PROJECTION_BUCKETS.map((bucket) => [

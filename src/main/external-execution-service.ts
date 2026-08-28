@@ -99,6 +99,7 @@ export class ExternalExecutionService {
   readonly #now: () => string;
   readonly #cache = new Map<string, CachedScope>();
   readonly #generation = new Map<string, number>();
+  readonly #listeners = new Set<(snapshot: ExternalExecutionCatalogSnapshot) => void>();
   #epoch = 0;
 
   constructor(options: ExternalExecutionServiceOptions) {
@@ -155,7 +156,16 @@ export class ExternalExecutionService {
     }
     this.#cache.set(key, Object.freeze({ scope: normalizedScope, capturedAt, sources: sourceSnapshots }));
     this.#epoch += 1;
-    return this.snapshot(normalizedScope);
+    const snapshot = await this.snapshot(normalizedScope);
+    for (const listener of [...this.#listeners]) {
+      try { listener(snapshot); } catch { /* One projection consumer cannot break source refresh. */ }
+    }
+    return snapshot;
+  }
+
+  subscribe(listener: (snapshot: ExternalExecutionCatalogSnapshot) => void): () => void {
+    this.#listeners.add(listener);
+    return () => { this.#listeners.delete(listener); };
   }
 
   async snapshot(scope: ExternalExecutionScope): Promise<ExternalExecutionCatalogSnapshot> {
