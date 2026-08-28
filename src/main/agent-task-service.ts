@@ -844,13 +844,16 @@ export class AgentTaskService {
     });
   }
 
-  async abortTask(taskId: string): Promise<AbortedAgentTask> {
+  async abortTask(taskId: string, expectedAgentTaskId?: string): Promise<AbortedAgentTask> {
     const now = this.#now();
     let rootId = "";
     let runningAgentTaskId: string | undefined;
     const bootstrap = await this.#commit((current) => {
       const task = this.#task(current, taskId);
       if (!task.activeAgentTaskId) throw new Error("任务当前没有可中止的 Agent 执行");
+      if (expectedAgentTaskId && task.activeAgentTaskId !== expectedAgentTaskId) {
+        throw new Error("AgentTask execution 已变化，请刷新后重试");
+      }
       const root = this.#agentTask(current, task.activeAgentTaskId);
       if (isTerminalAgentTaskStatus(root.status)) throw new Error("AgentTask 已经进入终态");
       rootId = root.id;

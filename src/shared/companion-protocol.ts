@@ -176,6 +176,27 @@ export interface CompanionTaskDetailSummary extends CompanionTaskSummary {
   readonly executionWorkspace: CompanionTaskWorkspaceSummary;
 }
 
+export type CompanionTaskAction =
+  | {
+      readonly kind: "resolve-human-gate";
+      readonly taskId: string;
+      readonly runId: string;
+      readonly stepId: string;
+      readonly label: string;
+    }
+  | {
+      readonly kind: "review-execution";
+      readonly taskId: string;
+      readonly executionKind: "workflow" | "agent-task";
+      readonly executionId: string;
+    }
+  | {
+      readonly kind: "abort-execution";
+      readonly taskId: string;
+      readonly executionKind: "workflow" | "agent-task";
+      readonly executionId: string;
+    };
+
 export interface CompanionTimelineArtifact {
   readonly title: string;
   readonly content: string;
@@ -204,6 +225,74 @@ export interface CompanionTaskDetail extends CompanionProtocolEnvelope {
   readonly task: CompanionTaskDetailSummary;
   readonly agents: readonly CompanionAgentSummary[];
   readonly timeline: readonly CompanionTaskTimelineEntry[];
+  readonly actions: readonly CompanionTaskAction[];
+}
+
+interface CompanionCommandBase {
+  readonly idempotencyKey: string;
+}
+
+export type CompanionCommand =
+  | (CompanionCommandBase & {
+      readonly type: "add-task-message";
+      readonly taskId: string;
+      readonly body: string;
+      readonly dispatchMentions: boolean;
+    })
+  | (CompanionCommandBase & {
+      readonly type: "resolve-human-gate";
+      readonly taskId: string;
+      readonly runId: string;
+      readonly stepId: string;
+      readonly decision: "approve" | "reject";
+      readonly comment: string;
+    })
+  | (CompanionCommandBase & {
+      readonly type: "review-execution";
+      readonly taskId: string;
+      readonly executionKind: "workflow" | "agent-task";
+      readonly executionId: string;
+      readonly decision: "accept" | "revision-requested" | "reject";
+      readonly comment: string;
+    })
+  | (CompanionCommandBase & {
+      readonly type: "abort-execution";
+      readonly taskId: string;
+      readonly executionKind: "workflow" | "agent-task";
+      readonly executionId: string;
+    });
+
+export type CompanionCommandEffect =
+  | "comment-only"
+  | "dispatch-agent-tasks"
+  | "resume-coordinator"
+  | "resolve-human-gate"
+  | "review-execution"
+  | "abort-execution";
+
+export interface CompanionCommandPreview {
+  readonly commandType: CompanionCommand["type"];
+  readonly effect: CompanionCommandEffect;
+  readonly summary: string;
+  readonly destructive: boolean;
+  readonly requiresConfirmation: boolean;
+}
+
+export type CompanionCommandResultStatus = "accepted" | "rejected" | "indeterminate";
+export type CompanionCommandResultCode =
+  | "accepted"
+  | "domain-rejected"
+  | "stale-execution"
+  | "idempotency-conflict"
+  | "command-in-progress";
+
+export interface CompanionCommandResult {
+  readonly idempotencyKey: string;
+  readonly status: CompanionCommandResultStatus;
+  readonly code: CompanionCommandResultCode;
+  readonly message: string;
+  readonly completedAt: string;
+  readonly preview?: CompanionCommandPreview;
 }
 
 export interface CompanionSnapshotEvent extends CompanionProtocolEnvelope {
@@ -242,6 +331,16 @@ export type CompanionClientFrame =
       readonly taskId: string;
     }
   | {
+      readonly type: "preview-command";
+      readonly requestId: string;
+      readonly command: CompanionCommand;
+    }
+  | {
+      readonly type: "execute-command";
+      readonly requestId: string;
+      readonly command: CompanionCommand;
+    }
+  | {
       readonly type: "ping";
       readonly requestId: string;
     };
@@ -253,6 +352,7 @@ export type CompanionServerErrorCode =
   | "authentication-failed"
   | "not-authenticated"
   | "task-not-found"
+  | "command-preview-failed"
   | "request-failed";
 
 export type CompanionServerFrame =
@@ -285,6 +385,16 @@ export type CompanionServerFrame =
       readonly detail: CompanionTaskDetail;
     }
   | {
+      readonly type: "command-preview";
+      readonly requestId: string;
+      readonly preview: CompanionCommandPreview;
+    }
+  | {
+      readonly type: "command-result";
+      readonly requestId: string;
+      readonly result: CompanionCommandResult;
+    }
+  | {
       readonly type: "pong";
       readonly requestId: string;
       readonly capturedAt: string;
@@ -309,11 +419,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function requiredFrameText(record: Readonly<Record<string, unknown>>, key: string): string {
+function requiredFrameText(record: Readonly<Record<string, unknown>>, key: string, limit = 2_048): string {
   const value = record[key];
-  if (typeof value !== "string" || value.trim().length === 0 || value.length > 2_048) {
+  if (typeof value !== "string" || value.trim().length === 0 || value.length > limit) {
     throw new Error(`Companion frame ${key} 无效`);
   }
+  return value;
+}
+
+function frameText(record: Readonly<Record<string, unknown>>, key: string, limit = 2_048): string {
+  const value = record[key];
+  if (typeof value !== "string" || value.length > limit) throw new Error(`Companion frame ${key} 无效`);
   return value;
 }
 
@@ -368,8 +484,65 @@ export function parseCompanionClientFrame(value: unknown): CompanionClientFrame 
   if (value.type === "get-task-detail") {
     return Object.freeze({ type: value.type, requestId, taskId: requiredFrameText(value, "taskId") });
   }
+  if (value.type === "preview-command" || value.type === "execute-command") {
+    return Object.freeze({ type: value.type, requestId, command: parseCompanionCommand(value.command) });
+  }
   if (value.type === "ping") return Object.freeze({ type: value.type, requestId });
   throw new Error(`未知 Companion frame type: ${value.type}`);
+}
+
+export function parseCompanionCommand(value: unknown): CompanionCommand {
+  if (!isRecord(value) || typeof value.type !== "string") throw new Error("Companion command 必须是带 type 的对象");
+  const idempotencyKey = requiredFrameText(value, "idempotencyKey", 128);
+  const taskId = requiredFrameText(value, "taskId");
+  if (value.type === "add-task-message") {
+    if (typeof value.dispatchMentions !== "boolean") throw new Error("Companion command dispatchMentions 无效");
+    return Object.freeze({
+      type: value.type,
+      idempotencyKey,
+      taskId,
+      body: requiredFrameText(value, "body", COMPANION_PROJECTION_LIMITS.detailText),
+      dispatchMentions: value.dispatchMentions,
+    });
+  }
+  if (value.type === "resolve-human-gate") {
+    if (value.decision !== "approve" && value.decision !== "reject") throw new Error("Companion gate decision 无效");
+    return Object.freeze({
+      type: value.type,
+      idempotencyKey,
+      taskId,
+      runId: requiredFrameText(value, "runId"),
+      stepId: requiredFrameText(value, "stepId"),
+      decision: value.decision,
+      comment: frameText(value, "comment", COMPANION_PROJECTION_LIMITS.detailText),
+    });
+  }
+  if (value.type === "review-execution") {
+    if (value.executionKind !== "workflow" && value.executionKind !== "agent-task") throw new Error("Companion review executionKind 无效");
+    if (value.decision !== "accept" && value.decision !== "revision-requested" && value.decision !== "reject") {
+      throw new Error("Companion review decision 无效");
+    }
+    return Object.freeze({
+      type: value.type,
+      idempotencyKey,
+      taskId,
+      executionKind: value.executionKind,
+      executionId: requiredFrameText(value, "executionId"),
+      decision: value.decision,
+      comment: frameText(value, "comment", COMPANION_PROJECTION_LIMITS.detailText),
+    });
+  }
+  if (value.type === "abort-execution") {
+    if (value.executionKind !== "workflow" && value.executionKind !== "agent-task") throw new Error("Companion abort executionKind 无效");
+    return Object.freeze({
+      type: value.type,
+      idempotencyKey,
+      taskId,
+      executionKind: value.executionKind,
+      executionId: requiredFrameText(value, "executionId"),
+    });
+  }
+  throw new Error(`未知 Companion command type: ${value.type}`);
 }
 
 function isHostSummary(value: unknown): value is CompanionHostSummary {
@@ -444,7 +617,8 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
   if (value.type === "task-detail") {
     if (!isRecord(value.detail) || value.detail.protocolVersion !== COMPANION_PROTOCOL_VERSION
       || !Number.isSafeInteger(value.detail.sequence) || typeof value.detail.capturedAt !== "string"
-      || !isRecord(value.detail.task) || !Array.isArray(value.detail.agents) || !Array.isArray(value.detail.timeline)) {
+      || !isRecord(value.detail.task) || !Array.isArray(value.detail.agents) || !Array.isArray(value.detail.timeline)
+      || !Array.isArray(value.detail.actions)) {
       throw new Error("Companion task-detail frame 无效");
     }
     return Object.freeze({
@@ -452,6 +626,14 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
       requestId: requiredFrameText(value, "requestId"),
       detail: value.detail as unknown as CompanionTaskDetail,
     });
+  }
+  if (value.type === "command-preview") {
+    if (!isCommandPreview(value.preview)) throw new Error("Companion command-preview frame 无效");
+    return Object.freeze({ type: value.type, requestId: requiredFrameText(value, "requestId"), preview: value.preview });
+  }
+  if (value.type === "command-result") {
+    if (!isCommandResult(value.result)) throw new Error("Companion command-result frame 无效");
+    return Object.freeze({ type: value.type, requestId: requiredFrameText(value, "requestId"), result: value.result });
   }
   if (value.type === "pong") {
     return Object.freeze({
@@ -463,7 +645,7 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
   if (value.type === "error") {
     const validCodes: readonly CompanionServerErrorCode[] = [
       "malformed-frame", "protocol-incompatible", "pairing-invalid", "authentication-failed",
-      "not-authenticated", "task-not-found", "request-failed",
+      "not-authenticated", "task-not-found", "command-preview-failed", "request-failed",
     ];
     if (typeof value.code !== "string" || !validCodes.includes(value.code as CompanionServerErrorCode)
       || typeof value.message !== "string" || typeof value.recoverable !== "boolean") {
@@ -478,6 +660,35 @@ export function parseCompanionServerFrame(value: unknown): CompanionServerFrame 
     });
   }
   throw new Error(`未知 Companion server frame type: ${value.type}`);
+}
+
+function isCommandPreview(value: unknown): value is CompanionCommandPreview {
+  const commandTypes: readonly CompanionCommand["type"][] = [
+    "add-task-message", "resolve-human-gate", "review-execution", "abort-execution",
+  ];
+  const effects: readonly CompanionCommandEffect[] = [
+    "comment-only", "dispatch-agent-tasks", "resume-coordinator", "resolve-human-gate", "review-execution", "abort-execution",
+  ];
+  return isRecord(value)
+    && typeof value.commandType === "string" && commandTypes.includes(value.commandType as CompanionCommand["type"])
+    && typeof value.effect === "string" && effects.includes(value.effect as CompanionCommandEffect)
+    && typeof value.summary === "string"
+    && typeof value.destructive === "boolean"
+    && typeof value.requiresConfirmation === "boolean";
+}
+
+function isCommandResult(value: unknown): value is CompanionCommandResult {
+  const statuses: readonly CompanionCommandResultStatus[] = ["accepted", "rejected", "indeterminate"];
+  const codes: readonly CompanionCommandResultCode[] = [
+    "accepted", "domain-rejected", "stale-execution", "idempotency-conflict", "command-in-progress",
+  ];
+  return isRecord(value)
+    && typeof value.idempotencyKey === "string"
+    && typeof value.status === "string" && statuses.includes(value.status as CompanionCommandResultStatus)
+    && typeof value.code === "string" && codes.includes(value.code as CompanionCommandResultCode)
+    && typeof value.message === "string"
+    && typeof value.completedAt === "string"
+    && (value.preview === undefined || isCommandPreview(value.preview));
 }
 
 export function formatCompanionPairingUri(value: CompanionPairingUri): string {
@@ -524,5 +735,7 @@ export function parseCompanionPairingUri(raw: string): CompanionPairingUri {
 export interface CompanionControlPlane {
   getSnapshot(): Promise<CompanionSnapshot>;
   getTaskDetail(taskId: string): Promise<CompanionTaskDetail>;
+  previewCommand(deviceId: string, command: CompanionCommand): Promise<CompanionCommandPreview>;
+  executeCommand(deviceId: string, command: CompanionCommand): Promise<CompanionCommandResult>;
   subscribe(listener: CompanionProjectedEventListener): () => void;
 }

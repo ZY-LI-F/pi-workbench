@@ -5,11 +5,15 @@ import {
   parseCompanionPairingUri,
   parseCompanionServerFrame,
   type CompanionClientFrame,
+  type CompanionCommand,
+  type CompanionCommandPreview,
+  type CompanionCommandResult,
   type CompanionDeviceSummary,
   type CompanionHostSummary,
   type CompanionPairingUri,
   type CompanionServerFrame,
   type CompanionSnapshot,
+  type CompanionTaskDetail,
 } from "../../../src/shared/companion-protocol";
 
 export type CompanionConnectionState = "unpaired" | "pairing" | "connecting" | "reconnecting" | "online" | "offline" | "incompatible";
@@ -56,6 +60,28 @@ interface CompanionClientDependencies {
 interface PendingPairing {
   readonly uri: CompanionPairingUri;
   readonly deviceName: string;
+}
+
+type CompanionRequestFrame = Extract<CompanionClientFrame, { readonly type: "get-task-detail" | "preview-command" | "execute-command" }>;
+type CompanionRequestResponse = CompanionTaskDetail | CompanionCommandPreview | CompanionCommandResult;
+
+interface PendingRequest {
+  readonly kind: "read" | "command";
+  readonly idempotencyKey?: string;
+  readonly expected: "task-detail" | "command-preview" | "command-result";
+  readonly resolve: (value: CompanionRequestResponse) => void;
+  readonly reject: (cause: Error) => void;
+  readonly timer: ReturnType<typeof setTimeout>;
+}
+
+export class CompanionCommandIndeterminateError extends Error {
+  readonly idempotencyKey: string;
+
+  constructor(idempotencyKey: string, message = "连接在桌面返回命令结果前中断，执行结果未知") {
+    super(message);
+    this.name = "CompanionCommandIndeterminateError";
+    this.idempotencyKey = idempotencyKey;
+  }
 }
 
 const STORAGE_REVISION = 1;
@@ -119,12 +145,13 @@ export class CompanionWebSocketClient {
   #pendingPairing: PendingPairing | undefined;
   #socket: CompanionSocket | undefined;
   #generation = 0;
-  #request = 0;
+  #requestCounter = 0;
   #reconnectAttempt = 0;
   #reconnectTimer: unknown;
   #blocked = false;
   #stopped = false;
   #recoveringRequestId: string | undefined;
+  readonly #pendingRequests = new Map<string, PendingRequest>();
 
   constructor(dependencies: CompanionClientDependencies) {
     this.#storage = dependencies.storage;
@@ -183,6 +210,30 @@ export class CompanionWebSocketClient {
     this.#setState({ connection: "unpaired" });
   }
 
+  getTaskDetail(taskId: string): Promise<CompanionTaskDetail> {
+    return this.#request(
+      { type: "get-task-detail", requestId: this.#requestId(), taskId },
+      "task-detail",
+      "read",
+    ) as Promise<CompanionTaskDetail>;
+  }
+
+  previewCommand(command: CompanionCommand): Promise<CompanionCommandPreview> {
+    return this.#request(
+      { type: "preview-command", requestId: this.#requestId(), command },
+      "command-preview",
+      "read",
+    ) as Promise<CompanionCommandPreview>;
+  }
+
+  executeCommand(command: CompanionCommand): Promise<CompanionCommandResult> {
+    return this.#request(
+      { type: "execute-command", requestId: this.#requestId(), command },
+      "command-result",
+      "command",
+    ) as Promise<CompanionCommandResult>;
+  }
+
   stop(): void {
     this.#stopped = true;
     this.#disconnectSocket();
@@ -231,6 +282,7 @@ export class CompanionWebSocketClient {
     socket.onclose = () => {
       if (generation !== this.#generation) return;
       this.#socket = undefined;
+      this.#failPendingRequests("连接在桌面返回结果前中断");
       if (this.#stopped || this.#blocked) return;
       if (!this.#saved) {
         this.#setState({ connection: "unpaired", error: this.#state.error ?? "配对连接已关闭" });
@@ -250,7 +302,12 @@ export class CompanionWebSocketClient {
     if (generation !== this.#generation) return;
     const frame = parseCompanionServerFrame(JSON.parse(raw));
     if (frame.type === "error") {
+      if (frame.requestId && this.#rejectRequest(frame.requestId, new Error(frame.message))) return;
       this.#handleServerError(frame);
+      return;
+    }
+    if (frame.type === "task-detail" || frame.type === "command-preview" || frame.type === "command-result") {
+      this.#resolveRequest(frame);
       return;
     }
     if (frame.type === "paired") {
@@ -350,6 +407,7 @@ export class CompanionWebSocketClient {
   }
 
   #disconnectSocket(): void {
+    this.#failPendingRequests("Companion 连接已重置");
     this.#generation += 1;
     if (this.#reconnectTimer !== undefined) {
       this.#cancelScheduled(this.#reconnectTimer);
@@ -361,12 +419,73 @@ export class CompanionWebSocketClient {
   }
 
   #requestId(): string {
-    this.#request += 1;
-    return `android-${this.#request}`;
+    this.#requestCounter += 1;
+    return `android-${this.#requestCounter}`;
   }
 
   async #persist(): Promise<void> {
     if (this.#saved) await this.#storage.set(JSON.stringify(this.#saved));
+  }
+
+  #request(
+    frame: CompanionRequestFrame,
+    expected: PendingRequest["expected"],
+    kind: PendingRequest["kind"],
+  ): Promise<CompanionRequestResponse> {
+    if (this.#state.connection !== "online" || !this.#socket || this.#socket.readyState !== WebSocket.OPEN) {
+      return Promise.reject(new Error("Companion 当前不在线"));
+    }
+    return new Promise((resolve, reject) => {
+      const idempotencyKey = frame.type === "execute-command" ? frame.command.idempotencyKey : undefined;
+      const timer = setTimeout(() => {
+        this.#pendingRequests.delete(frame.requestId);
+        reject(kind === "command"
+          ? new CompanionCommandIndeterminateError(idempotencyKey ?? "unknown", "桌面未在限定时间内返回命令结果")
+          : new Error("桌面未在限定时间内返回请求结果"));
+      }, 15_000);
+      this.#pendingRequests.set(frame.requestId, {
+        kind,
+        ...(idempotencyKey ? { idempotencyKey } : {}),
+        expected,
+        resolve,
+        reject,
+        timer,
+      });
+      this.#send(frame);
+    });
+  }
+
+  #resolveRequest(frame: Extract<CompanionServerFrame, { readonly type: "task-detail" | "command-preview" | "command-result" }>): void {
+    const pending = this.#pendingRequests.get(frame.requestId);
+    if (!pending) return;
+    if (pending.expected !== frame.type) {
+      this.#rejectRequest(frame.requestId, new Error(`桌面返回了错误的响应类型: ${frame.type}`));
+      return;
+    }
+    clearTimeout(pending.timer);
+    this.#pendingRequests.delete(frame.requestId);
+    if (frame.type === "task-detail") pending.resolve(frame.detail);
+    else if (frame.type === "command-preview") pending.resolve(frame.preview);
+    else pending.resolve(frame.result);
+  }
+
+  #rejectRequest(requestId: string, cause: Error): boolean {
+    const pending = this.#pendingRequests.get(requestId);
+    if (!pending) return false;
+    clearTimeout(pending.timer);
+    this.#pendingRequests.delete(requestId);
+    pending.reject(cause);
+    return true;
+  }
+
+  #failPendingRequests(message: string): void {
+    for (const [requestId, pending] of this.#pendingRequests) {
+      clearTimeout(pending.timer);
+      this.#pendingRequests.delete(requestId);
+      pending.reject(pending.kind === "command"
+        ? new CompanionCommandIndeterminateError(pending.idempotencyKey ?? "unknown", message)
+        : new Error(message));
+    }
   }
 
   #setState(value: Omit<CompanionClientState, "host" | "snapshot" | "error"> & Partial<Pick<CompanionClientState, "host" | "snapshot" | "error">>): void {

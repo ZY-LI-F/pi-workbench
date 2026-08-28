@@ -596,6 +596,10 @@ export interface UpdateAutopilotInput extends Omit<CreateAutopilotInput, "trigge
 
 export interface ResolveGateInput {
   readonly taskId: string;
+  /** Optional optimistic fence used by remote clients. */
+  readonly runId?: string;
+  /** Optional optimistic fence used by remote clients. */
+  readonly stepId?: string;
   readonly decision: "approve" | "reject";
   readonly comment: string;
 }

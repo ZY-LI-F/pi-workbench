@@ -178,6 +178,7 @@ export class WorkflowOrchestrator {
     const bootstrap = await this.#commit((current) => {
       const task = this.#task(current, input.taskId);
       if (!task.activeRunId) throw new Error("任务当前没有等待处理的流程");
+      if (input.runId && task.activeRunId !== input.runId) throw new Error("人工关卡所属 execution 已变化，请刷新后重试");
       const run = this.#run(current, task.activeRunId);
       runId = run.id;
       if (run.status !== "review" || !run.currentStepId) throw new Error("流程当前不在人工关卡");
@@ -185,6 +186,7 @@ export class WorkflowOrchestrator {
       if (!step || step.stepKind !== "human-gate" || step.status !== "waiting") {
         throw new Error("流程的人工关卡状态无效");
       }
+      if (input.stepId && step.id !== input.stepId) throw new Error("人工关卡步骤已变化，请刷新后重试");
       const comment = input.comment.trim();
       if (input.decision === "reject") {
         const rejectedStep: StepRun = Object.freeze({
@@ -236,16 +238,18 @@ export class WorkflowOrchestrator {
     return bootstrap;
   }
 
-  async abort(taskId: string): Promise<BoardBootstrap> {
+  async abort(taskId: string, expectedRunId?: string): Promise<BoardBootstrap> {
     const state = await this.#repository.read();
     const task = this.#task(state, taskId);
     if (!task.activeRunId) throw new Error("任务当前没有可中止的流程");
+    if (expectedRunId && task.activeRunId !== expectedRunId) throw new Error("流程 execution 已变化，请刷新后重试");
     const runId = task.activeRunId;
     this.#waitingAdmissions.get(runId)?.controller.abort();
     const active = this.#activeAgents.get(runId);
     const now = this.#now();
     const bootstrap = await this.#commit((current) => {
       const latestTask = this.#task(current, taskId);
+      if (latestTask.activeRunId !== runId) throw new Error("流程 execution 已变化，请刷新后重试");
       const run = this.#run(current, runId);
       if (["failed", "blocked", "interrupted", "reported"].includes(run.status)) {
         throw new Error("流程已经进入终态，不能再次中止");

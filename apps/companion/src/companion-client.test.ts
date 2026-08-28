@@ -5,11 +5,13 @@ import {
   formatCompanionPairingUri,
   type CompanionDeviceSummary,
   type CompanionHostSummary,
+  type CompanionCommand,
   type CompanionServerFrame,
   type CompanionSnapshot,
 } from "../../../src/shared/companion-protocol";
-import { CompanionWebSocketClient, type CompanionClientStorage } from "./companion-client";
+import { CompanionCommandIndeterminateError, CompanionWebSocketClient, type CompanionClientStorage } from "./companion-client";
 
+const NOW = "2026-08-28T10:00:00.000Z";
 const HOST: CompanionHostSummary = Object.freeze({ id: "host-1", name: "Studio Mac", version: "0.5.0" });
 const DEVICE: CompanionDeviceSummary = Object.freeze({
   id: "device-1",
@@ -198,5 +200,53 @@ describe("CompanionWebSocketClient", () => {
     expect(client.state()).toMatchObject({ connection: "offline", snapshot: { sequence: 7, freshness: { stale: true } }, error: expect.stringContaining("撤销") });
     sockets[0]?.close();
     expect(scheduled).toHaveLength(0);
+  });
+
+  it("round-trips typed command previews/results and marks a lost reply indeterminate", async () => {
+    const storage = new MemoryStorage();
+    storage.value = JSON.stringify({ revision: 1, endpoint: "ws://desktop.test:43821/companion", host: HOST, device: DEVICE, credential: "credential-1", lastSnapshot: snapshot(1) });
+    const socket = new FakeSocket();
+    const client = new CompanionWebSocketClient({
+      storage,
+      socket: () => socket,
+      schedule: () => 1,
+      cancelScheduled: () => undefined,
+    });
+    await client.start();
+    socket.open();
+    socket.receive(readyFrame(snapshot(2)));
+    await flush();
+    const command: CompanionCommand = Object.freeze({
+      type: "add-task-message",
+      idempotencyKey: "command-1",
+      taskId: "task-1",
+      body: "继续",
+      dispatchMentions: true,
+    });
+
+    const previewPromise = client.previewCommand(command);
+    const previewRequest = JSON.parse(socket.sent.at(-1) ?? "{}") as { requestId: string };
+    socket.receive({
+      type: "command-preview",
+      requestId: previewRequest.requestId,
+      preview: { commandType: "add-task-message", effect: "resume-coordinator", summary: "恢复 Coordinator", destructive: false, requiresConfirmation: false },
+    });
+    await expect(previewPromise).resolves.toMatchObject({ effect: "resume-coordinator" });
+
+    const resultPromise = client.executeCommand(command);
+    const resultRequest = JSON.parse(socket.sent.at(-1) ?? "{}") as { requestId: string };
+    socket.receive({
+      type: "command-result",
+      requestId: resultRequest.requestId,
+      result: { idempotencyKey: command.idempotencyKey, status: "accepted", code: "accepted", message: "已恢复", completedAt: NOW },
+    });
+    await expect(resultPromise).resolves.toMatchObject({ status: "accepted" });
+
+    const unknown = client.executeCommand({ ...command, idempotencyKey: "command-unknown" });
+    socket.close();
+    await expect(unknown).rejects.toMatchObject({
+      name: CompanionCommandIndeterminateError.name,
+      idempotencyKey: "command-unknown",
+    });
   });
 });

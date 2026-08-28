@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from "vitest";
 import { MainCompanionControlPlane } from "../../src/main/companion-control-plane";
 import { CompanionGateway } from "../../src/main/companion-gateway";
 import { CompanionPairingStore } from "../../src/main/companion-pairing-store";
+import { CompanionCommandReceiptStore } from "../../src/main/companion-command-receipt-store";
+import { CompanionCommandService } from "../../src/main/companion-command-service";
 import type { BoardRepository } from "../../src/main/board-repository";
 import {
   COMPANION_MINIMUM_PROTOCOL_VERSION,
@@ -122,7 +124,31 @@ async function fixture() {
   });
   await pairingStore.initialize(HOST.name);
   const repository = new MemoryBoardRepository(board());
-  const controlPlane = new MainCompanionControlPlane({ repository, host: HOST, now: () => NOW });
+  const receipts = new CompanionCommandReceiptStore(join(directory, "command-receipts.json"), { now: () => NOW });
+  await receipts.initialize();
+  const commandService = new CompanionCommandService({
+    repository,
+    catalog: { agents: Object.freeze([]), workflows: Object.freeze([]) },
+    receipts,
+    now: () => NOW,
+    handlers: {
+      addComment: async (input) => repository.update((current) => Object.freeze({
+        ...current,
+        comments: Object.freeze([...current.comments, Object.freeze({
+          id: `comment-${current.comments.length + 1}`,
+          taskId: input.taskId,
+          author: "user" as const,
+          messageKind: "comment" as const,
+          body: input.body,
+          createdAt: NOW,
+        })]),
+      })),
+      resolveGate: async () => undefined,
+      reviewExecution: async () => undefined,
+      abortExecution: async () => undefined,
+    },
+  });
+  const controlPlane = new MainCompanionControlPlane({ repository, host: HOST, commands: commandService, now: () => NOW });
   const gateway = new CompanionGateway({
     controlPlane,
     pairingStore,
@@ -138,7 +164,7 @@ async function fixture() {
   const status = await gateway.start();
   const endpoint = status.connectionUrls[0];
   if (!endpoint) throw new Error("Gateway test endpoint missing");
-  return { gateway, pairingStore, repository, controlPlane, endpoint, directory };
+  return { gateway, pairingStore, repository, controlPlane, commandService, endpoint, directory };
 }
 
 function handshake(requestId: string) {
@@ -271,6 +297,19 @@ describe("CompanionGateway", () => {
     await client.pair(offer.pairingUri, "Android integration client");
     await waitFor(() => client.state().connection === "online");
     expect(client.state()).toMatchObject({ snapshot: { tasks: [{ title: "Initial Task" }] } });
+
+    const command = Object.freeze({
+      type: "add-task-message" as const,
+      idempotencyKey: "android-command-1",
+      taskId: "task-1",
+      body: "Android reply",
+      dispatchMentions: true,
+    });
+    await expect(client.previewCommand(command)).resolves.toMatchObject({ effect: "comment-only" });
+    const accepted = await client.executeCommand(command);
+    expect(accepted).toMatchObject({ status: "accepted" });
+    await expect(client.executeCommand(command)).resolves.toEqual(accepted);
+    expect((await repository.read()).comments).toHaveLength(1);
 
     const committed = await repository.update((current) => Object.freeze({
       ...current,

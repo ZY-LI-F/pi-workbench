@@ -192,6 +192,12 @@ describe("MainCompanionControlPlane", () => {
     expect(detail.timeline).toHaveLength(COMPANION_PROJECTION_LIMITS.taskTimeline);
     expect(detail.task.description).toHaveLength(COMPANION_PROJECTION_LIMITS.detailText);
     expect(detail.task.acceptanceCriteria).toHaveLength(COMPANION_PROJECTION_LIMITS.detailText);
+    expect(detail.actions).toEqual([{
+      kind: "abort-execution",
+      taskId: selectedTask.id,
+      executionKind: "agent-task",
+      executionId: "agent-1",
+    }]);
     expect(detail.timeline[0]?.id).toBe("message:message-033");
     expect(Math.max(...detail.timeline.map((item) => item.body?.length ?? 0)))
       .toBeLessThanOrEqual(COMPANION_PROJECTION_LIMITS.detailText);

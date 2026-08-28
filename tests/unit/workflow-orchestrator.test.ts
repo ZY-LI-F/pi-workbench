@@ -219,7 +219,15 @@ describe("WorkflowOrchestrator", () => {
     expect(repository.state.tasks[0]?.stage).toBe("review");
     expect(repository.state.runs[0]?.currentStepId).toBe("approve-plan");
 
-    await orchestrator.resolveGate({ taskId, decision: "approve", comment: "方案通过" });
+    const gateRun = repository.state.runs[0];
+    const gateStep = gateRun?.steps.find((step) => step.stepId === gateRun.currentStepId);
+    if (!gateRun || !gateStep) throw new Error("测试缺少等待中的人工关卡");
+    await expect(orchestrator.resolveGate({ taskId, runId: "stale-run", stepId: gateStep.id, decision: "approve", comment: "旧决定" }))
+      .rejects.toThrow("execution 已变化");
+    await expect(orchestrator.resolveGate({ taskId, runId: gateRun.id, stepId: "stale-step", decision: "approve", comment: "旧决定" }))
+      .rejects.toThrow("步骤已变化");
+
+    await orchestrator.resolveGate({ taskId, runId: gateRun.id, stepId: gateStep.id, decision: "approve", comment: "方案通过" });
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(3));
     await vi.waitFor(() => expect(runtimeFactory.runtimes[2]?.start).toHaveBeenCalledWith(expect.objectContaining({
       allowedTools: expect.arrayContaining(["edit", "write"]),
@@ -250,7 +258,11 @@ describe("WorkflowOrchestrator", () => {
     const { repository, runtimeFactory, orchestrator, taskId } = await setup();
     await orchestrator.dispatch(taskId);
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(1));
-    await orchestrator.abort(taskId);
+    const activeRunId = repository.state.tasks[0]?.activeRunId;
+    if (!activeRunId) throw new Error("测试缺少 active Workflow run");
+    await expect(orchestrator.abort(taskId, "stale-run")).rejects.toThrow("execution 已变化");
+    expect(runtimeFactory.runtimes[0]?.abortAndStop).not.toHaveBeenCalled();
+    await orchestrator.abort(taskId, activeRunId);
     expect(repository.state.tasks[0]?.stage).toBe("blocked");
     expect(repository.state.tasks[0]?.activeRunId).toBeUndefined();
     expect(repository.state.runs[0]?.status).toBe("interrupted");

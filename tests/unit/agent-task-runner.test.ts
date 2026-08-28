@@ -562,7 +562,11 @@ describe("AgentTaskRunner", () => {
     runner.start();
     await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.commands.some((command) => command.type === "prompt")).toBe(true));
     const runtime = runtimeFactory.runtimes[0];
-    await runner.abortTask(taskId);
+    const activeAgentTaskId = repository.state.tasks.find((task) => task.id === taskId)?.activeAgentTaskId;
+    if (!activeAgentTaskId) throw new Error("测试缺少 active AgentTask");
+    await expect(runner.abortTask(taskId, "stale-agent-task")).rejects.toThrow("execution 已变化");
+    expect(runtime?.abortAndStop).not.toHaveBeenCalled();
+    await runner.abortTask(taskId, activeAgentTaskId);
     runtime?.settle();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(repository.state.tasks.find((task) => task.id === taskId)?.stage).toBe("blocked");

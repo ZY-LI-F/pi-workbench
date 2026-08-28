@@ -321,6 +321,42 @@ export class CompanionGateway {
       }
       return;
     }
+    if (frame.type === "preview-command") {
+      try {
+        this.#send(context, {
+          type: "command-preview",
+          requestId: frame.requestId,
+          preview: await this.#controlPlane.previewCommand(context.device.id, frame.command),
+        });
+      } catch (cause) {
+        this.#send(context, {
+          type: "error",
+          requestId: frame.requestId,
+          code: "command-preview-failed",
+          message: errorMessage(cause),
+          recoverable: true,
+        });
+      }
+      return;
+    }
+    if (frame.type === "execute-command") {
+      try {
+        this.#send(context, {
+          type: "command-result",
+          requestId: frame.requestId,
+          result: await this.#controlPlane.executeCommand(context.device.id, frame.command),
+        });
+      } catch (cause) {
+        this.#send(context, {
+          type: "error",
+          requestId: frame.requestId,
+          code: "request-failed",
+          message: errorMessage(cause),
+          recoverable: true,
+        });
+      }
+      return;
+    }
     this.#send(context, { type: "pong", requestId: frame.requestId, capturedAt: this.#now() });
   }
 

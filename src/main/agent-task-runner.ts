@@ -100,11 +100,11 @@ export class AgentTaskRunner {
       .finally(() => { if (this.#schedulePromise === schedule) this.#schedulePromise = undefined; });
   }
 
-  async abortTask(taskId: string): Promise<BoardBootstrap> {
+  async abortTask(taskId: string, expectedAgentTaskId?: string): Promise<BoardBootstrap> {
     for (const waiting of this.#waiting.values()) {
       if (waiting.taskId === taskId) waiting.controller.abort();
     }
-    const result = await this.#service.abortTask(taskId);
+    const result = await this.#service.abortTask(taskId, expectedAgentTaskId);
     const active = [...this.#active.values()].filter((entry) => entry.taskId === taskId);
     for (const entry of active) {
       entry.abortRequested = true;

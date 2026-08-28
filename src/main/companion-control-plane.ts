@@ -4,6 +4,9 @@ import {
   COMPANION_PROTOCOL_VERSION,
   type CompanionAgentSummary,
   type CompanionAttentionItem,
+  type CompanionCommand,
+  type CompanionCommandPreview,
+  type CompanionCommandResult,
   type CompanionControlPlane,
   type CompanionHostSummary,
   type CompanionProjectedEventListener,
@@ -12,6 +15,7 @@ import {
   type CompanionSnapshot,
   type CompanionSnapshotEvent,
   type CompanionTaskDetail,
+  type CompanionTaskAction,
   type CompanionTaskSummary,
   type CompanionTaskTimelineEntry,
 } from "../shared/companion-protocol";
@@ -26,6 +30,10 @@ import type { BoardRepository } from "./board-repository";
 interface MainCompanionControlPlaneDependencies {
   readonly repository: BoardRepository;
   readonly host: CompanionHostSummary;
+  readonly commands?: {
+    preview(command: CompanionCommand): Promise<CompanionCommandPreview>;
+    execute(deviceId: string, command: CompanionCommand): Promise<CompanionCommandResult>;
+  };
   readonly now?: () => string;
 }
 
@@ -267,9 +275,51 @@ function compactTimelineEntry(item: TaskTimelineEntry): CompanionTaskTimelineEnt
   });
 }
 
+function taskActions(board: BoardState, task: KanbanTask): readonly CompanionTaskAction[] {
+  const actions: CompanionTaskAction[] = [];
+  if (task.activeRunId) {
+    const run = board.runs.find((candidate) => candidate.id === task.activeRunId);
+    const gate = run?.currentStepId
+      ? run.steps.find((candidate) => candidate.stepId === run.currentStepId && candidate.stepKind === "human-gate" && candidate.status === "waiting")
+      : undefined;
+    if (run?.status === "review" && gate) {
+      actions.push(Object.freeze({
+        kind: "resolve-human-gate",
+        taskId: task.id,
+        runId: run.id,
+        stepId: gate.id,
+        label: requiredCompactText(gate.name, COMPANION_PROJECTION_LIMITS.titleText),
+      }));
+    }
+    actions.push(Object.freeze({
+      kind: "abort-execution",
+      taskId: task.id,
+      executionKind: "workflow",
+      executionId: task.activeRunId,
+    }));
+  } else if (task.activeAgentTaskId) {
+    actions.push(Object.freeze({
+      kind: "abort-execution",
+      taskId: task.id,
+      executionKind: "agent-task",
+      executionId: task.activeAgentTaskId,
+    }));
+  }
+  if (task.awaitingReviewExecution) {
+    actions.push(Object.freeze({
+      kind: "review-execution",
+      taskId: task.id,
+      executionKind: task.awaitingReviewExecution.kind,
+      executionId: task.awaitingReviewExecution.id,
+    }));
+  }
+  return Object.freeze(actions);
+}
+
 export class MainCompanionControlPlane implements CompanionControlPlane {
   readonly #repository: BoardRepository;
   readonly #host: CompanionHostSummary;
+  readonly #commands: MainCompanionControlPlaneDependencies["commands"];
   readonly #now: () => string;
   readonly #listeners = new Set<CompanionProjectedEventListener>();
   #board: BoardState | undefined;
@@ -279,6 +329,7 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
   constructor(dependencies: MainCompanionControlPlaneDependencies) {
     this.#repository = dependencies.repository;
     this.#host = Object.freeze({ ...dependencies.host });
+    this.#commands = dependencies.commands;
     this.#now = dependencies.now ?? (() => new Date().toISOString());
   }
 
@@ -333,8 +384,19 @@ export class MainCompanionControlPlane implements CompanionControlPlane {
         }),
         agents: selectedAgents,
         timeline: selectedTimeline,
+        actions: taskActions(board, task),
       });
     });
+  }
+
+  previewCommand(_deviceId: string, command: CompanionCommand): Promise<CompanionCommandPreview> {
+    if (!this.#commands) return Promise.reject(new Error("Companion command control plane 尚未配置"));
+    return this.#commands.preview(command);
+  }
+
+  executeCommand(deviceId: string, command: CompanionCommand): Promise<CompanionCommandResult> {
+    if (!this.#commands) return Promise.reject(new Error("Companion command control plane 尚未配置"));
+    return this.#commands.execute(deviceId, command);
   }
 
   subscribe(listener: CompanionProjectedEventListener): () => void {

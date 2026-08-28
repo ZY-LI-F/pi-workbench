@@ -135,6 +135,8 @@ import { PiSkillInstaller } from "./pi-skill-installer";
 import { MainCompanionControlPlane } from "./companion-control-plane";
 import { CompanionGateway, companionPortFromEnvironment } from "./companion-gateway";
 import { CompanionPairingStore } from "./companion-pairing-store";
+import { CompanionCommandReceiptStore } from "./companion-command-receipt-store";
+import { CompanionCommandService, type CompanionAbortExecutionInput } from "./companion-command-service";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
@@ -240,6 +242,8 @@ let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
 let companionControlPlane: MainCompanionControlPlane | undefined;
 let companionPairingStore: CompanionPairingStore | undefined;
+let companionCommandReceiptStore: CompanionCommandReceiptStore | undefined;
+let companionCommandService: CompanionCommandService | undefined;
 let companionGateway: CompanionGateway | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
@@ -490,6 +494,8 @@ function validatedGate(value: unknown): ResolveGateInput {
   if (input.decision !== "approve" && input.decision !== "reject") throw new Error("decision 必须是 approve 或 reject");
   return Object.freeze({
     taskId: requiredString(input.taskId, "taskId"),
+    runId: input.runId === undefined ? undefined : requiredString(input.runId, "runId"),
+    stepId: input.stepId === undefined ? undefined : requiredString(input.stepId, "stepId"),
     decision: input.decision,
     comment: textValue(input.comment, "comment"),
   });
@@ -797,6 +803,17 @@ async function abortBoardTask(taskId: string): Promise<BoardBootstrap> {
   if (task.activeRunId) return workflowOrchestrator.abort(taskId);
   if (task.activeAgentTaskId) return agentTaskRunner.abortTask(taskId);
   throw new Error("任务当前没有可中止的执行");
+}
+
+async function abortCompanionExecution(input: CompanionAbortExecutionInput): Promise<BoardBootstrap> {
+  const state = await boardStore.read();
+  const task = state.tasks.find((candidate) => candidate.id === input.taskId);
+  if (!task) throw new Error(`找不到任务: ${input.taskId}`);
+  const activeId = input.executionKind === "workflow" ? task.activeRunId : task.activeAgentTaskId;
+  if (activeId !== input.executionId) throw new Error("active execution 已变化，请刷新 Task Room 后重试");
+  return input.executionKind === "workflow"
+    ? workflowOrchestrator.abort(input.taskId, input.executionId)
+    : agentTaskRunner.abortTask(input.taskId, input.executionId);
 }
 
 function dataFromResponse<T>(response: PiResponse, command: string): T {
@@ -1420,12 +1437,30 @@ async function initializeTaskCapability(): Promise<void> {
     await companionGateway?.stop();
     boardStore = new BoardStore(join(app.getPath("userData"), "board", "board.json"));
     await boardStore.initialize();
+    companionCommandReceiptStore = new CompanionCommandReceiptStore(join(app.getPath("userData"), "companion", "command-receipts.json"));
+    await companionCommandReceiptStore.initialize();
     companionPairingStore = new CompanionPairingStore(join(app.getPath("userData"), "companion", "devices.json"));
     await companionPairingStore.initialize(hostname());
     const companionHost = await companionPairingStore.host(app.getVersion());
+    companionCommandService = new CompanionCommandService({
+      repository: boardStore,
+      catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      receipts: companionCommandReceiptStore,
+      handlers: {
+        addComment: async (input) => {
+          const bootstrap = await agentTaskService.addComment(input);
+          agentTaskRunner.notify();
+          return bootstrap;
+        },
+        resolveGate: (input) => workflowOrchestrator.resolveGate(input),
+        reviewExecution: (input) => executionReviewService.review(input),
+        abortExecution: abortCompanionExecution,
+      },
+    });
     companionControlPlane = new MainCompanionControlPlane({
       repository: boardStore,
       host: companionHost,
+      commands: companionCommandService,
     });
     companionGateway = new CompanionGateway({
       controlPlane: companionControlPlane,
@@ -1434,11 +1469,6 @@ async function initializeTaskCapability(): Promise<void> {
       port: companionPortFromEnvironment(process.env.STELLA_COMPANION_PORT),
       emitChanged: (status) => broadcast("companion", { type: "gateway-status", status }),
     });
-    try {
-      await companionGateway.start();
-    } catch (cause) {
-      console.error("Companion Gateway failed to start; Task Control remains available", cause);
-    }
     const emitSnapshot = (bootstrap: BoardBootstrap): void => emitBoardEvent({ type: "snapshot", bootstrap });
     boardService = new BoardService({
       repository: boardStore,
@@ -1559,6 +1589,11 @@ async function initializeTaskCapability(): Promise<void> {
     });
     if (currentProject) await boardService.updateProjectTrust(currentProject.cwd, currentProject.trusted);
     agentTaskRunner.start();
+    try {
+      await companionGateway.start();
+    } catch (cause) {
+      console.error("Companion Gateway failed to start; Task Control remains available", cause);
+    }
     capabilityHealth.set("task", "ready");
     await Promise.all([startScheduleCapability(), startWebhookCapability()]);
   } catch (cause) {

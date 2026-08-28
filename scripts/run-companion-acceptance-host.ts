@@ -4,9 +4,12 @@ import { join } from "node:path";
 import { MainCompanionControlPlane } from "../src/main/companion-control-plane";
 import { CompanionGateway } from "../src/main/companion-gateway";
 import { CompanionPairingStore } from "../src/main/companion-pairing-store";
+import { CompanionCommandReceiptStore } from "../src/main/companion-command-receipt-store";
+import { CompanionCommandService } from "../src/main/companion-command-service";
 import type { BoardRepository } from "../src/main/board-repository";
 import { snapshotExecutionProfile } from "../src/shared/execution-profile";
 import { BOARD_SCHEMA_VERSION, type AgentDefinition, type BoardState } from "../src/shared/kanban";
+import { BUILTIN_ORCHESTRATION_CATALOG } from "../src/shared/orchestration-catalog";
 
 const hostAddress = process.env.STELLA_COMPANION_ACCEPTANCE_ADDRESS?.trim() || "10.0.2.2";
 const port = Number(process.env.STELLA_COMPANION_ACCEPTANCE_PORT ?? "43822");
@@ -89,7 +92,6 @@ class MemoryRepository implements BoardRepository {
     this.#board = transform(this.#board);
     return this.#board;
   }
-  set(board: BoardState) { this.#board = board; }
 }
 
 const directory = await mkdtemp(join(tmpdir(), "stella-companion-acceptance-"));
@@ -97,7 +99,44 @@ const pairingStore = new CompanionPairingStore(join(directory, "devices.json"));
 await pairingStore.initialize("Stella Acceptance Host");
 const host = await pairingStore.host("0.5.0");
 const repository = new MemoryRepository();
-const controlPlane = new MainCompanionControlPlane({ repository, host });
+const receiptStore = new CompanionCommandReceiptStore(join(directory, "command-receipts.json"));
+await receiptStore.initialize();
+let controlPlane: MainCompanionControlPlane;
+const commit = async (transform: (current: BoardState) => BoardState) => {
+  const board = await repository.update(transform);
+  await controlPlane.publishCommitted(board);
+  return board;
+};
+const commandService = new CompanionCommandService({
+  repository,
+  catalog: BUILTIN_ORCHESTRATION_CATALOG,
+  receipts: receiptStore,
+  handlers: {
+    addComment: (input) => commit((current) => Object.freeze({
+      ...current,
+      comments: Object.freeze([...current.comments, Object.freeze({
+        id: `android-comment-${current.comments.length + 1}`,
+        taskId: input.taskId,
+        author: "user" as const,
+        messageKind: "comment" as const,
+        body: input.body,
+        createdAt: new Date().toISOString(),
+      })]),
+    })),
+    resolveGate: async () => { throw new Error("验收主机当前没有人工关卡"); },
+    reviewExecution: async () => { throw new Error("验收主机当前没有待验收报告"); },
+    abortExecution: (input) => commit((current) => Object.freeze({
+      ...current,
+      tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId
+        ? Object.freeze({ ...task, activeAgentTaskId: undefined, stage: "blocked" as const, blockedReason: "Android 验收中止", updatedAt: new Date().toISOString() })
+        : task)),
+      agentTasks: Object.freeze(current.agentTasks.map((agentTask) => agentTask.id === input.executionId
+        ? Object.freeze({ ...agentTask, status: "interrupted" as const, error: "Android 验收中止", completedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+        : agentTask)),
+    })),
+  },
+});
+controlPlane = new MainCompanionControlPlane({ repository, host, commands: commandService });
 const gateway = new CompanionGateway({
   controlPlane,
   pairingStore,
@@ -114,9 +153,26 @@ process.stdout.write(`PAIRING_EXPIRES_AT=${offer.expiresAt}\n`);
 let waiting = true;
 const timer = setInterval(() => {
   waiting = !waiting;
-  const board = acceptanceBoard(waiting ? "waiting_human" : "running", new Date().toISOString());
-  repository.set(board);
-  void controlPlane.publishCommitted(board);
+  const updatedAt = new Date().toISOString();
+  void commit((current) => {
+    const active = current.tasks[0]?.activeAgentTaskId === "android-acceptance-agent";
+    if (!active) return current;
+    return Object.freeze({
+      ...current,
+      tasks: Object.freeze(current.tasks.map((task) => Object.freeze({ ...task, updatedAt }))),
+      agentTasks: Object.freeze(current.agentTasks.map((agentTask) => agentTask.id === "android-acceptance-agent"
+        ? Object.freeze({ ...agentTask, status: waiting ? "waiting_human" as const : "running" as const, updatedAt })
+        : agentTask)),
+      activities: Object.freeze([...current.activities, Object.freeze({
+        id: `activity-${updatedAt}`,
+        taskId: "android-acceptance-task",
+        agentTaskId: "android-acceptance-agent",
+        kind: "agent" as const,
+        summary: waiting ? "等待 Android 回复" : "正在处理 Android 验收",
+        createdAt: updatedAt,
+      })]),
+    });
+  });
 }, 4_000);
 
 const shutdown = async () => {
