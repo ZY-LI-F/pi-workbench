@@ -118,6 +118,5 @@ export function deriveAgentTaskQueue(board: BoardState, now: string | number | D
 }
 
 export function nextRunnableAgentTask(board: BoardState, now: string | number | Date): AgentTaskQueueEntry | undefined {
-  if (board.agentTasks.some((agentTask) => agentTask.status === "running")) return undefined;
   return deriveAgentTaskQueue(board, now).find((entry) => entry.queuePosition === 1);
 }

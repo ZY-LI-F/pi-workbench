@@ -33,6 +33,11 @@ import {
 import { executionProfileAgentIncompatibility, snapshotExecutionProfile, type ExecutionProfileId } from "../shared/execution-profile";
 import { ExecutionAbortedError, ExecutionProtocolError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
 import type { ExecutionBackendRegistryContract } from "./execution-backend-registry";
+import {
+  ExecutionCapacity,
+  ExecutionCapacityAbortError,
+  type ExecutionCapacityLease,
+} from "./execution-capacity";
 
 interface OrchestratorDependencies {
   readonly repository: BoardRepository;
@@ -40,6 +45,7 @@ interface OrchestratorDependencies {
   readonly backendRegistry: ExecutionBackendRegistryContract;
   readonly emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly workspace: ExecutionWorkspaceProvider;
+  readonly capacity?: ExecutionCapacity;
   readonly now?: () => string;
   readonly id?: () => string;
 }
@@ -51,6 +57,7 @@ interface ActiveAgentRun {
   readonly runtimeToken: string;
   readonly controller: AbortController;
   readonly workspace: ExecutionWorkspaceHandle;
+  readonly capacity: ExecutionCapacityLease;
   abortRequested: boolean;
   done?: Promise<void>;
 }
@@ -81,6 +88,7 @@ export class WorkflowOrchestrator {
   readonly #backendRegistry: ExecutionBackendRegistryContract;
   readonly #emitBoardEvent: (event: BoardBridgeEvent) => void;
   readonly #workspace: ExecutionWorkspaceProvider;
+  readonly #capacity: ExecutionCapacity;
   readonly #now: () => string;
   readonly #id: () => string;
   readonly #activeAgents = new Map<string, ActiveAgentRun>();
@@ -93,6 +101,7 @@ export class WorkflowOrchestrator {
     this.#backendRegistry = dependencies.backendRegistry;
     this.#emitBoardEvent = dependencies.emitBoardEvent;
     this.#workspace = dependencies.workspace;
+    this.#capacity = dependencies.capacity ?? new ExecutionCapacity();
     this.#now = dependencies.now ?? (() => new Date().toISOString());
     this.#id = dependencies.id ?? randomUUID;
   }
@@ -342,8 +351,10 @@ export class WorkflowOrchestrator {
     const controller = new AbortController();
     const waiting = Object.freeze({ taskId: task.id, controller });
     this.#waitingAdmissions.set(run.id, waiting);
-    let workspace: ExecutionWorkspaceHandle;
+    let capacity: ExecutionCapacityLease | undefined;
+    let workspace: ExecutionWorkspaceHandle | undefined;
     try {
+      capacity = await this.#capacity.acquire(`workflow:${run.id}:${step.stepId}`, controller.signal);
       workspace = await this.#workspace.acquire({
         projectPath: task.projectPath,
         preference: run.taskSpec.executionWorkspace ?? task.executionWorkspace,
@@ -361,13 +372,16 @@ export class WorkflowOrchestrator {
         onQueued: (owner) => this.#queueForWriter(run, task, step, agent, owner.label),
       });
     } catch (cause) {
-      if (cause instanceof ExecutionWorkspaceAbortError) return;
+      workspace?.release();
+      capacity?.release();
+      if (cause instanceof ExecutionWorkspaceAbortError || cause instanceof ExecutionCapacityAbortError) return;
       throw cause;
     } finally {
       if (this.#waitingAdmissions.get(run.id) === waiting) this.#waitingAdmissions.delete(run.id);
     }
     if (this.#stopping) {
       workspace.release();
+      capacity.release();
       return;
     }
     const latest = await this.#repository.read();
@@ -376,6 +390,7 @@ export class WorkflowOrchestrator {
     const latestStep = latestRun?.steps.find((candidate) => candidate.id === step.id);
     if (latestTask?.activeRunId !== run.id || !latestRun || !latestStep || latestStep.status !== "pending" || ["failed", "blocked", "interrupted", "reported"].includes(latestRun.status)) {
       workspace.release();
+      capacity.release();
       return;
     }
     await this.#startAgent(
@@ -387,6 +402,8 @@ export class WorkflowOrchestrator {
       resolvedBackend.backend,
       resolvedBackend.health.version,
       workspace,
+      capacity,
+      controller,
     );
   }
 
@@ -444,6 +461,8 @@ export class WorkflowOrchestrator {
     backend: ExecutionBackend,
     backendVersion: string | undefined,
     workspace: ExecutionWorkspaceHandle,
+    capacity: ExecutionCapacityLease,
+    controller: AbortController,
   ): Promise<void> {
     const runtimeToken = this.#id();
     const active: ActiveAgentRun = {
@@ -451,8 +470,9 @@ export class WorkflowOrchestrator {
       runId: run.id,
       stepId: step.stepId,
       runtimeToken,
-      controller: new AbortController(),
+      controller,
       workspace,
+      capacity,
       abortRequested: false,
     };
     this.#activeAgents.set(run.id, active);
@@ -584,6 +604,9 @@ export class WorkflowOrchestrator {
     const board = await this.#repository.read();
     const run = this.#run(board, active.runId);
     if (["failed", "blocked", "interrupted", "reported"].includes(run.status)) return false;
+    if (run.workspacePlacement?.resourceId !== active.workspace.placement.resourceId) {
+      throw new Error(`WorkflowRun ${run.id} 的 Execution Workspace identity 已失效`);
+    }
     const step = run.steps.find((candidate) => candidate.stepId === active.stepId && candidate.runtimeToken === active.runtimeToken);
     if (!step) throw new Error(`找不到运行步骤: ${active.stepId}`);
     const now = this.#now();
@@ -643,6 +666,7 @@ export class WorkflowOrchestrator {
 
   #finalizeActive(active: ActiveAgentRun): void {
     active.workspace.release();
+    active.capacity.release();
     if (this.#activeAgents.get(active.runId) === active) this.#activeAgents.delete(active.runId);
   }
 

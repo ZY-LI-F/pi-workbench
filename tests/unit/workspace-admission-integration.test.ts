@@ -12,6 +12,7 @@ import type { BoardRepository } from "../../src/main/board-repository";
 import { WorkflowOrchestrator } from "../../src/main/workflow-orchestrator";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
+import { ExecutionCapacity } from "../../src/main/execution-capacity";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 
 class MemoryRepository implements BoardRepository {
@@ -155,6 +156,88 @@ describe("shared WorkspaceAdmission integration", () => {
 
     agentFactory.runtimes[0]?.settle();
     await vi.waitFor(() => expect(repository.state.agentTasks.find((entry) => entry.taskId === agentTask.id)?.status).toBe("reported"));
+    await Promise.all([workflow.shutdown(), runner.shutdown()]);
+    admission.shutdown();
+  });
+
+  it("shares one application capacity limit across Workflow and AgentTask on different projects", async () => {
+    const repository = new MemoryRepository();
+    const id = idFactory();
+    const now = () => "2026-07-18T00:00:00.000Z";
+    const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.replaceAll("\\", "/").toLocaleLowerCase("en-US") });
+    const workspace = new CurrentFolderExecutionWorkspace({
+      admission,
+      resolveProjectTrust: async () => true,
+      resolveProjectPath: async (projectPath) => projectPath,
+    });
+    const capacity = new ExecutionCapacity(1);
+    const workflowFactory = new SharedRuntimeFactory();
+    const agentFactory = new SharedRuntimeFactory();
+    const boardService = new BoardService({ repository, catalog: CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
+    const agentTaskService = new AgentTaskService({ repository, catalog: CATALOG, emitChanged: () => undefined, skills: READY_AGENT_SKILLS, id, now });
+    const workflow = new WorkflowOrchestrator({
+      repository,
+      catalog: CATALOG,
+      backendRegistry: new ExecutionBackendRegistry({
+        backends: [new PiRpcExecutionAdapter({
+          runtimeFactory: workflowFactory,
+          globalModel: () => undefined,
+          coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+          skills: READY_AGENT_SKILLS,
+          now,
+        })],
+        now,
+      }),
+      emitBoardEvent: () => undefined,
+      workspace,
+      capacity,
+      id,
+      now,
+    });
+    const runner = new AgentTaskRunner({
+      service: agentTaskService,
+      backendRegistry: new ExecutionBackendRegistry({
+        backends: [new PiRpcExecutionAdapter({
+          runtimeFactory: agentFactory,
+          globalModel: () => undefined,
+          coordinatorExtensionPath: TEST_COORDINATOR_EXTENSION,
+          skills: READY_AGENT_SKILLS,
+          now,
+        })],
+        now,
+      }),
+      emitBoardEvent: () => undefined,
+      workspace,
+      capacity,
+    });
+
+    await boardService.createTask({
+      title: "Capacity Workflow", description: "", acceptanceCriteria: "", priority: "high",
+      projectPath: "C:/First", projectName: "First", trusted: true,
+      executionTarget: { kind: "workflow", workflowId: WRITE_WORKFLOW.id },
+    });
+    await boardService.createTask({
+      title: "Capacity AgentTask", description: "", acceptanceCriteria: "", priority: "high",
+      projectPath: "D:/Second", projectName: "Second", trusted: true,
+      executionTarget: { kind: "agent", agentId: "builder" },
+    });
+    const workflowTask = repository.state.tasks.find((task) => task.title === "Capacity Workflow");
+    const agentTask = repository.state.tasks.find((task) => task.title === "Capacity AgentTask");
+    if (!workflowTask || !agentTask) throw new Error("测试任务未创建");
+
+    await workflow.dispatch(workflowTask.id);
+    await vi.waitFor(() => expect(workflowFactory.runtimes).toHaveLength(1));
+    await agentTaskService.dispatchDirect(agentTask.id);
+    runner.start();
+    await vi.waitFor(() => expect(capacity.waitingCount).toBe(1));
+    expect(agentFactory.runtimes).toHaveLength(0);
+    expect(repository.state.agentTasks.find((entry) => entry.taskId === agentTask.id)?.status).toBe("queued");
+
+    workflowFactory.runtimes[0]?.settle();
+    await vi.waitFor(() => expect(agentFactory.runtimes).toHaveLength(1));
+    expect(capacity.activeCount).toBe(1);
+    agentFactory.runtimes[0]?.settle();
+    await vi.waitFor(() => expect(capacity.activeCount).toBe(0));
     await Promise.all([workflow.shutdown(), runner.shutdown()]);
     admission.shutdown();
   });

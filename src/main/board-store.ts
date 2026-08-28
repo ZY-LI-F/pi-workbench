@@ -3,6 +3,8 @@ import { copyFile, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import {
   EMPTY_BOARD_STATE,
+  BOARD_SCHEMA_V8,
+  BOARD_SCHEMA_V7,
   BOARD_SCHEMA_V6,
   BOARD_SCHEMA_V5,
   BOARD_SCHEMA_V4,
@@ -150,7 +152,7 @@ export class BoardStore implements BoardRepository {
       const sourceVersion = typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
         ? (parsed as Record<string, unknown>).version
         : undefined;
-      if (sourceVersion === LEGACY_BOARD_SCHEMA_VERSION || sourceVersion === BOARD_SCHEMA_V2 || sourceVersion === BOARD_SCHEMA_V3 || sourceVersion === BOARD_SCHEMA_V4 || sourceVersion === BOARD_SCHEMA_V5 || sourceVersion === BOARD_SCHEMA_V6) {
+      if (sourceVersion === LEGACY_BOARD_SCHEMA_VERSION || sourceVersion === BOARD_SCHEMA_V2 || sourceVersion === BOARD_SCHEMA_V3 || sourceVersion === BOARD_SCHEMA_V4 || sourceVersion === BOARD_SCHEMA_V5 || sourceVersion === BOARD_SCHEMA_V6 || sourceVersion === BOARD_SCHEMA_V7 || sourceVersion === BOARD_SCHEMA_V8) {
         const timestamp = this.#dependencies.now().replaceAll(":", "-");
         const backupPath = `${this.#path}.v${sourceVersion}.${timestamp}.${this.#dependencies.id()}.bak`;
         await copyFile(this.#path, backupPath);

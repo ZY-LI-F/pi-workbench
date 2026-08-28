@@ -86,6 +86,7 @@ import { WorkflowOrchestrator } from "./workflow-orchestrator";
 import { WebhookServer, webhookMaxBytesFromEnvironment, webhookPortFromEnvironment } from "./webhook-server";
 import { WorkspaceAdmission } from "./workspace-admission";
 import { CurrentFolderExecutionWorkspace, IsolatedWorktreeExecutionWorkspace, RoutedExecutionWorkspace } from "./execution-workspace";
+import { ExecutionCapacity, executionConcurrencyFromEnvironment } from "./execution-capacity";
 import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
 import {
@@ -1469,12 +1470,14 @@ async function initializeTaskCapability(): Promise<void> {
       currentFolderExecutionWorkspace,
       isolatedWorktreeExecutionWorkspace,
     );
+    const executionCapacity = new ExecutionCapacity(executionConcurrencyFromEnvironment());
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
       workspace: executionWorkspace,
+      capacity: executionCapacity,
     });
     agentTaskService = new AgentTaskService({
       repository: boardStore,
@@ -1517,6 +1520,7 @@ async function initializeTaskCapability(): Promise<void> {
       backendRegistry: executionBackendRegistry,
       emitBoardEvent: (event) => broadcast("board", event),
       workspace: executionWorkspace,
+      capacity: executionCapacity,
     });
     if (currentProject) await boardService.updateProjectTrust(currentProject.cwd, currentProject.trusted);
     agentTaskRunner.start();

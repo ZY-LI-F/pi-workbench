@@ -2,7 +2,7 @@
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import type { PiCommand, PiResponse, RuntimeSignal } from "../../src/shared/contracts";
-import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type ExecutionTarget } from "../../src/shared/kanban";
+import { EMPTY_BOARD_STATE, parseBoardState, type BoardState, type ExecutionTarget, type ExecutionWorkspacePreference } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import { DEFAULT_SQUAD_LEADER_INSTRUCTIONS, LEGACY_SQUAD_LEADER_INSTRUCTIONS } from "../../src/shared/coordinator-protocol";
 import { AgentTaskRunner } from "../../src/main/agent-task-runner";
@@ -23,6 +23,8 @@ import type { BoardRepository } from "../../src/main/board-repository";
 import { SquadService } from "../../src/main/squad-service";
 import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { CurrentFolderExecutionWorkspace } from "../../src/main/execution-workspace";
+import type { ExecutionWorkspaceProvider } from "../../src/main/execution-workspace";
+import { ExecutionCapacity } from "../../src/main/execution-capacity";
 import { READY_AGENT_SKILLS, TEST_COORDINATOR_EXTENSION } from "./test-doubles";
 import type { ExecutionBackendHealth, ExecutionProfileId } from "../../src/shared/execution-profile";
 
@@ -114,6 +116,46 @@ class ProtocolFailingCodexBackend implements ExecutionBackend {
   }
 }
 
+class ParallelIsolatedWorkspace implements ExecutionWorkspaceProvider {
+  readonly released: string[] = [];
+
+  async resolve(projectPath: string, preference?: ExecutionWorkspacePreference) {
+    if (preference?.strategy !== "isolated-worktree") throw new Error("测试 Workspace 只接受 isolated-worktree");
+    return Object.freeze({ strategy: "isolated-worktree" as const, cwd: projectPath, trusted: true });
+  }
+
+  async acquire(input: Parameters<ExecutionWorkspaceProvider["acquire"]>[0]) {
+    if (input.preference?.strategy !== "isolated-worktree") throw new Error("测试 Workspace 只接受 isolated-worktree");
+    const resourceId = input.owner.id.replaceAll(":", "-");
+    const cwd = `/worktrees/${resourceId}`;
+    let released = false;
+    return Object.freeze({
+      strategy: "isolated-worktree" as const,
+      cwd,
+      trusted: true,
+      placement: Object.freeze({
+        revision: 1 as const,
+        strategy: "isolated-worktree" as const,
+        resourceId,
+        projectPath: input.projectPath,
+        cwd,
+        resourcePath: cwd,
+        baseRef: input.preference.baseRef,
+        branch: `stella/${resourceId}`,
+        ownership: "stella" as const,
+        lifecycle: "retained" as const,
+        createdAt: "2026-07-18T00:00:00.000Z",
+        updatedAt: "2026-07-18T00:00:00.000Z",
+      }),
+      release: () => {
+        if (released) return;
+        released = true;
+        this.released.push(resourceId);
+      },
+    });
+  }
+}
+
 function idFactory(): () => string {
   let value = 0;
   return () => `id-${String(++value).padStart(3, "0")}`;
@@ -142,6 +184,8 @@ async function setup(
   resolveProjectTrust: (projectPath: string) => Promise<boolean> = async () => true,
   assertExecutionAvailable: (profileId: ExecutionProfileId, useCase: "direct-agent" | "worker-mention" | "coordinator" | "squad") => void = () => undefined,
   customBackendRegistry?: ExecutionBackendRegistry,
+  workspaceOverride?: ExecutionWorkspaceProvider,
+  capacity?: ExecutionCapacity,
 ) {
   const repository = new MemoryRepository();
   const id = idFactory();
@@ -159,23 +203,26 @@ async function setup(
   const squadService = new SquadService({ repository, catalog: BUILTIN_ORCHESTRATION_CATALOG, emitChanged: () => undefined, projectIdentity: (path) => path.toLocaleLowerCase(), id, now });
   const events: unknown[] = [];
   const admission = new WorkspaceAdmission({ canonicalize: async (path) => path.toLocaleLowerCase("en-US") });
-  const workspace = new CurrentFolderExecutionWorkspace({ admission, resolveProjectTrust, resolveProjectPath });
+  const workspace = workspaceOverride ?? new CurrentFolderExecutionWorkspace({ admission, resolveProjectTrust, resolveProjectPath });
   const runner = new AgentTaskRunner({
     service: agentTaskService,
     backendRegistry: customBackendRegistry ?? backendRegistry(runtimeFactory, globalModel),
     emitBoardEvent: (event) => events.push(event),
     workspace,
+    capacity,
   });
 
   const createTask = async (
     title: string,
     executionTarget: ExecutionTarget = { kind: "agent", agentId: "builder" },
     executionProfileId?: ExecutionProfileId,
+    executionWorkspace?: ExecutionWorkspacePreference,
+    projectPath = "C:/project",
   ) => {
     await boardService.createTask({
       title, description: "修改真实项目", acceptanceCriteria: "留下可验证结果", priority: "high",
-      projectPath: "C:/project", projectName: "project", trusted: true,
-      executionTarget, executionProfileId,
+      projectPath, projectName: "project", trusted: true,
+      executionTarget, executionProfileId, executionWorkspace,
     });
     const task = repository.state.tasks.find((candidate) => candidate.title === title);
     if (!task) throw new Error("测试任务未创建");
@@ -264,6 +311,80 @@ describe("AgentTaskRunner", () => {
     expect(repository.state.tasks.find((task) => task.id === firstTaskId)?.stage).toBe("review");
     expect(repository.state.comments.some((comment) => comment.taskId === firstTaskId && comment.author === "agent" && comment.body === "真实 Agent 产物")).toBe(true);
     expect(repository.state.agentTasks.find((task) => task.taskId === secondTaskId)?.status).toBe("running");
+  });
+
+  it("overlaps isolated writers up to capacity and aborts only the selected execution", async () => {
+    const runtimeFactory = new FakeAgentRuntimeFactory();
+    const workspace = new ParallelIsolatedWorkspace();
+    const capacity = new ExecutionCapacity(2);
+    const { repository, agentTaskService, runner, createTask } = await setup(
+      runtimeFactory,
+      () => undefined,
+      async (projectPath) => projectPath,
+      async () => true,
+      () => undefined,
+      undefined,
+      workspace,
+      capacity,
+    );
+    const isolated = { strategy: "isolated-worktree", baseRef: "main" } as const;
+    const firstTaskId = await createTask("隔离任务一", { kind: "agent", agentId: "builder" }, undefined, isolated, "/repo/one");
+    const secondTaskId = await createTask("隔离任务二", { kind: "agent", agentId: "builder" }, undefined, isolated, "/repo/two");
+    const thirdTaskId = await createTask("隔离任务三", { kind: "agent", agentId: "builder" }, undefined, isolated, "/repo/three");
+    await agentTaskService.dispatchDirect(firstTaskId);
+    await agentTaskService.dispatchDirect(secondTaskId);
+    await agentTaskService.dispatchDirect(thirdTaskId);
+
+    runner.start();
+    await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
+    expect(repository.state.agentTasks.filter((task) => task.status === "running")).toHaveLength(2);
+    expect(capacity.activeCount).toBe(2);
+    expect(runtimeFactory.runtimes[0]?.running).toBe(true);
+    expect(runtimeFactory.runtimes[1]?.running).toBe(true);
+
+    await runner.abortTask(firstTaskId);
+    await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(3));
+    expect(runtimeFactory.runtimes[0]?.abortAndStop).toHaveBeenCalledOnce();
+    expect(runtimeFactory.runtimes[1]?.abortAndStop).not.toHaveBeenCalled();
+    expect(runtimeFactory.runtimes[1]?.running).toBe(true);
+    expect(repository.state.tasks.find((task) => task.id === firstTaskId)?.stage).toBe("blocked");
+    expect(repository.state.agentTasks.find((task) => task.taskId === thirdTaskId)?.status).toBe("running");
+    expect(capacity.activeCount).toBe(2);
+
+    runtimeFactory.runtimes[1]?.settle();
+    runtimeFactory.runtimes[2]?.settle();
+    await vi.waitFor(() => expect(capacity.activeCount).toBe(0));
+    expect(repository.state.agentTasks.find((task) => task.taskId === secondTaskId)?.status).toBe("reported");
+    expect(repository.state.agentTasks.find((task) => task.taskId === thirdTaskId)?.status).toBe("reported");
+  });
+
+  it("interrupts every active isolated runtime exactly once during shutdown", async () => {
+    const runtimeFactory = new FakeAgentRuntimeFactory();
+    const capacity = new ExecutionCapacity(2);
+    const { repository, agentTaskService, runner, createTask } = await setup(
+      runtimeFactory,
+      () => undefined,
+      async (projectPath) => projectPath,
+      async () => true,
+      () => undefined,
+      undefined,
+      new ParallelIsolatedWorkspace(),
+      capacity,
+    );
+    const isolated = { strategy: "isolated-worktree", baseRef: "main" } as const;
+    const firstTaskId = await createTask("关闭任务一", { kind: "agent", agentId: "builder" }, undefined, isolated, "/repo/a");
+    const secondTaskId = await createTask("关闭任务二", { kind: "agent", agentId: "builder" }, undefined, isolated, "/repo/b");
+    await agentTaskService.dispatchDirect(firstTaskId);
+    await agentTaskService.dispatchDirect(secondTaskId);
+    runner.start();
+    await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));
+
+    await runner.shutdown();
+
+    expect(runtimeFactory.runtimes[0]?.abortAndStop).toHaveBeenCalledOnce();
+    expect(runtimeFactory.runtimes[1]?.abortAndStop).toHaveBeenCalledOnce();
+    expect(capacity.activeCount).toBe(0);
+    expect(repository.state.agentTasks.filter((task) => task.status === "interrupted")).toHaveLength(2);
   });
 
   it("fails a direct task on a typed Backend protocol error while preserving partial evidence", async () => {
@@ -385,6 +506,40 @@ describe("AgentTaskRunner", () => {
 
     await expect(runner.shutdown()).resolves.toBeUndefined();
     expect(runtimeFactory.runtimes[0]?.abortAndStop).toHaveBeenCalledOnce();
+  });
+
+  it("rejects settlement from the right runtime token bound to the wrong workspace identity", async () => {
+    const { repository, agentTaskService, createTask } = await setup();
+    const taskId = await createTask("Workspace fencing");
+    await agentTaskService.dispatchDirect(taskId);
+    const queued = await agentTaskService.nextQueued();
+    if (!queued) throw new Error("测试 AgentTask 未入队");
+    await agentTaskService.recordWorkspacePlacement(queued.agentTask.id, {
+      revision: 1,
+      strategy: "current-folder",
+      resourceId: "workspace-correct",
+      projectPath: "C:/project",
+      cwd: "C:/project",
+      ownership: "project",
+      lifecycle: "retained",
+      createdAt: "2026-07-18T00:00:00.000Z",
+      updatedAt: "2026-07-18T00:00:00.000Z",
+    });
+    const claimed = await agentTaskService.claim(queued.agentTask.id);
+    const runtimeToken = claimed?.agentTask.runtimeToken;
+    if (!runtimeToken) throw new Error("测试 AgentTask 未认领");
+
+    await expect(agentTaskService.complete(
+      queued.agentTask.id,
+      runtimeToken,
+      { output: "不应结算" },
+      "workspace-stale",
+    )).rejects.toThrow("Runtime 已失效");
+    expect(repository.state.agentTasks.find((task) => task.id === queued.agentTask.id)).toMatchObject({
+      status: "running",
+      runtimeToken,
+      workspacePlacement: { resourceId: "workspace-correct" },
+    });
   });
 
   it("does not suppress unrelated shutdown failures whose text mentions Runtime expiry", async () => {

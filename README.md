@@ -86,6 +86,12 @@ The Kanban header provides **Stella Tasks**, **CLI Tasks**, and **All**:
 
 Stella does not bundle Codex or Claude, parse their private state directories, or treat an external CLI's `done` as Task acceptance. Existing Pi context compaction remains Pi-native and unchanged by the multi-CLI layer.
 
+Writable automated Tasks can use the current project folder or an isolated Git worktree created from an explicit base ref. Stella persists the exact worktree/branch placement before starting the backend and retains reported, failed, and interrupted worktrees for inspection. Different isolated worktrees may run concurrently; current-folder writers still use the canonical-path FIFO lease.
+
+| Environment variable | Default | Meaning |
+| --- | --- | --- |
+| `STELLA_EXECUTION_CONCURRENCY` | `3` | Application-wide managed execution limit, from `1` to `16` |
+
 ## A Small, Explicit Architecture
 
 Stella keeps the native Pi workbench and Task Control as two first-class capability surfaces. It does not duplicate Pi; additional CLIs are isolated behind typed execution and discovery adapters.
@@ -95,7 +101,7 @@ Stella keeps the native Pi workbench and Task Control as two first-class capabil
 - **Immutable execution identity:** every dispatch increments `executionAttempt` and snapshots the current Task specification. Stale runtimes cannot overwrite a newer execution or specification revision.
 - **Explicit result acceptance:** a successful Agent or Workflow result becomes `reported + pending acceptance`. Only an explicit user acceptance completes the task.
 - **Frozen plans:** Agent, Squad, and Workflow definitions are snapshotted at dispatch. Editing a catalog entry affects the next run, not history.
-- **Shared workspace admission:** interactive Pi, Workflow, and AgentTask writers share a canonical-path write lease. Background writers wait FIFO; users can see the current owner and cancel queued work.
+- **Bounded workspace-aware execution:** Workflow and AgentTask share one FIFO capacity pool. Current-folder writers also share a canonical-path write lease; separate Stella-owned worktrees can use different active slots.
 - **Live trust resolution:** every background execution re-reads the project's current trust before starting its selected backend. A stale Task snapshot never grants permissions.
 - **Explicit Pi↔Task bridge:** a Pi session becomes a Task only through the visible “Save as Task” draft. A Task session returns to Pi only after the selected `sessionFile` is validated against that Task.
 - **One durable conversation:** Task Room is a projection of Task, Message, Activity, Workflow Run, Step Run, AgentTask, and Artifact facts. Team Chat does not create a second message database.

@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promis
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { BoardStore } from "../../src/main/board-store";
-import { BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, type AgentDefinition, type BoardState } from "../../src/shared/kanban";
+import { BOARD_SCHEMA_V8, BOARD_SCHEMA_VERSION, EMPTY_BOARD_STATE, type AgentDefinition, type BoardState } from "../../src/shared/kanban";
 import { snapshotExecutionProfile } from "../../src/shared/execution-profile";
 
 const TEST_AGENT: AgentDefinition = Object.freeze({
@@ -140,6 +140,20 @@ describe("BoardStore", () => {
 
     expect(migrated.version).toBe(BOARD_SCHEMA_VERSION);
     expect((await readdir(dirname(path))).some((file) => file.includes(".v6.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
+  });
+
+  it("backs up and persists an installed schema v8 board when adding workspace placements", async () => {
+    const path = await temporaryBoardPath();
+    const now = "2026-07-17T01:00:00.000Z";
+    const { version: _version, ...collections } = EMPTY_BOARD_STATE;
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, JSON.stringify({ ...collections, version: BOARD_SCHEMA_V8 }), "utf8");
+
+    const migrated = await new BoardStore(path, { now: () => now, id: () => "backup-id" }).initialize();
+
+    expect(migrated.version).toBe(BOARD_SCHEMA_VERSION);
+    expect(JSON.parse(await readFile(path, "utf8"))).toMatchObject({ version: BOARD_SCHEMA_VERSION });
+    expect((await readdir(dirname(path))).some((file) => file.includes(".v8.2026-07-17T01-00-00.000Z.backup-id.bak"))).toBe(true);
   });
 
   it("migrates schema v2 to the current version without losing automation history", async () => {

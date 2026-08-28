@@ -13,7 +13,7 @@ import {
   supersedePendingExecutions,
 } from "../shared/execution-state";
 import { deriveTeamLaunchDraft } from "../shared/team-launch";
-import { deriveAgentTaskQueue, nextRunnableAgentTask } from "../shared/agent-task-scheduler";
+import { deriveAgentTaskQueue } from "../shared/agent-task-scheduler";
 import {
   isTerminalAgentTaskStatus,
   type AgentDefinition,
@@ -436,17 +436,19 @@ export class AgentTaskService {
     });
   }
 
-  async nextQueued(): Promise<ClaimedAgentTask | undefined> {
+  async nextQueued(excludedAgentTaskIds: ReadonlySet<string> = new Set()): Promise<ClaimedAgentTask | undefined> {
     for (;;) {
       const current = await this.#repository.read();
-      if (current.agentTasks.some((agentTask) => agentTask.status === "running")) return undefined;
       const queue = deriveAgentTaskQueue(current, this.#now());
       const invalid = queue.find((entry) => entry.disposition === "invalid");
       if (invalid) {
         await this.rejectQueued(invalid.agentTask.id, new Error(`AgentTask 队列状态无效：${invalid.reason}`));
         continue;
       }
-      const next = queue.find((entry) => entry.queuePosition === 1)?.agentTask;
+      const next = queue
+        .filter((entry) => entry.disposition === "ready" && !excludedAgentTaskIds.has(entry.agentTask.id))
+        .sort((left, right) => (left.queuePosition ?? Number.MAX_SAFE_INTEGER) - (right.queuePosition ?? Number.MAX_SAFE_INTEGER))[0]
+        ?.agentTask;
       if (!next) return undefined;
       try {
         const task = this.#task(current, next.taskId);
@@ -462,12 +464,11 @@ export class AgentTaskService {
     const now = this.#now();
     let claimed = false;
     const board = await this.#repository.update((current) => {
-      if (current.agentTasks.some((agentTask) => agentTask.status === "running")) return current;
       const next = current.agentTasks.find((agentTask) => agentTask.id === agentTaskId);
       if (!next || next.status !== "queued") return current;
       const queue = deriveAgentTaskQueue(current, now);
       if (queue.some((entry) => entry.disposition === "invalid")) return current;
-      if (nextRunnableAgentTask(current, now)?.agentTask.id !== agentTaskId) return current;
+      if (queue.find((entry) => entry.agentTask.id === agentTaskId)?.disposition !== "ready") return current;
       const task = this.#task(current, next.taskId);
       claimed = true;
       let normalized = next.kind === "squad-leader" && next.executionPlan?.kind === "squad"
@@ -684,11 +685,11 @@ export class AgentTaskService {
     });
   }
 
-  async complete(agentTaskId: string, runtimeToken: string, result: AgentTaskResult): Promise<BoardBootstrap> {
+  async complete(agentTaskId: string, runtimeToken: string, result: AgentTaskResult, workspaceResourceId?: string): Promise<BoardBootstrap> {
     const output = normalizedRequired(result.output, "Agent 最终输出");
     const now = this.#now();
     return this.#commit((current) => {
-      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
+      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken, workspaceResourceId);
       const task = this.#task(current, agentTask.taskId);
       const resultFields: AgentTaskResultFields = Object.freeze({
         runtimeToken: undefined,
@@ -809,11 +810,11 @@ export class AgentTaskService {
     });
   }
 
-  async fail(agentTaskId: string, runtimeToken: string, cause: unknown, result?: AgentTaskFailureResult): Promise<BoardBootstrap> {
+  async fail(agentTaskId: string, runtimeToken: string, cause: unknown, result?: AgentTaskFailureResult, workspaceResourceId?: string): Promise<BoardBootstrap> {
     const message = cause instanceof Error ? cause.message : String(cause);
     const now = this.#now();
     return this.#commit((current) => {
-      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
+      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken, workspaceResourceId);
       const task = this.#task(current, agentTask.taskId);
       const failureFields = result ? Object.freeze({
         output: normalizedRequired(result.output, "Agent 部分输出"),
@@ -879,10 +880,10 @@ export class AgentTaskService {
     return Object.freeze({ bootstrap, agentTaskId: rootId, runningAgentTaskId, wasRunning: runningAgentTaskId !== undefined });
   }
 
-  async interruptRunning(agentTaskId: string, runtimeToken: string, reason: string): Promise<BoardBootstrap> {
+  async interruptRunning(agentTaskId: string, runtimeToken: string, reason: string, workspaceResourceId?: string): Promise<BoardBootstrap> {
     const now = this.#now();
     return this.#commit((current) => {
-      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
+      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken, workspaceResourceId);
       const task = this.#task(current, agentTask.taskId);
       const rootId = this.#rootAgentTaskId(current, agentTask);
       const groupIds = this.#agentTaskGroupIds(current, rootId);
@@ -907,10 +908,10 @@ export class AgentTaskService {
     });
   }
 
-  async recordToolEvent(agentTaskId: string, runtimeToken: string, toolName: string, started: boolean): Promise<BoardBootstrap> {
+  async recordToolEvent(agentTaskId: string, runtimeToken: string, toolName: string, started: boolean, workspaceResourceId?: string): Promise<BoardBootstrap> {
     const now = this.#now();
     return this.#commit((current) => {
-      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken);
+      const agentTask = this.#runningAgentTask(current, agentTaskId, runtimeToken, workspaceResourceId);
       return {
         ...current,
         activities: [...current.activities, this.#activity(agentTask.taskId, "tool", `${toolName}${started ? "开始运行" : "运行结束"}`, undefined, now, agentTask.id)],
@@ -999,9 +1000,10 @@ export class AgentTaskService {
     };
   }
 
-  #runningAgentTask(state: BoardState, agentTaskId: string, runtimeToken: string): AgentTask {
+  #runningAgentTask(state: BoardState, agentTaskId: string, runtimeToken: string, workspaceResourceId?: string): AgentTask {
     const agentTask = this.#agentTask(state, agentTaskId);
-    if (agentTask.status !== "running" || agentTask.runtimeToken !== runtimeToken) {
+    if (agentTask.status !== "running" || agentTask.runtimeToken !== runtimeToken
+      || (workspaceResourceId !== undefined && agentTask.workspacePlacement?.resourceId !== workspaceResourceId)) {
       throw new AgentTaskRuntimeExpiredError(agentTaskId);
     }
     return agentTask;
