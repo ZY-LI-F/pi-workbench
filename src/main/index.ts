@@ -1,6 +1,6 @@
 import { cp, copyFile, mkdir, readFile, readdir, realpath, rename, rm, stat } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { homedir, tmpdir } from "node:os";
+import { homedir, hostname, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn } from "node:child_process";
@@ -40,6 +40,7 @@ import {
   EXECUTION_WORKSPACE_STRATEGIES,
   MANUAL_TASK_STAGES,
   TASK_PRIORITIES,
+  type BoardBridgeEvent,
   type BoardBootstrap,
   type AutomatedExecutionTarget,
   type CreateAutopilotInput,
@@ -131,6 +132,7 @@ import { CodexExternalExecutionSource } from "./codex-external-execution-source"
 import { ExternalExecutionService } from "./external-execution-service";
 import { isPiSkillInstallScope, type PiSkillInstallResult } from "../shared/pi-skill";
 import { PiSkillInstaller } from "./pi-skill-installer";
+import { MainCompanionControlPlane } from "./companion-control-plane";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
@@ -234,11 +236,20 @@ let modelConfigurationService: ModelConfigurationService;
 let localPathService: LocalPathService;
 let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
+let companionControlPlane: MainCompanionControlPlane | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
 function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend", payload: unknown): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("stella:event", { source, payload });
+}
+
+function emitBoardEvent(event: BoardBridgeEvent): void {
+  broadcast("board", event);
+  if (event.type !== "snapshot" || !companionControlPlane) return;
+  void companionControlPlane.publishCommitted(event.bootstrap.board).catch((cause) => {
+    console.error("Companion projection failed after Board commit", cause);
+  });
 }
 
 const capabilityHealth = new CapabilityHealthStore({
@@ -1404,7 +1415,11 @@ async function initializeTaskCapability(): Promise<void> {
   try {
     boardStore = new BoardStore(join(app.getPath("userData"), "board", "board.json"));
     await boardStore.initialize();
-    const emitSnapshot = (bootstrap: BoardBootstrap): void => broadcast("board", { type: "snapshot", bootstrap });
+    companionControlPlane = new MainCompanionControlPlane({
+      repository: boardStore,
+      host: Object.freeze({ id: hostname(), name: hostname(), version: app.getVersion() }),
+    });
+    const emitSnapshot = (bootstrap: BoardBootstrap): void => emitBoardEvent({ type: "snapshot", bootstrap });
     boardService = new BoardService({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
@@ -1475,7 +1490,7 @@ async function initializeTaskCapability(): Promise<void> {
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,
       backendRegistry: executionBackendRegistry,
-      emitBoardEvent: (event) => broadcast("board", event),
+      emitBoardEvent,
       workspace: executionWorkspace,
       capacity: executionCapacity,
     });
@@ -1507,18 +1522,18 @@ async function initializeTaskCapability(): Promise<void> {
     scheduleRunner = new ScheduleRunner({
       repository: boardStore,
       autopilotService,
-      emitBoardEvent: (event) => broadcast("board", event),
+      emitBoardEvent,
     });
     webhookServer = new WebhookServer({
       autopilotService,
-      emitBoardEvent: (event) => broadcast("board", event),
+      emitBoardEvent,
       port: webhookPortFromEnvironment(process.env.STELLA_WEBHOOK_PORT),
       maxBodyBytes: webhookMaxBytesFromEnvironment(process.env.STELLA_WEBHOOK_MAX_BYTES),
     });
     agentTaskRunner = new AgentTaskRunner({
       service: agentTaskService,
       backendRegistry: executionBackendRegistry,
-      emitBoardEvent: (event) => broadcast("board", event),
+      emitBoardEvent,
       workspace: executionWorkspace,
       capacity: executionCapacity,
     });
