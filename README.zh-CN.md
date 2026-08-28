@@ -291,7 +291,7 @@ npm run preview
 
 不要把开发者自己的 API Key、OAuth 凭据或 `.pi/agent` 目录放进安装包。没有单独安装 Pi CLI 的用户也能启动 Stella，但首次调用模型前仍需配置自己的提供方凭据。
 
-看板状态存放在 Electron 的用户数据目录下 `board/board.json`，与被打开的代码仓库分离，因此不会向他人的项目写入 Stella 配置。旧 schema 升级时会先在同目录创建时间戳备份，再按 v1→v8 的确定性迁移链完整保留历史。v8 增加不可变执行 Profile/session 快照与 external origin，不重写既有 Pi 历史。无法安全恢复的旧 Coordinator 会明确终止并写入迁移活动，而不是伪装继续执行；内置角色不硬编码 API Key、模型或本机 CLI 路径。
+看板状态存放在 Electron 的用户数据目录下 `board/board.json`，与被打开的代码仓库分离，因此不会向他人的项目写入 Stella 配置。旧 schema 升级时会先在同目录创建时间戳备份，再按 v1→v9 的确定性迁移链完整保留历史。v8 增加不可变执行 Profile/session 快照与 external origin；v9 增加 execution workspace 偏好与实际 placement 快照，并把旧执行确定性迁移为 `current-folder`。迁移不重写既有 Pi 历史。无法安全恢复的旧 Coordinator 会明确终止并写入迁移活动，而不是伪装继续执行；内置角色不硬编码 API Key、模型或本机 CLI 路径。
 
 ### 本机打包
 
@@ -346,6 +346,10 @@ macOS 签名只能在 macOS 上完成，因此不要在 Windows 上交叉生成�
 | `APPLE_ID` | Apple Developer 账号 |
 | `APPLE_APP_SPECIFIC_PASSWORD` | Apple 专用密码，不是 Apple ID 登录密码 |
 | `APPLE_TEAM_ID` | Apple Developer Team ID |
+| `ANDROID_KEYSTORE_BASE64` | Android 正式发布 keystore 的 Base64 内容 |
+| `ANDROID_KEYSTORE_PASSWORD` | Android keystore 密码 |
+| `ANDROID_KEY_ALIAS` | Android 发布 Key alias |
+| `ANDROID_KEY_PASSWORD` | Android 发布 Key 密码 |
 
 正式发布示例：
 
@@ -357,6 +361,21 @@ git tag v0.5.0
 git push origin main --tags
 ```
 
+## Android Companion · v0.5.0
+
+独立的 React/Vite/Capacitor Companion 通过协议版本 `1` 连接桌面唯一事实源，提供 Attention、Tasks、Task Room 控制以及 Claude/Codex 外部活动只读视图。它不在手机运行 Provider CLI，也没有第二套编排数据库。桌面 Main 关闭后 App 会进入 offline/stale；首版使用同一 LAN 或用户已有私网，Relay 与可靠 FCM 通知后置。
+
+```bash
+npm ci --prefix apps/companion
+npm run companion:test
+npm run companion:apk:debug
+
+# 配置发布签名变量后生成并验证签名 APK
+npm run companion:apk:release
+```
+
+签名脚本输出 `release/Stella-Companion-0.5.0-android-vc6.apk` 与 `release/SHA256SUMS-android.txt`。产品版本、Android versionCode 和 Wire Protocol 独立演进。Tag 构建使用上表四个 Android GitHub Secrets，仓库不保存签名 Key。构建、签名和 AVD 验收方法见 [`apps/companion/README.md`](apps/companion/README.md)，完整发布证据见 [`docs/testing/stella-v0.5.0-release-acceptance-2026-08-29.md`](docs/testing/stella-v0.5.0-release-acceptance-2026-08-29.md)。
+
 ## 验证
 
 ```bash
@@ -366,7 +385,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前全量套件为 96 个 Vitest 文件、421 项测试。除既有 Pi/Team/Kanban 回归外，它覆盖 Board v8、Profile 兼容性、Backend 探测、Codex/Claude 受管执行成功/失败/中止、跨 Backend Workflow 与 Worker mention、App Server 分页/通知/超时/重启、Claude Agent 状态、Source last-good stale、可见性轮询、受管 session 关联、导入生命周期独立、详情懒加载、全部视图去重，以及 Pi 压缩独立超时与互斥。Electron E2E 使用真实内置 Pi RPC 冷启动，并验证外部 CLI 缺失只降级对应能力。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。
+当前桌面确定性套件为 106 个 Vitest 文件、460 项测试，Companion 另有 9 项测试。除既有 Pi/Team/Kanban 回归外，它覆盖 Board v9、execution workspace 生命周期、真实 Git isolated 并发与 current-folder 串行、Profile 能力真实性、Codex/Claude 受管执行、外部 Source last-good/去重/详情、Companion 协议/控制面/Gateway，以及 Pi 压缩独立超时与互斥。Electron E2E 使用真实内置 Pi RPC 冷启动，API 35 AVD 流程验收实际安装 APK。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 

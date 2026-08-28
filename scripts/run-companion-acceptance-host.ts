@@ -8,13 +8,14 @@ import { CompanionCommandReceiptStore } from "../src/main/companion-command-rece
 import { CompanionCommandService } from "../src/main/companion-command-service";
 import type { BoardRepository } from "../src/main/board-repository";
 import { snapshotExecutionProfile } from "../src/shared/execution-profile";
+import { snapshotTaskSpec } from "../src/shared/execution-state";
 import type {
   ExternalExecutionCatalogSnapshot,
   ExternalExecutionDetails,
   ExternalExecutionScope,
   ReadExternalExecutionDetailsInput,
 } from "../src/shared/external-execution";
-import { BOARD_SCHEMA_VERSION, type AgentDefinition, type BoardState } from "../src/shared/kanban";
+import { BOARD_SCHEMA_VERSION, type AgentDefinition, type BoardState, type KanbanTask } from "../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../src/shared/orchestration-catalog";
 
 const hostAddress = process.env.STELLA_COMPANION_ACCEPTANCE_ADDRESS?.trim() || "10.0.2.2";
@@ -37,53 +38,166 @@ const AGENT: AgentDefinition = Object.freeze({
   disableContextFiles: true,
 });
 
-function acceptanceBoard(status: "waiting_human" | "running", updatedAt: string): BoardState {
-  const task = Object.freeze({
-    id: "android-acceptance-task",
-    title: "Android 实时状态验收",
-    description: "由真实 Companion Gateway 推送状态",
-    acceptanceCriteria: "Android 在 Attention 与 Working 之间实时切换",
-    priority: "high" as const,
+const ACCEPTANCE_WORKFLOW = BUILTIN_ORCHESTRATION_CATALOG.workflows.find((workflow) => workflow.steps.some((step) => step.kind === "human-gate"));
+const ACCEPTANCE_GATE = ACCEPTANCE_WORKFLOW?.steps.find((step) => step.kind === "human-gate");
+const BUILDER = BUILTIN_ORCHESTRATION_CATALOG.agents.find((agent) => agent.id === "builder");
+if (!ACCEPTANCE_WORKFLOW || !ACCEPTANCE_GATE || ACCEPTANCE_GATE.kind !== "human-gate" || !BUILDER) {
+  throw new Error("Companion 验收主机缺少内置 Workflow、人工关卡或 Builder");
+}
+
+function acceptanceTask(input: {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly target: KanbanTask["executionTarget"];
+  readonly stage: KanbanTask["stage"];
+  readonly updatedAt: string;
+  readonly activeAgentTaskId?: string;
+  readonly activeRunId?: string;
+  readonly awaitingReviewExecution?: KanbanTask["awaitingReviewExecution"];
+}): KanbanTask {
+  return Object.freeze({
+    id: input.id,
+    title: input.title,
+    description: input.description,
+    acceptanceCriteria: "Android 命令由桌面既有领域规则接收且只作用于精确 execution",
+    priority: "high",
     projectPath: "/acceptance/stella",
     projectName: "pi-workbench",
     trusted: true,
-    executionTarget: Object.freeze({ kind: "agent" as const, agentId: AGENT.id }),
-    executionProfileId: "pi.rpc" as const,
-    executionWorkspace: Object.freeze({ strategy: "current-folder" as const }),
-    stage: "running" as const,
+    executionTarget: input.target,
+    executionProfileId: "pi.rpc",
+    executionWorkspace: Object.freeze({ strategy: "current-folder" }),
+    stage: input.stage,
     specRevision: 1,
-    activeAgentTaskId: "android-acceptance-agent",
+    executionAttempt: 1,
+    ...(input.activeAgentTaskId ? { activeAgentTaskId: input.activeAgentTaskId } : {}),
+    ...(input.activeRunId ? { activeRunId: input.activeRunId } : {}),
+    ...(input.awaitingReviewExecution ? { awaitingReviewExecution: input.awaitingReviewExecution } : {}),
     createdAt: "2026-08-28T10:00:00.000Z",
+    updatedAt: input.updatedAt,
+  });
+}
+
+function acceptanceBoard(status: "waiting_human" | "running", updatedAt: string): BoardState {
+  const coordinatorTask = acceptanceTask({
+    id: "android-acceptance-task",
+    title: "Android Coordinator 回复验收",
+    description: "由真实 Companion Gateway 推送状态并接收一次回复",
+    target: Object.freeze({ kind: "agent", agentId: AGENT.id }),
+    stage: "running",
+    activeAgentTaskId: "android-acceptance-agent",
+    updatedAt,
+  });
+  const gateTask = acceptanceTask({
+    id: "android-gate-task",
+    title: "Android 人工关卡验收",
+    description: "批准当前 Workflow human gate",
+    target: Object.freeze({ kind: "workflow", workflowId: ACCEPTANCE_WORKFLOW.id }),
+    stage: "review",
+    activeRunId: "android-gate-run",
+    updatedAt,
+  });
+  const reviewTask = acceptanceTask({
+    id: "android-review-task",
+    title: "Android 执行报告验收",
+    description: "接受或请求修订当前 AgentTask 报告",
+    target: Object.freeze({ kind: "agent", agentId: BUILDER.id }),
+    stage: "review",
+    awaitingReviewExecution: Object.freeze({ kind: "agent-task", id: "android-review-agent", attempt: 1 }),
+    updatedAt,
+  });
+  const abortTask = acceptanceTask({
+    id: "android-abort-task",
+    title: "Android 精确中止验收",
+    description: "确认后只中止当前 AgentTask execution",
+    target: Object.freeze({ kind: "agent", agentId: BUILDER.id }),
+    stage: "running",
+    activeAgentTaskId: "android-abort-agent",
     updatedAt,
   });
   return Object.freeze({
     version: BOARD_SCHEMA_VERSION,
-    tasks: Object.freeze([task]),
-    runs: Object.freeze([]),
+    tasks: Object.freeze([coordinatorTask, gateTask, reviewTask, abortTask]),
+    runs: Object.freeze([Object.freeze({
+      id: "android-gate-run",
+      taskId: gateTask.id,
+      executionAttempt: 1,
+      taskSpec: snapshotTaskSpec(gateTask),
+      executionProfile: snapshotExecutionProfile("pi.rpc"),
+      workflow: ACCEPTANCE_WORKFLOW,
+      agents: Object.freeze([BUILDER]),
+      status: "review" as const,
+      acceptance: "not-ready" as const,
+      currentStepId: ACCEPTANCE_GATE.id,
+      steps: Object.freeze(ACCEPTANCE_WORKFLOW.steps.map((step, index) => Object.freeze({
+        id: step.id === ACCEPTANCE_GATE.id ? "android-gate-step" : `android-workflow-step-${index}`,
+        stepId: step.id,
+        stepKind: step.kind,
+        name: step.name,
+        status: step.id === ACCEPTANCE_GATE.id ? "waiting" as const : "pending" as const,
+        ...(step.kind === "agent" ? { agentId: step.agentId } : {}),
+      }))),
+      startedAt: "2026-08-28T10:00:00.000Z",
+      updatedAt,
+    })]),
     activities: Object.freeze([Object.freeze({
       id: `activity-${updatedAt}`,
-      taskId: task.id,
+      taskId: coordinatorTask.id,
       agentTaskId: "android-acceptance-agent",
       kind: "agent" as const,
       summary: status === "waiting_human" ? "等待 Android 回复" : "正在处理 Android 验收",
       createdAt: updatedAt,
     })]),
     comments: Object.freeze([]),
-    agentTasks: Object.freeze([Object.freeze({
-      id: "android-acceptance-agent",
-      taskId: task.id,
-      executionAttempt: 1,
-      taskSpec: Object.freeze({ revision: 1, title: task.title, description: task.description, acceptanceCriteria: task.acceptanceCriteria, priority: task.priority, executionTarget: task.executionTarget, executionProfileId: "pi.rpc" as const }),
-      executionProfile: snapshotExecutionProfile("pi.rpc"),
-      agentSnapshot: AGENT,
-      kind: "coordinator" as const,
-      status,
-      acceptance: "not-ready" as const,
-      prompt: "Android acceptance",
-      ...(status === "waiting_human" ? { output: "请选择下一步，确认手机已收到实时状态。" } : {}),
-      createdAt: "2026-08-28T10:00:00.000Z",
-      updatedAt,
-    })]),
+    agentTasks: Object.freeze([
+      Object.freeze({
+        id: "android-acceptance-agent",
+        taskId: coordinatorTask.id,
+        executionAttempt: 1,
+        taskSpec: snapshotTaskSpec(coordinatorTask),
+        executionProfile: snapshotExecutionProfile("pi.rpc"),
+        agentSnapshot: AGENT,
+        kind: "coordinator" as const,
+        status,
+        acceptance: "not-ready" as const,
+        prompt: "Android acceptance",
+        ...(status === "waiting_human" ? { output: "请选择下一步，确认手机已收到实时状态。" } : {}),
+        createdAt: "2026-08-28T10:00:00.000Z",
+        updatedAt,
+      }),
+      Object.freeze({
+        id: "android-review-agent",
+        taskId: reviewTask.id,
+        executionAttempt: 1,
+        taskSpec: snapshotTaskSpec(reviewTask),
+        executionProfile: snapshotExecutionProfile("pi.rpc"),
+        agentSnapshot: BUILDER,
+        kind: "direct" as const,
+        status: "reported" as const,
+        acceptance: "pending" as const,
+        prompt: "Build release",
+        output: "发布候选已完成，等待 Android 验收。",
+        createdAt: "2026-08-28T10:00:00.000Z",
+        updatedAt,
+        completedAt: updatedAt,
+      }),
+      Object.freeze({
+        id: "android-abort-agent",
+        taskId: abortTask.id,
+        executionAttempt: 1,
+        taskSpec: snapshotTaskSpec(abortTask),
+        executionProfile: snapshotExecutionProfile("pi.rpc"),
+        agentSnapshot: BUILDER,
+        kind: "direct" as const,
+        status: "running" as const,
+        acceptance: "not-ready" as const,
+        prompt: "Wait for abort acceptance",
+        runtimeToken: "android-abort-runtime",
+        createdAt: "2026-08-28T10:00:00.000Z",
+        updatedAt,
+      }),
+    ]),
     customAgents: Object.freeze([]),
     squads: Object.freeze([]),
     autopilots: Object.freeze([]),
@@ -113,33 +227,134 @@ const commit = async (transform: (current: BoardState) => BoardState) => {
   await controlPlane.publishCommitted(board);
   return board;
 };
+let coordinatorReplySequence = 0;
 const commandService = new CompanionCommandService({
   repository,
   catalog: BUILTIN_ORCHESTRATION_CATALOG,
   receipts: receiptStore,
   handlers: {
-    addComment: (input) => commit((current) => Object.freeze({
-      ...current,
-      comments: Object.freeze([...current.comments, Object.freeze({
-        id: `android-comment-${current.comments.length + 1}`,
-        taskId: input.taskId,
-        author: "user" as const,
-        messageKind: "comment" as const,
-        body: input.body,
-        createdAt: new Date().toISOString(),
-      })]),
-    })),
-    resolveGate: async () => { throw new Error("验收主机当前没有人工关卡"); },
-    reviewExecution: async () => { throw new Error("验收主机当前没有待验收报告"); },
-    abortExecution: (input) => commit((current) => Object.freeze({
-      ...current,
-      tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId
-        ? Object.freeze({ ...task, activeAgentTaskId: undefined, stage: "blocked" as const, blockedReason: "Android 验收中止", updatedAt: new Date().toISOString() })
-        : task)),
-      agentTasks: Object.freeze(current.agentTasks.map((agentTask) => agentTask.id === input.executionId
-        ? Object.freeze({ ...agentTask, status: "interrupted" as const, error: "Android 验收中止", completedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
-        : agentTask)),
-    })),
+    addComment: (input) => commit((current) => {
+      const createdAt = new Date().toISOString();
+      const coordinator = current.agentTasks.find((agentTask) => agentTask.id === "android-acceptance-agent");
+      const resumesCoordinator = input.taskId === "android-acceptance-task" && coordinator?.status === "waiting_human";
+      const reviewId = resumesCoordinator ? `android-coordinator-review-${++coordinatorReplySequence}` : undefined;
+      return Object.freeze({
+        ...current,
+        tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId ? Object.freeze({ ...task, updatedAt: createdAt }) : task)),
+        comments: Object.freeze([...current.comments, Object.freeze({
+          id: `android-comment-${current.comments.length + 1}`,
+          taskId: input.taskId,
+          author: "user" as const,
+          messageKind: "comment" as const,
+          body: input.body,
+          createdAt,
+        })]),
+        agentTasks: Object.freeze([
+          ...current.agentTasks.map((agentTask) => resumesCoordinator && agentTask.id === coordinator?.id
+            ? Object.freeze({ ...agentTask, status: "waiting_children" as const, updatedAt: createdAt })
+            : agentTask),
+          ...(resumesCoordinator && coordinator && reviewId ? [Object.freeze({
+            id: reviewId,
+            taskId: coordinator.taskId,
+            executionAttempt: coordinator.executionAttempt,
+            taskSpec: coordinator.taskSpec,
+            executionProfile: coordinator.executionProfile,
+            agentSnapshot: coordinator.agentSnapshot,
+            kind: "coordinator-review" as const,
+            status: "queued" as const,
+            acceptance: "not-ready" as const,
+            prompt: `Android 回复后的 Coordinator review：${input.body}`,
+            parentAgentTaskId: coordinator.id,
+            delegationRound: coordinatorReplySequence,
+            createdAt,
+            updatedAt: createdAt,
+          })] : []),
+        ]),
+        activities: Object.freeze([...current.activities, ...(reviewId ? [Object.freeze({
+          id: `activity-${reviewId}`,
+          taskId: input.taskId,
+          agentTaskId: reviewId,
+          kind: "agent" as const,
+          summary: "Android 回复已创建且仅创建一个 Coordinator review",
+          createdAt,
+        })] : [])]),
+      });
+    }),
+    resolveGate: (input) => commit((current) => {
+      const completedAt = new Date().toISOString();
+      const gateIndex = ACCEPTANCE_WORKFLOW.steps.findIndex((step) => step.id === ACCEPTANCE_GATE.id);
+      const nextStep = ACCEPTANCE_WORKFLOW.steps[gateIndex + 1];
+      return Object.freeze({
+        ...current,
+        tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId
+          ? Object.freeze({
+              ...task,
+              ...(input.decision === "approve"
+                ? { stage: "running" as const }
+                : { activeRunId: undefined, stage: "blocked" as const, blockedReason: "Android 驳回人工关卡" }),
+              updatedAt: completedAt,
+            })
+          : task)),
+        runs: Object.freeze(current.runs.map((run) => run.id === input.runId
+          ? Object.freeze({
+              ...run,
+              status: input.decision === "approve" ? "running" as const : "failed" as const,
+              currentStepId: input.decision === "approve" ? nextStep?.id : undefined,
+              steps: Object.freeze(run.steps.map((step) => step.id === input.stepId
+                ? Object.freeze({
+                    ...step,
+                    status: input.decision === "approve" ? "succeeded" as const : "failed" as const,
+                    completedAt,
+                  })
+                : step)),
+              updatedAt: completedAt,
+              ...(input.decision === "reject" ? { completedAt, error: "Android 驳回人工关卡" } : {}),
+            })
+          : run)),
+      });
+    }),
+    reviewExecution: (input) => commit((current) => {
+      const reviewedAt = new Date().toISOString();
+      const acceptance = input.decision === "accept" ? "accepted" as const
+        : input.decision === "revision-requested" ? "revision-requested" as const
+          : "rejected" as const;
+      return Object.freeze({
+        ...current,
+        tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId
+          ? Object.freeze({
+              ...task,
+              awaitingReviewExecution: undefined,
+              stage: input.decision === "accept" ? "completed" as const : input.decision === "revision-requested" ? "planned" as const : "blocked" as const,
+              ...(input.decision === "reject" ? { blockedReason: input.comment || "Android 拒绝执行报告" } : {}),
+              updatedAt: reviewedAt,
+            })
+          : task)),
+        agentTasks: Object.freeze(current.agentTasks.map((agentTask) => agentTask.id === input.executionId
+          ? Object.freeze({ ...agentTask, acceptance, acceptanceComment: input.comment || undefined, reviewedAt, updatedAt: reviewedAt })
+          : agentTask)),
+      });
+    }),
+    abortExecution: (input) => commit((current) => {
+      const completedAt = new Date().toISOString();
+      return Object.freeze({
+        ...current,
+        tasks: Object.freeze(current.tasks.map((task) => task.id === input.taskId
+          ? Object.freeze({
+              ...task,
+              ...(input.executionKind === "workflow" ? { activeRunId: undefined } : { activeAgentTaskId: undefined }),
+              stage: "blocked" as const,
+              blockedReason: "Android 验收中止",
+              updatedAt: completedAt,
+            })
+          : task)),
+        runs: Object.freeze(current.runs.map((run) => input.executionKind === "workflow" && run.id === input.executionId
+          ? Object.freeze({ ...run, status: "interrupted" as const, error: "Android 验收中止", completedAt, updatedAt: completedAt })
+          : run)),
+        agentTasks: Object.freeze(current.agentTasks.map((agentTask) => input.executionKind === "agent-task" && agentTask.id === input.executionId
+          ? Object.freeze({ ...agentTask, status: "interrupted" as const, runtimeToken: undefined, error: "Android 验收中止", completedAt, updatedAt: completedAt })
+          : agentTask)),
+      });
+    }),
   },
 });
 controlPlane = new MainCompanionControlPlane({ repository, host, commands: commandService });
@@ -295,11 +510,13 @@ const timer = setInterval(() => {
   waiting = !waiting;
   const updatedAt = new Date().toISOString();
   void commit((current) => {
-    const active = current.tasks[0]?.activeAgentTaskId === "android-acceptance-agent";
-    if (!active) return current;
+    const coordinatorTask = current.tasks.find((task) => task.id === "android-acceptance-task");
+    const coordinator = current.agentTasks.find((agentTask) => agentTask.id === "android-acceptance-agent");
+    const alternating = coordinator?.status === "waiting_human" || coordinator?.status === "running";
+    if (coordinatorTask?.activeAgentTaskId !== coordinator?.id || !alternating) return current;
     return Object.freeze({
       ...current,
-      tasks: Object.freeze(current.tasks.map((task) => Object.freeze({ ...task, updatedAt }))),
+      tasks: Object.freeze(current.tasks.map((task) => task.id === coordinatorTask.id ? Object.freeze({ ...task, updatedAt }) : task)),
       agentTasks: Object.freeze(current.agentTasks.map((agentTask) => agentTask.id === "android-acceptance-agent"
         ? Object.freeze({ ...agentTask, status: waiting ? "waiting_human" as const : "running" as const, updatedAt })
         : agentTask)),

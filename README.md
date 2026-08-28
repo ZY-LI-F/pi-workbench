@@ -288,7 +288,7 @@ Recipient configuration is still read from Pi's standard directory:
 
 Do not package a developer's API Keys, OAuth credentials, or `.pi/agent` directory. A recipient without a separate Pi CLI can launch Stella, but must configure their own Provider credentials before the first model request.
 
-Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v8 chain. v8 adds immutable execution Profile/session snapshots and external origins without rewriting prior Pi history. Built-in roles never hardcode an API Key, model, or machine-specific CLI path.
+Board state is stored under Electron user data as `board/board.json`, outside the opened repository. Schema migration creates a timestamped backup and follows the deterministic v1→v9 chain. v8 adds immutable execution Profile/session snapshots and external origins; v9 adds execution-workspace preferences and persisted placement snapshots while migrating prior work to `current-folder`. Neither migration rewrites prior Pi history. Built-in roles never hardcode an API Key, model, or machine-specific CLI path.
 
 ### Local packaging
 
@@ -320,6 +320,21 @@ Stella Pi Workbench-0.5.0-mac-arm64.dmg
 
 Formal macOS signing must run on macOS. The repository includes [a GitHub Actions release workflow](.github/workflows/release.yml) for Windows x64, macOS Apple Silicon, and macOS Intel. Manual workflow runs may produce explicitly unsigned internal-test artifacts. A matching version tag requires signing, Apple notarization for macOS, and successful builds on every platform before creating the GitHub Release.
 
+## Android Companion · v0.5.0
+
+The separate React/Vite/Capacitor Companion connects to the desktop-owned Board over Companion Protocol `1`. It shows Attention, Tasks, Task Room controls, and read-only Claude/Codex external activity; it does not run Provider CLIs or own a second orchestration database. The desktop must remain running. Direct LAN or an existing private-network path is the initial transport; Relay and reliable FCM notifications are follow-up work.
+
+```bash
+npm ci --prefix apps/companion
+npm run companion:test
+npm run companion:apk:debug
+
+# Requires the signing variables documented in apps/companion/README.md.
+npm run companion:apk:release
+```
+
+The signed script produces `release/Stella-Companion-0.5.0-android-vc6.apk` and `release/SHA256SUMS-android.txt`. Product version, Android versionCode, and wire protocol are independent. Tag builds use the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` GitHub Secrets; no signing key is committed. See [the Companion build and AVD guide](apps/companion/README.md) and [the v0.5.0 release acceptance record](docs/testing/stella-v0.5.0-release-acceptance-2026-08-29.md).
+
 ## Verification
 
 ```bash
@@ -329,7 +344,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic suite contains **96 Vitest files and 421 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v8 migration, Profile compatibility, backend probing, managed Codex/Claude success/failure/interruption, cross-backend workflows and Worker mentions, App Server pagination/restart/timeout, Claude Agent state mapping, external last-good snapshots, polling visibility, managed-session association, import independence, lazy details, all-view de-duplication, and the dedicated Pi compaction timeout/mutual-exclusion behavior.
+The current deterministic desktop suite contains **106 Vitest files and 460 tests**; the Companion adds **9 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 

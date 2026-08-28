@@ -1,5 +1,17 @@
 apply plugin: 'com.android.application'
 
+def stellaAndroidVersionCode = Integer.parseInt(System.getenv('STELLA_ANDROID_VERSION_CODE') ?: '6')
+def stellaReleaseKeystore = System.getenv('STELLA_ANDROID_KEYSTORE')
+def stellaReleaseStorePassword = System.getenv('STELLA_ANDROID_KEYSTORE_PASSWORD')
+def stellaReleaseKeyAlias = System.getenv('STELLA_ANDROID_KEY_ALIAS')
+def stellaReleaseKeyPassword = System.getenv('STELLA_ANDROID_KEY_PASSWORD')
+def stellaHasReleaseSigning = [
+    stellaReleaseKeystore,
+    stellaReleaseStorePassword,
+    stellaReleaseKeyAlias,
+    stellaReleaseKeyPassword,
+].every { value -> value != null && !value.trim().isEmpty() }
+
 android {
     namespace = "ai.stably.stella.companion"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,7 +19,7 @@ android {
         applicationId "ai.stably.stella.companion"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
+        versionCode stellaAndroidVersionCode
         versionName "0.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,8 +28,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (stellaHasReleaseSigning) {
+                storeFile file(stellaReleaseKeystore)
+                storePassword stellaReleaseStorePassword
+                keyAlias stellaReleaseKeyAlias
+                keyPassword stellaReleaseKeyPassword
+            }
+        }
+    }
     buildTypes {
         release {
+            if (stellaHasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

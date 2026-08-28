@@ -11,7 +11,8 @@ import type { BoardRepository } from "../../src/main/board-repository";
 import { ExecutionBackendRegistry } from "../../src/main/execution-backend-registry";
 import { ExecutionAbortedError, type ExecutionBackend, type ExecutionOutcome, type ExecutionRequest } from "../../src/main/execution-backend";
 import { ExecutionCapacity } from "../../src/main/execution-capacity";
-import { IsolatedWorktreeExecutionWorkspace } from "../../src/main/execution-workspace";
+import { CurrentFolderExecutionWorkspace, IsolatedWorktreeExecutionWorkspace } from "../../src/main/execution-workspace";
+import { WorkspaceAdmission } from "../../src/main/workspace-admission";
 import { EMPTY_BOARD_STATE, parseBoardState, type BoardState } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 import type { ExecutionBackendHealth } from "../../src/shared/execution-profile";
@@ -176,5 +177,73 @@ describe("worktree-aware execution concurrency", () => {
       await expect(access(task.workspacePlacement?.cwd ?? "")).resolves.toBeUndefined();
     }
     await runner.shutdown();
+  });
+
+  it("keeps two writable AgentTasks FIFO-serial in the same real current folder", async () => {
+    const fixture = await gitFixture();
+    const repository = new MemoryRepository();
+    const id = idFactory("serial-domain");
+    const boardService = new BoardService({
+      repository,
+      catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      emitChanged: () => undefined,
+      projectIdentity: (path) => path,
+      id,
+      now: () => NOW,
+    });
+    const agentTaskService = new AgentTaskService({
+      repository,
+      catalog: BUILTIN_ORCHESTRATION_CATALOG,
+      emitChanged: () => undefined,
+      skills: READY_AGENT_SKILLS,
+      id,
+      now: () => NOW,
+    });
+    const backend = new HoldingPiBackend();
+    const capacity = new ExecutionCapacity(2);
+    const admission = new WorkspaceAdmission();
+    const workspace = new CurrentFolderExecutionWorkspace({
+      admission,
+      resolveProjectTrust: async () => true,
+      resolveProjectPath: async (path) => realpath(path),
+    });
+    const runner = new AgentTaskRunner({
+      service: agentTaskService,
+      backendRegistry: new ExecutionBackendRegistry({ backends: [backend], now: () => NOW }),
+      emitBoardEvent: () => undefined,
+      workspace,
+      capacity,
+    });
+    for (const title of ["真实串行一", "真实串行二"]) {
+      await boardService.createTask({
+        title,
+        description: "写入同一个真实 current folder",
+        acceptanceCriteria: "两个执行不重叠",
+        priority: "high",
+        projectPath: fixture.repository,
+        projectName: "真实项目",
+        trusted: true,
+        executionTarget: { kind: "agent", agentId: "builder" },
+        executionWorkspace: { strategy: "current-folder" },
+      });
+    }
+    for (const task of repository.state.tasks) await agentTaskService.dispatchDirect(task.id);
+
+    runner.start();
+    await vi.waitFor(() => expect(backend.executions).toHaveLength(1));
+    await vi.waitFor(() => expect(repository.state.activities.some((activity) => activity.summary.includes("等待项目写入席位"))).toBe(true));
+    expect(repository.state.agentTasks.map((task) => task.status).sort()).toEqual(["queued", "running"]);
+
+    backend.executions[0]?.settle("first current-folder complete");
+    await vi.waitFor(() => expect(backend.executions).toHaveLength(2));
+    expect(backend.executions[0]?.request.cwd).toBe(await realpath(fixture.repository));
+    expect(backend.executions[1]?.request.cwd).toBe(await realpath(fixture.repository));
+    expect(capacity.activeCount).toBe(1);
+
+    backend.executions[1]?.settle("second current-folder complete");
+    await vi.waitFor(() => expect(repository.state.agentTasks.every((task) => task.status === "reported")).toBe(true));
+    expect(capacity.activeCount).toBe(0);
+    await runner.shutdown();
+    admission.shutdown();
   });
 });

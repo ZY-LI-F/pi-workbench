@@ -1,6 +1,6 @@
 # Stella v0.5.0 · Orca 借鉴能力统一规格
 
-> 状态：规格完成，尚未进入实现
+> 状态：Track A–C 已实现并通过 v0.5.0 全链路验收；Relay/FCM 后置
 >
 > 产品版本：`0.5.0`
 >
@@ -11,6 +11,8 @@
 > Orca 研究快照：`65dd06a8701d7104340f9774d6f6ff6039488cfe`
 >
 > Stella 基线快照：`cb75738dfc440e4309e80598160f720473703b34`
+
+> 实现结果：Provider 能力真实性、统一 Agent Projection、schema 9 execution workspace、受限并发和 Android Companion 均已交付。验收记录见 [`../testing/stella-v0.5.0-release-acceptance-2026-08-29.md`](../testing/stella-v0.5.0-release-acceptance-2026-08-29.md)。
 
 ## Problem Statement
 

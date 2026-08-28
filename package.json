@@ -48,7 +48,9 @@
     "companion:test": "npm test --prefix apps/companion",
     "companion:sync": "npm run cap:sync --prefix apps/companion",
     "companion:host:mock": "tsx scripts/run-companion-acceptance-host.ts",
+    "companion:avd:acceptance": "node scripts/run-companion-avd-acceptance.mjs",
     "companion:apk:debug": "bash scripts/build-companion-android.sh",
+    "companion:apk:release": "bash scripts/build-companion-android-release.sh",
     "release:checksums": "node scripts/write-release-checksums.mjs",
     "check": "npm run typecheck && npm run lint && npm test"
   },

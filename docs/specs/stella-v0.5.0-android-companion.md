@@ -1,12 +1,12 @@
-# Stella v0.5.0 Android Companion APK 与 Agent 移动控制面规划
+# Stella v0.5.0 Android Companion APK 与 Agent 移动控制面规格
 
-> 状态：规划待确认，不包含业务代码实现
+> 状态：Phase 0–2 已实现并通过 API 35 AVD 验收；Phase 3 Relay/FCM 后置
 >
 > 产品版本：桌面端与 Android App 均使用 `0.5.0`；Android `versionCode` 独立递增
 >
 > Companion Wire Protocol：`1`
 >
-> 规划日期：2026-08-28（Asia/Shanghai）
+> 规格日期：2026-08-28；实现验收：2026-08-29（Asia/Shanghai）
 
 ## Problem Statement
 
@@ -40,15 +40,15 @@ Stella 当前可以在桌面端运行 Pi、Codex CLI、Claude CLI，展示 Board
 | --- | --- | --- |
 | Node.js / npm | Node `24.19.0`、npm `11.17.0` | 满足前端脚手架与 Capacitor 构建需要 |
 | Android Studio | 已安装 `2025.3` | 可管理 Android 工程和 SDK |
-| Java | Android Studio 内置 OpenJDK `21.0.10` 可用，但 shell 未配置 `JAVA_HOME` | 构建脚本需显式发现或配置 Android Studio JBR |
+| Java | Android Studio 内置 OpenJDK `21.0.10` 可用 | 共享环境脚本可发现 `JAVA_HOME` 或 Android Studio JBR |
 | Android SDK | 已安装 platform `35`、`36.1` | 可编译 Android 应用 |
 | Build Tools | 已安装 `36.0.0`、`36.1.0`、`37.0.0` | `aapt2`、`zipalign`、`apksigner` 可用 |
 | SDK License | Android SDK license 已存在 | 不阻塞 Gradle 构建 |
-| ADB | SDK 中已安装，但未加入 shell `PATH` | 构建不受影响；安装到设备前需配置路径 |
-| 设备/模拟器 | 当前没有连接设备，也没有已创建 AVD | 可以生成 APK，但运行验收前需连接真机或创建 AVD |
-| Capacitor 依赖 | 当前项目尚未安装 | 实现阶段需要新增移动 workspace 和锁定版本 |
+| ADB | SDK 中已安装 | 已用于安装、重启、端口转发与验收 |
+| 设备/模拟器 | `stella_companion_api35` / API 35 | 签名 APK 已完成全场景与重连验收 |
+| Capacitor 依赖 | 独立 `apps/companion` workspace 已锁定 | Android 工程、Gradle wrapper 与 Web 资源可复现构建 |
 
-因此，这台机器具备生成 APK 的基础工具链。当前还不能直接执行“一条现有命令生成 Stella APK”，原因只是项目尚未有 Android target、Gradle wrapper 和移动应用代码，而不是环境或架构不可行。
+因此，这台机器与仓库现在都具备可复现 APK 工具链：`npm run companion:apk:debug` 构建 debug APK，`npm run companion:apk:release` 在显式 signing 变量完整时构建、验证并输出带 SHA-256 的签名 APK。首个发布候选为 `0.5.0 / versionCode 6 / protocol 1`。
 
 ## Solution
 
@@ -322,3 +322,9 @@ Exit criterion: background attention notifications and cross-network reconnect a
 - Orca implements its broader app with Expo/React Native and a versioned WebSocket protocol. Stella should borrow the desktop-owned, versioned, read-mostly model, but not its terminal/file/SSH scope or implementation size.
 - Capacitor can later integrate FCM, but reliable push requires Firebase configuration and a sender that does not embed server credentials in the APK: https://capacitorjs.com/docs/guides/push-notifications-firebase
 - This plan deliberately preserves Stella's current Board, Execution Attempt, runtime token, Execution Backend and External Execution Source ownership. The new functionality is an Adapter and projection over those Modules, not a second orchestration system.
+
+## Implementation Acceptance
+
+Phase 0–2 已按本规格落地。API 35 AVD 对实际安装的签名 `0.5.0 / versionCode 6` APK 完成配对、在线更新、Coordinator 回复且只生成一个 review、gate approve、report accept、确认后的精确 abort、外部 Source stale/last-good、managed 去重、按需只读详情，以及 App 重启后的持久配对与 authoritative snapshot 替换。
+
+本地验收 APK 的 SHA-256 为 `6ADE01B64FECD6730366BBD6AABEBBB4B33F8D4BEFBF439F0693791EC9E0D3CC`。它使用一次性验收证书；正式 tag 由 GitHub Actions 使用仓库 Secrets 中的发布证书重新签名。完整证据与迁移/回滚步骤见 [`../testing/stella-v0.5.0-release-acceptance-2026-08-29.md`](../testing/stella-v0.5.0-release-acceptance-2026-08-29.md)。

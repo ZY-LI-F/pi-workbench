@@ -101,10 +101,92 @@ jobs:
             release/latest*.yml
             release/SHA256SUMS*.txt
 
+  android:
+    name: Android Companion
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install desktop and Companion dependencies
+        run: |
+          npm ci
+          npm ci --prefix apps/companion
+
+      - name: Run shared and Companion quality gates
+        run: |
+          npm run check
+          npm run companion:test
+
+      - name: Build debug APK
+        run: npm run companion:apk:debug
+
+      - name: Prepare manual-run debug artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          mkdir -p android-ci
+          cp apps/companion/android/app/build/outputs/apk/debug/app-debug.apk android-ci/Stella-Companion-0.5.0-android-debug-vc6.apk
+          sha256sum android-ci/Stella-Companion-0.5.0-android-debug-vc6.apk > android-ci/SHA256SUMS-android-debug.txt
+
+      - name: Decode Android release keystore
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/stella-release.jks"
+
+      - name: Build signed release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          STELLA_ANDROID_KEYSTORE: ${{ runner.temp }}/stella-release.jks
+          STELLA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          STELLA_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          STELLA_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          STELLA_ANDROID_VERSION_CODE: "6"
+        run: npm run companion:apk:release
+
+      - name: Upload Android debug artifact
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: stella-android-debug
+          if-no-files-found: error
+          path: android-ci/*
+
+      - name: Upload signed Android artifact
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: stella-android-release
+          if-no-files-found: error
+          path: |
+            release/*.apk
+            release/SHA256SUMS-android.txt
+
   release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    needs: [build, android]
     runs-on: ubuntu-latest
     steps:
       - name: Download signed artifacts
