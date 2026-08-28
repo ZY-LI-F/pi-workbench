@@ -55,9 +55,15 @@ class FakeSource implements ExternalExecutionSource {
       id,
       label: `${id} source`,
       description: "fixture",
-      supportsDetails: false,
-      supportsImport: true,
-      supportsContinue: false,
+      capabilities: Object.freeze({
+        discovery: "cli-json" as const,
+        updates: Object.freeze(["poll" as const]),
+        details: false,
+        import: true,
+        continue: false,
+        hierarchy: false,
+        evidence: "official-structured" as const,
+      }),
     });
     this.items = items;
   }
@@ -91,6 +97,18 @@ function fixture(sources: readonly ExternalExecutionSource[]) {
 }
 
 describe("ExternalExecutionService", () => {
+  it("rejects Source capability claims that have no implementation path", () => {
+    const source = new FakeSource("claude", []);
+    const inconsistent = Object.assign(source, {
+      definition: Object.freeze({
+        ...source.definition,
+        capabilities: Object.freeze({ ...source.definition.capabilities, details: true }),
+      }),
+    });
+
+    expect(() => fixture([inconsistent])).toThrow("details 能力与实现不一致");
+  });
+
   it("keeps a last-good snapshot per source and per scope when refresh fails", async () => {
     const claude = new FakeSource("claude", [execution("claude", "claude-1")]);
     const codex = new FakeSource("codex", [execution("codex", "codex-1")]);

@@ -211,9 +211,15 @@ export class CodexExternalExecutionSource implements ExternalExecutionSource {
     id: "codex" as const,
     label: "Codex Threads",
     description: "Codex CLI、Exec、App Server 与 Sub-agent Thread。",
-    supportsDetails: true,
-    supportsImport: true,
-    supportsContinue: true,
+    capabilities: Object.freeze({
+      discovery: "app-server" as const,
+      updates: Object.freeze(["poll" as const, "notification" as const]),
+      details: true,
+      import: true,
+      continue: true,
+      hierarchy: true,
+      evidence: "official-structured" as const,
+    }),
   });
 
   readonly #configuration: () => ExecutionBackendConfiguration;

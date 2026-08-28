@@ -123,9 +123,15 @@ export class ClaudeExternalExecutionSource implements ExternalExecutionSource {
     id: "claude" as const,
     label: "Claude Agents",
     description: "Claude Code agent view 中的后台与交互 session。",
-    supportsDetails: false,
-    supportsImport: true,
-    supportsContinue: true,
+    capabilities: Object.freeze({
+      discovery: "cli-json" as const,
+      updates: Object.freeze(["poll" as const]),
+      details: false,
+      import: true,
+      continue: true,
+      hierarchy: true,
+      evidence: "official-structured" as const,
+    }),
   });
 
   readonly #configuration: () => ExecutionBackendConfiguration;

@@ -11,7 +11,20 @@ function snapshot(scope: ExternalExecutionScope, title: string): ExternalExecuti
     scope,
     capturedAt: "2026-08-24T08:00:00.000Z",
     sources: Object.freeze([Object.freeze({
-      source: Object.freeze({ id: "claude", label: "Claude", description: "", supportsDetails: false, supportsImport: true, supportsContinue: true }),
+      source: Object.freeze({
+        id: "claude",
+        label: "Claude",
+        description: "",
+        capabilities: Object.freeze({
+          discovery: "cli-json",
+          updates: Object.freeze(["poll"]),
+          details: false,
+          import: true,
+          continue: true,
+          hierarchy: true,
+          evidence: "official-structured",
+        }),
+      }),
       state: "ready",
       stale: false,
       items: Object.freeze([Object.freeze({

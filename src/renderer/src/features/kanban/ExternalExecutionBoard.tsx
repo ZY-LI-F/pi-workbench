@@ -7,6 +7,7 @@ import type {
   ExternalExecutionSourceId,
   ExternalExecutionState,
 } from "@shared/external-execution";
+import { projectExternalExecutionCards } from "@shared/agent-projection";
 import { formatRelativeTime } from "./kanban-format";
 
 const STATE_LABEL: Readonly<Record<ExternalExecutionState, string>> = Object.freeze({
@@ -61,12 +62,12 @@ export function ExternalExecutionBoard({
   const [notice, setNotice] = useState("");
   const [expandedDetails, setExpandedDetails] = useState<string>();
   const normalizedQuery = query.trim().toLocaleLowerCase();
-  const items = useMemo(() => (snapshot?.sources.flatMap((source) => source.items) ?? [])
+  const items = useMemo(() => projectExternalExecutionCards(snapshot)
+    .flatMap((card) => card.external ? [card.external] : [])
     .filter((item) => sourceFilter === "all" || item.sourceId === sourceFilter)
     .filter((item) => stateFilter === "all" || item.state === stateFilter)
     .filter((item) => !hideManaged || item.association?.relation !== "managed")
-    .filter((item) => !normalizedQuery || `${item.title} ${item.summary ?? ""} ${item.projectPath} ${item.nativeId}`.toLocaleLowerCase().includes(normalizedQuery))
-    .sort((left, right) => Number(right.needsInput) - Number(left.needsInput) || Date.parse(right.updatedAt) - Date.parse(left.updatedAt)),
+    .filter((item) => !normalizedQuery || `${item.title} ${item.summary ?? ""} ${item.projectPath} ${item.nativeId}`.toLocaleLowerCase().includes(normalizedQuery)),
   [hideManaged, normalizedQuery, snapshot, sourceFilter, stateFilter]);
 
   const perform = async (action: () => Promise<void>) => {
@@ -122,9 +123,9 @@ export function ExternalExecutionBoard({
                 {item.needsInput && <div className="external-execution-card__waiting"><ShieldAlert size={13} />{item.waitingFor ?? "Claude 正在等待你的输入"}</div>}
                 <footer>
                   {item.association ? <button type="button" className="button-secondary" onClick={() => onOpenTask(item.association?.taskId ?? "")}><Link2 size={13} />{item.association.relation === "managed" ? "打开受管 Task" : "打开已导入 Task"}</button>
-                    : source?.supportsImport && <button type="button" className="button-secondary" disabled={importing} onClick={() => void perform(async () => { const result = await onImport(item); setNotice(result.created ? "已导入为独立手工 Task" : "该 session 已经导入"); onOpenTask(result.taskId); })}><Import size={13} />{importing ? "导入中" : "导入为 Task"}</button>}
-                  {source?.supportsContinue && <button type="button" className="button-secondary" disabled={continuing} onClick={() => void perform(async () => { const result = await onContinue(item); setNotice(`已复制继续命令：${result.message}`); })}>{continuing ? <RefreshCw className="is-spinning" size={13} /> : <Copy size={13} />}继续 Session</button>}
-                  {source?.supportsDetails && <button type="button" className="button-secondary" disabled={loadingDetails} aria-expanded={detailsOpen} onClick={() => void perform(async () => {
+                    : source?.capabilities.import && <button type="button" className="button-secondary" disabled={importing} onClick={() => void perform(async () => { const result = await onImport(item); setNotice(result.created ? "已导入为独立手工 Task" : "该 session 已经导入"); onOpenTask(result.taskId); })}><Import size={13} />{importing ? "导入中" : "导入为 Task"}</button>}
+                  {source?.capabilities.continue && <button type="button" className="button-secondary" disabled={continuing} onClick={() => void perform(async () => { const result = await onContinue(item); setNotice(`已复制继续命令：${result.message}`); })}>{continuing ? <RefreshCw className="is-spinning" size={13} /> : <Copy size={13} />}继续 Session</button>}
+                  {source?.capabilities.details && <button type="button" className="button-secondary" disabled={loadingDetails} aria-expanded={detailsOpen} onClick={() => void perform(async () => {
                     if (detailsOpen) { setExpandedDetails(undefined); return; }
                     setExpandedDetails(key);
                     if (!detail) await onLoadDetails(item);

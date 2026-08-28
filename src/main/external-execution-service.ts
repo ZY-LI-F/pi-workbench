@@ -80,6 +80,17 @@ function withAssociation(item: ExternalExecutionItem, state: BoardState, managed
     : Object.freeze({ ...item, association: undefined });
 }
 
+function assertSourceCapabilityContract(source: ExternalExecutionSource): void {
+  const { capabilities } = source.definition;
+  if (capabilities.updates.length === 0) throw new Error(`${source.definition.id} Source 必须声明至少一种更新机制`);
+  if (capabilities.details !== Boolean(source.details)) {
+    throw new Error(`${source.definition.id} Source 的 details 能力与实现不一致`);
+  }
+  if (capabilities.continue !== Boolean(source.continue)) {
+    throw new Error(`${source.definition.id} Source 的 continue 能力与实现不一致`);
+  }
+}
+
 export class ExternalExecutionService {
   readonly #sources: ReadonlyMap<ExternalExecutionSourceId, ExternalExecutionSource>;
   readonly #repository: BoardRepository;
@@ -94,6 +105,7 @@ export class ExternalExecutionService {
     if (new Set(options.sources.map((source) => source.definition.id)).size !== options.sources.length) {
       throw new Error("ExternalExecution Source ID 重复");
     }
+    for (const source of options.sources) assertSourceCapabilityContract(source);
     this.#sources = new Map(options.sources.map((source) => [source.definition.id, source] as const));
     this.#repository = options.repository;
     this.#boardService = options.boardService;
@@ -174,6 +186,8 @@ export class ExternalExecutionService {
   }
 
   async import(input: ImportExternalExecutionInput): Promise<ImportExternalExecutionResult> {
+    const source = this.#sources.get(input.sourceId);
+    if (!source?.definition.capabilities.import) throw new Error(`${input.sourceId} Source 不支持导入 Task`);
     const item = this.#findItem(input.sourceId, input.externalId);
     const before = await this.#repository.read();
     const existing = importedTask(before, item.sourceId, item.externalId);
@@ -212,14 +226,14 @@ export class ExternalExecutionService {
   async continue(input: ContinueExternalExecutionInput): Promise<ContinueExternalExecutionResult> {
     const item = this.#findItem(input.sourceId, input.externalId);
     const source = this.#sources.get(input.sourceId);
-    if (!source?.continue) throw new Error(`${input.sourceId} Source 不支持继续 session`);
+    if (!source?.definition.capabilities.continue || !source.continue) throw new Error(`${input.sourceId} Source 不支持继续 session`);
     return source.continue(item);
   }
 
   async details(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails> {
     const item = this.#findItem(input.sourceId, input.externalId);
     const source = this.#sources.get(input.sourceId);
-    if (!source?.details) throw new Error(`${input.sourceId} Source 不支持读取详情`);
+    if (!source?.definition.capabilities.details || !source.details) throw new Error(`${input.sourceId} Source 不支持读取详情`);
     return source.details(item);
   }
 

@@ -22,6 +22,15 @@ export const EXTERNAL_EXECUTION_STATES = [
 ] as const;
 export type ExternalExecutionState = (typeof EXTERNAL_EXECUTION_STATES)[number];
 
+export const EXTERNAL_EXECUTION_DISCOVERY_MECHANISMS = ["cli-json", "app-server"] as const;
+export type ExternalExecutionDiscoveryMechanism = (typeof EXTERNAL_EXECUTION_DISCOVERY_MECHANISMS)[number];
+
+export const EXTERNAL_EXECUTION_UPDATE_MECHANISMS = ["poll", "notification", "hook"] as const;
+export type ExternalExecutionUpdateMechanism = (typeof EXTERNAL_EXECUTION_UPDATE_MECHANISMS)[number];
+
+export const EXTERNAL_EXECUTION_EVIDENCE_QUALITIES = ["official-structured", "provider-file", "heuristic"] as const;
+export type ExternalExecutionEvidenceQuality = (typeof EXTERNAL_EXECUTION_EVIDENCE_QUALITIES)[number];
+
 export type ExternalExecutionScope =
   | { readonly kind: "all" }
   | { readonly kind: "project"; readonly projectPath: string };
@@ -63,9 +72,15 @@ export interface ExternalExecutionSourceDefinition {
   readonly id: ExternalExecutionSourceId;
   readonly label: string;
   readonly description: string;
-  readonly supportsDetails: boolean;
-  readonly supportsImport: boolean;
-  readonly supportsContinue: boolean;
+  readonly capabilities: {
+    readonly discovery: ExternalExecutionDiscoveryMechanism;
+    readonly updates: readonly ExternalExecutionUpdateMechanism[];
+    readonly details: boolean;
+    readonly import: boolean;
+    readonly continue: boolean;
+    readonly hierarchy: boolean;
+    readonly evidence: ExternalExecutionEvidenceQuality;
+  };
 }
 
 export interface ExternalExecutionSourceSnapshot {
