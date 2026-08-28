@@ -37,6 +37,7 @@ import type {
 import { CAPABILITY_NAMES, type CapabilityHealthSnapshot, type CapabilityName } from "../shared/capabilities";
 import {
   AGENT_THINKING_LEVELS,
+  EXECUTION_WORKSPACE_STRATEGIES,
   MANUAL_TASK_STAGES,
   TASK_PRIORITIES,
   type BoardBootstrap,
@@ -48,6 +49,7 @@ import {
   type KanbanTask,
   type LaunchTeamTaskInput,
   type ExecutionTarget,
+  type ExecutionWorkspacePreference,
   type CreateSquadInput,
   type ManualTaskStage,
   type OpenTaskSessionInput,
@@ -83,7 +85,7 @@ import { SquadService } from "./squad-service";
 import { WorkflowOrchestrator } from "./workflow-orchestrator";
 import { WebhookServer, webhookMaxBytesFromEnvironment, webhookPortFromEnvironment } from "./webhook-server";
 import { WorkspaceAdmission } from "./workspace-admission";
-import { CurrentFolderExecutionWorkspace } from "./execution-workspace";
+import { CurrentFolderExecutionWorkspace, IsolatedWorktreeExecutionWorkspace, RoutedExecutionWorkspace } from "./execution-workspace";
 import { visibleInteractiveSessions } from "../shared/session-policy";
 import { resolveTaskSessionTarget } from "../shared/task-session-bridge";
 import {
@@ -401,6 +403,19 @@ function validatedExternalOrigin(value: unknown): ExternalExecutionOrigin {
   });
 }
 
+function validatedExecutionWorkspace(value: unknown, target: ExecutionTarget): ExecutionWorkspacePreference | undefined {
+  if (value === undefined) return undefined;
+  const workspace = objectValue(value, "executionWorkspace");
+  if (typeof workspace.strategy !== "string" || !EXECUTION_WORKSPACE_STRATEGIES.includes(workspace.strategy as ExecutionWorkspacePreference["strategy"])) {
+    throw new Error("executionWorkspace.strategy 无效");
+  }
+  if (workspace.strategy === "isolated-worktree") {
+    if (target.kind === "manual") throw new Error("手工任务不支持 isolated-worktree");
+    return Object.freeze({ strategy: "isolated-worktree", baseRef: requiredString(workspace.baseRef, "executionWorkspace.baseRef") });
+  }
+  return Object.freeze({ strategy: "current-folder" });
+}
+
 function validatedCreateTask(value: unknown): CreateTaskInput {
   const input = objectValue(value, "创建任务参数");
   const priority = textValue(input.priority, "priority");
@@ -416,6 +431,7 @@ function validatedCreateTask(value: unknown): CreateTaskInput {
     trusted: booleanValue(input.trusted, "trusted"),
     executionTarget,
     executionProfileId: validatedExecutionProfileId(input.executionProfileId, executionTarget),
+    executionWorkspace: validatedExecutionWorkspace(input.executionWorkspace, executionTarget),
     sourceSession: input.sourceSession === undefined ? undefined : validatedExecutionSession(input.sourceSession, "sourceSession"),
     externalOrigin: input.externalOrigin === undefined ? undefined : validatedExternalOrigin(input.externalOrigin),
   });
@@ -442,6 +458,7 @@ function validatedUpdateTask(value: unknown): UpdateTaskInput {
     priority: priority as UpdateTaskInput["priority"],
     executionTarget,
     executionProfileId: validatedExecutionProfileId(input.executionProfileId, executionTarget),
+    executionWorkspace: validatedExecutionWorkspace(input.executionWorkspace, executionTarget),
   });
 }
 
@@ -1438,11 +1455,20 @@ async function initializeTaskCapability(): Promise<void> {
       boardService,
       resolveProjectTrust,
     });
-    const executionWorkspace = new CurrentFolderExecutionWorkspace({
+    const currentFolderExecutionWorkspace = new CurrentFolderExecutionWorkspace({
       admission: workspaceAdmission,
       resolveProjectTrust,
       resolveProjectPath: canonicalExecutionProjectPath,
     });
+    const isolatedWorktreeExecutionWorkspace = new IsolatedWorktreeExecutionWorkspace({
+      workspaceRoot: join(app.getPath("userData"), "execution-worktrees"),
+      resolveProjectTrust,
+      resolveProjectPath: canonicalExecutionProjectPath,
+    });
+    const executionWorkspace = new RoutedExecutionWorkspace(
+      currentFolderExecutionWorkspace,
+      isolatedWorktreeExecutionWorkspace,
+    );
     workflowOrchestrator = new WorkflowOrchestrator({
       repository: boardStore,
       catalog: BUILTIN_ORCHESTRATION_CATALOG,

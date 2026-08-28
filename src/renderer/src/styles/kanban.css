@@ -1139,6 +1139,28 @@
 
 .task-detail__execution-truth { padding: 3px 16px 8px; }
 
+.task-detail__workspace-truth {
+  display: flex;
+  margin: 0 16px 8px;
+  padding: 7px 9px;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.task-detail__workspace-truth code {
+  min-width: 0;
+  margin-left: auto;
+  overflow: hidden;
+  color: var(--text-faint);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .execution-chip,
 .acceptance-chip {
   display: inline-flex;
@@ -3387,6 +3409,7 @@
 .task-detail--workspace .task-detail__header h2 { font-size: 1.0714rem; }
 .task-detail--workspace .task-detail__badges,
 .task-detail--workspace .task-detail__execution-truth,
+.task-detail--workspace .task-detail__workspace-truth,
 .task-detail--workspace .agent-execution-graph,
 .task-detail--workspace .workflow-dag,
 .task-detail--workspace .task-room { max-width: 880px; margin-right: auto; margin-left: auto; }

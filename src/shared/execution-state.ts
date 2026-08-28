@@ -1,5 +1,5 @@
 import { applyTaskLifecycle, type TaskLifecycleEvent } from "./task-lifecycle";
-import type { AgentTask, BoardState, ExecutionReference, KanbanTask, TaskSpecSnapshot, WorkflowRun } from "./kanban";
+import { cloneExecutionWorkspacePreference, type AgentTask, type BoardState, type ExecutionReference, type KanbanTask, type TaskSpecSnapshot, type WorkflowRun } from "./kanban";
 
 const SUPERSEDED_REASON = "已由更新的执行尝试取代";
 
@@ -16,6 +16,7 @@ export function snapshotTaskSpec(task: KanbanTask): TaskSpecSnapshot {
     priority: task.priority,
     executionTarget: Object.freeze({ ...task.executionTarget }),
     executionProfileId: task.executionProfileId,
+    executionWorkspace: cloneExecutionWorkspacePreference(task.executionWorkspace),
   });
 }
 

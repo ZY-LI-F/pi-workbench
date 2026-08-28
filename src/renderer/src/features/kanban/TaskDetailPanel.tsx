@@ -208,6 +208,13 @@ export function TaskDetailPanel({
     ...(run ? [{ kind: "workflow" as const, execution: run }] : []),
     ...(rootAgentTask ? [{ kind: "agent-task" as const, execution: rootAgentTask }] : []),
   ].sort((left, right) => Date.parse(right.execution.updatedAt) - Date.parse(left.execution.updatedAt))[0];
+  const latestWorkspacePlacement = [
+    ...runs.filter((candidate) => candidate.workspacePlacement),
+    ...agentTasks.filter((candidate) => candidate.workspacePlacement),
+  ].sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0]?.workspacePlacement;
+  const workspacePreference = task.executionWorkspace?.strategy === "isolated-worktree"
+    ? `独立 Worktree · ${task.executionWorkspace.baseRef}`
+    : "当前项目目录";
   const awaitingReview = task.awaitingReviewExecution;
   const awaitingWorkflow = awaitingReview?.kind === "workflow"
     ? runs.find((candidate) => candidate.id === awaitingReview.id && candidate.status === "reported" && candidate.acceptance === "pending")
@@ -324,6 +331,17 @@ export function TaskDetailPanel({
           <div className="task-detail__execution-truth">
             <span className={`execution-chip execution-chip--${executionTruth.execution.status}`}>执行 · {EXECUTION_STATUS_LABEL[executionTruth.execution.status] ?? executionTruth.execution.status}</span>
             <span className={`acceptance-chip acceptance-chip--${executionTruth.execution.acceptance}`}>验收 · {ACCEPTANCE_LABEL[executionTruth.execution.acceptance]}</span>
+          </div>
+        )}
+        {!isManual && (
+          <div className="task-detail__workspace-truth" aria-label="执行工作区">
+            <GitBranch size={13} />
+            <span>{workspacePreference}</span>
+            {latestWorkspacePlacement && (
+              <code title={latestWorkspacePlacement.cwd}>
+                {latestWorkspacePlacement.branch ?? latestWorkspacePlacement.cwd}
+              </code>
+            )}
           </div>
         )}
         {task.blockedReason && <div className="task-detail__blocked"><XCircle size={14} /><span>{task.blockedReason}</span></div>}

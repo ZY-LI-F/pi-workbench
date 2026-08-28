@@ -249,6 +249,13 @@ describe("AgentTaskRunner", () => {
     const prompt = runtimeFactory.runtimes[0]?.commands.find((command) => command.type === "prompt");
     expect(prompt).toMatchObject({ type: "prompt", message: expect.stringContaining("请保留用户已有改动") });
     expect(repository.state.agentTasks.filter((task) => task.status === "running")).toHaveLength(1);
+    expect(repository.state.agentTasks.find((task) => task.taskId === firstTaskId)?.workspacePlacement).toMatchObject({
+      strategy: "current-folder",
+      projectPath: "C:/project",
+      cwd: "C:/project",
+      ownership: "project",
+      lifecycle: "retained",
+    });
 
     runtimeFactory.runtimes[0]?.settle();
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));

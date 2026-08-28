@@ -197,6 +197,13 @@ describe("WorkflowOrchestrator", () => {
     await orchestrator.dispatch(taskId);
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(1));
     await vi.waitFor(() => expect(runtimeFactory.runtimes[0]?.commands.some((command) => command.type === "prompt")).toBe(true));
+    expect(repository.state.runs[0]?.workspacePlacement).toMatchObject({
+      strategy: "current-folder",
+      projectPath: "C:/project",
+      cwd: "C:/project",
+      ownership: "project",
+      lifecycle: "retained",
+    });
 
     runtimeFactory.runtimes[0]?.settle();
     await vi.waitFor(() => expect(runtimeFactory.runtimes).toHaveLength(2));

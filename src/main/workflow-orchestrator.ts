@@ -111,7 +111,7 @@ export class WorkflowOrchestrator {
     const previewAgents = Object.freeze([...previewAgentIds].map((agentId) => this.#agent(agentId)));
     this.#assertWorkflowProfile(previewTask.executionProfileId, previewAgents);
     this.#backendRegistry.resolve(previewTask.executionProfileId);
-    await this.#workspace.resolve(previewTask.projectPath);
+    await this.#workspace.resolve(previewTask.projectPath, previewTask.executionWorkspace);
     const now = this.#now();
     let runId = "";
     const bootstrap = await this.#commit((current) => {
@@ -346,6 +346,9 @@ export class WorkflowOrchestrator {
     try {
       workspace = await this.#workspace.acquire({
         projectPath: task.projectPath,
+        preference: run.taskSpec.executionWorkspace ?? task.executionWorkspace,
+        existingPlacement: run.workspacePlacement,
+        executionAttempt: run.executionAttempt,
         agent,
         owner: {
           id: `workflow:${run.id}:${step.stepId}`,
@@ -472,11 +475,22 @@ export class WorkflowOrchestrator {
                 ...latestRun,
                 status: "running" as const,
                 currentStepId: step.stepId,
+                workspacePlacement: latestRun.workspacePlacement ?? workspace.placement,
                 steps: Object.freeze(latestRun.steps.map((item) => item.id === step.id ? runningStep : item)),
                 updatedAt: startedAt,
               })
             : candidate),
-          activities: [...current.activities, this.#activity(task.id, "agent", `${agent.name}开始执行「${step.name}」`, agent.callsign, startedAt, run.id, step.stepId)],
+          activities: [...current.activities, this.#activity(
+            task.id,
+            "agent",
+            `${agent.name}开始执行「${step.name}」`,
+            workspace.placement.strategy === "isolated-worktree"
+              ? `${workspace.placement.branch ?? agent.callsign} · ${workspace.cwd}`
+              : agent.callsign,
+            startedAt,
+            run.id,
+            step.stepId,
+          )],
         };
       });
     } catch (cause) {

@@ -142,6 +142,9 @@ export class AgentTaskRunner {
       try {
         workspace = await this.#workspace.acquire({
           projectPath: queued.task.projectPath,
+          preference: queued.agentTask.taskSpec.executionWorkspace ?? queued.task.executionWorkspace,
+          existingPlacement: queued.agentTask.workspacePlacement,
+          executionAttempt: queued.agentTask.executionAttempt,
           agent,
           owner: {
             id: `agent-task:${queued.agentTask.id}`,
@@ -162,6 +165,13 @@ export class AgentTaskRunner {
       }
       if (this.#stopping) {
         workspace.release();
+        return;
+      }
+      try {
+        await this.#service.recordWorkspacePlacement(queued.agentTask.id, workspace.placement);
+      } catch (cause) {
+        workspace.release();
+        try { await this.#service.rejectQueued(queued.agentTask.id, cause); } catch { /* The task may have been cancelled while provisioning. */ }
         return;
       }
       const claimed = await this.#service.claim(queued.agentTask.id);

@@ -2,13 +2,16 @@ import { randomUUID } from "node:crypto";
 import type { BoardRepository } from "./board-repository";
 import {
   AGENT_THINKING_LEVELS,
+  CURRENT_FOLDER_EXECUTION_WORKSPACE,
   TASK_PRIORITIES,
   canMoveTaskManually,
+  cloneExecutionWorkspacePreference,
   type BoardBootstrap,
   type BoardState,
   type CreateProjectAgentInput,
   type CreateTaskInput,
   type ExecutionTarget,
+  type ExecutionWorkspacePreference,
   type KanbanTask,
   type ManualTaskStage,
   type OrchestrationCatalog,
@@ -43,6 +46,18 @@ function taskStageLabel(stage: ManualTaskStage): string {
   if (stage === "review") return "待审核";
   if (stage === "blocked") return "受阻";
   return "已完成";
+}
+
+function executionWorkspace(
+  target: ExecutionTarget,
+  input: ExecutionWorkspacePreference | undefined,
+): ExecutionWorkspacePreference {
+  if (target.kind === "manual") {
+    if (input?.strategy === "isolated-worktree") throw new Error("手工任务不支持 isolated-worktree");
+    return CURRENT_FOLDER_EXECUTION_WORKSPACE;
+  }
+  if (input?.strategy !== "isolated-worktree") return CURRENT_FOLDER_EXECUTION_WORKSPACE;
+  return Object.freeze({ strategy: "isolated-worktree", baseRef: normalizedText(input.baseRef, "Worktree base ref", true) });
 }
 
 export class BoardService {
@@ -112,6 +127,7 @@ export class BoardService {
       }
       this.#assertExecutionTarget(current, input.executionTarget, input.projectPath);
       const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
+      const selectedWorkspace = executionWorkspace(input.executionTarget, input.executionWorkspace);
       this.#assertExecutionProfileAgents(current, input.executionTarget, executionProfileId);
       const task: KanbanTask = Object.freeze({
         id: this.#id(),
@@ -124,6 +140,7 @@ export class BoardService {
         trusted: input.trusted,
         executionTarget: Object.freeze({ ...input.executionTarget }),
         executionProfileId,
+        executionWorkspace: selectedWorkspace,
         stage: "planned",
         specRevision: 1,
         executionAttempt: 0,
@@ -152,12 +169,14 @@ export class BoardService {
       if (task.awaitingReviewExecution) throw new Error("任务正在等待验收；请先验收或退回本次执行，再修改任务规格");
       this.#assertExecutionTarget(current, input.executionTarget, task.projectPath);
       const executionProfileId = this.#executionProfileId(input.executionTarget, input.executionProfileId);
+      const selectedWorkspace = executionWorkspace(input.executionTarget, input.executionWorkspace ?? task.executionWorkspace);
       this.#assertExecutionProfileAgents(current, input.executionTarget, executionProfileId);
       const title = normalizedText(input.title, "任务标题", true);
       const description = normalizedText(input.description, "任务说明", false);
       const acceptanceCriteria = normalizedText(input.acceptanceCriteria, "验收标准", false);
       const targetChanged = JSON.stringify(task.executionTarget) !== JSON.stringify(input.executionTarget);
       const profileChanged = task.executionProfileId !== executionProfileId;
+      const workspaceChanged = JSON.stringify(cloneExecutionWorkspacePreference(task.executionWorkspace)) !== JSON.stringify(selectedWorkspace);
       const resetManualProgress = task.executionTarget.kind === "manual"
         && input.executionTarget.kind !== "manual"
         && (task.stage === "running" || task.stage === "review");
@@ -166,7 +185,8 @@ export class BoardService {
         || task.acceptanceCriteria !== acceptanceCriteria
         || task.priority !== input.priority
         || targetChanged
-        || profileChanged;
+        || profileChanged
+        || workspaceChanged;
       const nextTask: KanbanTask = Object.freeze({
         ...task,
         title,
@@ -175,6 +195,7 @@ export class BoardService {
         priority: input.priority,
         executionTarget: Object.freeze({ ...input.executionTarget }),
         executionProfileId,
+        executionWorkspace: selectedWorkspace,
         stage: resetManualProgress ? "planned" : task.stage,
         blockedReason: resetManualProgress ? undefined : task.blockedReason,
         specRevision: specChanged ? task.specRevision + 1 : task.specRevision,

@@ -4,6 +4,7 @@ import type {
   AgentDefinition,
   CreateTaskInput,
   ExecutionTarget,
+  ExecutionWorkspacePreference,
   KanbanTask,
   Squad,
   TaskPriority,
@@ -68,6 +69,8 @@ export function TaskEditorDialog({
   const [executionKind, setExecutionKind] = useState<ExecutionTarget["kind"]>(task?.executionTarget.kind ?? "manual");
   const [executionId, setExecutionId] = useState(targetId(task?.executionTarget));
   const [executionProfileId, setExecutionProfileId] = useState<ExecutionProfileId>(task?.executionProfileId ?? "pi.rpc");
+  const [workspaceStrategy, setWorkspaceStrategy] = useState<ExecutionWorkspacePreference["strategy"]>(task?.executionWorkspace?.strategy ?? "current-folder");
+  const [workspaceBaseRef, setWorkspaceBaseRef] = useState(task?.executionWorkspace?.strategy === "isolated-worktree" ? task.executionWorkspace.baseRef : project.branch ?? "HEAD");
   const [error, setError] = useState("");
   const showAutomationChoices = automationEnabled || (task !== undefined && task.executionTarget.kind !== "manual");
   const executionTarget: ExecutionTarget = useMemo(() => executionKind === "manual"
@@ -97,6 +100,7 @@ export function TaskEditorDialog({
     snapshot: executionBackends,
     piExecutionEnabled,
   }), [executionBackends, executionTarget, piExecutionEnabled, project.branch, targetAgents]);
+  const isolatedWorkspaceAvailable = Boolean(project.branch) && targetAgents.some((agent) => agent.workspaceAccess === "write");
   const targetSignature = `${executionKind}:${executionId}`;
   const initialTargetSignature = useRef(targetSignature);
 
@@ -110,6 +114,10 @@ export function TaskEditorDialog({
       if (fallback) setExecutionProfileId(fallback.id);
     }
   }, [executionProfileId, profileOptions, targetSignature, task]);
+
+  useEffect(() => {
+    if (executionKind === "manual" || !isolatedWorkspaceAvailable) setWorkspaceStrategy("current-folder");
+  }, [executionKind, isolatedWorkspaceAvailable]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -129,11 +137,18 @@ export function TaskEditorDialog({
       setError(selectedProfile?.reason ?? "当前没有可用的执行环境");
       return;
     }
+    if (workspaceStrategy === "isolated-worktree" && !workspaceBaseRef.trim()) {
+      setError("请填写 isolated worktree 的 base ref");
+      return;
+    }
     const selectedProfileId = executionKind === "manual" ? undefined : executionProfileId;
+    const executionWorkspace: ExecutionWorkspacePreference = executionKind !== "manual" && workspaceStrategy === "isolated-worktree"
+      ? { strategy: "isolated-worktree", baseRef: workspaceBaseRef.trim() }
+      : { strategy: "current-folder" };
     setError("");
     try {
       if (task) {
-        await onUpdate({ taskId: task.id, title, description, acceptanceCriteria, priority, executionTarget, executionProfileId: selectedProfileId });
+        await onUpdate({ taskId: task.id, title, description, acceptanceCriteria, priority, executionTarget, executionProfileId: selectedProfileId, executionWorkspace });
       } else {
         await onCreate({
           title,
@@ -142,6 +157,7 @@ export function TaskEditorDialog({
           priority,
           executionTarget,
           executionProfileId: selectedProfileId,
+          executionWorkspace,
           projectPath: project.cwd,
           projectName: project.name,
           trusted: project.trusted,
@@ -253,6 +269,18 @@ export function TaskEditorDialog({
             <span>执行环境</span>
             <ExecutionProfilePicker options={profileOptions} value={executionProfileId} onChange={setExecutionProfileId} />
             <small>环境只决定实际 CLI；推进方式、任务生命周期和人工验收仍由 Stella 管理。</small>
+          </div>
+        )}
+
+        {executionKind !== "manual" && (
+          <div className="kanban-field">
+            <span>执行工作区</span>
+            <div className="execution-kind-picker" role="radiogroup" aria-label="执行工作区">
+              <button type="button" role="radio" aria-checked={workspaceStrategy === "current-folder"} className={workspaceStrategy === "current-folder" ? "is-selected" : ""} onClick={() => setWorkspaceStrategy("current-folder")}><Folder size={12} />当前目录</button>
+              <button type="button" role="radio" aria-checked={workspaceStrategy === "isolated-worktree"} className={workspaceStrategy === "isolated-worktree" ? "is-selected" : ""} disabled={!isolatedWorkspaceAvailable} onClick={() => setWorkspaceStrategy("isolated-worktree")}><GitBranch size={12} />独立 Worktree</button>
+            </div>
+            {workspaceStrategy === "isolated-worktree" && <input aria-label="Worktree base ref" value={workspaceBaseRef} onChange={(event) => setWorkspaceBaseRef(event.target.value)} placeholder={project.branch ?? "HEAD"} />}
+            <small>{isolatedWorkspaceAvailable ? "独立 Worktree 从明确 base ref 创建；失败、中断和待验收现场默认保留。" : "只有 Git 项目中的可写自动任务可以使用独立 Worktree。"}</small>
           </div>
         )}
 

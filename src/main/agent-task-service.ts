@@ -22,6 +22,8 @@ import {
   type BoardBootstrap,
   type BoardState,
   type CreateTaskCommentInput,
+  cloneExecutionWorkspacePlacement,
+  type ExecutionWorkspacePlacementSnapshot,
   type LaunchTeamTaskInput,
   type KanbanTask,
   type OrchestrationCatalog,
@@ -504,6 +506,43 @@ export class AgentTaskService {
     const agentTask = board.agentTasks.find((candidate) => candidate.id === agentTaskId);
     if (!agentTask) throw new Error(`认领后找不到 AgentTask: ${agentTaskId}`);
     return Object.freeze({ task: this.#task(board, agentTask.taskId), agentTask });
+  }
+
+  async recordWorkspacePlacement(
+    agentTaskId: string,
+    placement: ExecutionWorkspacePlacementSnapshot,
+  ): Promise<BoardBootstrap> {
+    const now = this.#now();
+    return this.#commit((current) => {
+      const agentTask = this.#agentTask(current, agentTaskId);
+      if (agentTask.status !== "queued") throw new Error(`AgentTask ${agentTaskId} 不在 queued 状态`);
+      if (agentTask.workspacePlacement) {
+        if (agentTask.workspacePlacement.strategy !== placement.strategy
+          || agentTask.workspacePlacement.resourceId !== placement.resourceId
+          || agentTask.workspacePlacement.cwd !== placement.cwd) {
+          throw new Error(`AgentTask ${agentTaskId} 已绑定另一个 Execution Workspace`);
+        }
+        return current;
+      }
+      const snapshot = cloneExecutionWorkspacePlacement(placement);
+      const location = snapshot?.strategy === "isolated-worktree"
+        ? `${snapshot.branch ?? "isolated worktree"} · ${snapshot.cwd}`
+        : snapshot?.cwd;
+      return {
+        ...current,
+        agentTasks: current.agentTasks.map((candidate) => candidate.id === agentTask.id
+          ? Object.freeze({ ...candidate, workspacePlacement: snapshot, updatedAt: now })
+          : candidate),
+        activities: [...current.activities, this.#activity(
+          agentTask.taskId,
+          "status",
+          `${agentTask.agentSnapshot.name}执行工作区已准备`,
+          location,
+          now,
+          agentTask.id,
+        )],
+      };
+    });
   }
 
   async recordWorkspaceWait(agentTaskId: string, blockingOwner: string): Promise<BoardBootstrap> {

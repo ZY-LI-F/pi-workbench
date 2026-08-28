@@ -20,7 +20,8 @@ import {
   type ExternalExecutionOrigin,
 } from "./external-execution";
 
-export const BOARD_SCHEMA_VERSION = 8 as const;
+export const BOARD_SCHEMA_VERSION = 9 as const;
+export const BOARD_SCHEMA_V8 = 8 as const;
 export const BOARD_SCHEMA_V7 = 7 as const;
 export const BOARD_SCHEMA_V6 = 6 as const;
 export const BOARD_SCHEMA_V5 = 5 as const;
@@ -158,6 +159,48 @@ export type ExecutionTarget =
 
 export type AutomatedExecutionTarget = Exclude<ExecutionTarget, { readonly kind: "manual" }>;
 
+export const EXECUTION_WORKSPACE_STRATEGIES = ["current-folder", "isolated-worktree"] as const;
+export type ExecutionWorkspaceStrategy = (typeof EXECUTION_WORKSPACE_STRATEGIES)[number];
+
+export type ExecutionWorkspacePreference =
+  | { readonly strategy: "current-folder" }
+  | { readonly strategy: "isolated-worktree"; readonly baseRef: string };
+
+export const EXECUTION_WORKSPACE_LIFECYCLES = ["retained", "cleanup-eligible", "cleaned", "cleanup-failed"] as const;
+export type ExecutionWorkspaceLifecycle = (typeof EXECUTION_WORKSPACE_LIFECYCLES)[number];
+
+export interface ExecutionWorkspacePlacementSnapshot {
+  readonly revision: 1;
+  readonly strategy: ExecutionWorkspaceStrategy;
+  readonly resourceId: string;
+  readonly projectPath: string;
+  readonly cwd: string;
+  readonly resourcePath?: string;
+  readonly baseRef?: string;
+  readonly branch?: string;
+  readonly ownership: "project" | "stella";
+  readonly lifecycle: ExecutionWorkspaceLifecycle;
+  readonly lifecycleError?: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+export const CURRENT_FOLDER_EXECUTION_WORKSPACE: ExecutionWorkspacePreference = Object.freeze({ strategy: "current-folder" });
+
+export function cloneExecutionWorkspacePreference(
+  value: ExecutionWorkspacePreference | undefined,
+): ExecutionWorkspacePreference {
+  return value?.strategy === "isolated-worktree"
+    ? Object.freeze({ strategy: "isolated-worktree", baseRef: value.baseRef })
+    : CURRENT_FOLDER_EXECUTION_WORKSPACE;
+}
+
+export function cloneExecutionWorkspacePlacement(
+  value: ExecutionWorkspacePlacementSnapshot | undefined,
+): ExecutionWorkspacePlacementSnapshot | undefined {
+  return value ? Object.freeze({ ...value }) : undefined;
+}
+
 export type ExecutionReference =
   | { readonly kind: "workflow"; readonly id: string; readonly attempt: number }
   | { readonly kind: "agent-task"; readonly id: string; readonly attempt: number };
@@ -171,6 +214,7 @@ export interface TaskSpecSnapshot {
   readonly priority: TaskPriority;
   readonly executionTarget: ExecutionTarget;
   readonly executionProfileId?: ExecutionProfileId;
+  readonly executionWorkspace?: ExecutionWorkspacePreference;
 }
 
 export interface KanbanTask {
@@ -184,6 +228,7 @@ export interface KanbanTask {
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
   readonly executionProfileId?: ExecutionProfileId;
+  readonly executionWorkspace?: ExecutionWorkspacePreference;
   readonly stage: TaskStage;
   /** Increases whenever user-editable execution requirements change. */
   readonly specRevision: number;
@@ -234,6 +279,7 @@ export interface WorkflowRun {
   readonly executionAttempt: number;
   readonly taskSpec: TaskSpecSnapshot;
   readonly executionProfile: ExecutionProfileSnapshot;
+  readonly workspacePlacement?: ExecutionWorkspacePlacementSnapshot;
   readonly workflow: WorkflowDefinition;
   readonly agents: readonly AgentDefinition[];
   readonly status: WorkflowRunStatus;
@@ -299,6 +345,7 @@ export interface AgentTask {
   readonly executionAttempt: number;
   readonly taskSpec: TaskSpecSnapshot;
   readonly executionProfile: ExecutionProfileSnapshot;
+  readonly workspacePlacement?: ExecutionWorkspacePlacementSnapshot;
   readonly agentSnapshot: AgentDefinition;
   readonly kind: AgentTaskKind;
   readonly status: AgentTaskStatus;
@@ -463,6 +510,7 @@ export interface CreateTaskInput {
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
   readonly executionProfileId?: ExecutionProfileId;
+  readonly executionWorkspace?: ExecutionWorkspacePreference;
   readonly sourceSession?: ExecutionSessionReference;
   readonly externalOrigin?: ExternalExecutionOrigin;
 }
@@ -475,6 +523,7 @@ export interface UpdateTaskInput {
   readonly priority: TaskPriority;
   readonly executionTarget: ExecutionTarget;
   readonly executionProfileId?: ExecutionProfileId;
+  readonly executionWorkspace?: ExecutionWorkspacePreference;
 }
 
 export interface CreateTaskCommentInput {
@@ -763,6 +812,41 @@ function assertExecutionReference(value: unknown, path: string): asserts value i
   assertPositiveInteger(value.attempt, `${path}.attempt`);
 }
 
+function assertExecutionWorkspacePreference(value: unknown, path: string): asserts value is ExecutionWorkspacePreference {
+  if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
+  assertOneOf(value.strategy, EXECUTION_WORKSPACE_STRATEGIES, `${path}.strategy`);
+  if (value.strategy === "isolated-worktree") assertString(value.baseRef, `${path}.baseRef`);
+  if (value.strategy === "current-folder" && value.baseRef !== undefined) throw new Error(`${path}.baseRef 只允许 isolated-worktree 使用`);
+}
+
+function assertExecutionWorkspacePlacement(value: unknown, path: string): asserts value is ExecutionWorkspacePlacementSnapshot {
+  if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
+  if (value.revision !== 1) throw new Error(`${path}.revision 必须为 1`);
+  assertOneOf(value.strategy, EXECUTION_WORKSPACE_STRATEGIES, `${path}.strategy`);
+  for (const key of ["resourceId", "projectPath", "cwd"] as const) assertString(value[key], `${path}.${key}`);
+  assertOptionalString(value.baseRef, `${path}.baseRef`);
+  assertOptionalString(value.branch, `${path}.branch`);
+  assertOptionalString(value.resourcePath, `${path}.resourcePath`);
+  assertOneOf(value.ownership, ["project", "stella"] as const, `${path}.ownership`);
+  assertOneOf(value.lifecycle, EXECUTION_WORKSPACE_LIFECYCLES, `${path}.lifecycle`);
+  assertOptionalString(value.lifecycleError, `${path}.lifecycleError`);
+  assertIsoDate(value.createdAt, `${path}.createdAt`);
+  assertIsoDate(value.updatedAt, `${path}.updatedAt`);
+  if (value.strategy === "isolated-worktree") {
+    if (value.ownership !== "stella") throw new Error(`${path}.ownership 必须为 stella`);
+    assertString(value.baseRef, `${path}.baseRef`);
+    assertString(value.branch, `${path}.branch`);
+    assertString(value.resourcePath, `${path}.resourcePath`);
+  } else {
+    if (value.ownership !== "project") throw new Error(`${path}.ownership 必须为 project`);
+    if (value.baseRef !== undefined || value.branch !== undefined || value.resourcePath !== undefined) {
+      throw new Error(`${path} 的 Git 字段只允许 isolated-worktree 使用`);
+    }
+  }
+  if (value.lifecycle === "cleanup-failed" && !value.lifecycleError) throw new Error(`${path}.lifecycleError 是 cleanup-failed 的必填字段`);
+  if (value.lifecycle !== "cleanup-failed" && value.lifecycleError !== undefined) throw new Error(`${path}.lifecycleError 只允许 cleanup-failed 使用`);
+}
+
 function assertTaskSpecSnapshot(value: unknown, path: string): asserts value is TaskSpecSnapshot {
   if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
   assertPositiveInteger(value.revision, `${path}.revision`);
@@ -772,7 +856,10 @@ function assertTaskSpecSnapshot(value: unknown, path: string): asserts value is 
   assertOneOf(value.priority, TASK_PRIORITIES, `${path}.priority`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
   if (value.executionProfileId !== undefined) assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
+  if (value.executionWorkspace !== undefined) assertExecutionWorkspacePreference(value.executionWorkspace, `${path}.executionWorkspace`);
   assertExecutionProfileTarget(value.executionTarget, value.executionProfileId as ExecutionProfileId | undefined, `${path}.executionProfileId`);
+  if ((value.executionTarget as ExecutionTarget).kind === "manual" && isRecord(value.executionWorkspace)
+    && value.executionWorkspace.strategy !== "current-folder") throw new Error(`${path}.executionWorkspace 手工任务只支持 current-folder`);
 }
 
 function assertTaskBase(value: Record<string, unknown>, path: string, requireSpecRevision = true): void {
@@ -799,7 +886,10 @@ function assertTask(value: unknown, path: string): asserts value is KanbanTask {
   assertOneOf(value.stage, TASK_STAGES, `${path}.stage`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
   if (value.executionProfileId !== undefined) assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
+  if (value.executionWorkspace !== undefined) assertExecutionWorkspacePreference(value.executionWorkspace, `${path}.executionWorkspace`);
   assertExecutionProfileTarget(value.executionTarget, value.executionProfileId as ExecutionProfileId | undefined, `${path}.executionProfileId`);
+  if ((value.executionTarget as ExecutionTarget).kind === "manual" && isRecord(value.executionWorkspace)
+    && value.executionWorkspace.strategy !== "current-folder") throw new Error(`${path}.executionWorkspace 手工任务只支持 current-folder`);
   if (value.activeRunId !== undefined && value.activeAgentTaskId !== undefined) {
     throw new Error(`${path} 不能同时拥有 activeRunId 和 activeAgentTaskId`);
   }
@@ -850,6 +940,7 @@ function assertRun(value: unknown, path: string): asserts value is WorkflowRun {
   assertPositiveInteger(value.executionAttempt, `${path}.executionAttempt`);
   assertTaskSpecSnapshot(value.taskSpec, `${path}.taskSpec`);
   assertExecutionProfileSnapshot(value.executionProfile, `${path}.executionProfile`);
+  if (value.workspacePlacement !== undefined) assertExecutionWorkspacePlacement(value.workspacePlacement, `${path}.workspacePlacement`);
   if (value.taskSpec.executionProfileId !== value.executionProfile.id) {
     throw new Error(`${path}.executionProfile 与任务规格 Profile 不匹配`);
   }
@@ -950,6 +1041,7 @@ function assertAgentTask(value: unknown, path: string): asserts value is AgentTa
   assertPositiveInteger(value.executionAttempt, `${path}.executionAttempt`);
   assertTaskSpecSnapshot(value.taskSpec, `${path}.taskSpec`);
   assertExecutionProfileSnapshot(value.executionProfile, `${path}.executionProfile`);
+  if (value.workspacePlacement !== undefined) assertExecutionWorkspacePlacement(value.workspacePlacement, `${path}.workspacePlacement`);
   if (value.taskSpec.executionProfileId !== value.executionProfile.id) {
     throw new Error(`${path}.executionProfile 与任务规格 Profile 不匹配`);
   }
@@ -1116,6 +1208,7 @@ function cloneTaskSpec(taskSpec: TaskSpecSnapshot): TaskSpecSnapshot {
   return Object.freeze({
     ...taskSpec,
     executionTarget: Object.freeze({ ...taskSpec.executionTarget }),
+    executionWorkspace: cloneExecutionWorkspacePreference(taskSpec.executionWorkspace),
   });
 }
 
@@ -1135,6 +1228,7 @@ function cloneRun(run: WorkflowRun): WorkflowRun {
     ...run,
     taskSpec: cloneTaskSpec(run.taskSpec),
     executionProfile: cloneExecutionProfileSnapshot(run.executionProfile),
+    workspacePlacement: cloneExecutionWorkspacePlacement(run.workspacePlacement),
     workflow: cloneWorkflow(run.workflow),
     agents: Object.freeze(run.agents.map(cloneAgent)),
     steps: Object.freeze(run.steps.map((step) => Object.freeze({
@@ -1235,7 +1329,12 @@ function validateReferences(state: BoardState): void {
   }
 
   for (const run of state.runs) {
-    if (!taskIds.has(run.taskId)) throw new Error(`流程实例 ${run.id} 引用了未知任务`);
+    const task = tasksById.get(run.taskId);
+    if (!task) throw new Error(`流程实例 ${run.id} 引用了未知任务`);
+    if (run.workspacePlacement && (run.workspacePlacement.projectPath !== task.projectPath
+      || run.workspacePlacement.strategy !== cloneExecutionWorkspacePreference(run.taskSpec.executionWorkspace).strategy)) {
+      throw new Error(`流程实例 ${run.id} 的 Execution Workspace identity 与任务快照不匹配`);
+    }
     if (run.executionProfile.id === "codex.review") throw new Error(`流程实例 ${run.id} 不能使用 codex.review`);
     if (run.status === "reported" && run.acceptance === "pending") {
       const awaiting = tasksById.get(run.taskId)?.awaitingReviewExecution;
@@ -1288,7 +1387,12 @@ function validateReferences(state: BoardState): void {
   }
 
   for (const agentTask of state.agentTasks) {
-    if (!taskIds.has(agentTask.taskId)) throw new Error(`AgentTask ${agentTask.id} 引用了未知任务`);
+    const task = tasksById.get(agentTask.taskId);
+    if (!task) throw new Error(`AgentTask ${agentTask.id} 引用了未知任务`);
+    if (agentTask.workspacePlacement && (agentTask.workspacePlacement.projectPath !== task.projectPath
+      || agentTask.workspacePlacement.strategy !== cloneExecutionWorkspacePreference(agentTask.taskSpec.executionWorkspace).strategy)) {
+      throw new Error(`AgentTask ${agentTask.id} 的 Execution Workspace identity 与任务快照不匹配`);
+    }
     if (!agentTask.parentAgentTaskId && agentTask.status === "reported" && agentTask.acceptance === "pending") {
       const awaiting = tasksById.get(agentTask.taskId)?.awaitingReviewExecution;
       if (awaiting?.kind !== "agent-task" || awaiting.id !== agentTask.id) {
@@ -1390,6 +1494,7 @@ export function parseBoardState(value: unknown): BoardState {
       ...task,
       executionAttempt: task.executionAttempt ?? 0,
       executionTarget: Object.freeze({ ...task.executionTarget }),
+      executionWorkspace: cloneExecutionWorkspacePreference(task.executionWorkspace),
       sourceSession: cloneExecutionSessionReference(task.sourceSession),
       externalOrigin: task.externalOrigin ? Object.freeze({
         ...task.externalOrigin,
@@ -1404,6 +1509,7 @@ export function parseBoardState(value: unknown): BoardState {
       ...agentTask,
       taskSpec: cloneTaskSpec(agentTask.taskSpec),
       executionProfile: cloneExecutionProfileSnapshot(agentTask.executionProfile),
+      workspacePlacement: cloneExecutionWorkspacePlacement(agentTask.workspacePlacement),
       session: cloneExecutionSessionReference(agentTask.session),
       agentSnapshot: cloneAgent(agentTask.agentSnapshot),
       executionPlan: cloneAgentExecutionPlan(agentTask.executionPlan),
@@ -1813,6 +1919,7 @@ function migrateTaskSpecV8(value: unknown): unknown {
   return {
     ...value,
     executionProfileId: automated ? (value.executionProfileId ?? "pi.rpc") : undefined,
+    executionWorkspace: value.executionWorkspace ?? CURRENT_FOLDER_EXECUTION_WORKSPACE,
   };
 }
 
@@ -1851,6 +1958,7 @@ export function migrateBoardStateV7(value: unknown): BoardState {
     return {
       ...task,
       executionProfileId: automated ? (candidate.executionProfileId ?? "pi.rpc") : undefined,
+      executionWorkspace: candidate.executionWorkspace ?? CURRENT_FOLDER_EXECUTION_WORKSPACE,
       sourceSession: candidate.sourceSession ?? piExecutionSession({
         sessionId: typeof sourcePiSessionId === "string" ? sourcePiSessionId : undefined,
         sessionPath: typeof sourcePiSessionPath === "string" ? sourcePiSessionPath : undefined,
@@ -1883,9 +1991,9 @@ export function migrateBoardStateV7(value: unknown): BoardState {
     return { ...candidate, executionProfileId: candidate.executionProfileId ?? "pi.rpc" };
   });
 
-  return parseBoardState({
+  return migrateBoardStateV8({
     ...value,
-    version: BOARD_SCHEMA_VERSION,
+    version: BOARD_SCHEMA_V8,
     tasks,
     runs,
     agentTasks,
@@ -1893,14 +2001,79 @@ export function migrateBoardStateV7(value: unknown): BoardState {
   });
 }
 
+function migratedCurrentFolderPlacement(
+  kind: "workflow" | "agent-task",
+  execution: Record<string, unknown>,
+  projectPath: string,
+): ExecutionWorkspacePlacementSnapshot {
+  const id = typeof execution.id === "string" ? execution.id : "unknown";
+  const timestamp = [execution.startedAt, execution.createdAt, execution.updatedAt, execution.completedAt]
+    .find((value): value is string => typeof value === "string" && Number.isFinite(Date.parse(value)))
+    ?? new Date(0).toISOString();
+  return Object.freeze({
+    revision: 1,
+    strategy: "current-folder",
+    resourceId: `migration-v9:${kind}:${id}`,
+    projectPath,
+    cwd: projectPath,
+    ownership: "project",
+    lifecycle: "retained",
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+}
+
+/** Adds immutable execution workspace preferences and placement snapshots. */
+export function migrateBoardStateV8(value: unknown): BoardState {
+  if (!isRecord(value)) throw new Error("schema v8 看板文件根节点必须是对象");
+  if (value.version !== BOARD_SCHEMA_V8) throw new Error(`无法从版本 ${String(value.version)} 迁移看板`);
+  const collections = ["tasks", "runs", "activities", "comments", "agentTasks", "customAgents", "squads", "autopilots", "autopilotRuns"] as const;
+  for (const collection of collections) {
+    if (!Array.isArray(value[collection])) throw new Error(`schema v8 看板文件缺少 ${collection} 数组`);
+  }
+  const tasks: Record<string, unknown>[] = (value.tasks as unknown[]).map((candidate, index): Record<string, unknown> => {
+    if (!isRecord(candidate)) throw new Error(`schema v8 tasks[${index}] 必须是对象`);
+    return { ...candidate, executionWorkspace: candidate.executionWorkspace ?? CURRENT_FOLDER_EXECUTION_WORKSPACE };
+  });
+  const taskById = new Map(tasks.flatMap((task) => typeof task.id === "string" ? [[task.id, task] as const] : []));
+  const runs = (value.runs as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v8 runs[${index}] 必须是对象`);
+    const task = typeof candidate.taskId === "string" ? taskById.get(candidate.taskId) : undefined;
+    const projectPath = task && typeof task.projectPath === "string" ? task.projectPath : "";
+    return {
+      ...candidate,
+      taskSpec: isRecord(candidate.taskSpec)
+        ? { ...candidate.taskSpec, executionWorkspace: candidate.taskSpec.executionWorkspace ?? CURRENT_FOLDER_EXECUTION_WORKSPACE }
+        : candidate.taskSpec,
+      workspacePlacement: candidate.workspacePlacement ?? migratedCurrentFolderPlacement("workflow", candidate, projectPath),
+    };
+  });
+  const agentTasks = (value.agentTasks as unknown[]).map((candidate, index) => {
+    if (!isRecord(candidate)) throw new Error(`schema v8 agentTasks[${index}] 必须是对象`);
+    const task = typeof candidate.taskId === "string" ? taskById.get(candidate.taskId) : undefined;
+    const projectPath = task && typeof task.projectPath === "string" ? task.projectPath : "";
+    return {
+      ...candidate,
+      taskSpec: isRecord(candidate.taskSpec)
+        ? { ...candidate.taskSpec, executionWorkspace: candidate.taskSpec.executionWorkspace ?? CURRENT_FOLDER_EXECUTION_WORKSPACE }
+        : candidate.taskSpec,
+      workspacePlacement: candidate.workspacePlacement ?? migratedCurrentFolderPlacement("agent-task", candidate, projectPath),
+    };
+  });
+  return parseBoardState({ ...value, version: BOARD_SCHEMA_VERSION, tasks, runs, agentTasks });
+}
+
 export interface ParsedBoardFile {
   readonly state: BoardState;
-  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6 | typeof BOARD_SCHEMA_V7;
+  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6 | typeof BOARD_SCHEMA_V7 | typeof BOARD_SCHEMA_V8;
 }
 
 export function parseBoardFile(value: unknown): ParsedBoardFile {
   if (!isRecord(value)) throw new Error("看板文件根节点必须是对象");
   if (value.version === BOARD_SCHEMA_VERSION) return Object.freeze({ state: parseBoardState(value) });
+  if (value.version === BOARD_SCHEMA_V8) {
+    return Object.freeze({ state: migrateBoardStateV8(value), migratedFrom: BOARD_SCHEMA_V8 });
+  }
   if (value.version === BOARD_SCHEMA_V7) {
     return Object.freeze({ state: migrateBoardStateV7(value), migratedFrom: BOARD_SCHEMA_V7 });
   }
