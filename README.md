@@ -322,7 +322,7 @@ Formal macOS signing must run on macOS. The repository includes [a GitHub Action
 
 ## Android Companion · v0.5.0
 
-The separate React/Vite/Capacitor Companion connects to the desktop-owned Board over Companion Protocol `1`. One phone can keep independent Mac and Windows Host connections active at the same time, aggregate their Attention/Tasks/Claude/Codex activity, or scope the UI and commands to one exact Host. It does not run Provider CLIs or own a second orchestration database. Each desktop must remain running. Direct LAN or Tailscale is the initial transport; detected Tailscale IPv4 addresses are preferred in new pairing offers, while Relay and reliable FCM notifications remain follow-up work.
+The separate React/Vite/Capacitor Companion connects to the desktop-owned Board over Companion Protocol `1`. One phone can keep independent Mac and Windows Host connections active at the same time, aggregate their Attention/Tasks/Claude/Codex activity, or scope the UI and commands to one exact Host. It includes an in-app QR scanner and keeps invalid-code, camera-permission, and unreachable-endpoint failures distinct. It does not run Provider CLIs or own a second orchestration database. Each desktop must remain running. Direct LAN or Tailscale is the initial transport; detected Tailscale IPv4 addresses are preferred in new pairing offers, while Relay and reliable FCM notifications remain follow-up work.
 
 ```bash
 npm ci --prefix apps/companion
@@ -333,7 +333,7 @@ npm run companion:apk:debug
 npm run companion:apk:release
 ```
 
-The signed script produces `release/Stella-Companion-0.5.0-android-vc6.apk` and `release/SHA256SUMS-android.txt`. Product version, Android versionCode, and wire protocol are independent. Tag builds use the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` GitHub Secrets; no signing key is committed. See [the Companion build and AVD guide](apps/companion/README.md) and [the v0.5.0 release acceptance record](docs/testing/stella-v0.5.0-release-acceptance-2026-08-29.md).
+With `STELLA_ANDROID_VERSION_CODE=7`, the signed script produces `release/Stella-Companion-0.5.0-android-vc7.apk` and `release/SHA256SUMS-android.txt`. Product version, Android versionCode, and wire protocol are independent. Tag builds use the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` GitHub Secrets; no signing key is committed. See [the Companion build and AVD guide](apps/companion/README.md) and [the QR pairing acceptance record](docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md).
 
 ## Verification
 
@@ -344,7 +344,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic desktop suite contains **106 Vitest files and 462 tests**; the Companion adds **13 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, multi-Host migration/routing, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
+The current deterministic desktop suite contains **106 Vitest files and 462 tests**; the Companion adds **4 files and 18 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, multi-Host migration/routing, native QR scan result handling, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 

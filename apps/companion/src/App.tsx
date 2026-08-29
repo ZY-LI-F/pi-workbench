@@ -18,6 +18,7 @@ import {
   CompanionHostFleet,
   type CompanionFleetState,
 } from "./companion-host-fleet";
+import { companionPairingScanner } from "./companion-pairing-scanner";
 import { companionFleetStorage } from "./companion-storage";
 
 const fleet = new CompanionHostFleet({ storage: companionFleetStorage });
@@ -303,6 +304,7 @@ export function App() {
   const [pairingUri, setPairingUri] = useState("");
   const [pairingError, setPairingError] = useState<string>();
   const [pendingHostId, setPendingHostId] = useState<string>();
+  const [scanning, setScanning] = useState(false);
   const [addingHost, setAddingHost] = useState(false);
   const [hostScope, setHostScope] = useState<string>(ALL_HOSTS);
   const [tab, setTab] = useState<"attention" | "activity">("attention");
@@ -320,6 +322,22 @@ export function App() {
       setPairingError(cause instanceof Error ? cause.message : String(cause));
     }
   }, []);
+
+  const scanAndConnect = useCallback(async () => {
+    setPairingError(undefined);
+    setScanning(true);
+    try {
+      const value = await companionPairingScanner.scan();
+      if (!value) return;
+      setPairingUri(value);
+      setAddingHost(true);
+      await connect(value);
+    } catch (cause) {
+      setPairingError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setScanning(false);
+    }
+  }, [connect]);
 
   useEffect(() => {
     const unsubscribe = fleet.subscribe(setFleetState);
@@ -462,9 +480,11 @@ export function App() {
         <section className="pairing-card">
           <small>PAIR WITH DESKTOP</small>
           <h2>{hosts.length > 0 ? "添加另一台电脑" : "连接你的 Stella"}</h2>
-          <p>Mac、Windows 和手机登录同一个 Tailscale 网络后，在目标电脑的“偏好设置 → Android Companion”生成配对码。每台电脑只需配对一次。</p>
+          <p>Mac、Windows 和手机登录同一个 Tailscale 网络后，在目标电脑的“偏好设置 → Android Companion”生成配对码并直接扫描。每台电脑只需配对一次。</p>
+          <button type="button" className="pairing-scan" disabled={scanning || pairing} onClick={() => void scanAndConnect()}>{scanning ? "正在打开相机…" : pairing ? "正在配对…" : "▣ 扫码配对"}</button>
+          <div className="pairing-divider"><span>或粘贴配对链接</span></div>
           <textarea aria-label="Companion 配对链接" value={pairingUri} onChange={(event) => setPairingUri(event.target.value)} rows={4} placeholder="stella://pair?endpoint=…" />
-          <div className="pairing-actions"><button type="button" disabled={!pairingUri.trim() || pairing} onClick={() => void connect(pairingUri)}>{pairing ? "正在配对…" : "连接这台电脑"}</button>{hosts.length > 0 && <button type="button" className="is-secondary" disabled={pairing} onClick={() => { setAddingHost(false); setPairingUri(""); setPairingError(undefined); }}>取消</button>}</div>
+          <div className="pairing-actions"><button type="button" className="is-secondary" disabled={!pairingUri.trim() || scanning || pairing} onClick={() => void connect(pairingUri)}>连接粘贴链接</button>{hosts.length > 0 && <button type="button" className="is-secondary" disabled={scanning || pairing} onClick={() => { setAddingHost(false); setPairingUri(""); setPairingError(undefined); }}>取消</button>}</div>
         </section>
       )}
 

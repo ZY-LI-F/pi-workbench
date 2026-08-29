@@ -48,6 +48,9 @@ button { color: inherit; font: inherit; }
 .pairing-card textarea { width: 100%; resize: vertical; padding: 11px; border: 1px solid #2c3a50; border-radius: 12px; outline: none; color: #dce7f8; background: #080e17; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pairing-card textarea:focus { border-color: #61dcb0; box-shadow: 0 0 0 3px #49d6a51a; }
 .pairing-card button { min-height: 42px; border: 0; border-radius: 12px; color: #07130f; background: #7ce4bc; font-size: 12px; font-weight: 800; }
+.pairing-card button.pairing-scan { min-height: 50px; font-size: 14px; box-shadow: 0 10px 28px #42dca426; }
+.pairing-divider { display: flex; align-items: center; gap: 9px; color: #65748a; font-size: 9px; }
+.pairing-divider::before, .pairing-divider::after { content: ""; height: 1px; flex: 1; background: #202c3e; }
 .pairing-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
 .pairing-actions button.is-secondary { min-width: 72px; border: 1px solid #2c3a50; color: #9ba9be; background: #111827; }
 .pairing-card button:disabled, button:disabled { opacity: .5; }

@@ -124,6 +124,33 @@ async function flush() {
 }
 
 describe("CompanionWebSocketClient", () => {
+  it("distinguishes an unreachable desktop from an invalid QR code", async () => {
+    const storage = new MemoryStorage();
+    const socket = new FakeSocket();
+    const client = new CompanionWebSocketClient({
+      storage,
+      socket: () => socket,
+      schedule: () => 1,
+      cancelScheduled: () => undefined,
+    });
+    const uri = formatCompanionPairingUri({
+      endpoint: "ws://100.64.0.10:43821/companion",
+      offerId: "offer-1",
+      offerSecret: "offer-secret",
+      hostId: HOST.id,
+      protocolVersion: COMPANION_PROTOCOL_VERSION,
+      minimumProtocolVersion: COMPANION_MINIMUM_PROTOCOL_VERSION,
+    });
+
+    await client.pair(uri, "Pixel");
+    socket.close();
+
+    expect(client.state()).toMatchObject({
+      connection: "unpaired",
+      error: expect.stringContaining("二维码有效，但无法连接桌面 Stella"),
+    });
+  });
+
   it("pairs, persists identity, replaces a sequence gap, and reconnects from last-good state", async () => {
     const storage = new MemoryStorage();
     const sockets: FakeSocket[] = [];

@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def stellaAndroidVersionCode = Integer.parseInt(System.getenv('STELLA_ANDROID_VERSION_CODE') ?: '6')
+def stellaAndroidVersionCode = Integer.parseInt(System.getenv('STELLA_ANDROID_VERSION_CODE') ?: '7')
 def stellaReleaseKeystore = System.getenv('STELLA_ANDROID_KEYSTORE')
 def stellaReleaseStorePassword = System.getenv('STELLA_ANDROID_KEYSTORE_PASSWORD')
 def stellaReleaseKeyAlias = System.getenv('STELLA_ANDROID_KEY_ALIAS')

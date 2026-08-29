@@ -1,6 +1,6 @@
 # Stella Companion 0.5.0
 
-独立于 Electron 桌面应用的 Capacitor Android workspace。App 通过 Companion Protocol `1` 与桌面 Stella 配对，读取真实 Agent Projection，并在断线时保留带 stale 标记的 last-good snapshot。桌面仍是 Board 和执行状态的唯一事实源；Android versionCode 独立于产品版本，首个发布候选为 `6`。
+独立于 Electron 桌面应用的 Capacitor Android workspace。App 通过 Companion Protocol `1` 与桌面 Stella 配对，读取真实 Agent Projection，并在断线时保留带 stale 标记的 last-good snapshot。桌面仍是 Board 和执行状态的唯一事实源；Android versionCode 独立于产品版本，当前扫码构建为 `7`，最低支持 Android 8（API 26）。
 
 ## 开发与 debug APK
 
@@ -23,7 +23,9 @@ Companion 0.5.0 可以保存多台桌面 Host，并为每台 Host 同时维护�
 1. 在 Android、Mac、Windows 上安装 Tailscale，并登录同一个 tailnet。
 2. 在 Mac 与 Windows 分别启动 Stella；两台桌面都必须保持运行。
 3. 在每台桌面的“偏好设置 → Android Companion”检查“首选地址”，Tailscale 的 `100.64.0.0/10` 地址会自动排在 LAN 地址之前。
-4. 依次为 Mac、Windows 生成一次性配对码并在同一部手机上完成配对。
+4. 依次为 Mac、Windows 生成一次性配对码，在 Companion 点击“扫码配对”并允许相机权限。
+
+扫码器只接受完整的 `stella://pair` offer。取消扫码不会显示错误；相机权限被拒、二维码内容无效、二维码有效但桌面 endpoint 不可达会分别提示。后两种情况不是同一个问题：跨 Wi-Fi 时先确认三台设备都出现在同一个 [Tailscale Machines](https://login.tailscale.com/admin/machines) 列表，且桌面配对页的首选地址为 `100.x` 或 MagicDNS。
 
 如果需要固定使用 Tailscale MagicDNS 名称或指定地址，可在启动 Stella 前设置：
 
@@ -42,14 +44,14 @@ export STELLA_ANDROID_KEYSTORE=/absolute/path/to/release.jks
 export STELLA_ANDROID_KEYSTORE_PASSWORD='...'
 export STELLA_ANDROID_KEY_ALIAS='...'
 export STELLA_ANDROID_KEY_PASSWORD='...'
-export STELLA_ANDROID_VERSION_CODE=6
+export STELLA_ANDROID_VERSION_CODE=7
 npm run companion:apk:release
 ```
 
 脚本会执行 Capacitor sync、`assembleRelease`、`apksigner verify`，并生成：
 
 ```text
-release/Stella-Companion-0.5.0-android-vc6.apk
+release/Stella-Companion-0.5.0-android-vc7.apk
 release/SHA256SUMS-android.txt
 ```
 
@@ -63,7 +65,7 @@ release/SHA256SUMS-android.txt
 npm run companion:host:mock
 ```
 
-该命令使用真实协议、配对存储、幂等命令回执和 WebSocket Gateway，只把 Board 数据源替换为可预测的验收快照。它会打印一个 `stella://pair?...` 配对链接；在 Android App 中粘贴链接，或使用桌面 Stella 设置页生成的二维码完成配对。Android 模拟器默认通过 `10.0.2.2:43822` 连接宿主机；可用 `STELLA_COMPANION_ACCEPTANCE_ADDRESS` 和 `STELLA_COMPANION_ACCEPTANCE_PORT` 覆盖。
+该命令使用真实协议、配对存储、幂等命令回执和 WebSocket Gateway，只把 Board 数据源替换为可预测的验收快照。它会打印一个 `stella://pair?...` 配对链接；在 Android App 中粘贴链接，或点击“扫码配对”扫描桌面 Stella 设置页生成的二维码。Android 模拟器默认通过 `10.0.2.2:43822` 连接宿主机；可用 `STELLA_COMPANION_ACCEPTANCE_ADDRESS` 和 `STELLA_COMPANION_ACCEPTANCE_PORT` 覆盖。
 
 Agent 卡片可打开 Task Room。消息必须先查看效果预览再提交；普通消息、Agent mention 和等待中的 Coordinator 回复都交给桌面既有规则处理。人工关卡、执行验收与精确 execution 中止同样通过 typed command 执行，破坏性决定会再次确认。连接中断前未收到结果的命令会显示“结果未知”，并可使用同一 idempotency key 查询或重试。
 

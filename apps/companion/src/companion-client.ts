@@ -298,7 +298,10 @@ export class CompanionWebSocketClient {
       this.#failPendingRequests("连接在桌面返回结果前中断");
       if (this.#stopped || this.#blocked) return;
       if (!this.#saved) {
-        this.#setState({ connection: "unpaired", error: this.#state.error ?? "配对连接已关闭" });
+        this.#setState({
+          connection: "unpaired",
+          error: this.#state.error ?? "二维码有效，但无法连接桌面 Stella。请确认桌面应用仍在运行；跨 Wi-Fi 时，手机和电脑须连接同一个 Tailscale Tailnet，且配对地址应为 100.x 或 MagicDNS。",
+        });
         return;
       }
       this.#setState({
