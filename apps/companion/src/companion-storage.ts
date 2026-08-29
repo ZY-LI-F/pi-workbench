@@ -1,17 +1,18 @@
 import { Preferences } from "@capacitor/preferences";
-import type { CompanionClientStorage } from "./companion-client";
+import type { CompanionFleetStorage } from "./companion-host-fleet";
 
-const HOST_KEY = "stella.companion.host.v1";
+const LEGACY_HOST_KEY = "stella.companion.host.v1";
+const HOST_FLEET_KEY = "stella.companion.hosts.v2";
 
-export const companionStorage: CompanionClientStorage = Object.freeze({
+export const companionFleetStorage: CompanionFleetStorage = Object.freeze({
   async get() {
-    const result = await Preferences.get({ key: HOST_KEY });
-    return result.value ?? undefined;
+    const current = await Preferences.get({ key: HOST_FLEET_KEY });
+    if (current.value) return current.value;
+    const legacy = await Preferences.get({ key: LEGACY_HOST_KEY });
+    return legacy.value ?? undefined;
   },
   async set(value: string) {
-    await Preferences.set({ key: HOST_KEY, value });
-  },
-  async remove() {
-    await Preferences.remove({ key: HOST_KEY });
+    await Preferences.set({ key: HOST_FLEET_KEY, value });
+    await Preferences.remove({ key: LEGACY_HOST_KEY });
   },
 });

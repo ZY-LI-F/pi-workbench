@@ -12,12 +12,16 @@ import type {
 } from "../../../src/shared/companion-protocol";
 import {
   CompanionCommandIndeterminateError,
-  CompanionWebSocketClient,
   type CompanionClientState,
 } from "./companion-client";
-import { companionStorage } from "./companion-storage";
+import {
+  CompanionHostFleet,
+  type CompanionFleetState,
+} from "./companion-host-fleet";
+import { companionFleetStorage } from "./companion-storage";
 
-const client = new CompanionWebSocketClient({ storage: companionStorage });
+const fleet = new CompanionHostFleet({ storage: companionFleetStorage });
+const ALL_HOSTS = "__all_hosts__";
 
 const BUCKET_LABEL: Readonly<Record<CompanionAgentSummary["bucket"], string>> = Object.freeze({
   attention: "需要处理",
@@ -64,7 +68,9 @@ function actionLabel(action: CompanionTaskAction): string {
   return "当前执行可中止";
 }
 
-function TaskRoom({ taskId, sequence, online, onClose }: {
+function TaskRoom({ hostId, hostName, taskId, sequence, online, onClose }: {
+  readonly hostId: string;
+  readonly hostName: string;
   readonly taskId: string;
   readonly sequence: number;
   readonly online: boolean;
@@ -83,14 +89,14 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
     if (!online) return;
     setLoading(true);
     try {
-      setDetail(await client.getTaskDetail(taskId));
+      setDetail(await fleet.getTaskDetail(hostId, taskId));
       setError(undefined);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
       setLoading(false);
     }
-  }, [online, taskId]);
+  }, [hostId, online, taskId]);
 
   useEffect(() => { void refresh(); }, [refresh, sequence]);
 
@@ -101,7 +107,7 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
     }
     setNotice({ state: "submitting", message: "桌面正在处理…", command });
     try {
-      const result: CompanionCommandResult = await client.executeCommand(command);
+      const result: CompanionCommandResult = await fleet.executeCommand(hostId, command);
       setNotice({
         state: result.status,
         message: result.message,
@@ -124,7 +130,7 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
         ...(indeterminate ? { command } : {}),
       });
     }
-  }, [online, refresh]);
+  }, [hostId, online, refresh]);
 
   const previewMessage = async () => {
     const command = Object.freeze({
@@ -135,7 +141,7 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
       dispatchMentions: true,
     });
     try {
-      const preview = await client.previewCommand(command);
+      const preview = await fleet.previewCommand(hostId, command);
       setMessageCommand(command);
       setMessagePreview(preview);
       setNotice(undefined);
@@ -148,7 +154,7 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
 
   const prepareAction = async (command: CompanionCommand) => {
     try {
-      const preview = await client.previewCommand(command);
+      const preview = await fleet.previewCommand(hostId, command);
       if (preview.requiresConfirmation && !window.confirm(`${preview.summary}\n\n确认继续？`)) return;
       await execute(command);
     } catch (cause) {
@@ -183,7 +189,7 @@ function TaskRoom({ taskId, sequence, online, onClose }: {
   };
 
   return <section className="task-room" role="dialog" aria-modal="true" aria-label="Task Room">
-    <header className="task-room__top"><button type="button" onClick={onClose}>←</button><div><small>TASK ROOM</small><h2>{detail?.task.title ?? "加载任务…"}</h2></div><button type="button" disabled={!online || loading} onClick={() => void refresh()}>刷新</button></header>
+    <header className="task-room__top"><button type="button" onClick={onClose}>←</button><div><small>TASK ROOM · {hostName}</small><h2>{detail?.task.title ?? "加载任务…"}</h2></div><button type="button" disabled={!online || loading} onClick={() => void refresh()}>刷新</button></header>
     {!online && <aside className="stale-banner"><b>Task Room 离线</b><span>可以阅读已加载内容，但不会排队或伪装命令已发送。</span></aside>}
     {error && <aside className="error-banner"><b>读取失败</b><span>{error}</span></aside>}
     {notice && <aside className={`command-notice is-${notice.state}`}><b>{notice.state === "accepted" ? "已接受" : notice.state === "indeterminate" ? "结果未知" : notice.state === "submitting" ? "提交中" : notice.state === "offline" ? "未发送" : "已拒绝"}</b><span>{notice.message}</span>{notice.command && notice.state === "indeterminate" && online && <button type="button" onClick={() => void execute(notice.command as CompanionCommand)}>使用同一 idempotency key 查询/重试</button>}</aside>}
@@ -210,26 +216,52 @@ const EXTERNAL_STATE_LABEL: Readonly<Record<CompanionExternalExecutionReference[
   unknown: "未知",
 });
 
-function ExternalActivity({ state, onOpenTask }: {
+interface HostContext {
+  readonly hostId: string;
+  readonly hostName: string;
   readonly state: CompanionClientState;
-  readonly onOpenTask: (taskId: string) => void;
+}
+
+interface TaskSelection {
+  readonly hostId: string;
+  readonly taskId: string;
+}
+
+interface ExternalAgentEntry extends HostContext {
+  readonly agent: CompanionAgentSummary;
+}
+
+function ExternalActivity({ hosts, onOpenTask }: {
+  readonly hosts: readonly HostContext[];
+  readonly onOpenTask: (selection: TaskSelection) => void;
 }) {
-  const snapshot = state.snapshot;
-  const externalAgents = useMemo(() => (snapshot?.agents ?? []).filter((agent) => agent.kind === "external" && agent.external), [snapshot]);
+  const externalAgents = useMemo<readonly ExternalAgentEntry[]>(() => hosts.flatMap((host) =>
+    (host.state.snapshot?.agents ?? [])
+      .filter((agent) => agent.kind === "external" && agent.external)
+      .map((agent) => Object.freeze({ ...host, agent }))), [hosts]);
   const [source, setSource] = useState<CompanionExternalExecutionReference["sourceId"] | "all">("all");
   const [project, setProject] = useState("all");
   const [executionState, setExecutionState] = useState<CompanionExternalExecutionReference["state"] | "all">("all");
   const [details, setDetails] = useState<Readonly<Record<string, CompanionExternalExecutionDetail>>>(Object.freeze({}));
   const [loadingDetail, setLoadingDetail] = useState<string>();
   const [error, setError] = useState<string>();
-  const projects = useMemo(() => [...new Set(externalAgents.map((agent) => agent.projectPath))].sort(), [externalAgents]);
+  const projects = useMemo(() => [...new Set(externalAgents.map(({ agent }) => agent.projectPath))].sort(), [externalAgents]);
+  const sources = useMemo(() => {
+    const labels = new Map<CompanionExternalExecutionReference["sourceId"], string>();
+    for (const host of hosts) {
+      for (const item of host.state.snapshot?.externalSources ?? []) {
+        if (!labels.has(item.id)) labels.set(item.id, item.label);
+      }
+    }
+    return [...labels.entries()];
+  }, [hosts]);
   const visible = externalAgents
-    .filter((agent) => source === "all" || agent.external?.sourceId === source)
-    .filter((agent) => project === "all" || agent.projectPath === project)
-    .filter((agent) => executionState === "all" || agent.external?.state === executionState);
+    .filter(({ agent }) => source === "all" || agent.external?.sourceId === source)
+    .filter(({ agent }) => project === "all" || agent.projectPath === project)
+    .filter(({ agent }) => executionState === "all" || agent.external?.state === executionState);
 
-  const loadDetail = async (external: CompanionExternalExecutionReference) => {
-    const key = `${external.sourceId}:${external.externalId}`;
+  const loadDetail = async (hostId: string, external: CompanionExternalExecutionReference) => {
+    const key = `${hostId}:${external.sourceId}:${external.externalId}`;
     if (details[key]) {
       setDetails((current) => {
         const next = { ...current };
@@ -241,7 +273,7 @@ function ExternalActivity({ state, onOpenTask }: {
     setLoadingDetail(key);
     setError(undefined);
     try {
-      const detail = await client.getExternalExecutionDetail(external.sourceId, external.externalId);
+      const detail = await fleet.getExternalExecutionDetail(hostId, external.sourceId, external.externalId);
       setDetails((current) => Object.freeze({ ...current, [key]: detail }));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
@@ -251,60 +283,154 @@ function ExternalActivity({ state, onOpenTask }: {
   };
 
   return <section className="external-activity">
-    <header><div><small>EXTERNAL EXECUTIONS</small><h2>Claude / Codex 只读活动</h2><p>状态由桌面 Source 读取；手机不会运行 CLI，也不显示伪造的回复或 continue 控件。</p></div></header>
-    <div className="external-filters"><label>来源<select value={source} onChange={(event) => setSource(event.target.value as typeof source)}><option value="all">全部来源</option>{snapshot?.externalSources?.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label><label>项目<select value={project} onChange={(event) => setProject(event.target.value)}><option value="all">全部项目</option>{projects.map((path) => <option value={path} key={path}>{path}</option>)}</select></label><label>状态<select value={executionState} onChange={(event) => setExecutionState(event.target.value as typeof executionState)}><option value="all">全部状态</option>{Object.entries(EXTERNAL_STATE_LABEL).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
-    {snapshot?.externalSources
-      ?.filter((item) => source === "all" || item.id === source)
-      .map((item) => item.state !== "ready" || item.stale ? <aside className={`external-source-state is-${item.state}`} key={item.id}><b>{item.label} · {item.stale ? "Last good" : item.state}</b><span>{item.stale ? `保留上次成功快照${item.lastSuccessfulAt ? ` · ${relativeTime(item.lastSuccessfulAt)}` : ""}` : item.error}</span>{item.stale && item.error && <small>{item.error}</small>}</aside> : null)}
+    <header><div><small>EXTERNAL EXECUTIONS</small><h2>Claude / Codex 只读活动</h2><p>状态由各台桌面的 Source 读取；手机不会运行 CLI，也不显示伪造的回复或 continue 控件。</p></div></header>
+    <div className="external-filters"><label>来源<select value={source} onChange={(event) => setSource(event.target.value as typeof source)}><option value="all">全部来源</option>{sources.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>项目<select value={project} onChange={(event) => setProject(event.target.value)}><option value="all">全部项目</option>{projects.map((path) => <option value={path} key={path}>{path}</option>)}</select></label><label>状态<select value={executionState} onChange={(event) => setExecutionState(event.target.value as typeof executionState)}><option value="all">全部状态</option>{Object.entries(EXTERNAL_STATE_LABEL).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label></div>
+    {hosts.flatMap((host) => (host.state.snapshot?.externalSources ?? [])
+      .filter((item) => source === "all" || item.id === source)
+      .map((item) => item.state !== "ready" || item.stale ? <aside className={`external-source-state is-${item.state}`} key={`${host.hostId}:${item.id}`}><b>{host.hostName} · {item.label} · {item.stale ? "Last good" : item.state}</b><span>{item.stale ? `保留上次成功快照${item.lastSuccessfulAt ? ` · ${relativeTime(item.lastSuccessfulAt)}` : ""}` : item.error}</span>{item.stale && item.error && <small>{item.error}</small>}</aside> : null))}
     {error && <aside className="error-banner"><b>外部详情读取失败</b><span>{error}</span></aside>}
-    <div className="external-list">{visible.map((agent) => {
+    <div className="external-list">{visible.map(({ hostId, hostName, state, agent }) => {
       const external = agent.external as CompanionExternalExecutionReference;
-      const key = `${external.sourceId}:${external.externalId}`;
+      const key = `${hostId}:${external.sourceId}:${external.externalId}`;
       const detail = details[key];
-      return <article className={`external-card is-${external.state}`} key={agent.id}><header><span>{agent.sourceLabel ?? external.sourceId}</span><em>{EXTERNAL_STATE_LABEL[external.state]}</em></header><h3>{agent.title}</h3>{agent.summary && <p>{agent.summary}</p>}<dl><div><dt>项目</dt><dd>{agent.projectPath}</dd></div><div><dt>Session</dt><dd>{external.nativeId}</dd></div>{external.parentExternalId && <div><dt>Parent</dt><dd>{external.parentExternalId.slice(0, 16)}</dd></div>}<div><dt>更新</dt><dd>{relativeTime(agent.updatedAt)}</dd></div></dl>{agent.freshness?.stale && <aside>该 Source 当前 stale，正在显示 last-good 状态。</aside>}<footer>{external.association && <button type="button" onClick={() => onOpenTask(external.association?.taskId ?? "")}>打开{external.association.relation === "imported" ? "已导入" : "受管"} Task</button>}{external.detailsAvailable && <button type="button" disabled={state.connection !== "online" || loadingDetail === key} onClick={() => void loadDetail(external)}>{loadingDetail === key ? "读取中…" : detail ? "收起只读详情" : "查看只读详情"}</button>}<span>只读</span></footer>{detail && <section className="external-detail">{detail.turns.map((turn) => <article key={turn.id}><header><b>{turn.status}</b><time>{turn.completedAt ? relativeTime(turn.completedAt) : turn.startedAt ? relativeTime(turn.startedAt) : ""}</time></header>{turn.items.map((item) => <div key={item.id}><strong>{item.label}</strong>{item.status && <em>{item.status}</em>}{item.text && <pre>{item.text}</pre>}</div>)}</article>)}{detail.turns.length === 0 && <p>该 execution 暂无可显示的记录。</p>}</section>}</article>;
+      return <article className={`external-card is-${external.state}`} key={`${hostId}:${agent.id}`}><header><span>{hostName} · {agent.sourceLabel ?? external.sourceId}</span><em>{EXTERNAL_STATE_LABEL[external.state]}</em></header><h3>{agent.title}</h3>{agent.summary && <p>{agent.summary}</p>}<dl><div><dt>电脑</dt><dd>{hostName}</dd></div><div><dt>项目</dt><dd>{agent.projectPath}</dd></div><div><dt>Session</dt><dd>{external.nativeId}</dd></div>{external.parentExternalId && <div><dt>Parent</dt><dd>{external.parentExternalId.slice(0, 16)}</dd></div>}<div><dt>更新</dt><dd>{relativeTime(agent.updatedAt)}</dd></div></dl>{agent.freshness?.stale && <aside>该 Source 当前 stale，正在显示 last-good 状态。</aside>}<footer>{external.association && <button type="button" onClick={() => onOpenTask({ hostId, taskId: external.association?.taskId ?? "" })}>打开{external.association.relation === "imported" ? "已导入" : "受管"} Task</button>}{external.detailsAvailable && <button type="button" disabled={state.connection !== "online" || loadingDetail === key} onClick={() => void loadDetail(hostId, external)}>{loadingDetail === key ? "读取中…" : detail ? "收起只读详情" : "查看只读详情"}</button>}<span>只读</span></footer>{detail && <section className="external-detail">{detail.turns.map((turn) => <article key={turn.id}><header><b>{turn.status}</b><time>{turn.completedAt ? relativeTime(turn.completedAt) : turn.startedAt ? relativeTime(turn.startedAt) : ""}</time></header>{turn.items.map((item) => <div key={item.id}><strong>{item.label}</strong>{item.status && <em>{item.status}</em>}{item.text && <pre>{item.text}</pre>}</div>)}</article>)}{detail.turns.length === 0 && <p>该 execution 暂无可显示的记录。</p>}</section>}</article>;
     })}{visible.length === 0 && <div className="empty-state"><div>◌</div><strong>当前筛选没有外部活动</strong><p>Source 尚未刷新、CLI 当前没有任务，或关联的 managed session 已在统一 Agent 视图中去重。</p></div>}</div>
   </section>;
 }
 
 export function App() {
-  const [state, setState] = useState<CompanionClientState>(() => client.state());
+  const [fleetState, setFleetState] = useState<CompanionFleetState>(() => fleet.state());
   const [pairingUri, setPairingUri] = useState("");
   const [pairingError, setPairingError] = useState<string>();
+  const [pendingHostId, setPendingHostId] = useState<string>();
+  const [addingHost, setAddingHost] = useState(false);
+  const [hostScope, setHostScope] = useState<string>(ALL_HOSTS);
   const [tab, setTab] = useState<"attention" | "activity">("attention");
   const [mainView, setMainView] = useState<"agents" | "external">("agents");
-  const [taskRoomId, setTaskRoomId] = useState<string>();
+  const [taskRoom, setTaskRoom] = useState<TaskSelection>();
+
+  const connect = useCallback(async (value: string) => {
+    setPairingError(undefined);
+    try {
+      await fleet.start();
+      const hostId = await fleet.pair(value, "Android Companion");
+      setPendingHostId(hostId);
+    } catch (cause) {
+      setPendingHostId(undefined);
+      setPairingError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }, []);
+
   useEffect(() => {
-    const unsubscribe = client.subscribe(setState);
+    const unsubscribe = fleet.subscribe(setFleetState);
+    let active = true;
     let handledPairUrl: string | undefined;
     const pairUrl = (value: string | undefined) => {
-      if (!value?.startsWith("stella://pair") || value === handledPairUrl) return;
+      if (!active || !value?.startsWith("stella://pair") || value === handledPairUrl) return;
       handledPairUrl = value;
       setPairingUri(value);
       setPairingError(undefined);
-      void client.pair(value, "Android Companion").catch((cause: unknown) => {
-        setPairingError(cause instanceof Error ? cause.message : String(cause));
+      setAddingHost(true);
+      void fleet.start().then(() => {
+        if (active) void connect(value);
+      }).catch((cause: unknown) => {
+        if (active) setPairingError(cause instanceof Error ? cause.message : String(cause));
       });
     };
-    void client.start();
+    void fleet.start().catch((cause: unknown) => {
+      if (active) setPairingError(cause instanceof Error ? cause.message : String(cause));
+    });
     let removeUrlListener: (() => Promise<void>) | undefined;
-    void CapacitorApp.addListener("appUrlOpen", ({ url }) => pairUrl(url)).then((handle) => { removeUrlListener = () => handle.remove(); });
+    void CapacitorApp.addListener("appUrlOpen", ({ url }) => pairUrl(url)).then((handle) => {
+      if (active) removeUrlListener = () => handle.remove();
+      else void handle.remove();
+    });
     void CapacitorApp.getLaunchUrl().then((result) => pairUrl(result?.url));
     return () => {
+      active = false;
       unsubscribe();
-      client.stop();
+      fleet.stop();
       void removeUrlListener?.();
     };
-  }, []);
+  }, [connect]);
 
-  const snapshot = state.snapshot;
-  const agents = snapshot?.agents ?? [];
-  const attention = useMemo(() => agents.filter((agent) => agent.bucket === "attention"), [agents]);
-  const visible = tab === "attention" ? attention : agents;
-  const stale = Boolean(snapshot && (state.connection !== "online" || snapshot.freshness.stale));
-  const hostName = state.host?.name ?? snapshot?.host.name ?? "尚未连接桌面";
-  const connect = () => {
-    setPairingError(undefined);
-    void client.pair(pairingUri, "Android Companion").catch((cause: unknown) => {
+  const hosts = useMemo<readonly HostContext[]>(() => fleetState.hosts.map(({ hostId, state }) => Object.freeze({
+    hostId,
+    hostName: state.host?.name ?? state.snapshot?.host.name ?? `Host ${hostId.slice(0, 8)}`,
+    state,
+  })), [fleetState.hosts]);
+
+  useEffect(() => {
+    if (hostScope !== ALL_HOSTS && !hosts.some((host) => host.hostId === hostScope)) setHostScope(ALL_HOSTS);
+    if (!pendingHostId) return;
+    const pending = hosts.find((host) => host.hostId === pendingHostId);
+    if (!pending) {
+      setPendingHostId(undefined);
+      return;
+    }
+    if (pending.state.connection === "online") {
+      setHostScope(pendingHostId);
+      setAddingHost(false);
+      setPairingUri("");
+      setPendingHostId(undefined);
+    }
+  }, [hostScope, hosts, pendingHostId]);
+
+  const scopedHosts = hostScope === ALL_HOSTS
+    ? hosts
+    : hosts.filter((host) => host.hostId === hostScope);
+  const singleHost = hostScope === ALL_HOSTS ? undefined : scopedHosts[0];
+  const totalOnlineCount = hosts.filter((host) => host.state.connection === "online").length;
+  const onlineCount = scopedHosts.filter((host) => host.state.connection === "online").length;
+  const snapshots = scopedHosts.flatMap((host) => host.state.snapshot ? [{ host, snapshot: host.state.snapshot }] : []);
+  const agentEntries = snapshots.flatMap(({ host, snapshot }) => snapshot.agents.map((agent) => Object.freeze({
+    host,
+    snapshot,
+    agent,
+    projectName: snapshot.projects.find((project) => project.path === agent.projectPath)?.name ?? agent.backendId ?? "Stella",
+  })));
+  const attention = agentEntries.filter(({ agent }) => agent.bucket === "attention");
+  const visible = tab === "attention" ? attention : agentEntries;
+  const workingCount = agentEntries.filter(({ agent }) => agent.bucket === "working").length;
+  const stale = scopedHosts.some(({ state }) => state.connection !== "online" || Boolean(state.snapshot?.freshness.stale));
+  const aggregateConnection: CompanionClientState["connection"] = hosts.length === 0
+    ? "unpaired"
+    : onlineCount === scopedHosts.length && scopedHosts.length > 0
+      ? "online"
+      : scopedHosts.some(({ state }) => state.connection === "pairing")
+        ? "pairing"
+        : scopedHosts.some(({ state }) => state.connection === "connecting" || state.connection === "reconnecting")
+          ? "connecting"
+          : "offline";
+  const cardConnection = singleHost?.state.connection ?? aggregateConnection;
+  const newestSnapshot = snapshots.reduce<(typeof snapshots)[number] | undefined>((latest, candidate) =>
+    !latest || Date.parse(candidate.snapshot.capturedAt) > Date.parse(latest.snapshot.capturedAt) ? candidate : latest, undefined);
+  const hostTitle = singleHost?.hostName ?? (hosts.length > 0 ? "全部电脑" : "尚未连接桌面");
+  const hostStatus = singleHost ? connectionLabel(singleHost.state.connection) : hosts.length > 0 ? `${onlineCount}/${scopedHosts.length} 在线` : "未配对";
+  const hostDescription = singleHost
+    ? `${singleHost.state.connection === "online" ? "实时连接" : "桌面必须保持运行"}${singleHost.state.snapshot ? ` · ${relativeTime(singleHost.state.snapshot.capturedAt)}` : ""}`
+    : hosts.length > 0
+      ? `保持 ${hosts.length} 台电脑的独立连接${newestSnapshot ? ` · ${relativeTime(newestSnapshot.snapshot.capturedAt)}` : ""}`
+      : "添加 Mac 或 Windows 后即可远程查看";
+  const connectionError = pairingError ?? fleetState.error ?? scopedHosts.find(({ state }) => state.error)?.state.error;
+  const pairing = Boolean(pendingHostId && hosts.some((host) => host.hostId === pendingHostId && host.state.connection === "pairing"));
+  const showPairing = hosts.length === 0 || addingHost;
+  const taskHost = taskRoom ? hosts.find((host) => host.hostId === taskRoom.hostId) : undefined;
+
+  const selectHost = (hostId: string) => {
+    setHostScope(hostId);
+    setTaskRoom(undefined);
+    void fleet.select(hostId).catch((cause: unknown) => {
+      setPairingError(cause instanceof Error ? cause.message : String(cause));
+    });
+  };
+
+  const forgetSelectedHost = () => {
+    if (!singleHost || !window.confirm(`忘记“${singleHost.hostName}”并删除这台电脑的配对信息？\n\n其他电脑连接不会受影响。`)) return;
+    const hostId = singleHost.hostId;
+    setHostScope(ALL_HOSTS);
+    if (taskRoom?.hostId === hostId) setTaskRoom(undefined);
+    void fleet.forget(hostId).catch((cause: unknown) => {
       setPairingError(cause instanceof Error ? cause.message : String(cause));
     });
   };
@@ -314,53 +440,57 @@ export function App() {
       <header className="topbar">
         <div className="brand-mark">S</div>
         <div><strong>Stella Companion</strong><span>v0.5.0 · Protocol 1</span></div>
-        <button type="button" className="avatar" aria-label="忘记当前桌面" disabled={!state.host} onClick={() => {
-          if (window.confirm("忘记当前桌面并删除本机配对信息？")) void client.forget();
-        }}>ZX</button>
+        <div className="topbar-actions"><button type="button" aria-label="添加电脑" onClick={() => { setAddingHost(true); setPairingError(undefined); }}>＋</button><button type="button" aria-label="忘记当前电脑" disabled={!singleHost} onClick={forgetSelectedHost}>×</button></div>
       </header>
 
-      <section className={`host-card is-${state.connection}`}>
+      {hosts.length > 0 && <nav className="host-switcher" aria-label="电脑范围">
+        <button type="button" className={hostScope === ALL_HOSTS ? "is-active" : ""} onClick={() => { setHostScope(ALL_HOSTS); setTaskRoom(undefined); }}><i className={totalOnlineCount > 0 ? "is-online" : "is-offline"} />全部电脑</button>
+        {hosts.map((host) => <button type="button" className={hostScope === host.hostId ? "is-active" : ""} key={host.hostId} onClick={() => selectHost(host.hostId)}><i className={`is-${host.state.connection}`} />{host.hostName}</button>)}
+        <button type="button" onClick={() => { setAddingHost(true); setPairingError(undefined); }}>＋ 添加电脑</button>
+      </nav>}
+
+      <section className={`host-card is-${cardConnection}`}>
         <div className="host-card__signal"><i /><i /><i /></div>
-        <div><small>DESKTOP HOST</small><h1>{hostName}</h1><p>{state.connection === "online" ? "实时连接" : "桌面必须保持运行"}{snapshot ? ` · ${relativeTime(snapshot.capturedAt)}` : ""}</p></div>
-        <span>{connectionLabel(state.connection)}</span>
+        <div><small>{singleHost ? "DESKTOP HOST" : "HOST FLEET"}</small><h1>{hostTitle}</h1><p>{hostDescription}</p></div>
+        <span>{hostStatus}</span>
       </section>
 
-      {stale && <aside className="stale-banner" role="status"><b>离线快照</b><span>状态可能已变化；恢复网络后会自动重新协商并全量刷新。</span></aside>}
-      {(state.error || pairingError) && <aside className="error-banner" role="alert"><b>连接提示</b><span>{pairingError ?? state.error}</span></aside>}
+      {stale && snapshots.length > 0 && <aside className="stale-banner" role="status"><b>{singleHost ? "离线快照" : "部分电脑离线"}</b><span>在线电脑继续实时更新；离线电脑保留 last-good 快照，恢复 Tailscale 网络后会自动重连。</span></aside>}
+      {connectionError && <aside className="error-banner" role="alert"><b>连接提示</b><span>{connectionError}</span></aside>}
 
-      {(state.connection === "unpaired" || state.connection === "pairing" || (!snapshot && state.connection === "offline")) && (
+      {showPairing && (
         <section className="pairing-card">
           <small>PAIR WITH DESKTOP</small>
-          <h2>连接你的 Stella</h2>
-          <p>在桌面端“偏好设置 → Android Companion”生成配对码。可以扫码打开本应用，也可以粘贴配对链接。</p>
+          <h2>{hosts.length > 0 ? "添加另一台电脑" : "连接你的 Stella"}</h2>
+          <p>Mac、Windows 和手机登录同一个 Tailscale 网络后，在目标电脑的“偏好设置 → Android Companion”生成配对码。每台电脑只需配对一次。</p>
           <textarea aria-label="Companion 配对链接" value={pairingUri} onChange={(event) => setPairingUri(event.target.value)} rows={4} placeholder="stella://pair?endpoint=…" />
-          <button type="button" disabled={!pairingUri.trim() || state.connection === "pairing"} onClick={connect}>{state.connection === "pairing" ? "正在配对…" : "连接桌面"}</button>
+          <div className="pairing-actions"><button type="button" disabled={!pairingUri.trim() || pairing} onClick={() => void connect(pairingUri)}>{pairing ? "正在配对…" : "连接这台电脑"}</button>{hosts.length > 0 && <button type="button" className="is-secondary" disabled={pairing} onClick={() => { setAddingHost(false); setPairingUri(""); setPairingError(undefined); }}>取消</button>}</div>
         </section>
       )}
 
-      {snapshot && <>
+      {snapshots.length > 0 && <>
         <section className="summary-grid">
           <article><span>需要处理</span><strong>{attention.length}</strong><small>Attention</small></article>
-          <article><span>正在执行</span><strong>{agents.filter((agent) => agent.bucket === "working").length}</strong><small>Working</small></article>
-          <article><span>Host 序列</span><strong>{snapshot.sequence}</strong><small>{stale ? "Last good" : "Live updates"}</small></article>
+          <article><span>正在执行</span><strong>{workingCount}</strong><small>Working</small></article>
+          <article><span>{singleHost ? "Host 序列" : "在线电脑"}</span><strong>{singleHost?.state.snapshot?.sequence ?? onlineCount}</strong><small>{stale ? "Partial / last good" : "Live updates"}</small></article>
         </section>
 
         {mainView === "agents" ? <section className="task-section">
           <header><div><small>AGENT ACTIVITY</small><h2>任务动态</h2></div><div className="segmented"><button className={tab === "attention" ? "is-active" : ""} onClick={() => setTab("attention")}>Attention</button><button className={tab === "activity" ? "is-active" : ""} onClick={() => setTab("activity")}>全部</button></div></header>
           <div className="task-list">
-            {visible.map((agent) => <article className={`task-card is-${agent.bucket}`} key={agent.id}>
+            {visible.map(({ host, agent, projectName }) => <article className={`task-card is-${agent.bucket}`} key={`${host.hostId}:${agent.id}`}>
               <header><span><StatusMark bucket={agent.bucket} />{agent.title}</span><em>{BUCKET_LABEL[agent.bucket]}</em></header>
               <h3>{agent.taskTitle ?? "未关联 Task"}</h3><p>{agent.waitingFor ?? agent.summary ?? "等待下一次状态更新"}</p>
-              <footer><span>{snapshot.projects.find((project) => project.path === agent.projectPath)?.name ?? agent.backendId ?? "Stella"}</span><time>{relativeTime(agent.updatedAt)}</time></footer>
-              {agent.taskId && <button type="button" onClick={() => setTaskRoomId(agent.taskId)}>打开 Task Room <b>→</b></button>}
+              <footer><span>{host.hostName} · {projectName}</span><time>{relativeTime(agent.updatedAt)}</time></footer>
+              {agent.taskId && <button type="button" onClick={() => setTaskRoom({ hostId: host.hostId, taskId: agent.taskId as string })}>打开 Task Room <b>→</b></button>}
             </article>)}
-            {visible.length === 0 && <div className="empty-state"><div>✓</div><strong>当前没有{tab === "attention" ? "待处理" : " Agent"}事项</strong><p>{tab === "attention" ? "切换到“全部”查看正在执行与最近完成的任务。" : "桌面有 Agent 活动后会自动显示。"}</p></div>}
+            {visible.length === 0 && <div className="empty-state"><div>✓</div><strong>当前没有{tab === "attention" ? "待处理" : " Agent"}事项</strong><p>{tab === "attention" ? "切换到“全部”查看正在执行与最近完成的任务。" : "所选电脑有 Agent 活动后会自动显示。"}</p></div>}
           </div>
-        </section> : <ExternalActivity state={state} onOpenTask={setTaskRoomId} />}
+        </section> : <ExternalActivity hosts={scopedHosts} onOpenTask={setTaskRoom} />}
       </>}
 
       <footer className="bottom-nav"><button className={mainView === "agents" && tab === "attention" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("attention"); }}><span>⌁</span>Attention</button><button className={mainView === "agents" && tab === "activity" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("activity"); }}><span>▦</span>Tasks</button><button className={mainView === "external" ? "is-active" : ""} onClick={() => setMainView("external")}><span>◌</span>External</button></footer>
-      {taskRoomId && snapshot && <TaskRoom taskId={taskRoomId} sequence={snapshot.sequence} online={state.connection === "online"} onClose={() => setTaskRoomId(undefined)} />}
+      {taskRoom && taskHost?.state.snapshot && <TaskRoom hostId={taskHost.hostId} hostName={taskHost.hostName} taskId={taskRoom.taskId} sequence={taskHost.state.snapshot.sequence} online={taskHost.state.connection === "online"} onClose={() => setTaskRoom(undefined)} />}
     </main>
   );
 }

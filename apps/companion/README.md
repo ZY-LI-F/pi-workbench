@@ -14,6 +14,25 @@ npm run companion:apk:debug
 
 Debug APK 输出到 `apps/companion/android/app/build/outputs/apk/debug/app-debug.apk`。构建脚本优先使用 `JAVA_HOME`，并在 macOS 上回退到 Android Studio JBR；Android SDK 使用 `ANDROID_HOME`、`ANDROID_SDK_ROOT` 或标准用户目录。
 
+## 一部手机连接 Mac 与 Windows
+
+Companion 0.5.0 可以保存多台桌面 Host，并为每台 Host 同时维护独立 WebSocket、凭据和 last-good snapshot。顶部可选择“全部电脑”聚合查看，也可切换到单台电脑；Task Room、外部 execution 详情和所有 typed command 都携带明确的 `hostId`，不会因为切换看板范围而发往另一台电脑。旧版单 Host 存储会在首次启动时自动迁移到本机 storage revision `2`，不改变 Wire Protocol `1`。
+
+跨 Wi-Fi 推荐直接使用同一个免费 Tailscale tailnet：
+
+1. 在 Android、Mac、Windows 上安装 Tailscale，并登录同一个 tailnet。
+2. 在 Mac 与 Windows 分别启动 Stella；两台桌面都必须保持运行。
+3. 在每台桌面的“偏好设置 → Android Companion”检查“首选地址”，Tailscale 的 `100.64.0.0/10` 地址会自动排在 LAN 地址之前。
+4. 依次为 Mac、Windows 生成一次性配对码并在同一部手机上完成配对。
+
+如果需要固定使用 Tailscale MagicDNS 名称或指定地址，可在启动 Stella 前设置：
+
+```bash
+export STELLA_COMPANION_PUBLIC_ADDRESS=studio-mac.example-tailnet.ts.net
+```
+
+Windows 可使用等价的环境变量配置。`STELLA_COMPANION_PUBLIC_ADDRESS` 只决定新配对链接中的首选 Host；已配对记录继续使用原 endpoint，如需更换 endpoint，请在手机上只忘记对应电脑后重新配对。GitHub 不参与实时连接或中继。
+
 ## 签名 release APK
 
 Release signing material 不进入源码。为每次对外发布递增 `STELLA_ANDROID_VERSION_CODE`，保持当前产品 `versionName` 为 `0.5.0`：
@@ -50,7 +69,7 @@ Agent 卡片可打开 Task Room。消息必须先查看效果预览再提交；�
 
 底部 `External` 页面复用桌面的 External Execution Source 和统一 Agent Projection，可按来源、项目、状态查看 Claude/Codex 原生活动。每个 Source 独立显示 ready、unavailable 或 last-good/stale；Codex 结构化详情只在用户点击时有界读取。关联到现有 managed execution 的重复 Source 记录不会再生成第二张卡。该页面只提供状态、关联 Task 跳转和真实可用的只读详情，不在 Android 上运行 Provider CLI，也不提供没有真实发送能力的回复/continue 按钮。
 
-桌面正式 Gateway 默认监听 `43821`，可通过 `STELLA_COMPANION_PORT` 修改。首个预览 APK 面向同一局域网或既有私有网络路径，Android 使用明确配置的 cleartext LAN transport；桌面关闭后 App 会显示离线快照并自动重连，不会在手机端接管 Agent Runtime。
+桌面正式 Gateway 默认监听 `43821`，可通过 `STELLA_COMPANION_PORT` 修改。Gateway 监听所有 IPv4 网卡，并优先把检测到的 Tailscale IPv4 放入新配对链接；Android 使用明确配置的 cleartext private-network transport。桌面关闭后 App 会按 Host 显示离线快照并自动重连，不会在手机端接管 Agent Runtime。
 
 ## API 35 AVD 自动验收
 
@@ -67,4 +86,10 @@ npm run companion:avd:acceptance
 STELLA_COMPANION_AVD_MODE=reconnect npm run companion:avd:acceptance
 ```
 
-该脚本通过 Android WebView CDP 驱动实际安装的 APK，不替代共享协议、Gateway 和移动端单元测试。
+双 Host 验收可在 `43822` 运行默认验收主机，并在 `43823` 以 `STELLA_COMPANION_ACCEPTANCE_HOST_NAME='Windows Acceptance Host'` 启动第二个实例；两次配对完成后运行：
+
+```bash
+STELLA_COMPANION_AVD_MODE=multi-host npm run companion:avd:acceptance
+```
+
+该模式验证两个 Host 同时在线、全部/单机切换，并在 Windows Task Room 提交唯一消息后确认 Mac 的同名 Task Room 不包含该消息。脚本通过 Android WebView CDP 驱动实际安装的 APK，不替代共享协议、Gateway 和移动端单元测试。

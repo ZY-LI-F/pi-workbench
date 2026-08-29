@@ -143,10 +143,10 @@ function CompanionSetting({
   const stateLabel = status?.state === "listening" ? "正在监听" : status?.state === "error" ? "启动失败" : "已停止";
   return (
     <section className="settings-section settings-section--companion">
-      <div className="settings-section__heading"><span>Android Companion</span><small>v0.5.0 · Desktop 必须保持运行</small></div>
+      <div className="settings-section__heading"><span>Android Companion</span><small>v0.5.0 · 支持一部手机连接多台电脑</small></div>
       <div className="companion-gateway-card">
         <Smartphone size={19} />
-        <span><strong>{status?.host.name ?? "Stella Desktop"}</strong><small>{stateLabel}{status?.port ? ` · 端口 ${status.port}` : ""}</small></span>
+        <span><strong>{status?.host.name ?? "Stella Desktop"}</strong><small>{stateLabel}{status?.port ? ` · 端口 ${status.port}` : ""}</small>{status?.connectionUrls[0] && <small title={status.connectionUrls[0]}>首选地址 · {status.connectionUrls[0]}</small>}</span>
         <div><button type="button" disabled={busy} onClick={onRefresh}><RefreshCw size={12} />刷新</button><button type="button" disabled={busy || status?.state !== "listening"} onClick={onCreateOffer}>生成配对码</button></div>
       </div>
       {offer && (

@@ -3,8 +3,8 @@ const acceptanceMode = process.env.STELLA_COMPANION_AVD_MODE?.trim() || "full";
 if (!Number.isSafeInteger(cdpPort) || cdpPort < 1 || cdpPort > 65_535) {
   throw new Error("STELLA_COMPANION_CDP_PORT 无效");
 }
-if (acceptanceMode !== "full" && acceptanceMode !== "reconnect") {
-  throw new Error("STELLA_COMPANION_AVD_MODE 只支持 full 或 reconnect");
+if (acceptanceMode !== "full" && acceptanceMode !== "reconnect" && acceptanceMode !== "multi-host") {
+  throw new Error("STELLA_COMPANION_AVD_MODE 只支持 full、reconnect 或 multi-host");
 }
 
 const targets = await fetch(`http://127.0.0.1:${cdpPort}/json`).then((response) => {
@@ -143,6 +143,39 @@ if (acceptanceMode === "reconnect") {
   await navigate("External");
   await waitForText("Codex 外部 Thread 正在实现");
   console.log("PASS persisted pairing reconnected and replaced the authoritative snapshot");
+  socket.close();
+  process.exit(0);
+}
+
+if (acceptanceMode === "multi-host") {
+  const windowsHost = "Windows Acceptance Host";
+  const routedMessage = "Windows-only multi-host route";
+  await waitForText(windowsHost);
+  const hostButtons = await evaluate(`[...document.querySelectorAll(".host-switcher button")].map((button) => button.textContent?.trim())`);
+  if (!hostButtons.includes("全部电脑") || !hostButtons.includes("Stella Acceptance Host") || !hostButtons.includes(windowsHost)) {
+    throw new Error(`Host 切换器内容不完整: ${JSON.stringify(hostButtons)}`);
+  }
+  await clickButton("全部电脑");
+  await waitForText("2/2 在线");
+  await clickButton(windowsHost);
+  await waitFor("Windows Host selected", async () => String(await evaluate("document.querySelector('.host-card h1')?.textContent")).trim() === windowsHost);
+  await openTask("Android Coordinator 回复验收");
+  await enterTaskMessage(routedMessage);
+  await clickButton("预览效果");
+  await waitFor("Windows message preview", async () => Boolean(await evaluate(`(() => {
+    const button = [...document.querySelectorAll("button")].find((candidate) => candidate.textContent?.trim() === "按预览提交");
+    return button && !button.disabled;
+  })()`)));
+  await clickButton("按预览提交");
+  await waitForText("已接受");
+  await waitForText(routedMessage);
+  await closeTask();
+
+  await clickButton("Stella Acceptance Host");
+  await waitFor("Mac Host selected", async () => String(await evaluate("document.querySelector('.host-card h1')?.textContent")).trim() === "Stella Acceptance Host");
+  await openTask("Android Coordinator 回复验收");
+  if (String(await bodyText()).includes(routedMessage)) throw new Error("Windows 命令出现在 Mac Task Room，Host 路由错误");
+  console.log("PASS two simultaneous Hosts, scope switching, aggregation, and exact command routing");
   socket.close();
   process.exit(0);
 }

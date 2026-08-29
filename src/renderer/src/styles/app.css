@@ -3947,7 +3947,7 @@
 .companion-gateway-card { display: flex; min-height: 58px; padding: 10px 11px; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--surface-raised) 70%, transparent); color: var(--accent); }
 .companion-gateway-card > span { display: grid; min-width: 0; flex: 1; gap: 2px; }
 .companion-gateway-card strong { color: var(--text); font-size: 0.7857rem; }
-.companion-gateway-card small { color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; }
+.companion-gateway-card small { overflow: hidden; color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
 .companion-gateway-card > div { display: flex; gap: 6px; }
 .companion-gateway-card button,
 .companion-pairing-offer button,

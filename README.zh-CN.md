@@ -363,7 +363,7 @@ git push origin main --tags
 
 ## Android Companion · v0.5.0
 
-独立的 React/Vite/Capacitor Companion 通过协议版本 `1` 连接桌面唯一事实源，提供 Attention、Tasks、Task Room 控制以及 Claude/Codex 外部活动只读视图。它不在手机运行 Provider CLI，也没有第二套编排数据库。桌面 Main 关闭后 App 会进入 offline/stale；首版使用同一 LAN 或用户已有私网，Relay 与可靠 FCM 通知后置。
+独立的 React/Vite/Capacitor Companion 通过协议版本 `1` 连接桌面唯一事实源。一部手机可同时保持 Mac、Windows 的独立 Host 连接，聚合查看两台电脑的 Attention、Tasks 与 Claude/Codex 活动，也可切换到单台电脑并把命令精确路由到该 Host。它不在手机运行 Provider CLI，也没有第二套编排数据库。每台桌面 Main 关闭后对应 Host 会进入 offline/stale；首版使用同一 LAN 或 Tailscale，新配对码会优先采用检测到的 Tailscale IPv4，Relay 与可靠 FCM 通知后置。
 
 ```bash
 npm ci --prefix apps/companion
@@ -385,7 +385,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-当前桌面确定性套件为 106 个 Vitest 文件、460 项测试，Companion 另有 9 项测试。除既有 Pi/Team/Kanban 回归外，它覆盖 Board v9、execution workspace 生命周期、真实 Git isolated 并发与 current-folder 串行、Profile 能力真实性、Codex/Claude 受管执行、外部 Source last-good/去重/详情、Companion 协议/控制面/Gateway，以及 Pi 压缩独立超时与互斥。Electron E2E 使用真实内置 Pi RPC 冷启动，API 35 AVD 流程验收实际安装 APK。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。
+当前桌面确定性套件为 106 个 Vitest 文件、462 项测试，Companion 另有 13 项测试。除既有 Pi/Team/Kanban 回归外，它覆盖 Board v9、execution workspace 生命周期、真实 Git isolated 并发与 current-folder 串行、Profile 能力真实性、Codex/Claude 受管执行、外部 Source last-good/去重/详情、Companion 协议/控制面/Gateway、多 Host 迁移与路由，以及 Pi 压缩独立超时与互斥。Electron E2E 使用真实内置 Pi RPC 冷启动，API 35 AVD 流程验收实际安装 APK。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 

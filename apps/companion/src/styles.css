@@ -15,7 +15,16 @@ button { color: inherit; font: inherit; }
 .topbar strong { letter-spacing: -.02em; }
 .topbar span { color: #78869e; font-size: 11px; }
 .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 13px; color: #07101a; font: 800 20px Georgia, serif; background: linear-gradient(145deg, #b9f5d7, #6fe0bd); box-shadow: 0 8px 24px #3ad8aa30; }
-.avatar { width: 36px; height: 36px; border: 1px solid #2d3a50; border-radius: 50%; background: #151d2b; font-size: 11px; }
+.topbar-actions { display: flex; gap: 6px; }
+.topbar-actions button { width: 34px; height: 34px; border: 1px solid #2d3a50; border-radius: 11px; color: #aebbd0; background: #151d2b; font-size: 17px; line-height: 1; }
+.host-switcher { display: flex; gap: 7px; margin: -8px 0 13px; padding: 4px 0; overflow-x: auto; scrollbar-width: none; }
+.host-switcher::-webkit-scrollbar { display: none; }
+.host-switcher button { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; max-width: 190px; padding: 8px 11px; overflow: hidden; border: 1px solid #253148; border-radius: 99px; color: #8e9db3; background: #101725; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
+.host-switcher button.is-active { border-color: #477c69; color: #d7f4e8; background: #173027; box-shadow: inset 0 0 0 1px #5bd6a62b; }
+.host-switcher button i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #657287; }
+.host-switcher button i.is-online { background: #62e0b1; box-shadow: 0 0 0 3px #48d4a51a; }
+.host-switcher button i.is-pairing, .host-switcher button i.is-connecting, .host-switcher button i.is-reconnecting { background: #efad65; }
+.host-switcher button i.is-incompatible { background: #ef7180; }
 .host-card { position: relative; overflow: hidden; display: grid; grid-template-columns: 36px 1fr auto; align-items: center; gap: 12px; padding: 18px; border: 1px solid #26344a; border-radius: 20px; background: linear-gradient(140deg, #151f30, #0e1521); box-shadow: 0 18px 42px #0006; }
 .host-card::after { content: ""; position: absolute; inset: auto -40px -65px auto; width: 160px; height: 160px; border-radius: 50%; background: #42dca41b; }
 .host-card small, .task-section small { color: #70829d; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
@@ -39,6 +48,8 @@ button { color: inherit; font: inherit; }
 .pairing-card textarea { width: 100%; resize: vertical; padding: 11px; border: 1px solid #2c3a50; border-radius: 12px; outline: none; color: #dce7f8; background: #080e17; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pairing-card textarea:focus { border-color: #61dcb0; box-shadow: 0 0 0 3px #49d6a51a; }
 .pairing-card button { min-height: 42px; border: 0; border-radius: 12px; color: #07130f; background: #7ce4bc; font-size: 12px; font-weight: 800; }
+.pairing-actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.pairing-actions button.is-secondary { min-width: 72px; border: 1px solid #2c3a50; color: #9ba9be; background: #111827; }
 .pairing-card button:disabled, button:disabled { opacity: .5; }
 .scenario-strip { display: flex; gap: 7px; margin: 14px 0; overflow-x: auto; scrollbar-width: none; }
 .scenario-strip button { border: 1px solid #253148; border-radius: 99px; padding: 7px 11px; color: #9ba9be; background: #111827; font-size: 10px; white-space: nowrap; }

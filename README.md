@@ -322,7 +322,7 @@ Formal macOS signing must run on macOS. The repository includes [a GitHub Action
 
 ## Android Companion · v0.5.0
 
-The separate React/Vite/Capacitor Companion connects to the desktop-owned Board over Companion Protocol `1`. It shows Attention, Tasks, Task Room controls, and read-only Claude/Codex external activity; it does not run Provider CLIs or own a second orchestration database. The desktop must remain running. Direct LAN or an existing private-network path is the initial transport; Relay and reliable FCM notifications are follow-up work.
+The separate React/Vite/Capacitor Companion connects to the desktop-owned Board over Companion Protocol `1`. One phone can keep independent Mac and Windows Host connections active at the same time, aggregate their Attention/Tasks/Claude/Codex activity, or scope the UI and commands to one exact Host. It does not run Provider CLIs or own a second orchestration database. Each desktop must remain running. Direct LAN or Tailscale is the initial transport; detected Tailscale IPv4 addresses are preferred in new pairing offers, while Relay and reliable FCM notifications remain follow-up work.
 
 ```bash
 npm ci --prefix apps/companion
@@ -344,7 +344,7 @@ npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic desktop suite contains **106 Vitest files and 460 tests**; the Companion adds **9 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
+The current deterministic desktop suite contains **106 Vitest files and 462 tests**; the Companion adds **13 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, multi-Host migration/routing, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 

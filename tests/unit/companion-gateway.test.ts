@@ -4,7 +4,7 @@ import { join } from "node:path";
 import WebSocket from "ws";
 import { afterEach, describe, expect, it } from "vitest";
 import { MainCompanionControlPlane } from "../../src/main/companion-control-plane";
-import { CompanionGateway } from "../../src/main/companion-gateway";
+import { CompanionGateway, orderCompanionPublicAddresses } from "../../src/main/companion-gateway";
 import { CompanionPairingStore } from "../../src/main/companion-pairing-store";
 import { CompanionCommandReceiptStore } from "../../src/main/companion-command-receipt-store";
 import { CompanionCommandService } from "../../src/main/companion-command-service";
@@ -226,6 +226,36 @@ async function waitFor(predicate: () => boolean, timeoutMs = 3_000): Promise<voi
 }
 
 describe("CompanionGateway", () => {
+  it("prefers a Tailscale IPv4 address over LAN and loopback addresses", () => {
+    expect(orderCompanionPublicAddresses([
+      "192.168.50.12",
+      "127.0.0.1",
+      "100.101.22.8",
+      "10.0.0.9",
+    ])).toEqual([
+      "100.101.22.8",
+      "192.168.50.12",
+      "10.0.0.9",
+      "127.0.0.1",
+    ]);
+  });
+
+  it("uses an explicit MagicDNS or IP address first without duplicating it", () => {
+    expect(orderCompanionPublicAddresses(
+      ["100.101.22.8", "192.168.50.12", "127.0.0.1"],
+      "studio-mac.example-tailnet.ts.net",
+    )).toEqual([
+      "studio-mac.example-tailnet.ts.net",
+      "100.101.22.8",
+      "192.168.50.12",
+      "127.0.0.1",
+    ]);
+    expect(orderCompanionPublicAddresses(
+      ["100.101.22.8", "127.0.0.1"],
+      " 100.101.22.8 ",
+    )).toEqual(["100.101.22.8", "127.0.0.1"]);
+  });
+
   it("pairs once, persists a revocable device, authenticates, and streams real projections", async () => {
     const { gateway, repository, controlPlane, endpoint, directory } = await fixture();
     const offer = await gateway.createPairingOffer();

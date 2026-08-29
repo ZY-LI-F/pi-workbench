@@ -56,10 +56,10 @@ Stella 当前可以在桌面端运行 Pi、Codex CLI、Claude CLI，展示 Board
 
 ```text
 Android APK
-└── Companion Client Module
-    ├── 状态 / Attention / Task Room UI
-    ├── 配对与主机列表
-    └── WebSocket Transport Adapter
+└── Companion Host Fleet Module
+    ├── 多 Host 存储、生命周期与范围选择
+    ├── 每 Host 一个 Companion Client / WebSocket Adapter
+    └── 聚合 Attention / Task Room / External UI
                   ⇅ 版本化 Companion Protocol
 Desktop Electron Main
 └── Companion Gateway Module
@@ -121,6 +121,9 @@ Desktop Renderer
 33. As a Stella maintainer, I want a mock Companion host, so that most mobile work can be tested without running Electron or an Android device.
 34. As a Stella maintainer, I want a reproducible Gradle debug APK build, so that local and CI artifacts are generated in the same way.
 35. As a Stella maintainer, I want release APK signing isolated from source code and development builds, so that distributable artifacts are reproducible without committing signing material.
+36. As a Stella user, I want one phone to keep Mac and Windows connected at the same time, so that switching the visible Host never disconnects the other computer.
+37. As a Stella user, I want an all-computers scope plus per-Host scopes, so that I can aggregate status without losing the exact computer identity of each Task or external execution.
+38. As a Stella user, I want Tailscale addresses preferred in new pairing offers, so that a phone and computers on different Wi-Fi networks connect without a Stella or GitHub relay.
 
 ## Implementation Decisions
 
@@ -202,6 +205,9 @@ The first release does not support:
 ### 9. Transport and pairing
 
 - The first production Transport Adapter is a direct WebSocket connection over the same LAN or an existing private network path such as Tailscale.
+- Mobile uses one `CompanionWebSocketClient` per paired Host. `CompanionHostFleet` owns simultaneous lifecycle, revision-2 Host persistence, legacy single-Host migration, selection, forgetting one Host, and exact `hostId` command routing.
+- “All computers” is a projection scope only: it aggregates snapshots while every Host connection remains independent. Opening a Task Room pins its originating `hostId`, and changing the dashboard scope cannot retarget an in-flight command.
+- Desktop pairing offers order detected Tailscale IPv4 addresses (`100.64.0.0/10`) before LAN/loopback addresses. `STELLA_COMPANION_PUBLIC_ADDRESS` can explicitly prefer a Tailscale MagicDNS name or IP without changing Protocol `1`.
 - Pairing uses a short-lived desktop-generated offer, explicit confirmation, a per-device credential and a pinned desktop identity. The QR code contains connection and pairing material, not Board data.
 - Mobile stores its device credential in Android secure storage. Desktop stores paired-device records separately from BoardState and supports revocation.
 - The debug feasibility build may use a clearly marked local cleartext connection. A distributable APK must authenticate the device and protect command/status frames before enabling mutating commands.
@@ -325,6 +331,6 @@ Exit criterion: background attention notifications and cross-network reconnect a
 
 ## Implementation Acceptance
 
-Phase 0–2 已按本规格落地。API 35 AVD 对实际安装的签名 `0.5.0 / versionCode 6` APK 完成配对、在线更新、Coordinator 回复且只生成一个 review、gate approve、report accept、确认后的精确 abort、外部 Source stale/last-good、managed 去重、按需只读详情，以及 App 重启后的持久配对与 authoritative snapshot 替换。
+Phase 0–2 已按本规格落地。API 35 AVD 对实际安装的签名 `0.5.0 / versionCode 6` APK 完成配对、在线更新、Coordinator 回复且只生成一个 review、gate approve、report accept、确认后的精确 abort、外部 Source stale/last-good、managed 去重、按需只读详情，以及 App 重启后的持久配对与 authoritative snapshot 替换。本轮进一步对同一 APK 启动两个真实 Gateway，验证双 Host 同时在线、聚合/切换、精确命令路由和冷启动恢复；证据见 [`../testing/android-companion-multi-host-tailscale-acceptance-2026-08-29.md`](../testing/android-companion-multi-host-tailscale-acceptance-2026-08-29.md)。
 
 本地验收 APK 的 SHA-256 为 `6ADE01B64FECD6730366BBD6AABEBBB4B33F8D4BEFBF439F0693791EC9E0D3CC`。它使用一次性验收证书；正式 tag 由 GitHub Actions 使用仓库 Secrets 中的发布证书重新签名。完整证据与迁移/回滚步骤见 [`../testing/stella-v0.5.0-release-acceptance-2026-08-29.md`](../testing/stella-v0.5.0-release-acceptance-2026-08-29.md)。

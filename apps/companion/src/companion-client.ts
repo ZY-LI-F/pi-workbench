@@ -33,7 +33,7 @@ export interface CompanionClientStorage {
   remove(): Promise<void>;
 }
 
-interface PersistedCompanionHost {
+export interface PersistedCompanionHost {
   readonly revision: 1;
   readonly endpoint: string;
   readonly host: CompanionHostSummary;
@@ -92,7 +92,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parsePersistedHost(raw: string): PersistedCompanionHost {
+export function parsePersistedCompanionHost(raw: string): PersistedCompanionHost {
   const value = JSON.parse(raw) as unknown;
   if (!isRecord(value) || value.revision !== STORAGE_REVISION || typeof value.endpoint !== "string"
     || !isRecord(value.host) || typeof value.host.id !== "string" || typeof value.host.name !== "string" || typeof value.host.version !== "string"
@@ -179,7 +179,7 @@ export class CompanionWebSocketClient {
         this.#setState({ connection: "unpaired" });
         return;
       }
-      this.#saved = parsePersistedHost(raw);
+      this.#saved = parsePersistedCompanionHost(raw);
       this.#setState({ connection: "connecting", host: this.#saved.host, snapshot: staleSnapshot(this.#saved.lastSnapshot) });
       this.#connect(this.#saved.endpoint);
     } catch (cause) {

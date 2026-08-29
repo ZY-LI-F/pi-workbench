@@ -20,6 +20,7 @@ import { BUILTIN_ORCHESTRATION_CATALOG } from "../src/shared/orchestration-catal
 
 const hostAddress = process.env.STELLA_COMPANION_ACCEPTANCE_ADDRESS?.trim() || "10.0.2.2";
 const port = Number(process.env.STELLA_COMPANION_ACCEPTANCE_PORT ?? "43822");
+const hostName = process.env.STELLA_COMPANION_ACCEPTANCE_HOST_NAME?.trim() || "Stella Acceptance Host";
 if (!Number.isSafeInteger(port) || port < 1 || port > 65_535) throw new Error("STELLA_COMPANION_ACCEPTANCE_PORT 无效");
 
 const AGENT: AgentDefinition = Object.freeze({
@@ -216,7 +217,7 @@ class MemoryRepository implements BoardRepository {
 
 const directory = await mkdtemp(join(tmpdir(), "stella-companion-acceptance-"));
 const pairingStore = new CompanionPairingStore(join(directory, "devices.json"));
-await pairingStore.initialize("Stella Acceptance Host");
+await pairingStore.initialize(hostName);
 const host = await pairingStore.host("0.5.0");
 const repository = new MemoryRepository();
 const receiptStore = new CompanionCommandReceiptStore(join(directory, "command-receipts.json"));

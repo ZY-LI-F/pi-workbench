@@ -49,6 +49,34 @@ interface ConnectionContext {
   pendingEvents: CompanionProjectedEvent[];
 }
 
+function isTailscaleIpv4(address: string): boolean {
+  const octets = address.split(".").map(Number);
+  return octets.length === 4
+    && octets.every((octet) => Number.isInteger(octet) && octet >= 0 && octet <= 255)
+    && octets[0] === 100
+    && (octets[1] ?? 0) >= 64
+    && (octets[1] ?? 0) <= 127;
+}
+
+function isLoopbackAddress(address: string): boolean {
+  return address === "::1" || address.startsWith("127.");
+}
+
+export function orderCompanionPublicAddresses(
+  addresses: readonly string[],
+  preferredAddress?: string,
+): readonly string[] {
+  const preferred = preferredAddress?.trim();
+  const unique = [...new Set(addresses.map((address) => address.trim()).filter(Boolean))];
+  const ordered = [
+    ...(preferred ? [preferred] : []),
+    ...unique.filter((address) => isTailscaleIpv4(address)),
+    ...unique.filter((address) => !isTailscaleIpv4(address) && !isLoopbackAddress(address)),
+    ...unique.filter((address) => isLoopbackAddress(address)),
+  ];
+  return Object.freeze([...new Set(ordered)]);
+}
+
 function defaultPublicAddresses(): readonly string[] {
   const addresses = new Set<string>();
   for (const values of Object.values(networkInterfaces())) {
@@ -57,7 +85,7 @@ function defaultPublicAddresses(): readonly string[] {
     }
   }
   addresses.add("127.0.0.1");
-  return Object.freeze([...addresses]);
+  return orderCompanionPublicAddresses([...addresses], process.env.STELLA_COMPANION_PUBLIC_ADDRESS);
 }
 
 function hostForUrl(address: string): string {
