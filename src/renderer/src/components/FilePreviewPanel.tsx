@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileSearch,
   Files,
+  MessageSquareQuote,
   FolderOpen,
   LoaderCircle,
   Maximize2,
@@ -25,6 +26,7 @@ import type { StellaDesktopApi } from "@shared/contracts";
 import type { SessionFileReference } from "../lib/session-files";
 import { normalizePptxRelationshipTargets } from "../lib/pptx-package";
 import { SpreadsheetPreview } from "./SpreadsheetPreview";
+import { fileReferenceText } from "../lib/file-reference";
 
 type PreviewState =
   | { readonly status: "idle" }
@@ -416,11 +418,13 @@ export function FilePreviewPanel({
   inspection,
   references,
   onSelect,
+  onReference,
 }: {
   readonly api: StellaDesktopApi;
   readonly inspection?: LocalPathInspection;
   readonly references: readonly SessionFileReference[];
   readonly onSelect: (inspection: LocalPathInspection) => void;
+  readonly onReference?: (text: string) => void;
 }) {
   const [state, setState] = useState<PreviewState>({ status: inspection ? "loading" : "idle" });
   const [reload, setReload] = useState(0);
@@ -429,8 +433,26 @@ export function FilePreviewPanel({
   const [actionError, setActionError] = useState<string>();
   const [moreOpen, setMoreOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [selectedText, setSelectedText] = useState("");
+  const [referenceBusy, setReferenceBusy] = useState(false);
+  const [referenceFeedback, setReferenceFeedback] = useState<string>();
 
   useEffect(() => {
+    const captureSelection = () => {
+      const selection = window.getSelection();
+      const viewport = viewportRef.current;
+      if (selection?.rangeCount && viewport?.contains(selection.anchorNode) && viewport.contains(selection.focusNode)) {
+        setSelectedText(selection.toString());
+      }
+    };
+    document.addEventListener("selectionchange", captureSelection);
+    return () => document.removeEventListener("selectionchange", captureSelection);
+  }, []);
+
+  useEffect(() => {
+    setSelectedText("");
+    setReferenceFeedback(undefined);
     if (!inspection) {
       setState({ status: "idle" });
       setActionError(undefined);
@@ -489,6 +511,17 @@ export function FilePreviewPanel({
     void runAction(operation);
   };
 
+  const referenceFile = async () => {
+    if (!data || !onReference) return;
+    setReferenceBusy(true);
+    try {
+      const current = await api.readLocalFilePreview(data.canonicalPath);
+      if (!data.version || current.version !== data.version) throw new Error("文件版本已变化，请刷新预览后重新选择并引用。当前草稿未改变。");
+      onReference(fileReferenceText(data, selectedText));
+      setReferenceFeedback(selectedText ? "选区引用已追加到输入草稿" : "文件引用已追加到输入草稿");
+    } finally { setReferenceBusy(false); }
+  };
+
   return (
     <section className={`file-preview-panel${maximized ? " is-maximized" : ""}`} aria-label="文件检查器">
       <div className="file-preview-panel__body">
@@ -500,6 +533,7 @@ export function FilePreviewPanel({
               <strong title={inspection.canonicalPath}>{inspection.name}</strong>
               <code title={inspection.canonicalPath}>{inspection.canonicalPath}</code>
               <small>{data ? formatBytes(data.sizeBytes) : inspection.sizeBytes !== undefined ? formatBytes(inspection.sizeBytes) : "正在读取"} · {statusNote}</small>
+              {data?.version && <small title={`SHA-256: ${data.version}`}>本机读取已验证 · 版本 {data.version.slice(0, 12)}</small>}
             </div>}
             {inspection && <div className="file-preview__controls">
               {!nativePdfZoom && <div className="file-preview__zoom" aria-label="预览缩放">
@@ -508,6 +542,7 @@ export function FilePreviewPanel({
                 <button type="button" aria-label="放大预览" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 10))}><ZoomIn size={14} /></button>
               </div>}
               <button type="button" aria-label="刷新预览" title="重新读取磁盘文件" onClick={() => setReload((value) => value + 1)}><RefreshCw size={14} /></button>
+              {onReference && <button type="button" aria-label={selectedText ? "引用选区到对话" : "引用文件到对话"} title={selectedText ? `引用选区（${selectedText.length} 字符）` : "只追加路径和版本，不发送全文"} disabled={!data || referenceBusy} onClick={() => void runAction(referenceFile)}><MessageSquareQuote size={14} /><span>{selectedText ? "引用选区" : "引用"}</span></button>}
               <button type="button" aria-label={maximized ? "退出铺满窗口" : "铺满窗口"} title={maximized ? "退出铺满窗口" : "铺满窗口"} onClick={() => setMaximized((value) => !value)}>{maximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}</button>
               <div className="file-preview__more" ref={moreMenuRef}>
                 <button type="button" className="file-preview__more-trigger" aria-label="更多文件操作" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((value) => !value)}><Ellipsis size={15} /><span>更多</span></button>
@@ -520,11 +555,12 @@ export function FilePreviewPanel({
             </div>}
           </div>
           {actionError && <div className="file-preview__action-error" role="alert">操作失败：{actionError}</div>}
+          {referenceFeedback && <div className="file-preview__reference-feedback" role="status">{referenceFeedback}</div>}
           <div className={`file-preview__stage file-preview__stage--${inspection ? data?.kind ?? "loading" : "idle"}`}>
             {!inspection && <div className="file-preview__empty" role="status"><FileSearch size={30} /><strong>选择一个会话文件</strong><p>从上方下拉框选择输出，或点击对话中的“预览”按钮。</p></div>}
             {inspection && state.status === "loading" && <LoadingPreview label="正在读取本地文件" />}
             {inspection && state.status === "error" && <div className="file-preview__error" role="alert"><strong>无法预览这个文件</strong><p>{state.message}</p><button type="button" className="button-secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw size={14} />重新读取</button></div>}
-            {inspection && data && <div className="file-preview__viewport" style={{ "--file-preview-zoom": zoom / 100 } as CSSProperties}><PreviewContent api={api} data={data} /></div>}
+            {inspection && data && <div ref={viewportRef} className="file-preview__viewport" style={{ "--file-preview-zoom": zoom / 100 } as CSSProperties}><PreviewContent api={api} data={data} /></div>}
           </div>
         </section>
       </div>

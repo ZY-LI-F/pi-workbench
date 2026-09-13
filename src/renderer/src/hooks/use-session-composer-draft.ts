@@ -21,6 +21,7 @@ interface SessionComposerDraftController extends SessionComposerDraft {
   readonly setText: Dispatch<SetStateAction<string>>;
   readonly setImages: Dispatch<SetStateAction<readonly ComposerImage[]>>;
   readonly clear: () => void;
+  readonly prepareSend: () => (() => void);
   readonly flush: () => Promise<void>;
 }
 
@@ -48,6 +49,7 @@ export function useSessionComposerDraft(
   const [persistence, setPersistence] = useState<Readonly<Record<string, ComposerDraftPersistence>>>(Object.freeze({}));
   const draftsRef = useRef<Readonly<Record<string, SessionComposerDraft>>>(Object.freeze({}));
   const revisionsRef = useRef(new Map<string, number>());
+  const textRevisionsRef = useRef(new Map<string, number>());
   const savedRevisionsRef = useRef(new Map<string, number>());
   const loadedRef = useRef(new Set<string>());
   const loadingRef = useRef(new Map<string, Promise<void>>());
@@ -76,21 +78,23 @@ export function useSessionComposerDraft(
       throw new Error("会话草稿尚未成功加载，未覆盖本机草稿文件");
     }
 
-    const revision = revisionsRef.current.get(draftKey) ?? 0;
-    if (savedRevisionsRef.current.get(draftKey) === revision) return;
-    const current = draftsRef.current[draftKey] ?? EMPTY_DRAFT;
-    const input: SaveComposerDraftInput = Object.freeze({
-      key: draftKey,
-      text: current.text,
-      images: current.images,
-    });
-    setPersistenceFor(draftKey, Object.freeze({ status: "saving" }));
-    const operation = api.composerDraftSave(input).then(() => {
-      savedRevisionsRef.current.set(draftKey, revision);
-      if ((revisionsRef.current.get(draftKey) ?? 0) === revision) {
-        setPersistenceFor(draftKey, Object.freeze({ status: "saved" }));
+    const pending = inFlightRef.current.get(draftKey);
+    if (pending) return pending;
+    if (savedRevisionsRef.current.get(draftKey) === (revisionsRef.current.get(draftKey) ?? 0)) return;
+
+    // Exactly one writer per session. A flush also drains edits made during
+    // an earlier save, so an older IPC result cannot overwrite a newer draft.
+    const operation = (async () => {
+      while (savedRevisionsRef.current.get(draftKey) !== (revisionsRef.current.get(draftKey) ?? 0)) {
+        const revision = revisionsRef.current.get(draftKey) ?? 0;
+        const current = draftsRef.current[draftKey] ?? EMPTY_DRAFT;
+        const input: SaveComposerDraftInput = Object.freeze({ key: draftKey, text: current.text, images: current.images });
+        setPersistenceFor(draftKey, Object.freeze({ status: "saving" }));
+        await api.composerDraftSave(input);
+        savedRevisionsRef.current.set(draftKey, revision);
       }
-    }).catch((cause: unknown) => {
+      setPersistenceFor(draftKey, Object.freeze({ status: "saved" }));
+    })().catch((cause: unknown) => {
       const message = errorMessage(cause);
       setPersistenceFor(draftKey, Object.freeze({ status: "error", message }));
       throw cause;
@@ -164,6 +168,7 @@ export function useSessionComposerDraft(
 
   const setText = useCallback<Dispatch<SetStateAction<string>>>((next) => {
     if (!key) return;
+    textRevisionsRef.current.set(key, (textRevisionsRef.current.get(key) ?? 0) + 1);
     dirtyTextRef.current.add(key);
     updateDraft(key, (current) => Object.freeze({
       ...current,
@@ -182,9 +187,27 @@ export function useSessionComposerDraft(
 
   const clear = useCallback(() => {
     if (!key) return;
+    textRevisionsRef.current.set(key, (textRevisionsRef.current.get(key) ?? 0) + 1);
     dirtyTextRef.current.add(key);
     dirtyImagesRef.current.add(key);
     updateDraft(key, () => EMPTY_DRAFT);
+  }, [key, updateDraft]);
+
+  const prepareSend = useCallback(() => {
+    if (!key) throw new Error("没有可提交草稿的 Pi 会话");
+    const snapshot = draftsRef.current[key] ?? EMPTY_DRAFT;
+    const textRevision = textRevisionsRef.current.get(key) ?? 0;
+    return () => {
+      // Capture both identity and revision. Returning to this session and typing
+      // identical text still creates a NEW draft that an old ack must not erase.
+      const textUnchanged = (textRevisionsRef.current.get(key) ?? 0) === textRevision;
+      if (textUnchanged) dirtyTextRef.current.add(key);
+      if (snapshot.images.length > 0) dirtyImagesRef.current.add(key);
+      updateDraft(key, (current) => ({
+        text: textUnchanged && current.text === snapshot.text ? "" : current.text,
+        images: current.images.filter((image) => !snapshot.images.includes(image)),
+      }));
+    };
   }, [key, updateDraft]);
 
   const flush = useCallback(async () => {
@@ -200,6 +223,7 @@ export function useSessionComposerDraft(
     setText,
     setImages,
     clear,
+    prepareSend,
     flush,
-  }), [clear, draft, flush, key, persistence, setImages, setText]);
+  }), [clear, draft, flush, key, persistence, prepareSend, setImages, setText]);
 }

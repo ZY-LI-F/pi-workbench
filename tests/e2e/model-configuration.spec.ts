@@ -1,109 +1,15 @@
-import { expect, test, _electron as electron } from "@playwright/test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { createServer } from "node:http";
-import { createServer as createNetServer } from "node:net";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { expect, test } from "@playwright/test";
 import { e2eScreenshotPath } from "./helpers/screenshot-path";
+import { nativeFixture } from "./helpers/native-fixture";
 
-async function availableLoopbackPort(): Promise<number> {
-  const server = createNetServer();
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", resolve);
-  });
-  const address = server.address();
-  if (!address || typeof address === "string") throw new Error("无法分配本机端口");
-  await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
-  return address.port;
-}
-
-test("reveals the configured API key on demand and runs a real isolated model probe", async ({}, testInfo) => {
-  let receivedDiscoveryAuthorization = "";
-  let receivedModelAuthorization = "";
-  const providerServer = createServer(async (request, response) => {
-    if (request.method === "GET" && request.url?.startsWith("/v1/models")) {
-      receivedDiscoveryAuthorization = request.headers.authorization ?? "";
-      response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({
-        object: "list",
-        data: [
-          { id: "stella-e2e-model", name: "Local Validation Model", owned_by: "stella-e2e" },
-          { id: "stella-e2e-model-2", name: "Discovered Validation Model", owned_by: "stella-e2e" },
-        ],
-      }));
-      return;
-    }
-    receivedModelAuthorization = request.headers.authorization ?? "";
-    let requestBody = "";
-    for await (const _chunk of request) {
-      requestBody += _chunk.toString();
-    }
-    const requestedModel = (JSON.parse(requestBody) as { model?: string }).model ?? "stella-e2e-model";
-    response.writeHead(200, { "content-type": "text/event-stream" });
-    response.end([
-      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: requestedModel, choices: [{ index: 0, delta: { role: "assistant", content: "OK" }, finish_reason: null }] })}`,
-      "",
-      `data: ${JSON.stringify({ id: "chatcmpl-e2e", object: "chat.completion.chunk", created: 1, model: requestedModel, choices: [{ index: 0, delta: {}, finish_reason: "stop" }] })}`,
-      "",
-      "data: [DONE]",
-      "",
-    ].join("\n"));
-  });
-  await new Promise<void>((resolve, reject) => {
-    providerServer.once("error", reject);
-    providerServer.listen(0, "127.0.0.1", resolve);
-  });
-  const providerAddress = providerServer.address();
-  if (!providerAddress || typeof providerAddress === "string") throw new Error("无法创建本机 Provider");
-
-  const agentDir = await mkdtemp(join(tmpdir(), "stella-model-e2e-"));
-  await writeFile(join(agentDir, "models.json"), JSON.stringify({
-    providers: {
-      "stella-e2e": {
-        name: "OpenAI-Compatible Local",
-        baseUrl: `http://127.0.0.1:${providerAddress.port}/v1`,
-        api: "openai-completions",
-        models: [{
-          id: "stella-e2e-model",
-          name: "Local Validation Model",
-          reasoning: false,
-          input: ["text"],
-          contextWindow: 8_192,
-          maxTokens: 1_024,
-        }],
-      },
-    },
-  }), "utf8");
-  await writeFile(join(agentDir, "auth.json"), JSON.stringify({
-    "stella-e2e": { type: "api_key", key: "stella-e2e-secret" },
-  }), "utf8");
-
-  const electronApp = await electron.launch({
-    args: [".", `--user-data-dir=${testInfo.outputPath("electron-user-data")}`],
-    cwd: process.cwd(),
-    env: Object.freeze({
-      ...process.env,
-      PI_CODING_AGENT_DIR: agentDir,
-      STELLA_WEBHOOK_PORT: String(await availableLoopbackPort()),
-    }),
-  });
-
+test("discovers, adds, removes and tests models without coupling configuration to a chat task", async ({}, testInfo) => {
+  const fixture = await nativeFixture(testInfo);
+  const { window, requests } = fixture;
   try {
-    const window = await electronApp.firstWindow();
-    const pageErrors: string[] = [];
-    window.on("pageerror", (error) => pageErrors.push(error.message));
-    await window.waitForLoadState("domcontentloaded");
-    await expect(window.locator(".app-shell, .startup-screen--error")).toBeVisible({ timeout: 45_000 });
-    if (await window.locator(".startup-screen--error").isVisible()) {
-      throw new Error(await window.locator(".startup-screen--error").innerText());
-    }
-
-    await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
+    await fixture.openChat();
     await window.getByRole("button", { name: "模型配置", exact: true }).click();
     await expect(window.getByRole("heading", { name: "模型配置", exact: true })).toBeVisible({ timeout: 30_000 });
-    const providerList = window.getByLabel("Provider 列表");
-    await providerList.getByRole("button", { name: /OpenAI-Compatible Local/ }).click();
+    await window.getByLabel("Provider 列表").getByRole("button", { name: /OpenAI-Compatible Local/ }).click();
 
     const currentKey = window.getByLabel("OpenAI-Compatible Local 当前 API key");
     await expect(currentKey).toHaveValue("");
@@ -123,18 +29,18 @@ test("reveals the configured API key on demand and runs a real isolated model pr
     await providerDialog.getByLabel("添加模型 stella-e2e-model-2").click();
     await providerDialog.getByRole("button", { name: "保存并应用" }).click();
     await expect(providerDialog).toBeHidden({ timeout: 30_000 });
-    expect(receivedDiscoveryAuthorization).toBe("Bearer stella-e2e-secret");
+    expect(requests.find((request) => request.path === "/v1/models")?.authorization).toBe("Bearer stella-e2e-secret");
 
     await expect(window.getByLabel("连接测试模型")).toHaveValue("stella-e2e-model-2", { timeout: 30_000 });
     await window.getByRole("button", { name: "测试 OpenAI-Compatible Local 连通性" }).click();
     await expect(window.getByText("连通已验证")).toBeVisible({ timeout: 30_000 });
     await expect(window.getByLabel("OpenAI-Compatible Local 连通测试")).toContainText("stella-e2e-model-2");
-    expect(receivedModelAuthorization).toBe("Bearer stella-e2e-secret");
+    expect(requests.findLast((request) => request.body)?.authorization).toBe("Bearer stella-e2e-secret");
 
-    for (const closeNotice of await window.getByRole("button", { name: "关闭通知" }).all()) {
-      if (await closeNotice.isVisible()) await closeNotice.click();
+    for (const notice of await window.getByRole("button", { name: "关闭通知" }).all()) {
+      if (await notice.isVisible()) await notice.click();
     }
-    await window.setViewportSize({ width: 1_850, height: 1_178 });
+    await window.setViewportSize({ width: 1850, height: 1178 });
     await window.screenshot({ path: e2eScreenshotPath(testInfo, "model-configuration-stella.png"), fullPage: true, animations: "disabled" });
     await window.setViewportSize({ width: 600, height: 900 });
     const providerConsole = window.locator(".provider-console");
@@ -142,10 +48,7 @@ test("reveals the configured API key on demand and runs a real isolated model pr
     await expect.poll(() => providerConsole.evaluate((element) => element.scrollHeight <= element.clientHeight + 1)).toBe(true);
     await window.screenshot({ path: testInfo.outputPath("model-configuration.png"), fullPage: true, animations: "disabled" });
     await providerConsole.screenshot({ path: testInfo.outputPath("model-configuration-console.png"), animations: "disabled" });
-    expect(pageErrors).toEqual([]);
-  } finally {
-    await electronApp.close();
-    await new Promise<void>((resolve, reject) => providerServer.close((error) => error ? reject(error) : resolve()));
-    await rm(agentDir, { recursive: true, force: true });
-  }
+    expect(fixture.pageErrors).toEqual([]);
+    expect(fixture.providerErrors).toEqual([]);
+  } finally { await fixture.close(); }
 });

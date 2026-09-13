@@ -5,6 +5,9 @@ import type {
   SerializableMessage,
 } from "@shared/contracts";
 import { appendDiagnosticText } from "@shared/diagnostics";
+import { historicalTools } from "./historical-tools";
+import { projectMessage, reconcileSnapshotMessages, resumeMessageProjection } from "./message-projection";
+import { sameRuntimeScope, type RuntimeScope } from "@shared/runtime-scope";
 
 export interface ToolExecutionState {
   readonly id: string;
@@ -38,6 +41,12 @@ export interface RuntimeUiState {
   readonly phase: "loading" | "ready" | "error";
   readonly bootstrap?: RuntimeBootstrap;
   readonly messages: readonly SerializableMessage[];
+  readonly activeMessages: Readonly<Record<string, number>>;
+  readonly nextMessageOrdinal: number;
+  readonly scope?: RuntimeScope;
+  readonly retiredGenerations: readonly string[];
+  readonly executionObserved: boolean;
+  readonly compactionObserved: boolean;
   readonly streaming: boolean;
   readonly compacting: boolean;
   readonly retrying: boolean;
@@ -59,19 +68,26 @@ export interface RuntimeUiState {
 }
 
 export type RuntimeAction =
-  | { readonly type: "BOOTSTRAP"; readonly payload: RuntimeBootstrap }
+  | { readonly type: "BOOTSTRAP"; readonly payload: RuntimeBootstrap; readonly preserveLiveState?: boolean }
   | { readonly type: "INITIALIZE_FAILED"; readonly error: string }
   | { readonly type: "SYNC_FAILED"; readonly error: string }
   | { readonly type: "SYNC_WARNING"; readonly error: string }
   | { readonly type: "BRIDGE_EVENT"; readonly event: BridgeEvent }
+  | { readonly type: "BRIDGE_EVENTS"; readonly events: readonly BridgeEvent[] }
   | { readonly type: "EXTENSION_RESOLVED"; readonly response: PiExtensionResponse }
   | { readonly type: "EXTENSION_EXPIRED"; readonly id: string }
+  | { readonly type: "EDITOR_INJECTION_APPLIED"; readonly id: string }
   | { readonly type: "NOTICE"; readonly notice: Notice }
   | { readonly type: "DISMISS_NOTICE"; readonly id: string };
 
 export const INITIAL_RUNTIME_STATE: RuntimeUiState = Object.freeze({
   phase: "loading",
   messages: Object.freeze([]),
+  activeMessages: Object.freeze({}),
+  nextMessageOrdinal: 0,
+  retiredGenerations: Object.freeze([]),
+  executionObserved: false,
+  compactionObserved: false,
   streaming: false,
   compacting: false,
   retrying: false,
@@ -89,22 +105,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function recordValue(value: unknown): Readonly<Record<string, unknown>> {
   return isRecord(value) ? value : Object.freeze({});
-}
-
-function messageIdentity(message: SerializableMessage): string {
-  const timestamp = typeof message.timestamp === "number" ? message.timestamp : 0;
-  if (message.role === "toolResult") return `${message.role}:${message.toolCallId}:${timestamp}`;
-  return `${message.role}:${timestamp}`;
-}
-
-function upsertMessage(
-  messages: readonly SerializableMessage[],
-  incoming: SerializableMessage,
-): readonly SerializableMessage[] {
-  const identity = messageIdentity(incoming);
-  const index = messages.findIndex((message) => messageIdentity(message) === identity);
-  if (index < 0) return Object.freeze([...messages, incoming]);
-  return Object.freeze(messages.map((message, messageIndex) => (messageIndex === index ? incoming : message)));
 }
 
 function noticeFromExtension(payload: Record<string, unknown>): Notice {
@@ -210,10 +210,11 @@ function handleExtensionRequest(state: RuntimeUiState, payload: Record<string, u
 function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>): RuntimeUiState {
   if (payload.type === "extension_ui_request") return handleExtensionRequest(state, payload);
   if (payload.type === "extension_error") return handleExtensionError(state, payload);
-  if (payload.type === "agent_start") return { ...state, streaming: true, retrying: false };
-  if (payload.type === "agent_settled") return { ...state, streaming: false, retrying: false };
-  if (payload.type === "compaction_start") return { ...state, compacting: true };
+  if (payload.type === "agent_start") return { ...state, streaming: true, retrying: false, executionObserved: true };
+  if (payload.type === "agent_settled") return { ...state, streaming: false, retrying: false, executionObserved: true };
+  if (payload.type === "compaction_start") return { ...state, compacting: true, compactionObserved: true };
   if (payload.type === "compaction_end") {
+    state = { ...state, compactionObserved: true };
     const errorMessage = typeof payload.errorMessage === "string" && payload.errorMessage.trim().length > 0
       ? payload.errorMessage.trim()
       : undefined;
@@ -245,7 +246,8 @@ function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>):
   ) {
     return {
       ...state,
-      messages: upsertMessage(state.messages, payload.message as SerializableMessage),
+      ...projectMessage(state, payload.type, payload.message as SerializableMessage,
+        state.scope ? `${state.scope.generation}:${state.scope.scope}` : state.bootstrap?.state.sessionId ?? "initial", state.scope?.sequence),
     };
   }
   if (payload.type === "tool_execution_start") {
@@ -315,6 +317,18 @@ function handlePiEvent(state: RuntimeUiState, payload: Record<string, unknown>):
 }
 
 function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUiState {
+  if ((event.source === "pi" || event.source === "runtime") && event.scope) {
+    if (event.source === "runtime" && event.payload.type === "runtime_starting") {
+      if (state.retiredGenerations.includes(event.scope.generation)) return state;
+      return { ...state, scope: event.scope, activeMessages: Object.freeze({}), streaming: false, compacting: false, retrying: false,
+        executionObserved: false, compactionObserved: false, queue: INITIAL_RUNTIME_STATE.queue, tools: Object.freeze({}), extensionRequest: undefined,
+        extensionStatuses: Object.freeze({}), extensionWidgets: Object.freeze({}), editorInjection: undefined, windowTitle: undefined,
+        retiredGenerations: state.scope && state.scope.generation !== event.scope.generation
+        ? [...state.retiredGenerations, state.scope.generation] : state.retiredGenerations };
+    }
+    if (state.scope && (!sameRuntimeScope(state.scope, event.scope) || event.scope.sequence <= state.scope.sequence)) return state;
+    state = { ...state, scope: event.scope };
+  }
   if (event.source === "pi") return handlePiEvent(state, event.payload as unknown as Record<string, unknown>);
   if (event.source === "board" || event.source === "capability" || event.source === "execution-backend") return state;
   const payload = event.payload;
@@ -329,13 +343,18 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
     };
   }
   if (payload.type === "protocol_error") {
-    return { ...state, error: `Pi RPC 协议错误：${payload.message}` };
+    return { ...state, streaming: false, compacting: false, retrying: false, executionObserved: true, compactionObserved: true, error: `Pi RPC 协议错误：${payload.message}` };
   }
   return state;
 }
 
 export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): RuntimeUiState {
+  if (action.type === "EDITOR_INJECTION_APPLIED") {
+    return state.editorInjection?.id === action.id ? { ...state, editorInjection: undefined } : state;
+  }
   if (action.type === "BOOTSTRAP") {
+    if (action.payload.scope && (state.retiredGenerations.includes(action.payload.scope.generation)
+      || (state.scope?.generation === action.payload.scope.generation && state.scope.scope > action.payload.scope.scope))) return state;
     const identityChanged = Boolean(
       state.bootstrap
       && (
@@ -346,13 +365,25 @@ export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): Ru
     const base = identityChanged
       ? { ...INITIAL_RUNTIME_STATE, notices: state.notices }
       : state;
+    const preserveLive = !identityChanged && Boolean(state.bootstrap) && action.preserveLiveState;
+    const scoped = Boolean(action.payload.scope && state.scope && sameRuntimeScope(action.payload.scope, state.scope) && action.payload.messageSequence !== undefined);
+    const liveStateNewer = scoped && state.scope!.sequence > (action.payload.stateSequence ?? action.payload.scope!.sequence);
     return {
       ...base,
       phase: "ready",
       bootstrap: action.payload,
-      messages: action.payload.messages,
-      streaming: action.payload.state.isStreaming,
-      compacting: action.payload.state.isCompacting,
+      ...(scoped ? reconcileSnapshotMessages(state, action.payload) : preserveLive ? {} : resumeMessageProjection(action.payload.messages, action.payload.state.isStreaming)),
+      scope: (liveStateNewer || preserveLive) && state.scope ? state.scope : action.payload.scope,
+      retiredGenerations: state.retiredGenerations,
+      streaming: (liveStateNewer && state.executionObserved) || preserveLive ? state.streaming : action.payload.state.isStreaming,
+      compacting: (liveStateNewer && state.compactionObserved) || preserveLive ? state.compacting : action.payload.state.isCompacting,
+      executionObserved: true,
+      compactionObserved: true,
+      queue: liveStateNewer ? state.queue : base.queue,
+      tools: liveStateNewer || preserveLive ? Object.freeze({ ...historicalTools(action.payload.messages), ...state.tools }) : Object.freeze({
+        ...Object.fromEntries(Object.entries(base.tools).filter(([, tool]) => tool.status !== "running" || action.payload.state.isStreaming)),
+        ...historicalTools(action.payload.messages),
+      }),
       error: undefined,
     };
   }
@@ -378,6 +409,7 @@ export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): Ru
     };
   }
   if (action.type === "BRIDGE_EVENT") return handleBridgeEvent(state, action.event);
+  if (action.type === "BRIDGE_EVENTS") return action.events.reduce(handleBridgeEvent, state);
   if (action.type === "EXTENSION_RESOLVED") {
     if (state.extensionRequest?.id !== action.response.id) return state;
     return { ...state, extensionRequest: undefined };

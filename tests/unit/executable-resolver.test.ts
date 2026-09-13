@@ -22,7 +22,7 @@ afterEach(async () => {
 
 describe("ExecutableResolver", () => {
   it("discovers a CLI on PATH and records the resolved display path", async () => {
-    const codex = await executable("codex");
+    const codex = await executable(process.platform === "win32" ? "codex.exe" : "codex");
     const resolver = new ExecutableResolver({ environment: { PATH: join(codex, "..") } });
     await expect(resolver.resolve("codex")).resolves.toMatchObject({
       backendId: "codex",

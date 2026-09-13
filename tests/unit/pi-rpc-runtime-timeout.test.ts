@@ -54,6 +54,7 @@ async function startedRuntime(
 ) {
   const child = new FakeRpcProcess();
   const signals: unknown[] = [];
+  const events: unknown[] = [];
   const spawnArgs: string[][] = [];
   const runtime = new PiRpcRuntime({
     executablePath: "node",
@@ -63,7 +64,7 @@ async function startedRuntime(
       setImmediate(() => child.emit("spawn"));
       return child as unknown as ChildProcessWithoutNullStreams;
     },
-    emitPiEvent: () => undefined,
+    emitPiEvent: (event) => events.push(event),
     emitRuntimeSignal: (signal) => signals.push(signal),
     requestTimeoutMs: timeout,
     compactionTimeoutMs,
@@ -71,10 +72,123 @@ async function startedRuntime(
   });
   runtimes.push(runtime);
   await runtime.start(startOptions);
-  return { child, runtime, signals, spawnArgs };
+  return { child, runtime, signals, spawnArgs, events };
 }
 
 describe("PiRpcRuntime request boundaries", () => {
+  it("waits for protocol-failure termination before a stop or replacement start completes", async () => {
+    const children: FakeRpcProcess[] = [];
+    const runtime = new PiRpcRuntime({
+      executablePath: "node", rpcEntryPath: "rpc-entry.js", requestTimeoutMs: 5_000,
+      spawnProcess: () => {
+        const child = new FakeRpcProcess(); children.push(child);
+        setImmediate(() => child.emit("spawn"));
+        return child as unknown as ChildProcessWithoutNullStreams;
+      }, emitPiEvent: () => undefined, emitRuntimeSignal: () => undefined,
+    });
+    runtimes.push(runtime);
+    await runtime.start({ cwd: process.cwd(), trusted: false });
+    const old = children[0]!;
+    const finishExit = old.kill.bind(old);
+    old.kill = () => true; // Simulate a process whose SIGTERM has not completed yet.
+    old.stdout.write("{invalid-json}\n");
+    let stopCompleted = false;
+    const stopping = runtime.stop().then(() => { stopCompleted = true; });
+    const restarting = runtime.start({ cwd: process.cwd(), trusted: false });
+    try {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+      expect(stopCompleted).toBe(false);
+      expect(children).toHaveLength(1);
+    } finally { finishExit(); await stopping; await restarting; }
+    expect(children).toHaveLength(2);
+    expect(runtime.running).toBe(true);
+  });
+
+  it("decodes every possible UTF-8 byte boundary without changing Chinese, emoji or paths", async () => {
+    const { child, events, signals } = await startedRuntime(5_000);
+    const event = { type: "message_update", text: "中文😀路径 C:\\报告\\分子.md" };
+    const bytes = Buffer.from(`${JSON.stringify(event)}\r\n`);
+    for (let split = 1; split < bytes.length; split += 1) {
+      child.stdout.write(bytes.subarray(0, split));
+      child.stdout.write(bytes.subarray(split));
+    }
+    for (const byte of bytes) child.stdout.write(Buffer.from([byte]));
+    expect(events).toEqual(Array.from({ length: bytes.length }, () => event));
+    expect(signals).not.toContainEqual(expect.objectContaining({ type: "protocol_error" }));
+  });
+
+  it("flushes the final record at EOF and drains it before process close", async () => {
+    const { child, runtime } = await startedRuntime(5_000);
+    const pending = runtime.send({ type: "abort" });
+    const request = child.requests.at(-1);
+    child.emit("exit", 0, null);
+    child.stdout.end(JSON.stringify({ id: request?.id, type: "response", command: "abort", success: true }));
+    await expect(pending).resolves.toMatchObject({ success: true });
+    child.emit("close", 0, null);
+    expect(runtime.running).toBe(false);
+  });
+
+  it("reports truncated JSON and incomplete UTF-8 instead of silently dropping the last line", async () => {
+    const first = await startedRuntime(5_000);
+    const pending = first.runtime.send({ type: "abort" });
+    first.child.stdout.end('{"type":');
+    await expect(pending).rejects.toThrow("无法解析");
+    const second = await startedRuntime(5_000);
+    const other = second.runtime.send({ type: "abort" });
+    second.child.stdout.end(Buffer.from([0xe4, 0xb8]));
+    await expect(other).rejects.toThrow("UTF-8");
+  });
+
+  it("decodes stderr independently from stdout across byte boundaries", async () => {
+    const { child, signals } = await startedRuntime(5_000);
+    const bytes = Buffer.from("中文😀错误");
+    for (const byte of bytes) child.stderr.write(Buffer.from([byte]));
+    child.stderr.end();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(signals.filter((signal) => (signal as { type: string }).type === "runtime_stderr")
+      .map((signal) => (signal as { message: string }).message).join("")).toBe("中文😀错误");
+  });
+
+  it("isolates delayed stdout, stderr, exit and errors from retired processes", async () => {
+    const children: FakeRpcProcess[] = [];
+    const events: unknown[] = [];
+    const signals: unknown[] = [];
+    const runtime = new PiRpcRuntime({
+      executablePath: "node", rpcEntryPath: "rpc.js", requestTimeoutMs: 5_000,
+      spawnProcess: () => {
+        const child = new FakeRpcProcess();
+        children.push(child);
+        setImmediate(() => child.emit("spawn"));
+        return child as unknown as ChildProcessWithoutNullStreams;
+      },
+      emitPiEvent: (event) => events.push(event), emitRuntimeSignal: (event) => signals.push(event),
+    });
+    runtimes.push(runtime);
+    await runtime.start({ cwd: process.cwd(), trusted: false });
+    const before = runtime.scope;
+    children[0].stdout.write('{"type":"old');
+    await runtime.start({ cwd: process.cwd(), trusted: false });
+    expect(runtime.scope?.generation).not.toBe(before?.generation);
+    const pending = runtime.send({ type: "abort" });
+    const request = children[1].requests.at(-1);
+    children[0].stdout.write('-event"}\n');
+    children[0].stderr.write("old error");
+    children[0].emit("error", new Error("old process error"));
+    children[0].emit("close", 1, null);
+    children[1].stdout.write(`${JSON.stringify({ id: request?.id, type: "response", command: "abort", success: true })}\n`);
+    await expect(pending).resolves.toMatchObject({ success: true });
+    expect(events).toEqual([]);
+    expect(signals).not.toContainEqual(expect.objectContaining({ type: "runtime_exit" }));
+    expect(signals).not.toContainEqual(expect.objectContaining({ type: "runtime_stderr" }));
+  });
+
+  it("rejects a response whose command does not match the request ID", async () => {
+    const { child, runtime } = await startedRuntime(5_000);
+    const pending = runtime.send({ type: "abort" });
+    child.stdout.write(`${JSON.stringify({ id: child.requests.at(-1)?.id, type: "response", command: "prompt", success: true })}\n`);
+    await expect(pending).rejects.toThrow("响应与请求不匹配");
+  });
+
   it("resumes an unsaved session by its exact ID", async () => {
     const sessionId = "01a01595-7f5c-7a0d-a4d3-118f199cbd8b";
     const { spawnArgs } = await startedRuntime(5_000, undefined, {

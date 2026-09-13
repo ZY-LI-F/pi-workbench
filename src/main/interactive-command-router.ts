@@ -3,7 +3,7 @@ import type { PiCommand, PiResponse, RuntimeSignal } from "../shared/contracts";
 import { WorkspaceAdmission, type WorkspaceLease } from "./workspace-admission";
 
 interface InteractiveRuntime {
-  send(command: PiCommand): Promise<PiResponse>;
+  send(command: PiCommand, requestId?: string): Promise<PiResponse>;
 }
 
 interface InteractiveCommandRouterDependencies {
@@ -39,11 +39,11 @@ export class InteractiveCommandRouter {
     this.#id = dependencies.id ?? randomUUID;
   }
 
-  async send(command: PiCommand, workspacePath: string): Promise<PiResponse> {
+  async send(command: PiCommand, workspacePath: string, requestId?: string): Promise<PiResponse> {
     if (this.#runtimeMaintenance) {
       throw new Error("Pi Runtime 正在重载模型配置；请等待重载完成后再发送命令");
     }
-    if (TURN_COMMANDS.has(command.type)) return this.#sendTurn(command, workspacePath);
+    if (TURN_COMMANDS.has(command.type)) return this.#sendTurn(command, workspacePath, requestId);
     if (command.type === "bash") return this.#sendBash(command, workspacePath);
     if (command.type === "compact") return this.#sendCompaction(command);
     return this.#runtime.send(command);
@@ -67,7 +67,7 @@ export class InteractiveCommandRouter {
   }
 
   handleRuntimeSignal(signal: RuntimeSignal): void {
-    if (signal.type === "runtime_exit") this.release();
+    if (signal.type === "runtime_exit" || signal.type === "protocol_error") this.release();
   }
 
   release(): void {
@@ -76,7 +76,7 @@ export class InteractiveCommandRouter {
     active?.lease.release();
   }
 
-  async #sendTurn(command: PiCommand, workspacePath: string): Promise<PiResponse> {
+  async #sendTurn(command: PiCommand, workspacePath: string, requestId?: string): Promise<PiResponse> {
     const existing = this.#active;
     if (existing && existing.workspacePath !== workspacePath) {
       throw new Error(`Interactive Pi 已占用另一工作区: ${existing.workspacePath}`);
@@ -95,7 +95,7 @@ export class InteractiveCommandRouter {
       this.#active = Object.freeze({ workspacePath, lease });
     }
     try {
-      return await this.#runtime.send(command);
+      return await this.#runtime.send(command, requestId);
     } catch (cause) {
       if (newlyAcquired) this.release();
       throw cause;

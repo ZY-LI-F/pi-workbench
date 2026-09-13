@@ -1,8 +1,13 @@
-import React, { useState } from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import React, { useEffect, useState } from "react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Composer, type ComposerImage } from "@renderer/components/Composer";
+import { useSessionComposerDraft } from "@renderer/hooks/use-session-composer-draft";
+import type { RuntimeBootstrap } from "@shared/contracts";
+
+const source = { project: { cwd: "C:/test" }, state: { sessionId: "composer-test" } } as RuntimeBootstrap;
+const draftApi = { composerDraftLoad: async () => undefined, composerDraftSave: async () => undefined };
 
 afterEach(cleanup);
 
@@ -11,6 +16,7 @@ function ComposerHarness({
   onSend = vi.fn().mockResolvedValue(undefined),
   onStop = vi.fn(),
   onQueueModeChange = vi.fn(),
+  onError = vi.fn(),
   initialImages = Object.freeze([]),
   sendDisabled = false,
   commands = Object.freeze([{ name: "review", description: "审查改动", source: "prompt" as const }]),
@@ -19,12 +25,14 @@ function ComposerHarness({
   readonly onSend?: (message: string, images: readonly ComposerImage[]) => Promise<void>;
   readonly onStop?: () => void;
   readonly onQueueModeChange?: (mode: "steer" | "followUp") => void;
+  readonly onError?: (message: string) => void;
   readonly initialImages?: readonly ComposerImage[];
   readonly sendDisabled?: boolean;
   readonly commands?: React.ComponentProps<typeof Composer>["commands"];
 }) {
-  const [draft, setDraft] = useState("");
-  const [images, setImages] = useState<readonly ComposerImage[]>(initialImages);
+  const sessionDraft = useSessionComposerDraft(source, draftApi);
+  const { text: draft, setText: setDraft, images, setImages } = sessionDraft;
+  useEffect(() => { setImages(initialImages); }, []); // Test inputs are initial-only, like restored draft data.
   const [height, setHeight] = useState<number | null>(null);
   return (
     <Composer
@@ -37,11 +45,15 @@ function ComposerHarness({
       streaming={streaming}
       queueMode="steer"
       onQueueModeChange={onQueueModeChange}
-      onSend={onSend}
+      onSend={async (message, attachments) => {
+        const acknowledge = sessionDraft.prepareSend();
+        await onSend(message, attachments);
+        acknowledge();
+      }}
       onStop={onStop}
       onOpenTerminal={vi.fn()}
       onOpenPalette={vi.fn()}
-      onError={vi.fn()}
+      onError={onError}
       sendDisabled={sendDisabled}
       sendDisabledReason={sendDisabled ? "Pi 恢复后即可发送" : undefined}
       height={height}
@@ -51,6 +63,48 @@ function ComposerHarness({
 }
 
 describe("Composer", () => {
+  it("preserves a new draft and attachment edited while the previous send is pending", async () => {
+    let accept!: () => void;
+    const onSend = vi.fn(() => new Promise<void>((resolve) => { accept = resolve; }));
+    const image: ComposerImage = { type: "image", data: "b2xk", mimeType: "image/png", name: "sent.png" };
+    const user = userEvent.setup();
+    const { container } = render(<ComposerHarness initialImages={[image]} onSend={onSend} />);
+    const input = screen.getByLabelText("给 Pi 的消息") as HTMLTextAreaElement;
+    await user.type(input, "first{Enter}");
+    expect(onSend).toHaveBeenCalledWith("first", [image]);
+    await user.clear(input);
+    await user.type(input, "next draft");
+    const upload = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    await user.upload(upload, new File(["new"], "next.png", { type: "image/png" }));
+    await waitFor(() => expect(screen.getByAltText("next.png")).toBeTruthy());
+    await act(async () => accept());
+    expect(input.value).toBe("next draft");
+    expect(screen.queryByAltText("sent.png")).toBeNull();
+    expect(screen.getByAltText("next.png")).toBeTruthy();
+  });
+
+  it("does not steal focus from another control after a delayed acknowledgement", async () => {
+    let accept!: () => void;
+    const user = userEvent.setup();
+    render(<><ComposerHarness onSend={() => new Promise<void>((resolve) => { accept = resolve; })} /><button>其他页面</button></>);
+    await user.type(screen.getByLabelText("给 Pi 的消息"), "first{Enter}");
+    const other = screen.getByRole("button", { name: "其他页面" });
+    await user.click(other);
+    await act(async () => accept());
+    expect(document.activeElement).toBe(other);
+  });
+
+  it("makes every matching skill reachable by keyboard, including beyond the eighth result", async () => {
+    const user = userEvent.setup();
+    const commands = Array.from({ length: 12 }, (_, index) => ({ name: `skill:research-${index + 1}`, source: "skill" as const }));
+    render(<ComposerHarness commands={commands} />);
+    const input = screen.getByLabelText("给 Pi 的消息") as HTMLTextAreaElement;
+    await user.type(input, "/技能");
+    expect(screen.getAllByRole("option")).toHaveLength(12);
+    await user.keyboard("{ArrowUp}{Enter}");
+    expect(input.value).toBe("/skill:research-12 ");
+  });
+
   it("submits with Enter and clears the draft only after success", async () => {
     const user = userEvent.setup();
     const onSend = vi.fn().mockResolvedValue(undefined);
@@ -104,6 +158,12 @@ describe("Composer", () => {
     expect(input.value).toBe("/skill:clinical-landscape ");
     expect(screen.queryByRole("listbox", { name: "斜杠命令候选" })).toBeNull();
     expect(onSend).not.toHaveBeenCalled();
+
+    await user.type(input, "评估 CDK2 的靶点证据{Enter}");
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith(
+      "/skill:clinical-landscape 评估 CDK2 的靶点证据",
+      [],
+    ));
   });
 
   it("wraps upward through Skill options and confirms with Tab", async () => {
@@ -122,7 +182,22 @@ describe("Composer", () => {
     expect(document.activeElement).toBe(input);
   });
 
-  it("ignores composing Enter and lets Escape dismiss Skills before stopping a stream", async () => {
+  it("ignores active composition but accepts Enter after compositionend even with a stale Chromium flag", async () => {
+    const onSend = vi.fn().mockResolvedValue(undefined);
+    render(<ComposerHarness onSend={onSend} />);
+    const input = screen.getByLabelText("给 Pi 的消息") as HTMLTextAreaElement;
+
+    await userEvent.setup().type(input, "中文任务");
+    fireEvent.compositionStart(input);
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(onSend).not.toHaveBeenCalled();
+
+    fireEvent.compositionEnd(input);
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith("中文任务", []));
+  });
+
+  it("lets Escape dismiss Skills before stopping a stream", async () => {
     const user = userEvent.setup();
     const onSend = vi.fn().mockResolvedValue(undefined);
     const onStop = vi.fn();
@@ -133,11 +208,6 @@ describe("Composer", () => {
     const input = screen.getByLabelText("给 Pi 的消息") as HTMLTextAreaElement;
 
     await user.type(input, "/技能");
-    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
-    expect(input.value).toBe("/技能");
-    expect(screen.getByRole("listbox", { name: "斜杠命令候选" })).toBeTruthy();
-    expect(onSend).not.toHaveBeenCalled();
-
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("listbox", { name: "斜杠命令候选" })).toBeNull();
     expect(onStop).not.toHaveBeenCalled();
@@ -161,13 +231,15 @@ describe("Composer", () => {
   it("keeps the composer editable while sending is explicitly unavailable", async () => {
     const user = userEvent.setup();
     const onSend = vi.fn().mockResolvedValue(undefined);
-    render(<ComposerHarness sendDisabled onSend={onSend} />);
+    const onError = vi.fn();
+    render(<ComposerHarness sendDisabled onSend={onSend} onError={onError} />);
     const input = screen.getByLabelText("给 Pi 的消息");
 
     await user.type(input, "先保存这段任务上下文{Enter}");
     expect((input as HTMLTextAreaElement).value).toBe("先保存这段任务上下文");
     expect(screen.getByText("Pi 恢复后即可发送")).toBeTruthy();
     expect(onSend).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith("当前无法发送：Pi 恢复后即可发送");
   });
 
   it("resizes the input area with pointer and keyboard, then restores automatic height", () => {

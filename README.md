@@ -10,6 +10,20 @@ This is no longer a "Pi skin" project. Eight replaceable visual themes remain pa
 
 ## Product Positioning
 
+### v0.6.0 · Native Session Reliability
+
+This upgrade focuses on the native Pi GUI, without expanding Team or modifying official Pi 0.84.2. See the [specification](docs/specs/stella-v0.6.0-native-reliability.md), [delivery tickets](docs/specs/stella-v0.6.0-tickets.md), and [acceptance record](docs/testing/stella-v0.6.0-native-reliability-acceptance.md).
+
+- Fixes corrupted Chinese/emoji at UTF-8 chunk boundaries and collisions between messages with identical timestamps. Each RPC process owns its decoder, pending requests, and generation; retired-process events cannot update a new session.
+- Uses official entry IDs for history and exact RPC read sequence barriers to merge snapshots with the live message tail.
+- **Inspector → Activity → Submission receipts** distinguishes pending, Pi-accepted, Pi-rejected, and unknown results. Accepted does not mean the task completed. Unknown submissions are never replayed automatically; repeated IPC delivery with the same submission ID does not execute twice.
+- After an unexpected Pi exit, **Reconnect** restores the original session and unsent draft. Definitively rejected input can be retried explicitly after correcting its cause; unknown input requires review. Offline diagnostics retain the interrupted session correlation.
+- **Inspector → Context → Export local diagnostics** saves versions, session paths, layout, event counts, and correlated request IDs. It excludes conversation bodies, raw logs, environment variables, and credentials by default. Nothing is uploaded.
+- File previews expose content versions and can append a file reference or selection to the composer. Changed files require an explicit refresh; existing and concurrently edited drafts are preserved.
+- Reading anchors, selected files, and unread attention are retained per session. A saved running observation is not treated as a live process after restart. Receipts live in `native-submissions.json` under application data; view metadata stays in local renderer storage. Neither rewrites Pi JSONL history.
+
+Receipts prove GUI intent and Pi command acceptance, not cross-application exactly-once model execution. Incompatible future formats and write failures are explicit, and existing data is preserved. If a selection inside an isolated HTML/PDF viewer is inaccessible, file-level references remain available without weakening isolation. Windows artifacts are unsigned; macOS still requires platform-specific building, signing, and validation.
+
 | Surface | What users get | Architectural boundary |
 | --- | --- | --- |
 | **Native Pi workbench** | Chat, session tree, model and Provider configuration, thinking level, extensions, Skills, terminal, attachments, and local artifact previews | Uses the real Pi RPC runtime directly; no Task or Team setup is required |
@@ -38,7 +52,7 @@ The **Model Configuration** page is a direct Pi model router. It does not mainta
 
 ## Session Artifact Preview
 
-When Pi returns an absolute local path, the output card offers **Preview**. The file opens in a read-only inspector on the right without replacing the chat composer. All Assistant-delivered paths in the current session are deduplicated and sorted by their most recent mention; switching sessions closes the previous session's preview list.
+When Pi mentions an absolute local path, the output card offers **Preview** under **Inspector → Files** without replacing the composer. The compact file selector deduplicates paths and sorts them by their latest mention. A mention is not proof of existence: only an actual local inspection/read produces a verified preview. Returning to a session restores its selected file without mixing another session's list.
 
 Supported formats:
 
@@ -340,11 +354,12 @@ With `STELLA_ANDROID_VERSION_CODE=7`, the signed script produces `release/Stella
 ```bash
 npm run check
 npm run build
+npm run test:e2e:native
 npm run test:e2e
 npm run test:packaged
 ```
 
-The current deterministic desktop suite contains **106 Vitest files and 462 tests**; the Companion adds **4 files and 18 tests**. In addition to the established Pi/Team/Kanban regressions, it covers Board v9 migration, execution-workspace lifecycle, real-Git isolated concurrency/current-folder serialization, Profile capability truth, managed Codex/Claude execution, external last-good/de-duplication/details, Companion protocol/control-plane/Gateway behaviour, multi-Host migration/routing, native QR scan result handling, and Pi compaction timeout/mutual exclusion. Electron E2E and the API 35 AVD acceptance flow exercise the packaged runtimes rather than replacing them with UI-only mocks.
+The deterministic desktop suite covers Pi/Team/Kanban, Board v9 migration, execution-workspace lifecycle, real-Git concurrency, managed CLI execution, external-source projections, and Companion protocols. Native GUI regression also covers revision-safe draft submission, per-session reading anchors, persisted tool results, Skill keyboard selection, and real Pi automatic compaction. Protocol-fixture tests and billable real-model runs are reported separately in the [2026-09-12 reliability acceptance record](docs/testing/pi-gui-quality-2026-09-12.md); the [source research](docs/research/pi-gui-quality-2026-09-12.md) explains the design decisions. Companion/AVD verification remains a separate suite.
 
 Electron E2E launches the real bundled Pi RPC runtime and covers the default native workbench, Team feature persistence, global model visibility, LEAD/Worker Task Launchpad selection, Task Room, mention impact previews, Pi-to-Task drafts, Kanban drag and drop, orchestration catalog, Autopilot, themes, sessions, terminal behavior, attachments, artifact previews, keyboard focus, and responsive sidebars.
 

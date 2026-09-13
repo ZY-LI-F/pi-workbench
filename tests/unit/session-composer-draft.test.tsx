@@ -1,6 +1,6 @@
 import React from "react";
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RuntimeBootstrap } from "@shared/contracts";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "@shared/composer-draft";
 import {
@@ -31,6 +31,71 @@ function bootstrap(project: string, sessionId: string): RuntimeBootstrap {
 }
 
 describe("useSessionComposerDraft", () => {
+  it("consumes only the captured session revision, even when newer text is identical", async () => {
+    const first = bootstrap("C:/project", "A");
+    const second = bootstrap("C:/project", "B");
+    const api = draftApi();
+    const { result, rerender } = renderHook(({ source }) => useSessionComposerDraft(source, api), { initialProps: { source: first } });
+    await waitFor(() => expect(result.current.persistence.status).toBe("saved"));
+    act(() => result.current.setText("same text"));
+    const acknowledgeOld = result.current.prepareSend();
+    rerender({ source: second });
+    act(() => result.current.setText("B's draft"));
+    rerender({ source: first });
+    act(() => { result.current.setText(""); result.current.setText("same text"); });
+    act(() => acknowledgeOld());
+    expect(result.current.text).toBe("same text");
+    const acknowledgeCurrent = result.current.prepareSend();
+    rerender({ source: second });
+    act(() => acknowledgeCurrent());
+    expect(result.current.text).toBe("B's draft");
+    rerender({ source: first });
+    expect(result.current.text).toBe("");
+  });
+
+  it("serializes saves and flushes the latest edit even if an earlier save is pending", async () => {
+    const accepts: (() => void)[] = [];
+    const saved: string[] = [];
+    const api = {
+      composerDraftLoad: async () => undefined,
+      composerDraftSave: vi.fn((input: SaveComposerDraftInput) => new Promise<void>((resolve) => {
+        accepts.push(() => { saved.push(input.text); resolve(); });
+      })),
+    };
+    const { result } = renderHook(() => useSessionComposerDraft(bootstrap("C:/project", "session"), api));
+    await waitFor(() => expect(result.current.persistence.status).toBe("saved"));
+    act(() => result.current.setText("old"));
+    let firstFlush!: Promise<void>;
+    act(() => { firstFlush = result.current.flush(); });
+    expect(api.composerDraftSave).toHaveBeenCalledTimes(1);
+    act(() => result.current.setText("new"));
+    let latestFlush!: Promise<void>;
+    act(() => { latestFlush = result.current.flush(); });
+    expect(api.composerDraftSave).toHaveBeenCalledTimes(1);
+    await act(async () => { accepts[0]!(); });
+    expect(api.composerDraftSave).toHaveBeenCalledTimes(2);
+    expect(result.current.persistence.status).toBe("saving");
+    await act(async () => { accepts[1]!(); await Promise.all([firstFlush, latestFlush]); });
+    expect(saved).toEqual(["old", "new"]);
+    expect(result.current.persistence.status).toBe("saved");
+  });
+
+  it("exposes a failed save without consuming the draft and lets flush retry it", async () => {
+    const api = {
+      composerDraftLoad: async () => undefined,
+      composerDraftSave: vi.fn().mockRejectedValueOnce(new Error("disk unavailable")).mockResolvedValue(undefined),
+    };
+    const { result } = renderHook(() => useSessionComposerDraft(bootstrap("C:/project", "session"), api));
+    await waitFor(() => expect(result.current.persistence.status).toBe("saved"));
+    act(() => result.current.setText("must survive"));
+    await act(async () => { await expect(result.current.flush()).rejects.toThrow("disk unavailable"); });
+    expect(result.current.text).toBe("must survive");
+    expect(result.current.persistence).toEqual({ status: "error", message: "disk unavailable" });
+    await act(() => result.current.flush());
+    expect(result.current.persistence.status).toBe("saved");
+    expect(api.composerDraftSave).toHaveBeenLastCalledWith(expect.objectContaining({ text: "must survive" }));
+  });
+
   it("keeps independent text and attachments for every project session", async () => {
     const first = bootstrap("C:/project-a", "session-a");
     const second = bootstrap("C:/project-b", "session-b");

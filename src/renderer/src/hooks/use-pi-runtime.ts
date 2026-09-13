@@ -14,6 +14,7 @@ import {
   type Notice,
   type RuntimeUiState,
 } from "../lib/runtime-state";
+import { OrderedEventBatch } from "../lib/ordered-event-batch";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -39,6 +40,7 @@ export interface PiRuntimeController {
   openTaskSession(input: OpenTaskSessionInput): Promise<RuntimeBootstrap>;
   respondToExtension(response: PiExtensionResponse): Promise<void>;
   expireExtensionRequest(id: string): void;
+  consumeEditorInjection(id: string): void;
   notify(message: string, type?: Notice["type"]): void;
   dismissNotice(id: string): void;
 }
@@ -46,59 +48,85 @@ export interface PiRuntimeController {
 export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
   const [state, dispatch] = useReducer(runtimeReducer, INITIAL_RUNTIME_STATE);
   const settledRefreshPending = useRef(false);
+  const settledRefreshRequested = useRef(false);
+  const navigationPending = useRef(0);
+  const activeRef = useRef(true);
+  const liveRevision = useRef(0);
   const bootstrapRequestEpoch = useRef(0);
+  const flushEvents = useRef<() => void>(() => undefined);
 
   const refresh = useCallback(async () => {
     const epoch = ++bootstrapRequestEpoch.current;
+    const revision = liveRevision.current;
     const bootstrap = await api.refresh();
-    if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+    if (activeRef.current && bootstrapRequestEpoch.current === epoch) {
+      flushEvents.current();
+      dispatch({ type: "BOOTSTRAP", payload: bootstrap, preserveLiveState: liveRevision.current !== revision });
+    }
     return bootstrap;
   }, [api]);
 
+  const drainSettledRefresh = useCallback(async () => {
+    if (settledRefreshPending.current || navigationPending.current > 0) return;
+    settledRefreshPending.current = true;
+    try {
+      while (activeRef.current && settledRefreshRequested.current && navigationPending.current === 0) {
+        settledRefreshRequested.current = false;
+        try {
+          await refresh();
+        } catch (error) {
+          if (activeRef.current) dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
+        }
+      }
+    } finally {
+      settledRefreshPending.current = false;
+    }
+  }, [refresh]);
+
   useEffect(() => {
     let active = true;
+    activeRef.current = true;
+    const batch = new OrderedEventBatch<BridgeEvent>((events) => {
+      if (!active) return;
+      dispatch({ type: "BRIDGE_EVENTS", events });
+      if (events.some((event) => event.source === "pi" && event.payload.type === "agent_settled")) {
+        settledRefreshRequested.current = true;
+        void drainSettledRefresh();
+      }
+    }, (flush) => {
+      // A timer also delivers in hidden windows where requestAnimationFrame is suspended.
+      const timer = window.setTimeout(flush, 16);
+      return () => window.clearTimeout(timer);
+    });
+    flushEvents.current = () => batch.flush();
     const unsubscribe = api.onEvent((event: BridgeEvent) => {
       if (!active) return;
-      dispatch({ type: "BRIDGE_EVENT", event });
-      if (
-        event.source === "pi" &&
-        typeof event.payload === "object" &&
-        event.payload !== null &&
-        "type" in event.payload &&
-        event.payload.type === "agent_settled" &&
-        !settledRefreshPending.current
-      ) {
-        settledRefreshPending.current = true;
-        const epoch = ++bootstrapRequestEpoch.current;
-        void api
-          .refresh()
-          .then((bootstrap) => {
-            if (active && bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
-          })
-          .catch((error: unknown) => {
-            if (active) dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
-          })
-          .finally(() => {
-            settledRefreshPending.current = false;
-          });
-      }
+      if (event.source === "pi") liveRevision.current += 1;
+      batch.push(event);
+      if (event.source === "runtime" || (event.source === "pi" && (event.payload.type === "extension_ui_request" || event.payload.type === "agent_settled"))) batch.flush();
     });
 
     const initializeEpoch = ++bootstrapRequestEpoch.current;
     void api
       .initialize()
       .then((bootstrap) => {
-        if (active && bootstrapRequestEpoch.current === initializeEpoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (active && bootstrapRequestEpoch.current === initializeEpoch) {
+          batch.flush();
+          dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        }
       })
       .catch((error: unknown) => {
-        if (active) dispatch({ type: "INITIALIZE_FAILED", error: errorMessage(error) });
+        if (active && bootstrapRequestEpoch.current === initializeEpoch) dispatch({ type: "INITIALIZE_FAILED", error: errorMessage(error) });
       });
 
     return () => {
       active = false;
+      activeRef.current = false;
+      batch.dispose();
+      flushEvents.current = () => undefined;
       unsubscribe();
     };
-  }, [api]);
+  }, [api, drainSettledRefresh]);
 
   useEffect(() => {
     document.title = state.windowTitle ? `${state.windowTitle} · Stella` : "Stella · Pi Workbench";
@@ -135,32 +163,46 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
   const openProject = useCallback(
     async (path: string, trusted: boolean) => {
       const epoch = ++bootstrapRequestEpoch.current;
+      navigationPending.current += 1;
       try {
         const bootstrap = await api.openProject(path, trusted);
         if (!bootstrap) return null;
-        if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (bootstrapRequestEpoch.current === epoch) {
+          flushEvents.current();
+          dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        }
         return bootstrap;
       } catch (error) {
         dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
         throw new ReportedRuntimeError(error);
+      } finally {
+        navigationPending.current -= 1;
+        void drainSettledRefresh();
       }
     },
-    [api],
+    [api, drainSettledRefresh],
   );
 
   const openTaskSession = useCallback(
     async (input: OpenTaskSessionInput) => {
       const epoch = ++bootstrapRequestEpoch.current;
+      navigationPending.current += 1;
       try {
         const bootstrap = await api.openTaskSession(input);
-        if (bootstrapRequestEpoch.current === epoch) dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        if (bootstrapRequestEpoch.current === epoch) {
+          flushEvents.current();
+          dispatch({ type: "BOOTSTRAP", payload: bootstrap });
+        }
         return bootstrap;
       } catch (error) {
         dispatch({ type: "SYNC_FAILED", error: errorMessage(error) });
         throw new ReportedRuntimeError(error);
+      } finally {
+        navigationPending.current -= 1;
+        void drainSettledRefresh();
       }
     },
-    [api],
+    [api, drainSettledRefresh],
   );
 
   const respondToExtension = useCallback(
@@ -183,6 +225,7 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
     (id: string) => dispatch({ type: "EXTENSION_EXPIRED", id }),
     [],
   );
+  const consumeEditorInjection = useCallback((id: string) => dispatch({ type: "EDITOR_INJECTION_APPLIED", id }), []);
 
   return useMemo(
     () => ({
@@ -194,9 +237,10 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
       openTaskSession,
       respondToExtension,
       expireExtensionRequest,
+      consumeEditorInjection,
       notify,
       dismissNotice,
     }),
-    [api, command, dismissNotice, expireExtensionRequest, notify, openProject, openTaskSession, refresh, respondToExtension, state],
+    [api, command, consumeEditorInjection, dismissNotice, expireExtensionRequest, notify, openProject, openTaskSession, refresh, respondToExtension, state],
   );
 }

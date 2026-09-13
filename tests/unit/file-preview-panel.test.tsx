@@ -40,6 +40,25 @@ function PreviewHarness({ api }: { readonly api: StellaDesktopApi }) {
 }
 
 describe("FilePreviewPanel", () => {
+  it("quotes only the current file version and refuses stale references without changing the draft", async () => {
+    const user = userEvent.setup();
+    const target = inspection(newestPath);
+    let version = "initial-hash";
+    const api = { inspectLocalPath: vi.fn(async () => target), readLocalFilePreview: vi.fn(async () => ({ ...target.preview!, canonicalPath: newestPath,
+      name: target.name, sizeBytes: 20, bytes: new TextEncoder().encode("# source evidence"), version })) } as unknown as StellaDesktopApi;
+    const onReference = vi.fn();
+    render(<FilePreviewPanel api={api} inspection={target} references={[]} onSelect={vi.fn()} onReference={onReference} />);
+    await screen.findByRole("heading", { name: "source evidence" });
+    await user.click(screen.getByRole("button", { name: "引用文件到对话" }));
+    await waitFor(() => expect(onReference).toHaveBeenCalledTimes(1));
+    expect(onReference.mock.calls[0]?.[0]).toContain("sha256:initial-hash");
+    expect(onReference.mock.calls[0]?.[0]).not.toContain("source evidence");
+    version = "changed-hash";
+    await user.click(screen.getByRole("button", { name: "引用文件到对话" }));
+    await screen.findByRole("alert"); expect(screen.getByRole("alert").textContent).toContain("文件版本已变化");
+    expect(onReference).toHaveBeenCalledTimes(1);
+  });
+
   it("switches newest-first session files from a compact picker and groups secondary actions", async () => {
     const user = userEvent.setup();
     const api = {

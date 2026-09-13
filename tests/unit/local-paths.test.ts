@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { extractLocalPaths, normalizeLocalPathCandidate } from "../../src/renderer/src/lib/local-paths";
 
 describe("local path extraction", () => {
+  it("recognizes descriptive labels without mistaking the label for part of the path", () => {
+    expect(extractLocalPaths("参考文件：C:\\project\\README.md\nReport: /Users/stella/report.docx\n交付物：C:\\研究 资料\\报告.md"))
+      .toEqual(["C:\\project\\README.md", "/Users/stella/report.docx", "C:\\研究 资料\\报告.md"]);
+    expect(extractLocalPaths("链接：https://example.com/report.md\nhttps://example.com")).toEqual([]);
+  });
   it("recognizes the Windows output directory shown by Pi", () => {
     const path = "C:\\Users\\qq108\\Documents\\PI-GUI\\test-results\\pi-gui-pptx\\";
     expect(extractLocalPaths(`中间文件位置\n\n\`${path}\``)).toEqual([path]);

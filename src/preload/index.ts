@@ -40,6 +40,8 @@ import type {
 } from "../shared/kanban";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "../shared/composer-draft";
 import type { PiSkillInstallResult, PiSkillInstallScope } from "../shared/pi-skill";
+import type { NativeSubmissionInput } from "../shared/native-submission";
+import type { NativeDiagnosticLayout } from "../shared/native-diagnostics";
 import type {
   ContinueExternalExecutionInput,
   ExternalExecutionScope,
@@ -71,6 +73,9 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:external-executions:details", input) as ReturnType<StellaDesktopApi["externalExecutionDetails"]>,
   initialize: () => ipcRenderer.invoke("stella:initialize") as Promise<RuntimeBootstrap>,
   command: (command: PiCommand) => ipcRenderer.invoke("stella:command", command),
+  submitNativeTurn: (input: NativeSubmissionInput) => ipcRenderer.invoke("stella:native-submit", input),
+  nativeSubmissions: (sessionId: string) => ipcRenderer.invoke("stella:native-submissions", sessionId),
+  exportNativeDiagnostics: (layout: NativeDiagnosticLayout) => ipcRenderer.invoke("stella:native-diagnostics:export", layout),
   refresh: () => ipcRenderer.invoke("stella:refresh") as Promise<RuntimeBootstrap>,
   respondToExtension: (response: PiExtensionResponse) =>
     ipcRenderer.invoke("stella:extension-response", response) as Promise<void>,

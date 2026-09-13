@@ -32,15 +32,17 @@ export type { ComposerImage } from "../hooks/use-session-composer-draft";
 
 interface ComposerProps {
   readonly draft: string;
-  readonly onDraftChange: (draft: string) => void;
+  readonly onDraftChange: Dispatch<SetStateAction<string>>;
   readonly images: readonly ComposerImage[];
   readonly onImagesChange: Dispatch<SetStateAction<readonly ComposerImage[]>>;
   readonly editorInjection?: { readonly id: string; readonly text: string };
+  readonly onEditorInjectionApplied?: (id: string) => void;
   readonly commands: readonly SlashCommandSummary[];
   readonly widgets: RuntimeUiState["extensionWidgets"];
   readonly streaming: boolean;
   readonly queueMode: "steer" | "followUp";
   readonly onQueueModeChange: (mode: "steer" | "followUp") => void;
+  /** The session owner captures and consumes its draft only after Pi accepts. */
   readonly onSend: (message: string, images: readonly ComposerImage[]) => Promise<void>;
   readonly onStop: () => void;
   readonly onOpenTerminal: () => void;
@@ -94,6 +96,7 @@ export function Composer({
   images,
   onImagesChange,
   editorInjection,
+  onEditorInjectionApplied,
   commands,
   widgets,
   streaming,
@@ -115,6 +118,8 @@ export function Composer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resizeStart = useRef<Readonly<{ clientY: number; height: number }> | null>(null);
   const slashOptionRefs = useRef(new Map<string, HTMLButtonElement>());
+  const compositionActiveRef = useRef(false);
+  const submittingRef = useRef(false);
   const [sending, setSending] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [activeSlashCommandKey, setActiveSlashCommandKey] = useState<string>();
@@ -126,8 +131,7 @@ export function Composer({
       slashQuery === null
         ? []
         : commands
-            .filter((command) => slashCommandSearchText(command).includes(slashQuery.toLocaleLowerCase()))
-            .slice(0, 8),
+            .filter((command) => slashCommandSearchText(command).includes(slashQuery.toLocaleLowerCase())),
     [commands, slashQuery],
   );
   const slashMenuOpen = matchingCommands.length > 0 && dismissedSlashDraft !== draft;
@@ -145,6 +149,7 @@ export function Composer({
     setDismissedSlashDraft(undefined);
     setActiveSlashCommandKey(undefined);
     onDraftChange(editorInjection.text);
+    onEditorInjectionApplied?.(editorInjection.id);
     textareaRef.current?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 每条注入只按 id 应用一次；跟踪对象或回调身份会在重渲染时覆盖用户草稿
   }, [editorInjection?.id]);
@@ -231,17 +236,23 @@ export function Composer({
   };
 
   const submit = async () => {
-    if (sending || sendDisabled || (!draft.trim() && images.length === 0)) return;
+    if (submittingRef.current) return;
+    if (sendDisabled) {
+      onError(`当前无法发送：${sendDisabledReason ?? "Pi Runtime 尚未就绪"}`);
+      return;
+    }
+    if (!draft.trim() && images.length === 0) return;
+    submittingRef.current = true;
     setSending(true);
+    const submissionFocus = document.activeElement;
     try {
       await onSend(draft.trim(), images);
-      onDraftChange("");
-      onImagesChange(Object.freeze([]));
     } catch (error) {
       onError(`消息发送失败：${error instanceof Error ? error.message : String(error)}`);
     } finally {
+      submittingRef.current = false;
       setSending(false);
-      textareaRef.current?.focus();
+      if (document.activeElement === submissionFocus) textareaRef.current?.focus();
     }
   };
 
@@ -323,8 +334,16 @@ export function Composer({
             setActiveSlashCommandKey(undefined);
             onDraftChange(event.target.value);
           }}
+          onCompositionStart={() => {
+            compositionActiveRef.current = true;
+          }}
+          onCompositionEnd={() => {
+            compositionActiveRef.current = false;
+          }}
           onKeyDown={(event) => {
-            if (event.nativeEvent.isComposing) return;
+            // Chromium on Windows can leave nativeEvent.isComposing=true for the first
+            // post-composition Enter. Track the actual composition lifecycle instead.
+            if (compositionActiveRef.current) return;
             if (slashMenuOpen && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
               event.preventDefault();
               moveSlashSelection(event.key === "ArrowDown" ? 1 : -1);

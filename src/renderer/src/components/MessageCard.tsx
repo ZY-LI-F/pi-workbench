@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
+  BookOpenCheck,
   Check,
   ChevronDown,
   ChevronRight,
@@ -20,7 +21,14 @@ import type {
 } from "@shared/contracts";
 import type { LocalPathInspection } from "@shared/local-path";
 import type { ToolExecutionState } from "../lib/runtime-state";
+import {
+  parseExpandedSkillInvocation,
+  skillInvocationCommand,
+  type ExpandedSkillInvocation,
+} from "../lib/skill-invocation";
 import { LocalPathArtifacts } from "./LocalPathArtifacts";
+import { useCopyFeedback } from "../hooks/use-copy-feedback";
+import { formatTokenMillions } from "../lib/token-format";
 
 interface MessageCardProps {
   readonly api: StellaDesktopApi;
@@ -66,17 +74,18 @@ function ToolCallCard({
   readonly execution?: ToolExecutionState;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const status = execution?.status ?? "running";
-  const StatusIcon = status === "running" ? LoaderCircle : status === "error" ? CircleAlert : Check;
+  const status = execution?.status ?? "unknown";
+  const statusLabel = status === "running" ? "执行中" : status === "error" ? "执行失败" : status === "complete" ? "已完成" : "未记录结果";
+  const StatusIcon = status === "running" ? LoaderCircle : status === "complete" ? Check : CircleAlert;
   return (
     <div className={`tool-card tool-card--${status}`}>
-      <button type="button" className="tool-card__summary" onClick={() => setExpanded((value) => !value)}>
+      <button type="button" className="tool-card__summary" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
         <span className="tool-card__icon">{block.name === "bash" ? <TerminalSquare size={15} /> : <Wrench size={15} />}</span>
         <span className="tool-card__copy">
           <strong>{block.name}</strong>
           <small>{toolHeadline(block.name, block.arguments)}</small>
         </span>
-        <StatusIcon size={14} className={status === "running" ? "spin" : ""} />
+        <span title={statusLabel} aria-label={statusLabel}><StatusIcon size={14} className={status === "running" ? "spin" : ""} /></span>
         {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>
       {expanded && (
@@ -106,8 +115,10 @@ function ToolResultCard({ message }: { readonly message: Extract<SerializableMes
   );
 }
 
-function MarkdownBody({ api, text }: { readonly api: StellaDesktopApi; readonly text: string }) {
+const MarkdownBody = memo(function MarkdownBody({ api, text }: { readonly api: StellaDesktopApi; readonly text: string }) {
+  const [linkError, setLinkError] = useState<string>();
   return (
+    <>
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
       components={{
@@ -117,7 +128,10 @@ function MarkdownBody({ api, text }: { readonly api: StellaDesktopApi; readonly 
             onClick={(event) => {
               if (!href) return;
               event.preventDefault();
-              void api.openExternal(href);
+              setLinkError(undefined);
+              void api.openExternal(href).catch((cause: unknown) => {
+                setLinkError(`无法打开链接：${cause instanceof Error ? cause.message : String(cause)}`);
+              });
             }}
           >
             {children}
@@ -127,11 +141,46 @@ function MarkdownBody({ api, text }: { readonly api: StellaDesktopApi; readonly 
     >
       {text}
     </ReactMarkdown>
+    {linkError && <p className="assistant-error" role="alert">{linkError}</p>}
+    </>
+  );
+});
+
+function SkillInvocationCard({
+  api,
+  invocation,
+}: {
+  readonly api: StellaDesktopApi;
+  readonly invocation: ExpandedSkillInvocation;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <section className={`skill-invocation ${expanded ? "is-expanded" : ""}`}>
+      <button
+        type="button"
+        className="skill-invocation__summary"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="skill-invocation__icon"><BookOpenCheck size={15} /></span>
+        <span className="skill-invocation__copy">
+          <small>PI SKILL</small>
+          <strong>/skill:{invocation.name}</strong>
+        </span>
+        <span className="skill-invocation__state">{expanded ? "收起指令" : "已加载 · 展开查看"}</span>
+        <ChevronDown size={14} />
+      </button>
+      {expanded && (
+        <div className="skill-invocation__instructions markdown-body">
+          <MarkdownBody api={api} text={invocation.instructions} />
+        </div>
+      )}
+    </section>
   );
 }
 
 export function MessageCard({ api, message, toolExecutions, entryId, onFork, onPreviewFile }: MessageCardProps) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copyError, copy } = useCopyFeedback(api);
   if (message.role === "bashExecution") return null;
   if (message.role === "branchSummary" || message.role === "compactionSummary") {
     return (
@@ -158,6 +207,7 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork, onP
     .filter((block) => block.type === "text")
     .map((block) => (block.type === "text" ? block.text : ""))
     .join("\n");
+  const skillInvocation = message.role === "user" ? parseExpandedSkillInvocation(textOnly || text) : undefined;
 
   if (message.role === "toolResult") return <ToolResultCard message={message} />;
 
@@ -170,13 +220,7 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork, onP
     );
   }
 
-  const copyText = textOnly || text;
-  const copy = async () => {
-    await navigator.clipboard.writeText(copyText);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1200);
-  };
-
+  const copyText = skillInvocation ? skillInvocationCommand(skillInvocation) : textOnly || text;
   if (message.role === "user") {
     return (
       <article className="message message--user">
@@ -188,12 +232,18 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork, onP
               ))}
             </div>
           )}
-          {text && <p>{text}</p>}
+          {skillInvocation ? (
+            <>
+              <SkillInvocationCard api={api} invocation={skillInvocation} />
+              {skillInvocation.userMessage && <p className="skill-invocation__user-message">{skillInvocation.userMessage}</p>}
+            </>
+          ) : text ? <p>{text}</p> : null}
           <div className="message__meta">
             <span>{formatTime(message.timestamp)}</span>
             {entryId && <button type="button" onClick={() => onFork(entryId)} title="从这里分叉"><GitFork size={13} /> 分叉</button>}
-            <button type="button" onClick={() => void copy()} title="复制">{copied ? <Check size={13} /> : <Copy size={13} />}</button>
+            <button type="button" onClick={() => void copy(copyText)} title={copied ? "已复制" : "复制"}>{copied ? <Check size={13} /> : <Copy size={13} />}</button>
           </div>
+          {copyError && <p className="assistant-error" role="alert">{copyError}</p>}
         </div>
       </article>
     );
@@ -229,9 +279,10 @@ export function MessageCard({ api, message, toolExecutions, entryId, onFork, onP
           <div className="assistant-error"><CircleAlert size={15} /><span>{message.errorMessage}</span></div>
         )}
         <div className="assistant-actions">
-          <button type="button" onClick={() => void copy()}>{copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "已复制" : "复制"}</button>
-          {message.role === "assistant" && message.usage && <span>{message.usage.totalTokens.toLocaleString()} tokens</span>}
+          <button type="button" onClick={() => void copy(copyText)}>{copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "已复制" : "复制"}</button>
+          {message.role === "assistant" && message.usage && <span title={`${message.usage.totalTokens.toLocaleString()} tokens`}>{formatTokenMillions(message.usage.totalTokens)} tokens</span>}
         </div>
+        {copyError && <p className="assistant-error" role="alert">{copyError}</p>}
       </div>
     </article>
   );

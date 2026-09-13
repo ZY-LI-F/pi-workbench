@@ -9,6 +9,7 @@ import {
   SessionManager,
   hasTrustRequiringProjectResources,
   loadSkillsFromDir,
+  type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
 import {
   app,
@@ -77,6 +78,12 @@ import { BoardStore } from "./board-store";
 import { CapabilityHealthStore } from "./capability-health";
 import { ExecutionReviewService } from "./execution-review-service";
 import { InteractiveCommandRouter } from "./interactive-command-router";
+import { identifySnapshotMessages } from "./session-message-identity";
+import { sameRuntimeScope, type RuntimeScope } from "../shared/runtime-scope";
+import { AtomicJsonFile } from "./atomic-json-file";
+import { NativeSubmissionService } from "./native-submission-service";
+import { SerialOperationQueue } from "./serial-operation-queue";
+import { NativeDiagnostics, validateDiagnosticLayout } from "./native-diagnostics";
 import { PiRpcRuntime, piRpcCompactionTimeoutFromEnvironment, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment } from "./pi-rpc-runtime";
 import { validatedPiCommand } from "./pi-command-validation";
 import { mainWindowBounds } from "./window-bounds";
@@ -137,6 +144,7 @@ import { CompanionGateway, companionPortFromEnvironment } from "./companion-gate
 import { CompanionPairingStore } from "./companion-pairing-store";
 import { CompanionCommandReceiptStore } from "./companion-command-receipt-store";
 import { CompanionCommandService, type CompanionAbortExecutionInput } from "./companion-command-service";
+import { writeVerifiedClipboardText } from "./clipboard-service";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
@@ -217,6 +225,8 @@ function validatedExtensionResponse(value: unknown): PiExtensionResponse {
 
 let mainWindow: BrowserWindow | null = null;
 let currentProject: CurrentProject | null = null;
+// Recovery target from the interrupted native process, never an instruction to replay input.
+let interruptedNativeSession: RuntimeScope | undefined;
 let globalModelSelection: RuntimeModelSelection | undefined;
 let stateStore: StateStore;
 let boardStore: BoardStore;
@@ -240,6 +250,9 @@ let modelConfigurationService: ModelConfigurationService;
 let localPathService: LocalPathService;
 let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
+let nativeSubmissionService: NativeSubmissionService;
+const nativeOperations = new SerialOperationQueue();
+const nativeDiagnostics = new NativeDiagnostics(() => new Date().toISOString());
 let companionControlPlane: MainCompanionControlPlane | undefined;
 let companionPairingStore: CompanionPairingStore | undefined;
 let companionCommandReceiptStore: CompanionCommandReceiptStore | undefined;
@@ -247,9 +260,9 @@ let companionCommandService: CompanionCommandService | undefined;
 let companionGateway: CompanionGateway | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
-function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend" | "companion", payload: unknown): void {
+function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend" | "companion", payload: unknown, scope?: RuntimeScope): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  mainWindow.webContents.send("stella:event", { source, payload });
+  mainWindow.webContents.send("stella:event", { source, payload, scope });
 }
 
 function emitBoardEvent(event: BoardBridgeEvent): void {
@@ -292,20 +305,27 @@ const runtime = new PiRpcRuntime({
   executablePath: process.execPath,
   rpcEntryPath,
   spawnProcess: (command, args, options) => spawn(command, [...args], options),
-  emitPiEvent: (event) => {
+  emitPiEvent: (event, scope) => {
+    nativeDiagnostics.event(event, scope);
     interactiveCommandRouter?.handlePiEvent(event);
-    broadcast("pi", event);
+    broadcast("pi", event, scope);
   },
-  emitRuntimeSignal: (signal) => {
+  emitRuntimeSignal: (signal, scope) => {
+    nativeDiagnostics.event(signal, scope);
     interactiveCommandRouter?.handleRuntimeSignal(signal);
     if (signal.type === "runtime_exit") {
+      interruptedNativeSession = scope;
       capabilityHealth.set("pi", "error", `Pi RPC 意外退出 (code=${String(signal.code)}, signal=${String(signal.signal)})`);
     } else if (signal.type === "protocol_error") {
+      interruptedNativeSession = scope;
       capabilityHealth.set("pi", "degraded", `Pi RPC 协议错误：${signal.message}`);
+    } else if (signal.type === "runtime_ready") {
+      interruptedNativeSession = undefined;
     }
-    broadcast("runtime", signal);
+    broadcast("runtime", signal, scope);
   },
   requestTimeoutMs: piRpcRequestTimeoutMs,
+  emitRequestTrace: (trace, scope) => nativeDiagnostics.request(trace, scope),
   compactionTimeoutMs: piRpcCompactionTimeoutMs,
   maxProtocolRecordBytes: piRpcMaxRecordBytes,
 });
@@ -944,7 +964,16 @@ async function getProjectMeta(project: CurrentProject): Promise<ProjectMeta> {
 
 async function hydrate(): Promise<RuntimeBootstrap> {
   if (!currentProject) throw new Error("尚未选择项目");
-  if (!runtime.running) await runtime.start(currentProject);
+  if (!runtime.running) {
+    const interrupted = interruptedNativeSession;
+    if (interrupted?.sessionId && sameProject(interrupted.cwd, currentProject.cwd)) {
+      return restartRuntimePreservingSession(interrupted.sessionFile, interrupted.sessionId);
+    }
+    await runtime.start(currentProject);
+  }
+  const selectedProject = currentProject;
+  const scope = runtime.scope;
+  if (!scope) throw new Error("Pi Runtime 没有可读取的运行代际");
 
   const [stateResponse, messagesResponse, modelsResponse, thinkingLevelsResponse, commandsResponse, statsResponse, entriesResponse, treeResponse] =
     await Promise.all([
@@ -959,7 +988,6 @@ async function hydrate(): Promise<RuntimeBootstrap> {
     ]);
 
   const state = dataFromResponse<RuntimeBootstrap["state"]>(stateResponse, "get_state");
-  globalModelSelection = runtimeModelSelectionFromSession(state.model);
   const messages = dataFromResponse<RpcMessagesData>(messagesResponse, "get_messages").messages;
   const models = dataFromResponse<RpcModelsData>(modelsResponse, "get_available_models").models.map(mapModel);
   const thinkingLevels = dataFromResponse<RpcThinkingLevelsData>(thinkingLevelsResponse, "get_available_thinking_levels").levels;
@@ -968,17 +996,34 @@ async function hydrate(): Promise<RuntimeBootstrap> {
   const entriesData = dataFromResponse<RpcEntriesData>(entriesResponse, "get_entries");
   const treeData = dataFromResponse<RpcTreeData>(treeResponse, "get_tree");
   const [sessions, persisted, project, piVersion] = await Promise.all([
-    SessionManager.list(currentProject.cwd),
+    SessionManager.list(selectedProject.cwd),
     stateStore.read(),
-    getProjectMeta(currentProject),
+    getProjectMeta(selectedProject),
     getPiVersion(),
   ]);
 
+  if (currentProject !== selectedProject || !runtime.scope || !sameRuntimeScope(scope, runtime.scope)) {
+    throw new Error("会话在读取快照期间已切换，请刷新当前会话");
+  }
+  let submissions: RuntimeBootstrap["submissions"];
+  let submissionError: string | undefined;
+  try { submissions = await nativeSubmissionService.list(state.sessionId); }
+  catch (cause) { submissionError = `提交回执无法读取：${errorMessage(cause)}`; }
+  if (currentProject !== selectedProject || !runtime.scope || !sameRuntimeScope(scope, runtime.scope)) {
+    throw new Error("会话在加载回执期间已切换，请刷新当前会话");
+  }
+  globalModelSelection = runtimeModelSelectionFromSession(state.model);
+
   return Object.freeze({
+    scope: { ...scope, sessionId: state.sessionId, sessionFile: state.sessionFile },
+    messageSequence: runtime.responseScope(messagesResponse)?.sequence,
+    stateSequence: runtime.responseScope(stateResponse)?.sequence,
+    submissions,
+    submissionError,
     project,
     recentProjects: persisted.recentProjects,
     state,
-    messages: messages as RuntimeBootstrap["messages"],
+    messages: identifySnapshotMessages(messages as RuntimeBootstrap["messages"], entriesData.entries as unknown as SessionEntry[], entriesData.leafId, state.sessionId),
     models: Object.freeze(models),
     thinkingLevels: Object.freeze([...thinkingLevels]),
     commands: Object.freeze(commands),
@@ -1111,6 +1156,7 @@ async function openProject(path: string, trusted: boolean): Promise<RuntimeBoots
   const resolvedPath = await canonicalProjectDirectory(path);
   capabilityHealth.set("pi", "loading");
   try {
+    interruptedNativeSession = undefined;
     await runtime.stop();
     interactiveCommandRouter?.release();
     await stateStore.recordProject(resolvedPath, trusted);
@@ -1294,6 +1340,7 @@ async function chooseInstallAndReloadPiSkill(event: IpcMainInvokeEvent, scopeVal
   if (!isPiSkillInstallScope(scopeValue)) throw new Error(`不支持的 Skill 安装范围：${String(scopeValue)}`);
   if (!currentProject || currentProject.implicitDefault) throw new Error("请先选择项目，再添加 Pi Skill");
   if (!mainWindow || mainWindow.isDestroyed()) throw new Error("Stella 主窗口不可用，无法选择 Skill 文件夹");
+  const selectedProject = currentProject;
 
   const selection = await dialog.showOpenDialog(mainWindow, {
     title: "选择包含 SKILL.md 的 Skill 文件夹",
@@ -1304,54 +1351,60 @@ async function chooseInstallAndReloadPiSkill(event: IpcMainInvokeEvent, scopeVal
   const sourceFolder = selection.filePaths[0];
   if (!sourceFolder) throw new Error("文件夹选择器没有返回路径");
 
-  const project = currentProject;
-  const lease = await workspaceAdmission.acquireInteractive(project.cwd, {
-    id: randomUUID(),
-    kind: "interactive",
-    label: "Pi Skill 安装与热加载",
-  });
-  try {
-    const sessionState = dataFromResponse<RuntimeBootstrap["state"]>(
-      await runtime.send({ type: "get_state" }),
-      "get_state",
-    );
-    if (sessionState.isStreaming || sessionState.isCompacting) {
-      throw new Error("Pi 正在生成或压缩上下文；请等待当前操作完成后再添加 Skill");
+  return nativeOperations.run(async () => {
+    if (currentProject !== selectedProject) throw new Error("选择 Skill 文件夹期间项目已切换；尚未安装，请在当前项目重新选择");
+    assertPiExecutionCapability();
+    const project = selectedProject;
+    const lease = await workspaceAdmission.acquireInteractive(project.cwd, {
+      id: randomUUID(),
+      kind: "interactive",
+      label: "Pi Skill 安装与热加载",
+    });
+    try {
+      const sessionState = dataFromResponse<RuntimeBootstrap["state"]>(
+        await runtime.send({ type: "get_state" }),
+        "get_state",
+      );
+      if (sessionState.isStreaming || sessionState.isCompacting || sessionState.pendingMessageCount > 0) {
+        throw new Error("Pi 正在生成或压缩上下文；请等待当前操作完成后再添加 Skill");
+      }
+      const existing = await agentSkillService.discover(project.cwd, project.trusted);
+      const skill = await piSkillInstaller.installFolder({
+        sourceFolder,
+        scope: scopeValue,
+        projectPath: project.cwd,
+        projectTrusted: project.trusted,
+        existingSkillNames: existing.names,
+      });
+      await restartRuntimePreservingSession(sessionState.sessionFile, sessionState.sessionId);
+      return Object.freeze({
+        cancelled: false,
+        skill,
+        reloadedAt: new Date().toISOString(),
+      });
+    } finally {
+      lease.release();
     }
-    const existing = await agentSkillService.discover(project.cwd, project.trusted);
-    const skill = await piSkillInstaller.installFolder({
-      sourceFolder,
-      scope: scopeValue,
-      projectPath: project.cwd,
-      projectTrusted: project.trusted,
-      existingSkillNames: existing.names,
-    });
-    await restartRuntimePreservingSession(sessionState.sessionFile, sessionState.sessionId);
-    return Object.freeze({
-      cancelled: false,
-      skill,
-      reloadedAt: new Date().toISOString(),
-    });
-  } finally {
-    lease.release();
-  }
+  });
 }
 
 async function mutateModelConfiguration(mutation: () => Promise<void>) {
-  if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
-  return interactiveCommandRouter.runRuntimeMaintenance(() => (
-    executeModelConfigurationTransaction(
-      {
-        createCheckpoint: () => modelConfigurationService.createCheckpoint(),
-        restoreCheckpoint: (checkpoint, expectedCurrent) =>
-          modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
-        captureSession: captureCurrentSession,
-        restartRuntime: restartRuntimeAfterModelConfigurationChange,
-        snapshot: () => modelConfigurationService.snapshot(),
-      },
-      mutation,
-    )
-  ));
+  return nativeOperations.run(async () => {
+    if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
+    return interactiveCommandRouter.runRuntimeMaintenance(() => (
+      executeModelConfigurationTransaction(
+        {
+          createCheckpoint: () => modelConfigurationService.createCheckpoint(),
+          restoreCheckpoint: (checkpoint, expectedCurrent) =>
+            modelConfigurationService.restoreCheckpoint(checkpoint, expectedCurrent),
+          captureSession: captureCurrentSession,
+          restartRuntime: restartRuntimeAfterModelConfigurationChange,
+          snapshot: () => modelConfigurationService.snapshot(),
+        },
+        mutation,
+      )
+    ));
+  });
 }
 
 function allowedRevealRoots(): readonly string[] {
@@ -1608,7 +1661,7 @@ async function initializeTaskCapability(): Promise<void> {
 async function retryCapability(name: CapabilityName): Promise<CapabilityHealthSnapshot> {
   if (name === "pi") {
     try {
-      await initializeRuntime();
+      await nativeOperations.run(initializeRuntime);
     } catch {
       // initializeRuntime 已把精确错误写入 Capability Health。
     }
@@ -1682,13 +1735,47 @@ function registerIpcHandlers(): void {
     assertTaskCapability();
     return externalExecutionService.details(validatedExternalExecutionReference(value));
   });
-  ipcMain.handle("stella:initialize", () => initializeRuntime());
-  ipcMain.handle("stella:refresh", () => refreshPiCapability());
-  ipcMain.handle("stella:command", (_event, command: unknown) => {
+  ipcMain.handle("stella:initialize", () => nativeOperations.run(initializeRuntime));
+  ipcMain.handle("stella:refresh", () => nativeOperations.run(refreshPiCapability));
+  ipcMain.handle("stella:command", (event, value: unknown) => {
+    assertMainWindowFrame(event);
+    const command = validatedPiCommand(value);
+    const execute = async () => {
+      assertPiExecutionCapability();
+      if (!currentProject) throw new Error("尚未选择项目");
+      if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
+      return interactiveCommandRouter.send(command, currentProject.cwd);
+    };
+    // Cancellation must interrupt a long bash/compaction; it cannot wait behind it.
+    return command.type === "abort" || command.type === "abort_bash" || command.type === "abort_retry"
+      ? execute() : nativeOperations.run(execute);
+  });
+  ipcMain.handle("stella:native-submit", (event, value: unknown) => nativeOperations.run(async () => {
+    assertMainWindowFrame(event);
     assertPiExecutionCapability();
-    if (!currentProject) throw new Error("尚未选择项目");
-    if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
-    return interactiveCommandRouter.send(validatedPiCommand(command), currentProject.cwd);
+    const input = objectValue(value, "原生提交");
+    const command = validatedPiCommand(input.command);
+    if (command.type !== "prompt" && command.type !== "steer" && command.type !== "follow_up") throw new Error("原生提交只允许对话输入");
+    return nativeSubmissionService.submit({ id: requiredString(input.id, "提交 ID"), sessionId: requiredString(input.sessionId, "Session ID"), command });
+  }));
+  ipcMain.handle("stella:native-submissions", (event, sessionId: unknown) => {
+    assertMainWindowFrame(event);
+    return nativeSubmissionService.list(requiredString(sessionId, "Session ID"));
+  });
+  ipcMain.handle("stella:native-diagnostics:export", async (event, value: unknown) => {
+    assertMainWindowFrame(event);
+    const layout = validateDiagnosticLayout(value);
+    const scope = runtime.scope ?? interruptedNativeSession;
+    const receipts = scope?.sessionId ? await nativeSubmissionService.list(scope.sessionId) : [];
+    const snapshot = { ...nativeDiagnostics.snapshot(app.getVersion(), await getPiVersion(), scope, layout, receipts), runtimeConnected: runtime.running };
+    const choice = await dialog.showSaveDialog({ title: "导出本机诊断（不包含对话正文或密钥）", defaultPath: `stella-diagnostics-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, filters: [{ name: "JSON 诊断", extensions: ["json"] }] });
+    if (choice.canceled || !choice.filePath) return null;
+    await new AtomicJsonFile(choice.filePath).write(snapshot);
+    // This exact path was authorized by the native save dialog. Reveal it here;
+    // do not widen the renderer's general-purpose project path permissions.
+    try { shell.showItemInFolder(choice.filePath); }
+    catch (cause) { return { path: choice.filePath, revealError: errorMessage(cause) }; }
+    return { path: choice.filePath };
   });
   ipcMain.handle("stella:extension-response", (_event, response: unknown) => {
     assertPiExecutionCapability();
@@ -1706,7 +1793,7 @@ function registerIpcHandlers(): void {
     const trustDecision = trusted ? await confirmTrustEscalation(projectPath) : false;
     if (trustDecision === null) return null;
     const grantTrust = trustDecision;
-    return openProject(projectPath, grantTrust);
+    return nativeOperations.run(() => openProject(projectPath, grantTrust));
   });
   ipcMain.handle("stella:local-path:inspect", (event, path: unknown) => {
     assertMainWindowFrame(event);
@@ -1724,15 +1811,17 @@ function registerIpcHandlers(): void {
     assertMainWindowFrame(event);
     return localPathService.reveal(path);
   });
-  ipcMain.handle("stella:open-external", async (_event, url: unknown) => {
+  ipcMain.handle("stella:open-external", async (event, url: unknown) => {
+    assertMainWindowFrame(event);
     const parsed = new URL(requiredString(url, "外部链接"));
     if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
       throw new Error(`不允许打开协议 ${parsed.protocol}`);
     }
     await shell.openExternal(parsed.toString());
   });
-  ipcMain.handle("stella:copy-text", (_event, value: unknown) => {
-    clipboard.writeText(textValue(value, "待复制文本"));
+  ipcMain.handle("stella:copy-text", (event, value: unknown) => {
+    assertMainWindowFrame(event);
+    writeVerifiedClipboardText(clipboard, textValue(value, "待复制文本"));
   });
   ipcMain.handle("stella:composer-draft:load", (event, key: unknown) => {
     assertMainWindowFrame(event);
@@ -1869,7 +1958,7 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:board:abort-task", (_event, taskId: unknown) =>
     abortBoardTask(requiredString(taskId, "taskId")),
   );
-  ipcMain.handle("stella:board:open-session", (_event, input: unknown) => openTaskSession(input));
+  ipcMain.handle("stella:board:open-session", (_event, input: unknown) => nativeOperations.run(() => openTaskSession(input)));
   ipcMain.handle("stella:window-action", (_event, action: unknown) => {
     if (!mainWindow) return;
     if (action === "minimize") mainWindow.minimize();
@@ -1977,6 +2066,15 @@ if (!singleInstanceLock) {
       readFile,
     });
     composerDraftStore = new ComposerDraftStore(join(app.getPath("userData"), "composer-drafts"));
+    nativeSubmissionService = new NativeSubmissionService({
+      storage: new AtomicJsonFile(join(app.getPath("userData"), "native-submissions.json")),
+      now: () => new Date().toISOString(),
+      scope: () => runtime.scope,
+      send: (command, cwd, requestId) => {
+        if (!interactiveCommandRouter) throw new Error("Interactive command router 尚未初始化");
+        return interactiveCommandRouter.send(command, cwd, requestId);
+      },
+    });
     agentSkillService = new AgentSkillService();
     piSkillInstaller = new PiSkillInstaller({
       agentDir: piAgentDir(),

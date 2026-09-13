@@ -25,6 +25,11 @@ import {
   FILE_INSPECTOR_WIDTH,
 } from "../lib/inspector-layout";
 import { FilePreviewPanel } from "./FilePreviewPanel";
+import { activeBranchCompactions } from "../lib/session-branch";
+import { parseExpandedSkillInvocation, skillInvocationCommand } from "../lib/skill-invocation";
+import { formatTokenMillions } from "../lib/token-format";
+import { NativeSubmissionPanel } from "./NativeSubmissionPanel";
+import type { NativeSubmissionReceipt } from "@shared/native-submission";
 
 interface InspectorProps {
   readonly api: StellaDesktopApi;
@@ -48,14 +53,13 @@ interface InspectorProps {
   readonly onClone: () => void;
   readonly onRename: () => void;
   readonly onFork: (entryId: string) => void;
+  readonly submissions?: readonly NativeSubmissionReceipt[];
+  readonly onRefreshSubmissions?: () => void;
+  readonly onReferenceFile?: (text: string) => void;
+  readonly onExportDiagnostics?: () => void;
 }
 
 export type InspectorTab = "context" | "activity" | "tree" | "files";
-
-function compactNumber(value: number | null | undefined): string {
-  if (value === null || value === undefined) return "—";
-  return new Intl.NumberFormat("zh-CN", { notation: "compact", maximumFractionDigits: 1 }).format(value);
-}
 
 function entrySummary(node: SessionTreeSummary): string {
   const message = node.entry.message;
@@ -69,7 +73,10 @@ function entrySummary(node: SessionTreeSummary): string {
   if (typeof content === "string") return content.slice(0, 72);
   if (Array.isArray(content)) {
     const text = content.find((block) => block.type === "text");
-    if (text?.type === "text") return text.text.slice(0, 72);
+    if (text?.type === "text") {
+      const skill = message.role === "user" ? parseExpandedSkillInvocation(text.text) : undefined;
+      return (skill ? skillInvocationCommand(skill) : text.text).slice(0, 72);
+    }
   }
   return `${message.role} · ${node.entry.type}`;
 }
@@ -119,24 +126,39 @@ function ContextPanel({
   onExport,
   onClone,
   onRename,
-}: Pick<InspectorProps, "bootstrap" | "compactDisabled" | "onCompact" | "onExport" | "onClone" | "onRename">) {
+  onExportDiagnostics,
+}: Pick<InspectorProps, "bootstrap" | "compactDisabled" | "onCompact" | "onExport" | "onClone" | "onRename" | "onExportDiagnostics">) {
   const stats = bootstrap.stats;
   const percent = stats.contextUsage?.percent ?? 0;
+  const compaction = useMemo(() => activeBranchCompactions(bootstrap), [bootstrap]);
+  const autoCompactionEnabled = bootstrap.state.autoCompactionEnabled;
   return (
     <div className="inspector-panel context-panel" id="inspector-panel-context" role="tabpanel" aria-labelledby="inspector-tab-context">
       <div className="context-meter" style={{ "--context-percent": `${Math.max(0, Math.min(100, percent)) * 3.6}deg` } as CSSProperties}>
         <div><strong>{stats.contextUsage?.percent === null || stats.contextUsage?.percent === undefined ? "—" : `${Math.round(stats.contextUsage.percent)}%`}</strong><span>上下文</span></div>
       </div>
       <div className="context-caption">
-        <span>{compactNumber(stats.contextUsage?.tokens)} / {compactNumber(stats.contextUsage?.contextWindow)} tokens</span>
-        <small>Pi 会在接近窗口上限时自动压缩</small>
+        <span title={`${stats.contextUsage?.tokens ?? "未知"} / ${stats.contextUsage?.contextWindow ?? "未知"} tokens`}>{formatTokenMillions(stats.contextUsage?.tokens)} / {formatTokenMillions(stats.contextUsage?.contextWindow)} tokens</span>
+        <small>{stats.contextUsage?.tokens === null ? "压缩后用量待更新；下一次模型响应后显示" : "当前活动上下文，不是 Session 历史累计值"}</small>
       </div>
 
+      <div className="context-compaction-status" role="status">
+        <span className={autoCompactionEnabled ? "is-enabled" : "is-disabled"}>
+          {autoCompactionEnabled ? <Check size={13} /> : <CircleAlert size={13} />}
+          自动压缩{autoCompactionEnabled ? "已开启" : "已关闭"}
+        </span>
+        <strong>{compaction.count === undefined ? "压缩次数未知" : `已压缩 ${compaction.count} 次`}</strong>
+      </div>
+      {compaction.error && <p role="alert">{compaction.error}</p>}
+      <p className="context-ledger-note">
+        触发阈值由 Pi 的 compaction.reserveTokens 决定。Session JSONL 是追加式历史；压缩会替换活动上下文，但不会删除旧记录或缩小文件。
+      </p>
+
       <div className="metric-grid">
-        <div><span>输入</span><strong>{compactNumber(stats.tokens.input)}</strong></div>
-        <div><span>输出</span><strong>{compactNumber(stats.tokens.output)}</strong></div>
-        <div><span>缓存读取</span><strong>{compactNumber(stats.tokens.cacheRead)}</strong></div>
-        <div><span>费用</span><strong>${stats.cost.toFixed(3)}</strong></div>
+        <div><span>累计输入</span><strong title={`${stats.tokens.input} tokens`}>{formatTokenMillions(stats.tokens.input)}</strong></div>
+        <div><span>累计输出</span><strong title={`${stats.tokens.output} tokens`}>{formatTokenMillions(stats.tokens.output)}</strong></div>
+        <div><span>累计缓存读取</span><strong title={`${stats.tokens.cacheRead} tokens`}>{formatTokenMillions(stats.tokens.cacheRead)}</strong></div>
+        <div><span>累计费用</span><strong>${stats.cost.toFixed(3)}</strong></div>
       </div>
 
       <section className="inspector-section">
@@ -145,6 +167,7 @@ function ContextPanel({
         <button type="button" className="inspector-action" onClick={onClone}><CopyPlus size={15} /><span><strong>克隆分支</strong><small>复制当前活动分支</small></span><ChevronRight size={14} /></button>
         <button type="button" className="inspector-action" onClick={onExport}><FileOutput size={15} /><span><strong>导出 HTML</strong><small>生成可分享的只读记录</small></span><ChevronRight size={14} /></button>
         <button type="button" className="inspector-action" disabled={compactDisabled} title={compactDisabled ? "请等待当前生成、压缩或队列处理完成" : undefined} onClick={onCompact}><Archive size={15} /><span><strong>立即压缩</strong><small>{compactDisabled ? "当前回合结束后可压缩" : "保留重点并释放上下文"}</small></span><ChevronRight size={14} /></button>
+        {onExportDiagnostics && <button type="button" className="inspector-action" onClick={onExportDiagnostics}><FileOutput size={15} /><span><strong>导出本机诊断</strong><small>版本、会话地址、布局、事件计数与回执；不含对话正文、密钥或原始日志</small></span><ChevronRight size={14} /></button>}
       </section>
 
       <div className="inspector-signature"><span>Observed by</span><strong>Stella</strong><i /></div>
@@ -219,6 +242,10 @@ export function Inspector({
   onClone,
   onRename,
   onFork,
+  submissions,
+  onRefreshSubmissions,
+  onReferenceFile,
+  onExportDiagnostics,
 }: InspectorProps) {
   const resizeStart = useRef<Readonly<{ clientX: number; width: number }> | null>(null);
   const [resizing, setResizing] = useState(false);
@@ -295,8 +322,11 @@ export function Inspector({
         <button type="button" role="tab" id="inspector-tab-tree" aria-controls="inspector-panel-tree" aria-selected={tab === "tree"} className={tab === "tree" ? "is-active" : ""} onClick={() => onTabChange("tree")}>分支</button>
         <button type="button" role="tab" id="inspector-tab-files" aria-controls="inspector-panel-files" aria-selected={tab === "files"} className={tab === "files" ? "is-active" : ""} onClick={() => onTabChange("files")}><span>文件</span>{fileReferences.length > 0 && <small aria-hidden="true">{fileReferences.length}</small>}</button>
       </div>
-      {tab === "context" && <ContextPanel bootstrap={bootstrap} compactDisabled={compactDisabled} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} />}
-      {tab === "activity" && <ActivityPanel tools={tools} queue={queue} extensionStatuses={extensionStatuses} extensionWidgets={extensionWidgets} />}
+      {tab === "context" && <ContextPanel bootstrap={bootstrap} compactDisabled={compactDisabled} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} onExportDiagnostics={onExportDiagnostics} />}
+      {tab === "activity" && <div className="inspector-panel">
+        <ActivityPanel tools={tools} queue={queue} extensionStatuses={extensionStatuses} extensionWidgets={extensionWidgets} />
+        <NativeSubmissionPanel api={api} receipts={submissions ?? bootstrap.submissions ?? []} error={bootstrap.submissionError} onRefresh={onRefreshSubmissions ?? (() => undefined)} />
+      </div>}
       {tab === "tree" && (
         <div className="inspector-panel tree-panel" id="inspector-panel-tree" role="tabpanel" aria-labelledby="inspector-tab-tree">
           <div className="tree-panel__intro"><GitFork size={15} /><p>会话是追加式树结构。可从任一用户消息创建新的独立分支。</p></div>
@@ -308,7 +338,7 @@ export function Inspector({
       )}
       {tab === "files" && (
         <div className="inspector-file-panel" id="inspector-panel-files" role="tabpanel" aria-labelledby="inspector-tab-files">
-          <FilePreviewPanel api={api} inspection={filePreview} references={fileReferences} onSelect={onSelectFile} />
+          <FilePreviewPanel api={api} inspection={filePreview} references={fileReferences} onSelect={onSelectFile} onReference={onReferenceFile} />
         </div>
       )}
     </aside>

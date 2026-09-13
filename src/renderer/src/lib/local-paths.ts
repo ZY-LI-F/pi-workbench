@@ -5,7 +5,8 @@ const TRAILING_SENTENCE_PUNCTUATION = /[。；，、;,]+$/u;
 function stripMarkdownPrefix(value: string): string {
   return value
     .replace(/^\s*(?:[-+*]|\d+[.)]|>)\s+/, "")
-    .replace(/^\s*(?:输出(?:文件|目录|路径)?|文件(?:位置|路径)?|目录|路径|地址)\s*[：:]\s*/u, "");
+    // Labels such as “参考文件” and “Report” are not part of an absolute path.
+    .replace(/^\s*[^\r\n:：/\\]+[：:]\s*(?=(?:[A-Za-z]:[\\/]|\/(?!\/)))/u, "");
 }
 
 function stripWrappingPair(value: string): string {

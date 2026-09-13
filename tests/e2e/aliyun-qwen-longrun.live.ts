@@ -1,5 +1,6 @@
 import { createServer } from "node:net";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import {
   expect,
@@ -11,7 +12,9 @@ import {
 } from "@playwright/test";
 
 const APP_ROOT = resolve(process.cwd());
+const LIVE_PROVIDER = process.env.STELLA_LIVE_PROVIDER ?? "aliyun-maas";
 const EXPECTED_MODEL_LABEL = process.env.STELLA_QWEN_MODEL_LABEL ?? "Qwen 3.8 Max Preview (Aliyun MaaS)";
+const EXPECTED_MODEL_ID = process.env.STELLA_QWEN_MODEL_ID ?? "qwen3.8-max-preview";
 
 const RUNS_CSV = `run_id,scenario,started_at,duration_seconds,input_tokens,output_tokens,retries,status
 R001,code_review,2026-07-28T09:00:00Z,112,42000,6800,0,success
@@ -95,6 +98,7 @@ interface RuntimeSample {
   readonly elapsedMs: number;
   readonly sessionId: string;
   readonly isStreaming: boolean;
+  readonly isCompacting: boolean;
   readonly messageCount: number;
   readonly pendingMessageCount: number;
   readonly totalTokens: number;
@@ -141,13 +145,27 @@ async function prepareProject(testInfo: TestInfo): Promise<{ readonly project: s
 
 async function launchLongRunApp(
   testInfo: TestInfo,
-): Promise<{ readonly electronApp: ElectronApplication; readonly window: Page; readonly project: string }> {
+): Promise<{ readonly electronApp: ElectronApplication; readonly window: Page; readonly project: string; readonly clearCredentials: () => Promise<void> }> {
   const { project, userData } = await prepareProject(testInfo);
-  const electronApp = await electron.launch({
+  const sourceAgentDir = process.env.PI_CODING_AGENT_DIR ?? join(homedir(), ".pi", "agent");
+  const isolatedAgentDir = testInfo.outputPath("pi-agent-live");
+  await mkdir(isolatedAgentDir, { recursive: true });
+  const privateCopies = ["auth.json", "models.json", "models-store.json"].map((name) => join(isolatedAgentDir, name));
+  const clearCredentials = async () => { await Promise.all(privateCopies.map((path) => rm(path, { force: true }))); };
+  try {
+    await copyFile(join(sourceAgentDir, "models.json"), privateCopies[1]!);
+    await copyFile(join(sourceAgentDir, "auth.json"), privateCopies[0]!);
+    await writeFile(join(isolatedAgentDir, "settings.json"), JSON.stringify({ defaultProvider: LIVE_PROVIDER, defaultModel: EXPECTED_MODEL_ID }));
+  } catch (cause) { await clearCredentials(); throw cause; }
+  let electronApp: ElectronApplication;
+  try {
+  electronApp = await electron.launch({
     args: [APP_ROOT, `--user-data-dir=${userData}`],
     cwd: project,
-    env: Object.freeze({ ...process.env, STELLA_WEBHOOK_PORT: String(await availableLoopbackPort()) }),
+    env: Object.freeze({ ...process.env, PI_CODING_AGENT_DIR: isolatedAgentDir, STELLA_WEBHOOK_PORT: String(await availableLoopbackPort()), STELLA_COMPANION_PORT: String(await availableLoopbackPort()) }),
   });
+  } catch (cause) { await clearCredentials(); throw cause; }
+  try {
   const window = await electronApp.firstWindow();
   await window.waitForLoadState("domcontentloaded");
   await expect(window.locator(".app-shell, .startup-screen--error")).toBeVisible({ timeout: 45_000 });
@@ -158,7 +176,11 @@ async function launchLongRunApp(
     { timeout: 60_000 },
   ).toBe("ready");
   await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
-  return Object.freeze({ electronApp, window, project });
+  return Object.freeze({ electronApp, window, project, clearCredentials });
+  } catch (cause) {
+    try { await electronApp.close(); } finally { await clearCredentials(); }
+    throw cause;
+  }
 }
 
 async function runtimeState(window: Page) {
@@ -181,6 +203,7 @@ async function runtimeState(window: Page) {
     return Object.freeze({
       sessionId: state.data.sessionId,
       isStreaming: state.data.isStreaming,
+      isCompacting: state.data.isCompacting,
       messageCount: state.data.messageCount,
       pendingMessageCount: state.data.pendingMessageCount,
       totalTokens: stats.data.tokens.total,
@@ -222,9 +245,18 @@ async function waitForTurn(
     }
 
     const completed = !current.isStreaming
+      && !current.isCompacting
       && current.pendingMessageCount === 0
       && current.messageCount >= previousMessageCount + 2;
     if ((sawStreaming || current.messageCount >= previousMessageCount + 2) && completed) {
+      const modelError = await window.evaluate(async () => {
+        const response = await window.stella.command({ type: "get_messages" });
+        if (!response.success) throw new Error(response.error);
+        if (response.command !== "get_messages") throw new Error("Unexpected get_messages response");
+        const assistant = response.data.messages.filter((message) => message.role === "assistant").at(-1);
+        return assistant?.role === "assistant" ? assistant.errorMessage : undefined;
+      });
+      if (modelError) throw new Error(`真实模型运行失败：${modelError}`);
       return Object.freeze({
         sessionId: current.sessionId,
         messageCount: current.messageCount,
@@ -248,9 +280,9 @@ async function sendPrompt(window: Page, prompt: string): Promise<number> {
   return before.messageCount;
 }
 
-test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns", async ({}, testInfo) => {
+test("keeps a configured real model multi-step tool task stable across two turns", async ({}, testInfo) => {
   test.setTimeout(1_500_000);
-  const { electronApp, window, project } = await launchLongRunApp(testInfo);
+  const { electronApp, window, project, clearCredentials } = await launchLongRunApp(testInfo);
   const pageErrors: string[] = [];
   const samples: RuntimeSample[] = [];
   let unexpectedExit: { readonly code: number | null; readonly signal: NodeJS.Signals | null } | undefined;
@@ -268,8 +300,7 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
       value: (element as HTMLOptionElement).value,
       label: element.textContent?.trim() ?? "",
     })));
-    const qwen = options.find((option) => option.value === "aliyun-maas/qwen3.8-max-preview"
-      || (option.value.startsWith("aliyun-maas/") && option.label.includes(EXPECTED_MODEL_LABEL)));
+    const qwen = options.find((option) => option.value === `${LIVE_PROVIDER}/${EXPECTED_MODEL_ID}`);
     if (!qwen) throw new Error(`没有找到 ${EXPECTED_MODEL_LABEL}；实际模型：${options.map((option) => option.label).join("、")}`);
     await globalModel.selectOption(qwen.value);
     await expect(globalModel).toHaveValue(qwen.value);
@@ -280,6 +311,7 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
     const firstPrompt = [
       "请执行真实的多步稳定性分析，连续完成全部步骤，不要中途询问。",
       "只允许读写当前项目；不要安装依赖、不要执行 Git、不要改写 input。",
+      "不要开启子 Agent，不要调用任何团队委派功能，不要读取项目外的 Skills。由当前 Pi 会话直接执行此隔离测试。",
       "先读取 input/acceptance.md、input/runs.csv、input/incidents.json，并先给出执行计划。",
       "然后校验数据，编写并实际执行 analyze.mjs，生成 summary.json、stability-report.md、dashboard.html。",
       "再编写实现独立的 verify.mjs 并实际执行；不一致必须非零退出。",
@@ -290,6 +322,8 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
     const beforeFirst = await sendPrompt(window, firstPrompt);
     const firstTurn = await waitForTurn(window, beforeFirst, samples, 720_000, true);
     expect(firstTurn.navigationRoundTrip).toBe(true);
+    expect(await readFile(join(project, "input", "runs.csv"), "utf8")).toBe(RUNS_CSV);
+    expect(await readFile(join(project, "input", "incidents.json"), "utf8")).toBe(INCIDENTS_JSON);
 
     const requiredOutputs = [
       "analyze.mjs",
@@ -343,6 +377,7 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
     const finalRuntime = await runtimeState(window);
     expect(finalRuntime.isStreaming).toBe(false);
     expect(finalRuntime.pendingMessageCount).toBe(0);
+    expect(finalRuntime.isCompacting).toBe(false);
     expect(finalRuntime.composerInsideViewport).toBe(true);
     expect(finalRuntime.totalTokens).toBeGreaterThan(0);
     expect(samples.filter((sample) => sample.isStreaming).length).toBeGreaterThan(1);
@@ -351,7 +386,7 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
     expect(unexpectedExit).toBeUndefined();
 
     const evidence = Object.freeze({
-      provider: "aliyun-maas",
+      provider: LIVE_PROVIDER,
       model: qwen,
       sessionId: firstTurn.sessionId,
       totalDurationMs: Date.now() - testStartedAt,
@@ -363,14 +398,14 @@ test("keeps a real Qwen 3.8 Preview multi-step tool task stable across two turns
       pageErrors,
       stderrTail,
     });
-    const evidencePath = testInfo.outputPath("qwen-3.8-longrun-evidence.json");
+    const evidencePath = testInfo.outputPath("native-longrun-evidence.json");
     await writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`, "utf8");
-    await window.screenshot({ path: testInfo.outputPath("qwen-3.8-longrun-final.png"), animations: "disabled" });
-    await testInfo.attach("qwen-3.8-longrun-evidence.json", {
+    await window.screenshot({ path: testInfo.outputPath("native-longrun-final.png"), animations: "disabled" });
+    await testInfo.attach("native-longrun-evidence.json", {
       body: Buffer.from(`${JSON.stringify(evidence, null, 2)}\n`, "utf8"),
       contentType: "application/json",
     });
   } finally {
-    await electronApp.close();
+    try { await electronApp.close(); } finally { await clearCredentials(); }
   }
 });

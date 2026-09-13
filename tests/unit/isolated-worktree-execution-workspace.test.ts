@@ -98,7 +98,8 @@ describe("IsolatedWorktreeExecutionWorkspace", () => {
       ownership: "stella",
       lifecycle: "retained",
     });
-    expect(await git(fixture.repository, "worktree", "list", "--porcelain")).toContain(`worktree ${first.placement.resourcePath}`);
+    const worktreeRegistry = (await git(fixture.repository, "worktree", "list", "--porcelain")).replaceAll("\\", "/");
+    expect(worktreeRegistry).toContain(`worktree ${first.placement.resourcePath?.replaceAll("\\", "/")}`);
     await writeFile(join(first.cwd, "result.txt"), "backend wrote here\n", "utf8");
     first.release();
     expect((await stat(first.cwd)).isDirectory()).toBe(true);

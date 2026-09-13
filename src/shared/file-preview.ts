@@ -18,6 +18,8 @@ export interface LocalFilePreviewData extends LocalFilePreviewDescriptor {
   readonly name: string;
   readonly sizeBytes: number;
   readonly bytes: Uint8Array;
+  /** SHA-256 of the exact bytes shown, not a timestamp guessed from chat messages. */
+  readonly version?: string;
 }
 
 const PREVIEW_BY_EXTENSION: Readonly<Record<string, LocalFilePreviewDescriptor>> = Object.freeze({

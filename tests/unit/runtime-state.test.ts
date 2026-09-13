@@ -55,6 +55,82 @@ function piEvent(state: RuntimeUiState, payload: Record<string, unknown>): Runti
 }
 
 describe("runtimeReducer", () => {
+  it("merges exact post-snapshot message occurrences without duplicating already persisted messages", () => {
+    const scope = { generation: "generation", scope: 0, sequence: 0, cwd: "C:/workspace", sessionId: "session-1" };
+    let state = runtimeReducer(INITIAL_RUNTIME_STATE, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, scope } });
+    const user = { role: "user", content: "before read barrier", timestamp: 10 } as const;
+    const assistant = { role: "assistant", content: [{ type: "text", text: "流式内容" }], timestamp: 10, provider: "test", model: "test", stopReason: "stop" } as const;
+    const events = [{ type: "agent_start" }, { type: "message_start", message: user }, { type: "message_end", message: user },
+      { type: "message_start", message: assistant }, { type: "message_update", message: assistant }];
+    for (const [index, payload] of events.entries()) state = runtimeReducer(state, { type: "BRIDGE_EVENT", event: { source: "pi", scope: { ...scope, sequence: index + 1 }, payload } as BridgeEvent });
+    const snapshot = { ...BOOTSTRAP, scope, stateSequence: 3, messageSequence: 3,
+      messages: [{ ...user, stella: { key: "entry:session-1:user-id", entryId: "user-id" } }], state: { ...BOOTSTRAP.state, isStreaming: true } };
+    state = runtimeReducer(state, { type: "BOOTSTRAP", payload: snapshot });
+    expect(state.messages).toHaveLength(2); expect(state.messages[0]?.stella?.entryId).toBe("user-id");
+    expect(state.activeMessages.assistant).toBe(1); expect(state.streaming).toBe(true);
+    state = runtimeReducer(state, { type: "BRIDGE_EVENT", event: { source: "pi", scope: { ...scope, sequence: 6 }, payload: { type: "message_end", message: assistant } } as BridgeEvent });
+    expect(state.messages).toHaveLength(2); expect(state.activeMessages).toEqual({});
+  });
+
+  it("restores an in-flight message on renderer reload even when agent_start happened before subscription", () => {
+    const scope = { generation: "generation", scope: 0, sequence: 6, cwd: "C:/workspace", sessionId: "session-1" };
+    let state = runtimeReducer(INITIAL_RUNTIME_STATE, { type: "BRIDGE_EVENT", event: { source: "pi", scope,
+      payload: { type: "message_update", message: { role: "assistant", timestamp: 1, content: [{ type: "text", text: "live tail" }], model: "test", provider: "test", stopReason: "stop" } } } as BridgeEvent });
+    state = runtimeReducer(state, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, scope: { ...scope, sequence: 3 }, stateSequence: 3, messageSequence: 4, state: { ...BOOTSTRAP.state, isStreaming: true } } });
+    expect(state.streaming).toBe(true); expect(state.messages).toHaveLength(1);
+  });
+
+  it("does not accept a snapshot from a retired runtime generation", () => {
+    const scope = { generation: "old", scope: 0, sequence: 3, cwd: "C:/workspace" };
+    let state = runtimeReducer(INITIAL_RUNTIME_STATE, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, scope } });
+    state = runtimeReducer(state, { type: "BRIDGE_EVENT", event: { source: "runtime", scope: { ...scope, generation: "new" }, payload: { type: "runtime_starting", cwd: scope.cwd } } });
+    expect(runtimeReducer(state, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, scope } })).toBe(state);
+  });
+
+  it("preserves identical same-millisecond messages across independent start/end lifecycles", () => {
+    const message = { role: "user", timestamp: 123, content: "repeat intentionally" };
+    let state = readyState();
+    for (let index = 0; index < 2; index += 1) {
+      state = piEvent(state, { type: "message_start", message });
+      state = piEvent(state, { type: "message_end", message });
+    }
+    expect(state.messages).toHaveLength(2);
+    expect(state.messages[0]?.stella?.key).not.toBe(state.messages[1]?.stella?.key);
+    expect(state.activeMessages).toEqual({});
+  });
+
+  it("ignores duplicate, out-of-order and foreign-generation events without mutating the current conversation", () => {
+    const scope = { generation: "new", scope: 2, sequence: 10, cwd: "C:/workspace", sessionId: "session-1" };
+    const state = runtimeReducer(INITIAL_RUNTIME_STATE, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, scope } });
+    for (const stale of [{ ...scope, sequence: 10 }, { ...scope, sequence: 9 }, { ...scope, generation: "old", sequence: 100 }, { ...scope, scope: 1, sequence: 99 }]) {
+      const next = runtimeReducer(state, { type: "BRIDGE_EVENT", event: { source: "pi", scope: stale, payload: { type: "agent_start" } } as BridgeEvent });
+      expect(next).toBe(state);
+    }
+    const next = runtimeReducer(state, { type: "BRIDGE_EVENT", event: { source: "pi", scope: { ...scope, sequence: 11 }, payload: { type: "agent_start" } } as BridgeEvent });
+    expect(next.streaming).toBe(true);
+  });
+
+  it("consumes editor injections once without allowing a stale acknowledgement to clear a newer injection", () => {
+    const injected = piEvent(readyState(), { type: "extension_ui_request", method: "set_editor_text", id: "injection-1", text: "extension draft" });
+    expect(injected.editorInjection?.text).toBe("extension draft");
+    expect(runtimeReducer(injected, { type: "EDITOR_INJECTION_APPLIED", id: "old-id" }).editorInjection).toEqual(injected.editorInjection);
+    expect(runtimeReducer(injected, { type: "EDITOR_INJECTION_APPLIED", id: "injection-1" }).editorInjection).toBeUndefined();
+  });
+
+  it("rehydrates tool completion and failure from durable results without live events", () => {
+    const messages: readonly SerializableMessage[] = [
+      { role: "assistant", timestamp: 1, model: "test", provider: "test", stopReason: "toolUse", content: [
+        { type: "toolCall", id: "read-1", name: "read", arguments: { path: "file.txt" } },
+        { type: "toolCall", id: "read-2", name: "read", arguments: { path: "missing.txt" } },
+      ] },
+      { role: "toolResult", timestamp: 2, toolCallId: "read-1", toolName: "read", isError: false, content: [{ type: "text", text: "file contents" }] },
+      { role: "toolResult", timestamp: 3, toolCallId: "read-2", toolName: "read", isError: true, content: [{ type: "text", text: "not found" }] },
+    ];
+    const state = runtimeReducer(INITIAL_RUNTIME_STATE, { type: "BOOTSTRAP", payload: { ...BOOTSTRAP, messages } });
+    expect(state.tools["read-1"]).toMatchObject({ status: "complete", args: { path: "file.txt" }, startedAt: 1 });
+    expect(state.tools["read-2"]).toMatchObject({ status: "error", args: { path: "missing.txt" } });
+  });
+
   it("hydrates a ready workspace without mutating the initial state", () => {
     const result = readyState();
     expect(result.phase).toBe("ready");
@@ -92,7 +168,7 @@ describe("runtimeReducer", () => {
     });
 
     expect(state.messages).toHaveLength(1);
-    expect(state.messages[0]).toEqual(updatedMessage);
+    expect(state.messages[0]).toMatchObject(updatedMessage);
     expect(state.tools["tool-1"]).toMatchObject({ status: "complete", result: "ok" });
   });
 

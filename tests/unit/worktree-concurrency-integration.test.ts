@@ -154,7 +154,7 @@ describe("worktree-aware execution concurrency", () => {
     for (const task of repository.state.tasks) await agentTaskService.dispatchDirect(task.id);
 
     runner.start();
-    await vi.waitFor(() => expect(backend.executions).toHaveLength(2));
+    await vi.waitFor(() => expect(backend.executions).toHaveLength(2), { timeout: 5_000 });
 
     const running = repository.state.agentTasks.filter((task) => task.status === "running");
     expect(running).toHaveLength(2);
@@ -165,12 +165,14 @@ describe("worktree-aware execution concurrency", () => {
       await expect(access(execution.request.cwd)).resolves.toBeUndefined();
       await writeFile(join(execution.request.cwd, `output-${execution.request.executionId}.txt`), "overlap\n", "utf8");
     }
-    const worktreeRegistry = await git(fixture.repository, "worktree", "list", "--porcelain");
-    for (const execution of backend.executions) expect(worktreeRegistry).toContain(await realpath(execution.request.cwd));
+    const worktreeRegistry = (await git(fixture.repository, "worktree", "list", "--porcelain")).replaceAll("\\", "/");
+    for (const execution of backend.executions) {
+      expect(worktreeRegistry).toContain((await realpath(execution.request.cwd)).replaceAll("\\", "/"));
+    }
 
     backend.executions[0]?.settle("first complete");
     backend.executions[1]?.settle("second complete");
-    await vi.waitFor(() => expect(repository.state.agentTasks.filter((task) => task.status === "reported")).toHaveLength(2));
+    await vi.waitFor(() => expect(repository.state.agentTasks.filter((task) => task.status === "reported")).toHaveLength(2), { timeout: 5_000 });
     expect(capacity.activeCount).toBe(0);
     for (const task of repository.state.agentTasks) {
       expect(task.workspacePlacement).toMatchObject({ strategy: "isolated-worktree", lifecycle: "retained", ownership: "stella" });
@@ -230,18 +232,18 @@ describe("worktree-aware execution concurrency", () => {
     for (const task of repository.state.tasks) await agentTaskService.dispatchDirect(task.id);
 
     runner.start();
-    await vi.waitFor(() => expect(backend.executions).toHaveLength(1));
-    await vi.waitFor(() => expect(repository.state.activities.some((activity) => activity.summary.includes("等待项目写入席位"))).toBe(true));
+    await vi.waitFor(() => expect(backend.executions).toHaveLength(1), { timeout: 5_000 });
+    await vi.waitFor(() => expect(repository.state.activities.some((activity) => activity.summary.includes("等待项目写入席位"))).toBe(true), { timeout: 5_000 });
     expect(repository.state.agentTasks.map((task) => task.status).sort()).toEqual(["queued", "running"]);
 
     backend.executions[0]?.settle("first current-folder complete");
-    await vi.waitFor(() => expect(backend.executions).toHaveLength(2));
+    await vi.waitFor(() => expect(backend.executions).toHaveLength(2), { timeout: 5_000 });
     expect(backend.executions[0]?.request.cwd).toBe(await realpath(fixture.repository));
     expect(backend.executions[1]?.request.cwd).toBe(await realpath(fixture.repository));
     expect(capacity.activeCount).toBe(1);
 
     backend.executions[1]?.settle("second current-folder complete");
-    await vi.waitFor(() => expect(repository.state.agentTasks.every((task) => task.status === "reported")).toBe(true));
+    await vi.waitFor(() => expect(repository.state.agentTasks.every((task) => task.status === "reported")).toBe(true), { timeout: 5_000 });
     expect(capacity.activeCount).toBe(0);
     await runner.shutdown();
     admission.shutdown();

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpenCheck,
   ChevronDown,
@@ -20,12 +20,16 @@ import type { ModelSummary, RecentProject, RuntimeBootstrap, SerializableContent
 import type { SkinPreference } from "../lib/skins";
 import { Brand } from "./Brand";
 import { GlobalModelControl } from "./GlobalModelControl";
+import { parseExpandedSkillInvocation, skillInvocationCommand } from "../lib/skill-invocation";
+import type { NativeSessionViews } from "../lib/native-session-views";
 
 interface SidebarProps {
+  readonly nativeViews?: NativeSessionViews;
   readonly bootstrap?: RuntimeBootstrap;
   readonly capabilities?: CapabilityHealthSnapshot;
   readonly skin: SkinPreference;
   readonly open: boolean;
+  readonly focusRequest?: number;
   readonly activeView: WorkspaceView;
   readonly teamFeaturesEnabled: boolean;
   readonly modelChanging: boolean;
@@ -63,7 +67,10 @@ function relativeGroup(dateString: string): "今天" | "过去 7 天" | "更早"
 }
 
 function sessionTitle(session: SessionSummary): string {
-  return session.name?.trim() || session.firstMessage.trim() || "未命名会话";
+  if (session.name?.trim()) return session.name.trim();
+  const firstMessage = session.firstMessage.trim();
+  const skill = parseExpandedSkillInvocation(firstMessage);
+  return skill ? skillInvocationCommand(skill) : firstMessage === "(no messages)" ? "未命名会话" : firstMessage || "未命名会话";
 }
 
 function messageText(message: SerializableMessage): string {
@@ -87,7 +94,7 @@ function visibleSidebarSessions(bootstrap: RuntimeBootstrap | undefined): readon
     created: bootstrap.sessions.find((session) => session.path === bootstrap.state.sessionFile)?.created ?? new Date().toISOString(),
     modified: new Date().toISOString(),
     messageCount: bootstrap.state.messageCount,
-    firstMessage: bootstrap.messages.map(messageText).find((text) => text.length > 0) ?? "",
+    firstMessage: bootstrap.messages.filter((message) => message.role === "user").map(messageText).find((text) => text.length > 0) ?? "",
   });
   const withoutCurrent = bootstrap.sessions.filter((session) => session.path !== current.path);
   return Object.freeze([current, ...withoutCurrent]);
@@ -98,11 +105,13 @@ function SessionGroup({
   sessions,
   activePath,
   onSwitch,
+  nativeViews,
 }: {
   readonly label: string;
   readonly sessions: readonly SessionSummary[];
   readonly activePath?: string;
   readonly onSwitch: (session: SessionSummary) => void;
+  readonly nativeViews?: NativeSessionViews;
 }) {
   if (sessions.length === 0) return null;
   return (
@@ -121,6 +130,9 @@ function SessionGroup({
             <span className="session-item__title">{sessionTitle(session)}</span>
             <span className="session-item__meta">
               {session.messageCount} 条消息 · {new Date(session.modified).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
+              {nativeViews?.view(`${session.cwd}\u0000${session.id}`).unread && <span className="native-attention-badge" aria-label="有未读进展">未读</span>}
+              {nativeViews?.view(`${session.cwd}\u0000${session.id}`).attention === "needs-input" && <span className="native-attention-badge">待输入</span>}
+              {nativeViews?.view(`${session.cwd}\u0000${session.id}`).attention === "failed" && <span className="native-attention-badge">需检查</span>}
             </span>
           </button>
         ))}
@@ -130,10 +142,12 @@ function SessionGroup({
 }
 
 export function Sidebar({
+  nativeViews,
   bootstrap,
   capabilities,
   skin,
   open,
+  focusRequest = 0,
   activeView,
   teamFeaturesEnabled,
   modelChanging,
@@ -156,7 +170,6 @@ export function Sidebar({
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [sidebarTab, setSidebarTab] = useState<SidebarTab>("tasks");
   const closeRef = useRef<HTMLButtonElement>(null);
-  const wasOpenRef = useRef(open);
   const sessions = useMemo(() => visibleSidebarSessions(bootstrap), [bootstrap]);
   const groups = useMemo(() => {
     const filtered = sessions.filter((session) =>
@@ -228,13 +241,23 @@ export function Sidebar({
     </div>
   );
 
-  useEffect(() => {
-    const opening = open && !wasOpenRef.current;
-    wasOpenRef.current = open;
-    if (!opening) return;
-    const timeout = window.setTimeout(() => closeRef.current?.focus({ preventScroll: true }), 240);
-    return () => window.clearTimeout(timeout);
-  }, [open]);
+  useLayoutEffect(() => {
+    if (!open || focusRequest <= 0) return;
+    let frame = 0;
+    let attempts = 0;
+    const focusWhenInteractive = (): void => {
+      attempts += 1;
+      const close = closeRef.current;
+      const panel = close?.closest(".sidebar");
+      if (close && panel && !panel.hasAttribute("inert")) {
+        close.focus({ preventScroll: true });
+        if (document.activeElement === close) return;
+      }
+      if (attempts < 12) frame = window.requestAnimationFrame(focusWhenInteractive);
+    };
+    frame = window.requestAnimationFrame(focusWhenInteractive);
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusRequest, open]);
 
   return (
     <>
@@ -291,9 +314,9 @@ export function Sidebar({
               </div>
 
               <div className="session-list" aria-label="历史会话">
-                <SessionGroup label="今天" sessions={groups["今天"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} />
-                <SessionGroup label="过去 7 天" sessions={groups["过去 7 天"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} />
-                <SessionGroup label="更早" sessions={groups["更早"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} />
+                <SessionGroup label="今天" sessions={groups["今天"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} nativeViews={nativeViews} />
+                <SessionGroup label="过去 7 天" sessions={groups["过去 7 天"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} nativeViews={nativeViews} />
+                <SessionGroup label="更早" sessions={groups["更早"]} activePath={bootstrap.state.sessionFile} onSwitch={onSwitchSession} nativeViews={nativeViews} />
                 {sessions.length === 0 && (
                   <div className="sidebar-empty"><Command size={19} /><p>这个项目还没有会话。</p></div>
                 )}

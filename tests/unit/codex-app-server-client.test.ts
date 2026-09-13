@@ -60,8 +60,10 @@ describe("CodexAppServerClient", () => {
   });
 
   it("times out a stalled request, terminates that connection, and restarts on demand", async () => {
-    const { client, spawnProcess } = fixture(40);
-    await expect(client.request("test/timeout")).rejects.toThrow("40ms 内未响应");
+    // Leave enough startup headroom under a parallel full-suite run so this
+    // assertion measures the deliberately stalled request, not process spawn.
+    const { client, spawnProcess } = fixture(500);
+    await expect(client.request("test/timeout")).rejects.toThrow("500ms 内未响应");
     expect((await client.listThreads()).length).toBe(4);
     expect(spawnProcess).toHaveBeenCalledTimes(2);
     await client.shutdown();

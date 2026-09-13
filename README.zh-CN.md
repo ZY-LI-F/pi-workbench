@@ -10,6 +10,20 @@ Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造�
 
 ## 产品定位
 
+### v0.6.0 · 原生会话可靠性
+
+本轮聚焦 Pi 原生 GUI，不扩张 Team，也不修改官方 Pi 0.84.2。规格与逐项交付记录见 [Spec](docs/specs/stella-v0.6.0-native-reliability.md)、[Tickets](docs/specs/stella-v0.6.0-tickets.md) 和 [验收记录](docs/testing/stella-v0.6.0-native-reliability-acceptance.md)。
+
+- 修复 UTF-8 跨数据块切分时中文/emoji 乱码，以及同时间戳消息被覆盖的问题。每个 RPC 进程独立拥有解码器、请求和运行代际，旧进程的迟到事件不会进入新会话。
+- 历史消息使用官方 entry ID；刷新按实际 RPC 读取序号合并正在生成的消息，不把流式消息当成已持久化历史。
+- **检查器 → 活动 → 提交回执**显示正在提交、Pi 已接收、Pi 已拒绝或结果未知。“已接收”不代表任务完成；中断后不会自动重发。重复 IPC 使用同一提交 ID 时不会再次执行。
+- Pi 意外退出后，“重试连接”恢复原会话和未发送草稿；明确被拒绝的输入可在修正原因后手动重试，未知结果则先提示核对。断连时仍能导出包含原 Session 关联的诊断。
+- **检查器 → 上下文 → 导出本机诊断**保存版本、Session 地址、布局、事件计数和关联请求 ID。默认不含对话正文、原始日志、环境变量或密钥，不上传。
+- 右侧文件预览显示内容版本，可将文件路径或选区追加到草稿。磁盘文件变化时需刷新后引用；已有草稿与发送中新增内容不会被覆盖。
+- 阅读位置、选中文件和未读提示按会话保留；保存的旧“运行中”不会被当作重启后的实时状态。回执使用应用数据目录中的 `native-submissions.json`，视图元数据保存在本机页面存储，均不修改 Pi JSONL。
+
+当前回执仅证明 GUI 提交及 Pi 接收情况，不承诺跨应用的 exactly-once 模型执行。未来格式不兼容或写盘失败会明确报错并保留原数据。隔离 HTML/PDF 内部选区不可读取时，预览仍提供文件级引用，不取消隔离。Windows 安装包未签名；macOS 仍需在对应平台构建、签名和验证。
+
 | 能力面 | 用户得到什么 | 架构边界 |
 | --- | --- | --- |
 | **Pi 原生工作台** | 聊天、会话树、模型与 Provider 配置、思考级别、扩展、Skills、终端、附件和本地产物预览 | 直接使用真实 Pi RPC；无需创建 Task，也不依赖 Team 功能 |
@@ -38,7 +52,7 @@ Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造�
 
 ## 当前会话文件预览
 
-Pi 在回复中给出绝对本地文件路径后，“输出文件与路径”卡片会显示“预览”。点击后不离开聊天，也不覆盖输入器，而是在应用右侧打开只读文件栏；原有会话检查器会暂时收起。右栏左侧汇总当前 session 中 Assistant 明确交付的全部路径，Windows 路径不区分大小写去重，并按最后一次提及时间倒序排列，可直接切换文件。切换 session 会关闭旧 session 的预览，不会把产物列表串到新会话。
+Pi 在回复中提及绝对本地文件路径后，“输出文件与路径”卡片提供“预览”。点击后在右侧**检查器 → 文件**中打开，不离开聊天或覆盖输入器。文件下拉框按最后提及时间倒序排列，Windows 路径不区分大小写去重；“提及”本身不等于文件存在，只有主进程实际检查、读取成功后才标为本机已验证。切换 session 会恢复该会话上次选中的文件，不会把另一会话的列表带过来。
 
 支持范围：
 
@@ -381,11 +395,12 @@ npm run companion:apk:release
 ```bash
 npm run check
 npm run build
+npm run test:e2e:native
 npm run test:e2e
 npm run test:packaged
 ```
 
-当前桌面确定性套件为 106 个 Vitest 文件、462 项测试，Companion 另有 4 个文件、18 项测试。除既有 Pi/Team/Kanban 回归外，它覆盖 Board v9、execution workspace 生命周期、真实 Git isolated 并发与 current-folder 串行、Profile 能力真实性、Codex/Claude 受管执行、外部 Source last-good/去重/详情、Companion 协议/控制面/Gateway、多 Host 迁移与路由、原生二维码结果处理，以及 Pi 压缩独立超时与互斥。Electron E2E 使用真实内置 Pi RPC 冷启动，API 35 AVD 流程验收实际安装 APK。常规测试截图写入 Playwright 隔离输出目录；只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 时才更新 `docs/`。
+桌面确定性套件覆盖 Pi/Team/Kanban、Board v9、执行工作区生命周期、真实 Git 并发、受管 CLI、外部任务投影与 Companion 协议。原生 GUI 回归还覆盖按编辑版本确认发送、会话独立阅读锚点、历史工具结果恢复、Skill 键盘选择及真实 Pi 自动压缩。协议夹具测试与付费真实模型运行分别记录于 [2026-09-12 质量验收](docs/testing/pi-gui-quality-2026-09-12.md)，设计依据见[源码研究](docs/research/pi-gui-quality-2026-09-12.md)。Companion / AVD 保持独立验收。常规截图写入 Playwright 隔离输出目录，只有显式设置 `STELLA_UPDATE_DOCS_SCREENSHOTS=1` 才更新 `docs/`。
 
 阿里百炼 Qwen 的真实推理验证是显式付费/联网测试，不并入默认回归命令：
 

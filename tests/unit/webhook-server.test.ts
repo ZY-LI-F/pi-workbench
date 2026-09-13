@@ -18,6 +18,18 @@ import {
 } from "../../src/shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "../../src/shared/orchestration-catalog";
 
+// WHATWG Fetch deliberately rejects a small set of unsafe ports. An OS is
+// still allowed to hand one of them to listen(0), so skip those allocations
+// instead of turning an unrelated fetch policy into a flaky server test.
+const FETCH_BLOCKED_PORTS = new Set([
+  1, 7, 9, 11, 13, 15, 17, 19, 20, 21, 22, 23, 25, 37, 42, 43, 53, 69, 77,
+  79, 87, 95, 101, 102, 103, 104, 109, 110, 111, 113, 115, 117, 119, 123,
+  135, 137, 139, 143, 161, 179, 389, 427, 465, 512, 513, 514, 515, 526, 530,
+  531, 532, 540, 548, 554, 556, 563, 587, 601, 636, 989, 990, 993, 995, 1719,
+  1720, 1723, 2049, 3659, 4045, 4190, 5060, 5061, 6000, 6566, 6665, 6666,
+  6667, 6668, 6669, 6679, 6697, 10080,
+]);
+
 class MemoryRepository implements BoardRepository {
   state: BoardState = EMPTY_BOARD_STATE;
   async read(): Promise<BoardState> { return this.state; }
@@ -67,14 +79,25 @@ async function setup(options: {
     now: () => "2026-07-18T12:00:00.000Z",
   });
   await service.create(webhookInput(options.enabled));
-  const server = new WebhookServer({
-    autopilotService: service,
-    emitBoardEvent: (event) => events.push(event),
-    port: 0,
-    maxBodyBytes: options.maxBodyBytes ?? 1_048_576,
-  });
-  const status = await server.start();
-  if (status.state !== "listening") throw new Error(`测试 Webhook Server 未监听: ${status.error}`);
+  let server: WebhookServer | undefined;
+  let status: Awaited<ReturnType<WebhookServer["start"]>> | undefined;
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const candidate = new WebhookServer({
+      autopilotService: service,
+      emitBoardEvent: (event) => events.push(event),
+      port: 0,
+      maxBodyBytes: options.maxBodyBytes ?? 1_048_576,
+    });
+    const candidateStatus = await candidate.start();
+    if (candidateStatus.state !== "listening") throw new Error(`测试 Webhook Server 未监听: ${candidateStatus.error}`);
+    if (!FETCH_BLOCKED_PORTS.has(candidateStatus.port)) {
+      server = candidate;
+      status = candidateStatus;
+      break;
+    }
+    await candidate.stop();
+  }
+  if (!server || !status) throw new Error("无法分配 Fetch 允许的测试端口");
   const url = `http://${status.host}:${status.port}/api/webhooks/fixed-secret-token`;
   return { repository, service, server, status, url, events };
 }

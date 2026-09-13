@@ -1,6 +1,9 @@
 import { vi } from "vitest";
 
 if (typeof window !== "undefined") {
+  if (!("ResizeObserver" in window)) {
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  }
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     writable: true,

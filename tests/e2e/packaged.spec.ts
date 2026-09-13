@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, test, _electron as electron } from "@playwright/test";
 import { enableTeamFeatures } from "./helpers/team-features";
+import { availableLoopbackPort } from "./helpers/native-fixture";
 
 function packagedExecutable(): string | undefined {
   const explicit = process.env.STELLA_PACKAGED_EXECUTABLE;
@@ -58,6 +59,8 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     env: {
       ...withoutExecutableSearchPath(emptyExecutableSearchPath),
       PI_CODING_AGENT_DIR: testInfo.outputPath("pi-user-data"),
+      STELLA_WEBHOOK_PORT: String(await availableLoopbackPort()),
+      STELLA_COMPANION_PORT: String(await availableLoopbackPort()),
     },
   });
 
@@ -98,11 +101,54 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
       return Object.freeze({ sessionFile: response.data.sessionFile });
     });
     if (!packagedSession.sessionFile) throw new Error("打包态会话没有生成可追踪的 sessionFile");
+    await electronApp.evaluate(({ clipboard }, expected) => {
+      const audit: { action: string; matchesSession: boolean; length: number; at: number }[] = [];
+      const originalWrite = clipboard.writeText.bind(clipboard);
+      const originalRead = clipboard.readText.bind(clipboard);
+      // Observe the real OS calls without changing their results. Do not record
+      // pre-existing clipboard contents, which may belong to the desktop user.
+      clipboard.writeText = (text, type) => {
+        audit.push({ action: "write", matchesSession: text === expected, length: text.length, at: Date.now() });
+        originalWrite(text, type);
+      };
+      clipboard.readText = (type) => {
+        const text = originalRead(type);
+        audit.push({ action: "read", matchesSession: text === expected, length: text.length, at: Date.now() });
+        return text;
+      };
+      Object.assign(globalThis, { stellaPackagedClipboardAudit: audit });
+    }, packagedSession.sessionFile);
     const sessionMore = window.getByRole("button", { name: "更多会话操作" });
     await expect(sessionMore).toBeVisible();
     await sessionMore.click();
+    await window.bringToFront();
+    const clipboardWritable = await electronApp.evaluate(({ clipboard }) => {
+      const previous = clipboard.readText();
+      clipboard.writeText("stella-packaged-clipboard-probe");
+      const writable = clipboard.readText() === "stella-packaged-clipboard-probe";
+      if (writable) clipboard.writeText(previous);
+      return writable;
+    });
     await window.getByRole("menu", { name: "更多会话操作" }).getByRole("menuitem", { name: /复制 Session 地址/ }).click();
-    expect(await electronApp.evaluate(({ clipboard }) => clipboard.readText())).toBe(packagedSession.sessionFile);
+    const copyNotice = window.locator(".toast").last();
+    await expect(copyNotice).toContainText("Session 地址");
+    try {
+      if (clipboardWritable) {
+        await expect(copyNotice).toContainText("已复制");
+        await expect.poll(
+          () => electronApp.evaluate(({ clipboard }) => clipboard.readText()),
+          { message: "打包态复制动作完成后，系统剪贴板应包含当前 Session 文件地址" },
+        ).toBe(packagedSession.sessionFile);
+      } else {
+        await expect(copyNotice).toContainText("失败");
+        await expect(copyNotice).toContainText("系统剪贴板未接受待复制文本");
+      }
+    } finally {
+      const clipboardAudit = await electronApp.evaluate(() => (globalThis as unknown as { stellaPackagedClipboardAudit: unknown }).stellaPackagedClipboardAudit);
+      const auditPath = testInfo.outputPath("real-clipboard-audit.json");
+      writeFileSync(auditPath, JSON.stringify(clipboardAudit, null, 2));
+      await testInfo.attach("real-clipboard-audit.json", { path: auditPath, contentType: "application/json" });
+    }
 
     await expect(window.getByRole("button", { name: "团队协作", exact: true })).toHaveCount(0);
     await expect(window.getByRole("button", { name: "任务看板", exact: true })).toBeVisible();

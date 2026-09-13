@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PiResponse, RuntimeBootstrap, StellaDesktopApi } from "../../src/shared/contracts";
+import type { BridgeEvent, PiResponse, RuntimeBootstrap, StellaDesktopApi } from "../../src/shared/contracts";
 import {
   isReportedRuntimeError,
   usePiRuntime,
@@ -32,6 +32,73 @@ function runtimeApi(overrides: Partial<StellaDesktopApi>): StellaDesktopApi {
 afterEach(() => cleanup());
 
 describe("usePiRuntime error reporting", () => {
+  it("does not overwrite newer streamed content with an older refresh snapshot", async () => {
+    let emit!: (event: BridgeEvent) => void;
+    let complete!: (snapshot: RuntimeBootstrap) => void;
+    const initial = bootstrap("same-session");
+    const api = runtimeApi({
+      initialize: async () => initial,
+      onEvent: (listener) => { emit = listener; return () => undefined; },
+      refresh: () => new Promise((resolve) => { complete = resolve; }),
+    });
+    const { result } = renderHook(() => usePiRuntime(api));
+    await waitFor(() => expect(result.current.state.phase).toBe("ready"));
+    let refreshing!: Promise<RuntimeBootstrap>;
+    act(() => { refreshing = result.current.refresh(); });
+    const message = { role: "user", content: "arrived after snapshot", timestamp: 42 } as const;
+    act(() => {
+      emit({ source: "pi", payload: { type: "agent_start" } } as BridgeEvent);
+      emit({ source: "pi", payload: { type: "message_start", message } } as BridgeEvent);
+    });
+    await act(async () => { complete(initial); await refreshing; });
+    expect(result.current.state.messages).toMatchObject([message]);
+    expect(result.current.state.streaming).toBe(true);
+  });
+
+  it("drains a second settled event that arrives while the first refresh is pending", async () => {
+    let emit!: (event: BridgeEvent) => void;
+    const accepts: ((snapshot: RuntimeBootstrap) => void)[] = [];
+    const initial = bootstrap("same-session");
+    const api = runtimeApi({
+      initialize: async () => initial,
+      onEvent: (listener) => { emit = listener; return () => undefined; },
+      refresh: vi.fn(() => new Promise((resolve) => { accepts.push(resolve); })),
+    });
+    const { result } = renderHook(() => usePiRuntime(api));
+    await waitFor(() => expect(result.current.state.phase).toBe("ready"));
+    const settled = { source: "pi", payload: { type: "agent_settled" } } as BridgeEvent;
+    act(() => { emit(settled); emit(settled); });
+    expect(api.refresh).toHaveBeenCalledTimes(1);
+    await act(async () => { accepts[0]!(initial); });
+    expect(api.refresh).toHaveBeenCalledTimes(2);
+    const latest = { ...initial, state: { ...initial.state, sessionName: "latest turn" } };
+    await act(async () => { accepts[1]!(latest); });
+    expect(result.current.state.bootstrap?.state.sessionName).toBe("latest turn");
+  });
+
+  it("defers settled refreshes during navigation and ignores a stale initialization failure", async () => {
+    let emit!: (event: BridgeEvent) => void;
+    let failInitialize!: (cause: Error) => void;
+    let finishOpen!: (snapshot: RuntimeBootstrap) => void;
+    const next = bootstrap("new-session");
+    const api = runtimeApi({
+      initialize: () => new Promise((_, reject) => { failInitialize = reject; }),
+      onEvent: (listener) => { emit = listener; return () => undefined; },
+      openProject: () => new Promise((resolve) => { finishOpen = resolve; }),
+      refresh: vi.fn(async () => next),
+    });
+    const { result } = renderHook(() => usePiRuntime(api));
+    let opening!: Promise<RuntimeBootstrap | null>;
+    act(() => { opening = result.current.openProject("C:/project", true); });
+    act(() => { emit({ source: "pi", payload: { type: "agent_settled" } } as BridgeEvent); });
+    expect(api.refresh).not.toHaveBeenCalled();
+    await act(async () => { finishOpen(next); await opening; failInitialize(new Error("old initialization")); });
+    expect(result.current.state.bootstrap?.state.sessionId).toBe("new-session");
+    expect(result.current.state.phase).toBe("ready");
+    expect(result.current.state.error).toBeUndefined();
+    expect(api.refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("marks command failures that were already emitted as visible runtime notices", async () => {
     const api = runtimeApi({ command: vi.fn(async () => { throw new Error("RPC transport failed"); }) });
     const { result } = renderHook(() => usePiRuntime(api));

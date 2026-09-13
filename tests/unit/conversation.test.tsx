@@ -9,6 +9,7 @@ afterEach(cleanup);
 const BOOTSTRAP = {
   project: { name: "PI-GUI" },
   entries: [],
+  state: { sessionId: "test" },
 } as unknown as RuntimeBootstrap;
 
 describe("Conversation", () => {
@@ -26,6 +27,7 @@ describe("Conversation", () => {
         }]}
         tools={{}}
         streaming={false}
+        scrollMemory={new Map()}
         onPrefill={vi.fn()}
         onFork={vi.fn()}
         onPreviewFile={vi.fn()}

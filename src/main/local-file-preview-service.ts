@@ -1,5 +1,6 @@
 import type { LocalFilePreviewData } from "../shared/file-preview";
 import type { LocalPathInspection } from "../shared/local-path";
+import { createHash } from "node:crypto";
 
 export interface LocalFilePreviewServiceDependencies {
   readonly inspectLocalPath: (path: unknown) => Promise<LocalPathInspection>;
@@ -27,6 +28,7 @@ export class LocalFilePreviewService {
       kind: inspection.preview.kind,
       mimeType: inspection.preview.mimeType,
       sizeBytes: bytes.byteLength,
+      version: createHash("sha256").update(bytes).digest("hex"),
       bytes,
     });
   }

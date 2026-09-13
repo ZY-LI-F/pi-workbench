@@ -37,6 +37,9 @@ import { useCompanionGateway } from "./hooks/use-companion-gateway";
 import { useMediaQuery } from "./hooks/use-media-query";
 import { usePreferences } from "./hooks/use-preferences";
 import { useSessionComposerDraft } from "./hooks/use-session-composer-draft";
+import { useNativeSessionViews } from "./hooks/use-native-session-views";
+import { useNativeSubmissions } from "./hooks/use-native-submissions";
+import { Modal } from "./components/Modal";
 import { useSkinArtwork } from "./hooks/use-skin-artwork";
 import type { SkinPreference } from "./lib/skins";
 import chenxiArtwork from "./assets/skins/chenxi.png";
@@ -153,6 +156,7 @@ export function App({ api }: AppProps) {
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
   const skinArtwork = useSkinArtwork(api);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarFocusRequest, setSidebarFocusRequest] = useState(0);
   const [inspectorOpen, setInspectorOpen] = useState(() => window.innerWidth >= 1280);
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>("context");
   const [inspectorWidth, setInspectorWidth] = useState(() => constrainInspectorWidth(preferences.inspectorWidth, window.innerWidth));
@@ -178,6 +182,7 @@ export function App({ api }: AppProps) {
   const taskHealth = capabilitySnapshot?.task;
   const bootstrap = state.bootstrap;
   const composerDraft = useSessionComposerDraft(bootstrap, api);
+  const nativeSubmissions = useNativeSubmissions(api, bootstrap, controller.notify);
   const compactSidebar = useMediaQuery("(max-width: 1060px)");
   const sidebarCollapsed = preferences.sidebarCollapsed;
   const sidebarVisible = compactSidebar ? sidebarOpen : !sidebarCollapsed;
@@ -186,6 +191,7 @@ export function App({ api }: AppProps) {
   const activeView: WorkspaceView = !teamFeaturesEnabled && workspaceView === "team"
     ? "kanban"
     : workspaceView;
+  const sessionViews = useNativeSessionViews(state, activeView === "chat");
   const sessionFiles = useMemo(() => sessionFileReferences(state.messages), [state.messages]);
   const sessionAddress = bootstrap?.state.sessionFile?.trim() || undefined;
 
@@ -211,6 +217,7 @@ export function App({ api }: AppProps) {
   }, [skinArtwork.loadError]);
 
   const runtimeNotify = controller.notify;
+  useEffect(() => { if (sessionViews.error) runtimeNotify(sessionViews.error, "error"); }, [sessionViews.error, runtimeNotify]);
   useEffect(() => {
     if (!preferencesStorageError) return;
     runtimeNotify(preferencesStorageError, "error");
@@ -248,6 +255,7 @@ export function App({ api }: AppProps) {
 
   const openFilePreview = (inspection: LocalPathInspection) => {
     setFilePreview(inspection);
+    if (sessionViews.key) sessionViews.views.selectFile(sessionViews.key, inspection.canonicalPath);
     setInspectorTab("files");
     setInspectorWidth((current) => Math.max(current, constrainInspectorWidth(FILE_INSPECTOR_WIDTH, window.innerWidth)));
     setInspectorOpen(true);
@@ -259,9 +267,19 @@ export function App({ api }: AppProps) {
   };
 
   useEffect(() => {
+    let active = true;
     setFilePreview(undefined);
-    setInspectorTab((current) => current === "files" ? "context" : current);
-  }, [bootstrap?.state.sessionId]);
+    const selected = sessionViews.key ? sessionViews.views.view(sessionViews.key).selectedFile : undefined;
+    if (!selected) setInspectorTab((current) => current === "files" ? "context" : current);
+    else void api.inspectLocalPath(selected).then((inspection) => {
+      if (!active) return;
+      setFilePreview(inspection);
+      setInspectorTab("files");
+    }, (cause: unknown) => {
+      if (active) runtimeNotify(`上次查看的文件无法恢复：${errorMessage(cause)}。保存的选择未删除。`, "warning");
+    });
+    return () => { active = false; };
+  }, [api, runtimeNotify, sessionViews.key, sessionViews.views]);
 
   useEffect(() => {
     const constrainCurrentLayout = () => {
@@ -284,11 +302,10 @@ export function App({ api }: AppProps) {
   const openSidebar = () => {
     if (compactSidebar) {
       setSidebarOpen(true);
-      window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
     } else {
       setPreferences(Object.freeze({ ...preferences, sidebarCollapsed: false }));
-      window.requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(".sidebar__close")?.focus());
     }
+    setSidebarFocusRequest((request) => request + 1);
   };
 
   const closeSidebar = () => {
@@ -327,6 +344,7 @@ export function App({ api }: AppProps) {
       controller.notify("新建会话已由 Pi 扩展取消", "warning");
       return;
     }
+    setSidebarOpen(false);
     setWorkspaceView("chat");
     focusComposer();
   };
@@ -458,13 +476,20 @@ export function App({ api }: AppProps) {
   };
 
   const sendPrompt = async (message: string, images: readonly ComposerImage[]) => {
+    const acknowledge = composerDraft.prepareSend();
+    await composerDraft.flush();
     const payloadImages = images.map(({ type, data, mimeType }) => ({ type, data, mimeType }));
-    await controller.command(
+    const accepted = await nativeSubmissions.submit(
       state.streaming
         ? { type: "prompt", message, images: payloadImages, streamingBehavior: queueMode }
         : { type: "prompt", message, images: payloadImages },
-      true,
     );
+    if (!accepted) return;
+    acknowledge();
+    try { await composerDraft.flush(); }
+    catch (cause) { controller.notify(`Pi 已接收输入，但已发送草稿的清理未保存：${errorMessage(cause)}`, "error"); }
+    try { await controller.refresh(); }
+    catch (cause) { controller.notify(`Pi 已接收输入，但刷新失败：${errorMessage(cause)}`, "warning"); }
   };
 
   const fork = async (entryId: string) => {
@@ -499,6 +524,13 @@ export function App({ api }: AppProps) {
     } catch (cause) {
       controller.notify(`会话已导出到 ${path}，但无法在文件管理器中显示：${errorMessage(cause)}`, "error");
     }
+  };
+
+  const exportDiagnostics = async () => {
+    const exported = await api.exportNativeDiagnostics({ width: window.innerWidth, height: window.innerHeight,
+      inspectorWidth, inspectorOpen, sidebarOpen: sidebarVisible, fontSize: preferences.fontSize });
+    if (!exported) return;
+    controller.notify(`本机诊断已导出：${exported.path}。未上传任何内容。${exported.revealError ? `无法在文件管理器中显示：${exported.revealError}` : ""}`, exported.revealError ? "warning" : "success");
   };
 
   const paletteActions = useMemo<readonly PaletteAction[]>(
@@ -590,7 +622,9 @@ export function App({ api }: AppProps) {
         capabilities={capabilitySnapshot}
         skin={preferences.skin}
         open={sidebarVisible}
+        focusRequest={sidebarFocusRequest}
         activeView={activeView}
+        nativeViews={sessionViews.views}
         teamFeaturesEnabled={teamFeaturesEnabled}
         modelChanging={modelChanging}
         onClose={closeSidebar}
@@ -603,7 +637,6 @@ export function App({ api }: AppProps) {
             return;
           }
           setWorkspaceView(view);
-          if (view !== "chat") setFilePreview(undefined);
           setSidebarOpen(false);
           if (view === "chat") focusComposer();
         }}
@@ -662,6 +695,7 @@ export function App({ api }: AppProps) {
             </section>
           )}
           <Conversation
+            scrollMemory={sessionViews.views}
             api={api}
             bootstrap={bootstrap}
             messages={state.messages}
@@ -672,12 +706,18 @@ export function App({ api }: AppProps) {
             onPreviewFile={openFilePreview}
           />
         </div>
+        {(bootstrap.submissionError || nativeSubmissions.receipts.some((receipt) => receipt.status === "unknown" || receipt.status === "pending")) && <div className="submission-warning" role="status">
+          <span>{bootstrap.submissionError ?? "有输入的发送结果尚未确认。不会自动重发，请核对会话和提交回执。"}</span>
+          <button type="button" className="button-secondary" onClick={() => openInspector("activity")}>查看回执</button>
+        </div>}
         <Composer
+          key={bootstrap?.state.sessionId}
           draft={composerDraft.text}
           onDraftChange={composerDraft.setText}
           images={composerDraft.images}
           onImagesChange={composerDraft.setImages}
           editorInjection={state.editorInjection}
+          onEditorInjectionApplied={controller.consumeEditorInjection}
           commands={bootstrap.commands}
           widgets={state.extensionWidgets}
           streaming={piReady && state.streaming}
@@ -785,7 +825,7 @@ export function App({ api }: AppProps) {
         />
       ) : null}
 
-      {activeView === "chat" && bootstrap && piReady && <Inspector
+      {activeView === "chat" && bootstrap && <Inspector
         api={api}
         bootstrap={bootstrap}
         open={inspectorOpen}
@@ -795,12 +835,16 @@ export function App({ api }: AppProps) {
         queue={state.queue}
         extensionStatuses={state.extensionStatuses}
         extensionWidgets={state.extensionWidgets}
-        compactDisabled={state.streaming || state.compacting || state.queue.steering.length > 0 || state.queue.followUp.length > 0}
+        submissions={nativeSubmissions.receipts}
+        onRefreshSubmissions={() => runAction("刷新提交回执", controller.refresh)}
+        onReferenceFile={(text) => { composerDraft.setText((current) => `${current}${current ? "\n\n" : ""}${text}\n`); focusComposer(); }}
+        onExportDiagnostics={() => runAction("导出本机诊断", exportDiagnostics)}
+        compactDisabled={!piReady || state.streaming || state.compacting || state.queue.steering.length > 0 || state.queue.followUp.length > 0}
         filePreview={filePreview}
         fileReferences={sessionFiles}
         onTabChange={setInspectorTab}
         onWidthChange={setInspectorWidth}
-        onSelectFile={setFilePreview}
+        onSelectFile={(inspection) => { setFilePreview(inspection); if (sessionViews.key) sessionViews.views.selectFile(sessionViews.key, inspection.canonicalPath); }}
         onClose={() => setInspectorOpen(false)}
         onCompact={() => runAction("压缩上下文", compact)}
         onExport={() => runAction("导出会话", exportSession)}
@@ -830,6 +874,12 @@ export function App({ api }: AppProps) {
         />
       )}
       {state.extensionRequest && <ExtensionDialog request={state.extensionRequest} onRespond={(response) => void controller.respondToExtension(response).catch((cause: unknown) => controller.notify(`回复扩展请求失败：${cause instanceof Error ? cause.message : String(cause)}`, "error"))} onExpire={controller.expireExtensionRequest} />}
+      {nativeSubmissions.confirmation && <Modal title="上次发送结果未知" eyebrow="SUBMISSION RECOVERY" onClose={() => nativeSubmissions.confirm(false)}>
+        <p>Pi 可能已经接收上一次输入。请先核对当前会话，避免同一任务重复运行。</p>
+        <p>继续会创建一条新的输入，不会撤销或恢复上一次请求。</p>
+        <code>{nativeSubmissions.confirmation.receipt.id}</code>
+        <div className="modal-actions"><button type="button" className="button-secondary" onClick={() => nativeSubmissions.confirm(false)}>返回核对会话</button><button type="button" className="button-primary" onClick={() => nativeSubmissions.confirm(true)}>已核对，发送新输入</button></div>
+      </Modal>}
       {renameOpen && bootstrap && <TextPromptDialog title="重命名会话" eyebrow="SESSION NAME" label="会话名称" initialValue={bootstrap.state.sessionName ?? ""} confirmLabel="保存名称" onCancel={() => setRenameOpen(false)} onConfirm={(name) => {
         setRenameOpen(false);
         runAction("重命名会话", () => controller.command({ type: "set_session_name", name }, true));

@@ -1,0 +1,20 @@
+.native-submissions { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); min-width: 0; }
+.native-submissions > header { display: flex; align-items: center; justify-content: space-between; }
+.native-submissions p { font-size: .85rem; line-height: 1.6; color: var(--text-muted); overflow-wrap: anywhere; }
+.native-receipt { border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; padding: 10px; }
+.native-receipt summary { cursor: pointer; font-size: .85rem; }
+.native-receipt time { float: right; color: var(--text-muted); font-size: .75rem; }
+.native-receipt dd { margin: 2px 0 8px; font: .8125rem/1.5 monospace; overflow-wrap: anywhere; }
+.native-receipt dt { color: var(--text-muted); font-size: .75rem; }
+.native-receipt--unknown, .native-receipt--rejected { border-color: var(--accent-warm, #d89464); }
+.submission-warning { padding: 9px 14px; margin: 0 24px 8px; border: 1px solid var(--accent-warm, #d89464); border-radius: 10px; font-size: .85rem; display: flex; gap: 8px; align-items: center; }
+.submission-warning span { flex: 1; }
+.file-preview__reference-feedback { padding: 8px 14px; font-size: .8rem; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+.native-attention-badge { display: inline-flex; margin-left: 6px; padding: 1px 5px; border-radius: 5px; font-size: .8125rem; color: var(--accent, #a89bef); background: var(--accent-subtle, #8c7ad922); }
+
+/* The inspector changes the message column without changing window width. */
+.output-paths { container: output-artifacts / inline-size; }
+@container output-artifacts (max-width: 640px) {
+  .output-path { grid-template-columns: 28px minmax(0, 1fr); }
+  .output-path__actions { grid-column: 2; justify-content: flex-start; }
+}

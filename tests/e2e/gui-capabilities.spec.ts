@@ -357,8 +357,27 @@ test("executes native session, modal, command palette, and terminal interactions
     const topbarOverflow = topbar.getByRole("menu", { name: "更多会话操作" });
     await expect(topbarOverflow.getByRole("menuitem", { name: /固化为任务/ })).toBeVisible();
     await expect(topbarOverflow.getByRole("menuitem", { name: /新建会话/ })).toBeVisible();
+    await window.bringToFront();
+    const clipboardWritable = await electronApp.evaluate(({ clipboard }) => {
+      const previous = clipboard.readText();
+      clipboard.writeText("stella-clipboard-probe");
+      const writable = clipboard.readText() === "stella-clipboard-probe";
+      if (writable) clipboard.writeText(previous);
+      return writable;
+    });
     await topbarOverflow.getByRole("menuitem", { name: /复制 Session 地址/ }).click();
-    expect(await electronApp.evaluate(({ clipboard }) => clipboard.readText())).toBe(currentSession.sessionFile);
+    const copyNotice = window.locator(".toast").last();
+    await expect(copyNotice).toContainText("Session 地址");
+    if (clipboardWritable) {
+      await expect(copyNotice).toContainText("已复制");
+      await expect.poll(
+        () => electronApp.evaluate(({ clipboard }) => clipboard.readText()),
+        { message: "复制动作完成后，系统剪贴板应包含当前 Session 文件地址" },
+      ).toBe(currentSession.sessionFile);
+    } else {
+      await expect(copyNotice).toContainText("失败");
+      await expect(copyNotice).toContainText("系统剪贴板未接受待复制文本");
+    }
     await inspector.getByRole("tab", { name: "文件", exact: true }).click();
     await expect(inspector.getByText("选择一个会话文件", { exact: true })).toBeVisible();
     await inspector.getByRole("tab", { name: "上下文", exact: true }).click();

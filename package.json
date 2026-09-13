@@ -1,6 +1,6 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "productName": "Stella Pi Workbench",
   "private": true,
   "description": "A local-first Pi desktop workbench with native chat, multi-CLI task execution, external agent activity, Kanban, workflows, and artifact previews.",
@@ -38,7 +38,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "test:e2e:native": "playwright test tests/e2e/gui-capabilities.spec.ts tests/e2e/model-configuration.spec.ts --grep-invert \"team surface\"",
+    "test:e2e:native": "playwright test tests/e2e/gui-capabilities.spec.ts tests/e2e/model-configuration.spec.ts tests/e2e/native-chat.spec.ts tests/e2e/native-reliability.spec.ts --grep-invert \"team surface\"",
     "test:e2e:pharma": "npm run build && playwright test tests/e2e/pharma-early-research.spec.ts",
     "test:e2e:pharma:live": "npm run build && playwright test --config playwright.live.config.ts",
     "test:e2e:qwen:live": "npm run build && playwright test --config playwright.live.config.ts tests/e2e/aliyun-qwen.live.ts",
@@ -73,7 +73,13 @@
     "ws": "^8.21.3"
   },
   "overrides": {
-    "brace-expansion": "5.0.8"
+    "baseline-browser-mapping": "2.11.22",
+    "brace-expansion": "5.0.9",
+    "browserslist": "4.28.9",
+    "fast-uri": "3.1.7",
+    "js-yaml": "4.3.2",
+    "nanoid": "3.3.19",
+    "postcss": "8.5.28"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",
@@ -95,6 +101,6 @@
     "typescript": "5.9.3",
     "typescript-eslint": "^8.64.0",
     "vite": "7.3.6",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }

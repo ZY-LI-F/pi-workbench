@@ -1,5 +1,5 @@
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import type { RuntimeBootstrap } from "@shared/contracts";
@@ -74,6 +74,20 @@ function renderSidebar(source = bootstrap(), teamFeaturesEnabled = false, open =
 }
 
 describe("Sidebar", () => {
+  it("uses the Skill invocation as the default title without changing an explicit user title", () => {
+    const original = bootstrap();
+    const source = { ...original, messages: [
+      { role: "custom", customType: "internal", content: "extension metadata", display: false, timestamp: 1 } as const,
+      { role: "user", content: '<skill name="evidence" location="C:/skills/SKILL.md">\nprivate instructions\n</skill>\n\nCDK2 target analysis', timestamp: 2 } as const,
+    ] };
+    const { unmount } = renderSidebar(source);
+    expect(screen.getByRole("button", { name: /\/skill:evidence CDK2 target analysis/ })).toBeTruthy();
+    expect(screen.queryByText(/private instructions/)).toBeNull();
+    unmount();
+    renderSidebar({ ...source, state: { ...source.state, sessionName: "用户原始标题 <无需脱敏>" } });
+    expect(screen.getByRole("button", { name: /用户原始标题 <无需脱敏>/ })).toBeTruthy();
+  });
+
   it("defaults to the task rail and keeps Pi-native navigation in its own tab", async () => {
     const user = userEvent.setup();
     const { unmount } = renderSidebar();
@@ -130,5 +144,35 @@ describe("Sidebar", () => {
     expect(sidebar?.classList.contains("is-collapsed")).toBe(true);
     expect(sidebar?.getAttribute("aria-hidden")).toBe("true");
     expect(sidebar?.hasAttribute("inert")).toBe(true);
+  });
+
+  it("moves keyboard focus into the sidebar when a collapsed rail is reopened", async () => {
+    const view = renderSidebar(bootstrap(), false, false);
+    view.rerender(
+      <Sidebar
+        bootstrap={bootstrap()}
+        capabilities={{ pi: { state: "ready" }, task: { state: "ready" }, schedule: { state: "ready" }, webhook: { state: "ready" } }}
+        skin="stella"
+        open
+        focusRequest={1}
+        activeView="chat"
+        teamFeaturesEnabled={false}
+        modelChanging={false}
+        onClose={() => undefined}
+        onNewSession={() => undefined}
+        onNewTask={() => undefined}
+        onSwitchView={() => undefined}
+        onChooseProject={() => undefined}
+        onOpenRecentProject={() => undefined}
+        onSwitchSession={() => undefined}
+        onOpenPalette={() => undefined}
+        onOpenTerminal={() => undefined}
+        onOpenInspector={() => undefined}
+        onOpenSettings={() => undefined}
+        onModelChange={() => undefined}
+      />,
+    );
+
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("button", { name: "关闭侧栏" })));
   });
 });

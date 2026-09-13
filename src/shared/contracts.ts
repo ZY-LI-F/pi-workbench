@@ -47,6 +47,9 @@ import type { LocalPathInspection } from "./local-path";
 import type { LocalFilePreviewData } from "./file-preview";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "./composer-draft";
 import type { PiSkillInstallResult, PiSkillInstallScope } from "./pi-skill";
+import type { RuntimeScope } from "./runtime-scope";
+import type { NativeSubmissionInput, NativeSubmissionReceipt, NativeSubmissionResult } from "./native-submission";
+import type { NativeDiagnosticLayout, NativeDiagnosticExportResult } from "./native-diagnostics";
 import type {
   ContinueExternalExecutionInput,
   ContinueExternalExecutionResult,
@@ -144,7 +147,10 @@ export type SerializableContentBlock =
     }
   | { readonly type: "image"; readonly data: string; readonly mimeType: string };
 
-export type SerializableMessage =
+export type SerializableMessage = {
+  /** Renderer identity only; never persisted back to the official Pi session. */
+  readonly stella?: { readonly key: string; readonly entryId?: string; readonly liveScope?: string; readonly startSequence?: number; readonly endSequence?: number };
+} & (
   | {
       readonly role: "user";
       readonly content: string | readonly SerializableContentBlock[];
@@ -205,9 +211,14 @@ export type SerializableMessage =
       readonly summary: string;
       readonly tokensBefore: number;
       readonly timestamp: number;
-    };
+    });
 
 export interface RuntimeBootstrap {
+  readonly scope?: RuntimeScope;
+  readonly messageSequence?: number;
+  readonly stateSequence?: number;
+  readonly submissions?: readonly NativeSubmissionReceipt[];
+  readonly submissionError?: string;
   readonly project: ProjectMeta;
   readonly recentProjects: readonly RecentProject[];
   readonly state: RpcSessionState;
@@ -231,8 +242,8 @@ export type RuntimeSignal =
   | { readonly type: "protocol_error"; readonly message: string; readonly record: string };
 
 export type BridgeEvent =
-  | { readonly source: "pi"; readonly payload: AgentSessionEvent | RpcExtensionUIRequest }
-  | { readonly source: "runtime"; readonly payload: RuntimeSignal }
+  | { readonly source: "pi"; readonly payload: AgentSessionEvent | RpcExtensionUIRequest; readonly scope?: RuntimeScope }
+  | { readonly source: "runtime"; readonly payload: RuntimeSignal; readonly scope?: RuntimeScope }
   | { readonly source: "board"; readonly payload: BoardBridgeEvent }
   | { readonly source: "capability"; readonly payload: { readonly type: "capability-health"; readonly snapshot: CapabilityHealthSnapshot } }
   | { readonly source: "execution-backend"; readonly payload: ExecutionBackendCatalogSnapshot }
@@ -253,6 +264,9 @@ export interface StellaDesktopApi {
   externalExecutionDetails(input: ReadExternalExecutionDetailsInput): Promise<ExternalExecutionDetails>;
   initialize(): Promise<RuntimeBootstrap>;
   command(command: PiCommand): Promise<PiResponse>;
+  submitNativeTurn(input: NativeSubmissionInput): Promise<NativeSubmissionResult>;
+  nativeSubmissions(sessionId: string): Promise<readonly NativeSubmissionReceipt[]>;
+  exportNativeDiagnostics(layout: NativeDiagnosticLayout): Promise<NativeDiagnosticExportResult | null>;
   refresh(): Promise<RuntimeBootstrap>;
   respondToExtension(response: PiExtensionResponse): Promise<void>;
   chooseProject(): Promise<ProjectSelection | null>;
