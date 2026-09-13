@@ -10,6 +10,8 @@ import "./styles/kanban.css";
 import "./styles/models.css";
 import "./styles/skills.css";
 import "./styles/native-reliability.css";
+import "./styles/projects.css";
+import "./styles/user-guide.css";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("缺少 #root 渲染节点");

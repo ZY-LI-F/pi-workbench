@@ -4,6 +4,10 @@ Stella 是一个本地桌面 Agent 工作台，由完整独立的 Pi 工作台�
 
 - **Pi 工作台（Pi Workspace）**：直接使用交互式 Pi 的一等产品界面，完整保留项目、会话、模型、命令、扩展、工具、分支、终端和上下文能力；它不依赖 Task 或 AgentTask 才能存在。
 - **任务控制台（Task Control）**：管理 Task、Kanban、Task Room、Squad、Workflow、DAG 和 Autopilot 的可选产品界面。它与 Pi 工作台并列，而不是 Pi 工作台的替代品。
+- **项目清单（Project Registry）**：持久保存本地项目的稳定 ID、目录、显示名称、说明、计划阶段、置顶与归档。最近项目只是访问记录；项目清单不保存第二份信任授权或任务统计。
+- **项目看板（Project Board）**：同一项目清单的总览与阶段列视图，从现有 Board 汇总 Task 进度和人工注意事项。浏览与下钻不切换 Pi 会话，具体操作仍在原任务详情中进行。
+- **项目计划阶段（Project Planning Stage）**：待安排、进行中、暂缓、已收尾，表达用户的项目安排。它与 Task 阶段、执行状态、人工验收独立；暂缓和归档不停止调度，收尾不完成任务或接受报告。
+- **未归属任务（Unassigned Task）**：没有项目路径的手工 Task，可直接编辑、评论和推进，不借用进程 cwd。用户明确绑定已打开的工作区后才可选择本地自动执行；绑定保留原 Task 身份与历史。
 - **执行后端（Execution Backend）**：拥有具体进程、参数、机器协议、终止结果与 session 恢复语义的运行实现。v0.5.0 内置 `pi / codex / claude` 三个 Backend；它们共享 Runner 生命周期，但不共享原始协议。
 - **执行 Profile（Execution Profile）**：Task 保存的受约束执行环境定义及其不可变版本快照。当前 Profile 是 `pi.rpc / codex.exec / codex.review / claude.print`；Profile 不是任意 shell 命令，也不允许 Task 自带可执行文件或 flags。
 - **受管执行（Managed Execution）**：由 Stella 分发、占用 Workspace Lease、产生 AgentTask 或 StepRun，并以机器终态回写报告的执行。只有受管执行拥有 Stella Task 的运行状态；外部 CLI 会话不能自动完成 Task。

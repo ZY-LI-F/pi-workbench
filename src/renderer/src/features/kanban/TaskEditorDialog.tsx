@@ -12,6 +12,7 @@ import type {
   WorkflowDefinition,
 } from "@shared/kanban";
 import type { ProjectMeta } from "@shared/contracts";
+import { UNASSIGNED_PROJECT_NAME } from "@shared/task-project";
 import { Modal } from "../../components/Modal";
 import type { PiTaskDraft } from "./pi-task-draft";
 import type { ExecutionBackendCatalogSnapshot, ExecutionProfileId } from "@shared/execution-profile";
@@ -20,7 +21,8 @@ import { ExecutionProfilePicker, executionProfileOptions } from "./ExecutionProf
 interface TaskEditorDialogProps {
   readonly task?: KanbanTask;
   readonly draft?: PiTaskDraft;
-  readonly project: ProjectMeta;
+  readonly project?: ProjectMeta;
+  readonly defaultUnassigned?: boolean;
   readonly workflows: readonly WorkflowDefinition[];
   readonly agents: readonly AgentDefinition[];
   readonly squads: readonly Squad[];
@@ -51,6 +53,7 @@ export function TaskEditorDialog({
   task,
   draft,
   project,
+  defaultUnassigned = false,
   workflows,
   agents,
   squads,
@@ -62,6 +65,9 @@ export function TaskEditorDialog({
   onCreate,
   onUpdate,
 }: TaskEditorDialogProps) {
+  const availableProject = project && !project.requiresSelection ? project : undefined;
+  const [projectChoice, setProjectChoice] = useState<"current" | "none">(!task && !draft && (defaultUnassigned || !availableProject) ? "none" : task && !task.projectPath ? "none" : "current");
+  const selectedProject = projectChoice === "current" ? availableProject : undefined;
   const [title, setTitle] = useState(task?.title ?? draft?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? draft?.description ?? "");
   const [acceptanceCriteria, setAcceptanceCriteria] = useState(task?.acceptanceCriteria ?? draft?.acceptanceCriteria ?? "");
@@ -70,7 +76,7 @@ export function TaskEditorDialog({
   const [executionId, setExecutionId] = useState(targetId(task?.executionTarget));
   const [executionProfileId, setExecutionProfileId] = useState<ExecutionProfileId>(task?.executionProfileId ?? "pi.rpc");
   const [workspaceStrategy, setWorkspaceStrategy] = useState<ExecutionWorkspacePreference["strategy"]>(task?.executionWorkspace?.strategy ?? "current-folder");
-  const [workspaceBaseRef, setWorkspaceBaseRef] = useState(task?.executionWorkspace?.strategy === "isolated-worktree" ? task.executionWorkspace.baseRef : project.branch ?? "HEAD");
+  const [workspaceBaseRef, setWorkspaceBaseRef] = useState(task?.executionWorkspace?.strategy === "isolated-worktree" ? task.executionWorkspace.baseRef : project?.branch ?? "HEAD");
   const [error, setError] = useState("");
   const showAutomationChoices = automationEnabled || (task !== undefined && task.executionTarget.kind !== "manual");
   const executionTarget: ExecutionTarget = useMemo(() => executionKind === "manual"
@@ -96,11 +102,11 @@ export function TaskEditorDialog({
   const profileOptions = useMemo(() => executionTarget.kind === "manual" ? Object.freeze([]) : executionProfileOptions({
     target: executionTarget,
     agents: targetAgents,
-    gitRepository: Boolean(project.branch),
+    gitRepository: Boolean(selectedProject?.branch),
     snapshot: executionBackends,
     piExecutionEnabled,
-  }), [executionBackends, executionTarget, piExecutionEnabled, project.branch, targetAgents]);
-  const isolatedWorkspaceAvailable = Boolean(project.branch) && targetAgents.some((agent) => agent.workspaceAccess === "write");
+  }), [executionBackends, executionTarget, piExecutionEnabled, selectedProject?.branch, targetAgents]);
+  const isolatedWorkspaceAvailable = Boolean(selectedProject?.branch) && targetAgents.some((agent) => agent.workspaceAccess === "write");
   const targetSignature = `${executionKind}:${executionId}`;
   const initialTargetSignature = useRef(targetSignature);
 
@@ -130,6 +136,10 @@ export function TaskEditorDialog({
       return;
     }
     const selectedProfile = profileOptions.find((option) => option.id === executionProfileId);
+    if (executionKind !== "manual" && !selectedProject) {
+      setError("请先绑定项目，再选择 Agent 或流程执行");
+      return;
+    }
     const preservesUnavailableHistory = Boolean(task)
       && targetSignature === initialTargetSignature.current
       && executionProfileId === task?.executionProfileId;
@@ -158,9 +168,9 @@ export function TaskEditorDialog({
           executionTarget,
           executionProfileId: selectedProfileId,
           executionWorkspace,
-          projectPath: project.cwd,
-          projectName: project.name,
-          trusted: project.trusted,
+          projectPath: selectedProject?.cwd,
+          projectName: selectedProject?.name ?? UNASSIGNED_PROJECT_NAME,
+          trusted: selectedProject?.trusted ?? false,
           sourceSession: draft?.sourceSession,
         });
       }
@@ -179,9 +189,13 @@ export function TaskEditorDialog({
     >
       <form onSubmit={(event) => void submit(event)}>
         <div className="task-editor__project">
-          <span><Folder size={14} />{project.name}</span>
-          {project.branch && <span><GitBranch size={13} />{project.branch}</span>}
-          <small>{task ? "任务项目创建后保持不变" : project.cwd}</small>
+          {task || draft ? <span><Folder size={14} />{task?.projectName ?? selectedProject?.name ?? UNASSIGNED_PROJECT_NAME}</span>
+            : <label>任务项目<select aria-label="任务所属项目" value={projectChoice} onChange={(event) => setProjectChoice(event.target.value as "current" | "none")}>
+              <option value="none">不选择项目</option>
+              {availableProject && <option value="current">{availableProject.name} · 当前工作区</option>}
+            </select></label>}
+          {selectedProject?.branch && <span><GitBranch size={13} />{selectedProject.branch}</span>}
+          <small>{task?.projectPath ? "任务已绑定项目，归属保持不变" : selectedProject?.cwd ?? "可直接记录和手工推进；需要本地执行时再绑定项目。"}</small>
         </div>
 
         {!task && draft && (
@@ -279,7 +293,7 @@ export function TaskEditorDialog({
               <button type="button" role="radio" aria-checked={workspaceStrategy === "current-folder"} className={workspaceStrategy === "current-folder" ? "is-selected" : ""} onClick={() => setWorkspaceStrategy("current-folder")}><Folder size={12} />当前目录</button>
               <button type="button" role="radio" aria-checked={workspaceStrategy === "isolated-worktree"} className={workspaceStrategy === "isolated-worktree" ? "is-selected" : ""} disabled={!isolatedWorkspaceAvailable} onClick={() => setWorkspaceStrategy("isolated-worktree")}><GitBranch size={12} />独立 Worktree</button>
             </div>
-            {workspaceStrategy === "isolated-worktree" && <input aria-label="Worktree base ref" value={workspaceBaseRef} onChange={(event) => setWorkspaceBaseRef(event.target.value)} placeholder={project.branch ?? "HEAD"} />}
+            {workspaceStrategy === "isolated-worktree" && <input aria-label="Worktree base ref" value={workspaceBaseRef} onChange={(event) => setWorkspaceBaseRef(event.target.value)} placeholder={selectedProject?.branch ?? "HEAD"} />}
             <small>{isolatedWorkspaceAvailable ? "独立 Worktree 从明确 base ref 创建；失败、中断和待验收现场默认保留。" : "只有 Git 项目中的可写自动任务可以使用独立 Worktree。"}</small>
           </div>
         )}

@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
+Current source version: **v0.7.1** · Android versionCode: **9**.
+
 > **A native Pi desktop workbench with a local multi-CLI Agent control plane.** Use real Pi conversations, route managed tasks through Pi/Codex/Claude, inspect external CLI activity, and keep Kanban, human approval, artifacts, and automation in one installable application.
 
 Stella is a local-first Electron workbench for [earendil-works/pi](https://github.com/earendil-works/pi). It launches the bundled Pi JSONL RPC runtime directly: it does not simulate Agent responses and does not bypass Pi's sessions, models, Skills, extensions, or user configuration. The native Pi workbench remains independently usable, while Team, Kanban, Workflow, Autopilot, and optional locally installed Codex/Claude CLIs form a second capability surface with separate failure boundaries.
@@ -35,6 +37,30 @@ Team features are hidden by default and can be enabled under **Preferences → F
 ![Stella Team Workspace with task channels, Task Room, and Agent Pulse](docs/team-chat-stella.png)
 
 The current Team design is documented in the fixed-commit upstream study [`docs/research/team-multica-hiclaw-2026-08.md`](docs/research/team-multica-hiclaw-2026-08.md), the implemented reliability specification [`docs/specs/stella-team-reliability-v1.md`](docs/specs/stella-team-reliability-v1.md), [ADR 0005](docs/adr/0005-dependency-aware-agent-task-scheduling.md), and [ADR 0006](docs/adr/0006-use-one-typed-coordinator-protocol-for-team-leaders.md).
+
+## Project Board
+
+Open **任务栏 → 项目看板** in the sidebar, or choose **打开项目看板** from the command palette. Projects remain available with Team features disabled.
+
+- **Persistent project registry:** add an existing local directory, edit its display name and description, pin it, or archive and restore it. Current/recent projects and historical Task scopes are discovered incrementally; the registry outlives the 12-entry recent-project window.
+- **Overview and planning stages:** the same projects appear as overview cards or four columns: Planned, Active, On hold, and Wrapped up. Drag a card or use its stage menu to update the plan. Search includes project details, paths, and Task content.
+- **Actual Task progress:** completion, stage distribution, running/queued work, and human attention are derived from existing Tasks. Manual review, current execution reports, Coordinator questions, and Workflow human gates remain visible. Empty and unavailable Task data have distinct states.
+- **Cross-project navigation:** open the existing Task board and detail panel without switching the current Pi session. Editing and execution use the original workflow for opening the owning project. Registering a directory does not grant project trust.
+- **Tasks without a project:** the Task board defaults to all Tasks across projects. Choose **不选择项目** when creating a Task, including during first run. Unassigned Tasks support editing, comments, and manual progress; bind them to an opened workspace when local execution is needed.
+- **Scrollable Task lists:** each Task column scrolls vertically, narrow windows scroll horizontally between columns, and project details have a separate Task list scroll area. Tasks are not truncated to a fixed number.
+- **Recoverable local metadata:** project records live in `projects.json` under application data. Missing directories and invalid storage produce visible errors while preserving history; project metadata never duplicates Task execution state.
+
+Project stages express planning. On hold, archive, and Wrapped up do not stop executions, disable automation, or accept Tasks. Wrapped-up projects explicitly show any unfinished Tasks.
+
+Board storage upgrades to v10 to represent unassigned Tasks. Existing v9 data is backed up before migration; current project bindings and Task history are preserved.
+
+![Stella Project Board with project overview and actual Task progress](docs/project-board-overview.png)
+
+See the [design and code analysis](docs/specs/stella-project-board.md), [Orca study](docs/research/orca-project-board-2026-09-13.md), [comparison of nine related projects](docs/research/project-board-comparison-2026-09-13.md), and [acceptance record](docs/testing/stella-project-board-acceptance.md) for the implementation decisions and verification scope.
+
+## Illustrated User Guide
+
+The desktop **Preferences → 功能介绍与操作说明** entry provides illustrated, three-step instructions for projects, unassigned Tasks, scrolling, Pi chat, execution review, and Android pairing. Android has its own **Settings** entry covering pairing, activity, review, and offline states. All text and illustrations are bundled for offline reading. See the [guide design](docs/specs/stella-user-guide.md), [desktop screenshot](docs/user-guide-desktop.png), and [0.7.0 build and installation acceptance](docs/testing/stella-v0.7.0-installation-acceptance.md).
 
 ## Pi Model Routing and Provider Configuration
 
@@ -347,7 +373,7 @@ npm run companion:apk:debug
 npm run companion:apk:release
 ```
 
-With `STELLA_ANDROID_VERSION_CODE=7`, the signed script produces `release/Stella-Companion-0.5.0-android-vc7.apk` and `release/SHA256SUMS-android.txt`. Product version, Android versionCode, and wire protocol are independent. Tag builds use the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` GitHub Secrets; no signing key is committed. See [the Companion build and AVD guide](apps/companion/README.md) and [the QR pairing acceptance record](docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md).
+The signed script reads `version` and `androidVersionCode` from `apps/companion/package.json` and produces `release/Stella-Companion-{version}-android-vc{versionCode}.apk` plus `release/SHA256SUMS-android.txt`. `STELLA_ANDROID_VERSION_CODE` can explicitly override the build number. Product version, Android versionCode, and wire protocol are independent. Tag builds use the `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` GitHub Secrets; no signing key is committed. See [the Companion build and AVD guide](apps/companion/README.md) and [the QR pairing acceptance record](docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md).
 
 ## Verification
 
@@ -380,6 +406,7 @@ src/
 ├─ renderer/src/
 │  ├─ components/        Sessions, composer, inspector, terminal, dialogs, and navigation
 │  ├─ features/kanban/   Kanban, Task Room, Workflow DAG, Agent execution graph, Pi bridge, and Autopilot
+│  ├─ features/projects/ Project overview, planning board, metadata editor, and Task navigation
 │  ├─ features/team/     Task Launchpad, channels, Agent Pulse, and attention projections
 │  ├─ hooks/             Pi/Board state synchronization and local preferences
 │  ├─ assets/skins/      Original replaceable theme artwork
@@ -394,9 +421,9 @@ The main process launches Pi with Electron's Node runtime and `ELECTRON_RUN_AS_N
 
 | Shortcut | Action |
 | --- | --- |
-| `Ctrl/Cmd + N` | Focus Team Launchpad, create a structured Kanban Task, or create a new Pi session depending on the active page |
+| `Ctrl/Cmd + N` | Add a project, focus Team Launchpad, create a Kanban Task, or create a Pi session depending on the active page |
 | `Ctrl/Cmd + K` | Search and command palette |
-| `Ctrl/Cmd + L` | Focus the active composer |
+| `Ctrl/Cmd + L` | Focus project/Task search, Team channel search, or the chat composer depending on the active page |
 | <code>Ctrl/Cmd + `</code> | Toggle the local terminal drawer |
 | `Ctrl/Cmd + I` | Toggle the session inspector |
 | `Esc` | Stop generation or close the active dialog |

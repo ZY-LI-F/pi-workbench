@@ -1,6 +1,7 @@
 apply plugin: 'com.android.application'
 
-def stellaAndroidVersionCode = Integer.parseInt(System.getenv('STELLA_ANDROID_VERSION_CODE') ?: '7')
+def stellaPackage = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json'))
+def stellaAndroidVersionCode = Integer.parseInt(System.getenv('STELLA_ANDROID_VERSION_CODE') ?: stellaPackage.androidVersionCode.toString())
 def stellaReleaseKeystore = System.getenv('STELLA_ANDROID_KEYSTORE')
 def stellaReleaseStorePassword = System.getenv('STELLA_ANDROID_KEYSTORE_PASSWORD')
 def stellaReleaseKeyAlias = System.getenv('STELLA_ANDROID_KEY_ALIAS')
@@ -20,7 +21,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode stellaAndroidVersionCode
-        versionName "0.5.0"
+        versionName stellaPackage.version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

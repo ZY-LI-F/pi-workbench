@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { sameProjectPath } from "../shared/project-path";
 import type { BoardRepository } from "./board-repository";
 import {
   TASK_PRIORITIES,
@@ -326,7 +327,7 @@ export class AutopilotService {
       const agent = catalogForBoard(this.#catalog, state).agents.find((candidate) => candidate.id === target.agentId);
       if (!agent) throw new Error(`未知 Agent: ${target.agentId}`);
       const scoped = agent as Partial<ProjectAgentDefinition>;
-      if (scoped.projectPath && scoped.projectPath !== projectPath) throw new Error(`Agent ${agent.id} 属于其他项目`);
+      if (scoped.projectPath && !sameProjectPath(scoped.projectPath, projectPath)) throw new Error(`Agent ${agent.id} 属于其他项目`);
     }
     if (target.kind === "squad") {
       const squad = state.squads.find((candidate) => candidate.id === target.squadId);
@@ -335,7 +336,7 @@ export class AutopilotService {
       const scopedAgents = [squad.leaderAgentId, ...squad.memberAgentIds]
         .map((agentId) => catalog.agents.find((agent) => agent.id === agentId) as Partial<ProjectAgentDefinition> | undefined)
         .filter((agent): agent is Partial<ProjectAgentDefinition> => Boolean(agent?.projectPath));
-      if (scopedAgents.some((agent) => agent.projectPath !== projectPath)) throw new Error(`Squad ${squad.id} 包含其他项目的自定义 Agent`);
+      if (scopedAgents.some((agent) => !sameProjectPath(agent.projectPath, projectPath))) throw new Error(`Squad ${squad.id} 包含其他项目的自定义 Agent`);
     }
   }
 

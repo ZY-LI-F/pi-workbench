@@ -20,6 +20,8 @@ import {
 } from "./companion-host-fleet";
 import { companionPairingScanner } from "./companion-pairing-scanner";
 import { companionFleetStorage } from "./companion-storage";
+import { CompanionSettings } from "./CompanionSettings";
+import { version } from "../package.json";
 
 const fleet = new CompanionHostFleet({ storage: companionFleetStorage });
 const ALL_HOSTS = "__all_hosts__";
@@ -300,6 +302,7 @@ function ExternalActivity({ hosts, onOpenTask }: {
 }
 
 export function App() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [fleetState, setFleetState] = useState<CompanionFleetState>(() => fleet.state());
   const [pairingUri, setPairingUri] = useState("");
   const [pairingError, setPairingError] = useState<string>();
@@ -457,8 +460,8 @@ export function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-mark">S</div>
-        <div><strong>Stella Companion</strong><span>v0.5.0 · Protocol 1</span></div>
-        <div className="topbar-actions"><button type="button" aria-label="添加电脑" onClick={() => { setAddingHost(true); setPairingError(undefined); }}>＋</button><button type="button" aria-label="忘记当前电脑" disabled={!singleHost} onClick={forgetSelectedHost}>×</button></div>
+        <div><strong>Stella Companion</strong><span>v{version} · Protocol 1</span></div>
+        <div className="topbar-actions"><button type="button" aria-label="设置" onClick={() => setSettingsOpen(true)}>⚙</button><button type="button" aria-label="添加电脑" onClick={() => { setAddingHost(true); setPairingError(undefined); }}>＋</button><button type="button" aria-label="忘记当前电脑" disabled={!singleHost} onClick={forgetSelectedHost}>×</button></div>
       </header>
 
       {hosts.length > 0 && <nav className="host-switcher" aria-label="电脑范围">
@@ -511,6 +514,7 @@ export function App() {
 
       <footer className="bottom-nav"><button className={mainView === "agents" && tab === "attention" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("attention"); }}><span>⌁</span>Attention</button><button className={mainView === "agents" && tab === "activity" ? "is-active" : ""} onClick={() => { setMainView("agents"); setTab("activity"); }}><span>▦</span>Tasks</button><button className={mainView === "external" ? "is-active" : ""} onClick={() => setMainView("external")}><span>◌</span>External</button></footer>
       {taskRoom && taskHost?.state.snapshot && <TaskRoom hostId={taskHost.hostId} hostName={taskHost.hostName} taskId={taskRoom.taskId} sequence={taskHost.state.snapshot.sequence} online={taskHost.state.connection === "online"} onClose={() => setTaskRoom(undefined)} />}
+      {settingsOpen && <CompanionSettings onClose={() => setSettingsOpen(false)} />}
     </main>
   );
 }

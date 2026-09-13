@@ -20,7 +20,8 @@ import {
   type ExternalExecutionOrigin,
 } from "./external-execution";
 
-export const BOARD_SCHEMA_VERSION = 9 as const;
+export const BOARD_SCHEMA_VERSION = 10 as const;
+export const BOARD_SCHEMA_V9 = 9 as const;
 export const BOARD_SCHEMA_V8 = 8 as const;
 export const BOARD_SCHEMA_V7 = 7 as const;
 export const BOARD_SCHEMA_V6 = 6 as const;
@@ -223,7 +224,8 @@ export interface KanbanTask {
   readonly description: string;
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
-  readonly projectPath: string;
+  /** Absent for an unassigned manual Task. Never resolves to the process cwd. */
+  readonly projectPath?: string;
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
@@ -505,7 +507,7 @@ export interface CreateTaskInput {
   readonly description: string;
   readonly acceptanceCriteria: string;
   readonly priority: TaskPriority;
-  readonly projectPath: string;
+  readonly projectPath?: string;
   readonly projectName: string;
   readonly trusted: boolean;
   readonly executionTarget: ExecutionTarget;
@@ -866,8 +868,9 @@ function assertTaskSpecSnapshot(value: unknown, path: string): asserts value is 
     && value.executionWorkspace.strategy !== "current-folder") throw new Error(`${path}.executionWorkspace 手工任务只支持 current-folder`);
 }
 
-function assertTaskBase(value: Record<string, unknown>, path: string, requireSpecRevision = true): void {
-  for (const key of ["id", "title", "projectPath", "projectName"] as const) assertString(value[key], `${path}.${key}`);
+function assertTaskBase(value: Record<string, unknown>, path: string, requireSpecRevision = true, allowUnassigned = false): void {
+  for (const key of ["id", "title", "projectName"] as const) assertString(value[key], `${path}.${key}`);
+  if (!allowUnassigned || value.projectPath !== undefined) assertString(value.projectPath, `${path}.projectPath`);
   assertString(value.description, `${path}.description`, true);
   assertString(value.acceptanceCriteria, `${path}.acceptanceCriteria`, true);
   assertOneOf(value.priority, TASK_PRIORITIES, `${path}.priority`);
@@ -886,9 +889,14 @@ function assertTaskBase(value: Record<string, unknown>, path: string, requireSpe
 
 function assertTask(value: unknown, path: string): asserts value is KanbanTask {
   if (!isRecord(value)) throw new Error(`${path} 必须是对象`);
-  assertTaskBase(value, path);
+  assertTaskBase(value, path, true, true);
   assertOneOf(value.stage, TASK_STAGES, `${path}.stage`);
   assertExecutionTarget(value.executionTarget, `${path}.executionTarget`);
+  if (value.projectPath === undefined && ((value.executionTarget as ExecutionTarget).kind !== "manual"
+    || value.trusted || value.activeRunId || value.activeAgentTaskId || value.awaitingReviewExecution
+    || value.sourceSession || value.externalOrigin || (value.executionAttempt !== undefined && value.executionAttempt !== 0))) {
+    throw new Error(`${path} 未归属项目的任务只支持手工推进；执行与会话关联必须先绑定项目`);
+  }
   if (value.executionProfileId !== undefined) assertExecutionProfileId(value.executionProfileId, `${path}.executionProfileId`);
   if (value.executionWorkspace !== undefined) assertExecutionWorkspacePreference(value.executionWorkspace, `${path}.executionWorkspace`);
   assertExecutionProfileTarget(value.executionTarget, value.executionProfileId as ExecutionProfileId | undefined, `${path}.executionProfileId`);
@@ -1335,6 +1343,7 @@ function validateReferences(state: BoardState): void {
   for (const run of state.runs) {
     const task = tasksById.get(run.taskId);
     if (!task) throw new Error(`流程实例 ${run.id} 引用了未知任务`);
+    if (!task.projectPath) throw new Error(`流程实例 ${run.id} 引用了未归属项目的任务`);
     if (run.workspacePlacement && (run.workspacePlacement.projectPath !== task.projectPath
       || run.workspacePlacement.strategy !== cloneExecutionWorkspacePreference(run.taskSpec.executionWorkspace).strategy)) {
       throw new Error(`流程实例 ${run.id} 的 Execution Workspace identity 与任务快照不匹配`);
@@ -1393,6 +1402,7 @@ function validateReferences(state: BoardState): void {
   for (const agentTask of state.agentTasks) {
     const task = tasksById.get(agentTask.taskId);
     if (!task) throw new Error(`AgentTask ${agentTask.id} 引用了未知任务`);
+    if (!task.projectPath) throw new Error(`AgentTask ${agentTask.id} 引用了未归属项目的任务`);
     if (agentTask.workspacePlacement && (agentTask.workspacePlacement.projectPath !== task.projectPath
       || agentTask.workspacePlacement.strategy !== cloneExecutionWorkspacePreference(agentTask.taskSpec.executionWorkspace).strategy)) {
       throw new Error(`AgentTask ${agentTask.id} 的 Execution Workspace identity 与任务快照不匹配`);
@@ -2067,14 +2077,25 @@ export function migrateBoardStateV8(value: unknown): BoardState {
   return parseBoardState({ ...value, version: BOARD_SCHEMA_VERSION, tasks, runs, agentTasks });
 }
 
+export function migrateBoardStateV9(value: unknown): BoardState {
+  if (!isRecord(value) || value.version !== BOARD_SCHEMA_V9) throw new Error("不是 schema v9 看板");
+  if (!Array.isArray(value.tasks)) throw new Error("schema v9 tasks 必须是数组");
+  for (const task of value.tasks) {
+    if (!isRecord(task)) throw new Error("schema v9 任务必须是对象");
+    assertString(task.projectPath, "schema v9 task.projectPath");
+  }
+  return parseBoardState({ ...value, version: BOARD_SCHEMA_VERSION });
+}
+
 export interface ParsedBoardFile {
   readonly state: BoardState;
-  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6 | typeof BOARD_SCHEMA_V7 | typeof BOARD_SCHEMA_V8;
+  readonly migratedFrom?: typeof LEGACY_BOARD_SCHEMA_VERSION | typeof BOARD_SCHEMA_V2 | typeof BOARD_SCHEMA_V3 | typeof BOARD_SCHEMA_V4 | typeof BOARD_SCHEMA_V5 | typeof BOARD_SCHEMA_V6 | typeof BOARD_SCHEMA_V7 | typeof BOARD_SCHEMA_V8 | typeof BOARD_SCHEMA_V9;
 }
 
 export function parseBoardFile(value: unknown): ParsedBoardFile {
   if (!isRecord(value)) throw new Error("看板文件根节点必须是对象");
   if (value.version === BOARD_SCHEMA_VERSION) return Object.freeze({ state: parseBoardState(value) });
+  if (value.version === BOARD_SCHEMA_V9) return Object.freeze({ state: migrateBoardStateV9(value), migratedFrom: BOARD_SCHEMA_V9 });
   if (value.version === BOARD_SCHEMA_V8) {
     return Object.freeze({ state: migrateBoardStateV8(value), migratedFrom: BOARD_SCHEMA_V8 });
   }

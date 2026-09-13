@@ -1,6 +1,6 @@
-# Stella Companion 0.5.0
+# Stella Companion
 
-独立于 Electron 桌面应用的 Capacitor Android workspace。App 通过 Companion Protocol `1` 与桌面 Stella 配对，读取真实 Agent Projection，并在断线时保留带 stale 标记的 last-good snapshot。桌面仍是 Board 和执行状态的唯一事实源；Android versionCode 独立于产品版本，当前扫码构建为 `7`，最低支持 Android 8（API 26）。
+独立于 Electron 桌面应用的 Capacitor Android workspace。App 通过 Companion Protocol `1` 与桌面 Stella 配对，读取真实 Agent Projection，并在断线时保留带 stale 标记的 last-good snapshot。桌面仍是 Board 和执行状态的唯一事实源；产品版本和 Android versionCode 由本目录 `package.json` 管理，最低支持 Android 8（API 26）。
 
 ## 开发与 debug APK
 
@@ -16,7 +16,7 @@ Debug APK 输出到 `apps/companion/android/app/build/outputs/apk/debug/app-debu
 
 ## 一部手机连接 Mac 与 Windows
 
-Companion 0.5.0 可以保存多台桌面 Host，并为每台 Host 同时维护独立 WebSocket、凭据和 last-good snapshot。顶部可选择“全部电脑”聚合查看，也可切换到单台电脑；Task Room、外部 execution 详情和所有 typed command 都携带明确的 `hostId`，不会因为切换看板范围而发往另一台电脑。旧版单 Host 存储会在首次启动时自动迁移到本机 storage revision `2`，不改变 Wire Protocol `1`。
+Companion 可以保存多台桌面 Host，并为每台 Host 同时维护独立 WebSocket、凭据和 last-good snapshot。顶部可选择“全部电脑”聚合查看，也可切换到单台电脑；Task Room、外部 execution 详情和所有 typed command 都携带明确的 `hostId`，不会因为切换看板范围而发往另一台电脑。旧版单 Host 存储会在首次启动时自动迁移到本机 storage revision `2`，不改变 Wire Protocol `1`。
 
 跨 Wi-Fi 推荐直接使用同一个免费 Tailscale tailnet：
 
@@ -37,21 +37,20 @@ Windows 可使用等价的环境变量配置。`STELLA_COMPANION_PUBLIC_ADDRESS`
 
 ## 签名 release APK
 
-Release signing material 不进入源码。为每次对外发布递增 `STELLA_ANDROID_VERSION_CODE`，保持当前产品 `versionName` 为 `0.5.0`：
+Release signing material 不进入源码。Gradle、Bash、PowerShell 和 CI 从本目录 `package.json` 读取产品 `version` 与默认 `androidVersionCode`；发布前同步产品版本并递增 Android 构建编号。需要覆盖构建编号时，可显式设置 `STELLA_ANDROID_VERSION_CODE`：
 
 ```bash
 export STELLA_ANDROID_KEYSTORE=/absolute/path/to/release.jks
 export STELLA_ANDROID_KEYSTORE_PASSWORD='...'
 export STELLA_ANDROID_KEY_ALIAS='...'
 export STELLA_ANDROID_KEY_PASSWORD='...'
-export STELLA_ANDROID_VERSION_CODE=7
 npm run companion:apk:release
 ```
 
 脚本会执行 Capacitor sync、`assembleRelease`、`apksigner verify`，并生成：
 
 ```text
-release/Stella-Companion-0.5.0-android-vc7.apk
+release/Stella-Companion-{version}-android-vc{versionCode}.apk
 release/SHA256SUMS-android.txt
 ```
 

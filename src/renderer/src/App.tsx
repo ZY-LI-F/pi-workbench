@@ -31,6 +31,9 @@ import type { LocalPathInspection } from "@shared/local-path";
 import type { SkinArtworkDescriptor, SkinId } from "@shared/skin-artwork";
 import { isReportedRuntimeError, usePiRuntime } from "./hooks/use-pi-runtime";
 import { useKanban } from "./hooks/use-kanban";
+import { useProjectRegistry } from "./hooks/use-project-registry";
+import { sameProjectPath } from "@shared/project-path";
+import { ProjectBoardWorkspace } from "./features/projects/ProjectBoardWorkspace";
 import { useCapabilities } from "./hooks/use-capabilities";
 import { useExecutionBackends } from "./hooks/use-execution-backends";
 import { useCompanionGateway } from "./hooks/use-companion-gateway";
@@ -170,6 +173,9 @@ export function App({ api }: AppProps) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [modelChanging, setModelChanging] = useState(false);
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("chat");
+  const [createProjectRequest, setCreateProjectRequest] = useState(0);
+  const [kanbanLocation, setKanbanLocation] = useState<{ readonly path: string; readonly taskId?: string; readonly request: number }>();
+  const kanbanNavigation = useRef(0);
   const [createTaskRequest, setCreateTaskRequest] = useState(0);
   const [teamLaunchRequest, setTeamLaunchRequest] = useState(0);
   const [createTaskDraft, setCreateTaskDraft] = useState<PiTaskDraft>();
@@ -181,6 +187,7 @@ export function App({ api }: AppProps) {
   const piHealth = capabilitySnapshot?.pi;
   const taskHealth = capabilitySnapshot?.task;
   const bootstrap = state.bootstrap;
+  const projects = useProjectRegistry(api, bootstrap?.project.requiresSelection ? undefined : bootstrap?.project.cwd);
   const composerDraft = useSessionComposerDraft(bootstrap, api);
   const nativeSubmissions = useNativeSubmissions(api, bootstrap, controller.notify);
   const compactSidebar = useMediaQuery("(max-width: 1060px)");
@@ -350,11 +357,12 @@ export function App({ api }: AppProps) {
   };
 
   const newTask = () => {
-    if (!bootstrap) {
-      controller.notify("需要先选择一个可用项目，才能新建任务", "warning");
+    if (taskHealth?.state !== "ready") {
+      controller.notify("任务数据尚未就绪，请先重试任务数据", "warning");
       return;
     }
     setCreateTaskDraft(undefined);
+    setKanbanLocation(undefined);
     setWorkspaceView("kanban");
     setCreateTaskRequest((value) => value + 1);
   };
@@ -384,6 +392,7 @@ export function App({ api }: AppProps) {
     }
     try {
       setCreateTaskDraft(createPiTaskDraft(bootstrap));
+      setKanbanLocation(undefined);
       setWorkspaceView("kanban");
       setCreateTaskRequest((value) => value + 1);
     } catch (cause) {
@@ -405,6 +414,27 @@ export function App({ api }: AppProps) {
     if (!opened) return;
     setWorkspaceView("kanban");
     controller.notify(`已打开项目 ${opened.project.name}`, "success");
+  };
+
+  const viewProjectTasks = (path: string, taskId?: string) => {
+    setKanbanLocation({ path, taskId, request: ++kanbanNavigation.current });
+    setWorkspaceView("kanban");
+    setSidebarOpen(false);
+  };
+
+  const openProjectWorkspace = async (path: string) => {
+    if (sameProjectPath(path, bootstrap?.project.cwd) && !bootstrap?.project.requiresSelection) {
+      setWorkspaceView("chat");
+      setSidebarOpen(false);
+      return;
+    }
+    await composerDraft.flush();
+    const trusted = bootstrap?.recentProjects.find((recent) => sameProjectPath(recent.path, path))?.trusted ?? false;
+    const opened = await controller.openProject(path, trusted);
+    if (!opened) return;
+    setWorkspaceView("chat");
+    setSidebarOpen(false);
+    focusComposer();
   };
 
   const chooseProject = async () => {
@@ -536,6 +566,7 @@ export function App({ api }: AppProps) {
   const paletteActions = useMemo<readonly PaletteAction[]>(
     () => {
       const actions: PaletteAction[] = [
+        { id: "projects", label: "打开项目看板", detail: "整理项目阶段、查看任务进度与待处理事项", icon: FolderOpen, run: () => setWorkspaceView("projects") },
         { id: "kanban", label: "打开任务看板", detail: "管理手工任务、Pi 会话任务与自动执行任务", icon: LayoutDashboard, run: () => setWorkspaceView("kanban") },
         { id: "models", label: "打开模型配置", detail: "连接 Provider、维护自定义模型并选择全局路由", icon: SlidersHorizontal, run: () => setWorkspaceView("models") },
         { id: "skills", label: "打开 Skills 管理", detail: "查看、添加并热加载 Pi Skills", icon: BookOpenCheck, run: () => setWorkspaceView("skills") },
@@ -546,10 +577,12 @@ export function App({ api }: AppProps) {
           { id: "team", label: "打开团队协作", detail: "在 Task Room 中 @lead 或直接委派 Worker", icon: UsersRound, run: () => setWorkspaceView("team") },
         );
       }
+      if (taskHealth?.state === "ready") {
+        actions.push({ id: "task", label: "新建看板任务", detail: "可以先记录不归属项目的手工任务", icon: Plus, run: newTask });
+      }
       if (!bootstrap) return actions;
       return [
         ...actions,
-        { id: "task", label: "新建看板任务", detail: "默认由你推进，也可选择 Workflow、Agent 或 Squad", icon: Plus, run: newTask },
         { id: "capture-task", label: "固化当前会话为任务", detail: "保存来源会话并创建可手工推进的任务草稿", icon: ListPlus, run: solidifyCurrentSession },
         ...(teamFeaturesEnabled ? [
           { id: "team-task", label: "通过 @LEAD 启动任务", detail: "进入任务启动台并填写可验证验收标准", icon: MessageSquarePlus, run: newTeamTask },
@@ -579,13 +612,15 @@ export function App({ api }: AppProps) {
       }
       if (ctrl && event.key.toLocaleLowerCase() === "n") {
         event.preventDefault();
-        if (workspaceView === "team") newTeamTask();
+        if (workspaceView === "projects") setCreateProjectRequest((value) => value + 1);
+        else if (workspaceView === "team") newTeamTask();
         else if (workspaceView === "kanban") newTask();
         else runAction("新建会话", newSession);
       }
       if (ctrl && event.key.toLocaleLowerCase() === "l") {
         event.preventDefault();
-        if (workspaceView === "kanban") document.querySelector<HTMLInputElement>(".kanban-search input")?.focus();
+        if (workspaceView === "projects") document.querySelector<HTMLInputElement>(".project-search input")?.focus();
+        else if (workspaceView === "kanban") document.querySelector<HTMLInputElement>(".kanban-search input")?.focus();
         else if (workspaceView === "team") document.querySelector<HTMLInputElement>(".team-channel-search input")?.focus();
         else focusComposer();
       }
@@ -605,9 +640,9 @@ export function App({ api }: AppProps) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-    // newTask / newSession 闭包读取 bootstrap，必须随 bootstrap 重建，否则快捷键看到过期状态。
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- newTask/newSession 每次渲染重建；跟踪 workspaceView/bootstrap 已覆盖闭包读取的全部状态
-  }, [workspaceView, bootstrap]);
+    // 快捷键跟随工作区、任务能力和团队开关更新，首次启动也能创建未归属任务。
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 动作函数每次渲染重建；按动作读取的状态更新监听器
+  }, [workspaceView, bootstrap, taskHealth, teamFeaturesEnabled]);
 
   return (
     <div
@@ -629,7 +664,7 @@ export function App({ api }: AppProps) {
         modelChanging={modelChanging}
         onClose={closeSidebar}
         onNewSession={() => runAction("新建会话", newSession)}
-        onNewTask={activeView === "kanban" ? newTask : newTeamTask}
+        onNewTask={activeView === "projects" ? () => setCreateProjectRequest((value) => value + 1) : activeView === "kanban" ? newTask : newTeamTask}
         onSwitchView={(view) => {
           if (!teamFeaturesEnabled && view === "team") {
             controller.notify("请先在偏好设置中开启“显示团队功能”", "warning");
@@ -637,6 +672,7 @@ export function App({ api }: AppProps) {
             return;
           }
           setWorkspaceView(view);
+          if (view === "kanban") setKanbanLocation(undefined);
           setSidebarOpen(false);
           if (view === "chat") focusComposer();
         }}
@@ -650,7 +686,7 @@ export function App({ api }: AppProps) {
         onModelChange={(model) => void setModel(model)}
       />
 
-      {bootstrap?.project.requiresSelection && activeView !== "models" ? (
+      {bootstrap?.project.requiresSelection && activeView !== "models" && activeView !== "projects" && activeView !== "kanban" ? (
         <main className="first-run-setup" aria-labelledby="first-run-title">
           <span className="first-run-setup__orbit" aria-hidden="true"><i /><b /><Sparkles size={24} /></span>
           <small>STELLA · FIRST LIGHT</small>
@@ -784,6 +820,12 @@ export function App({ api }: AppProps) {
           onRuntimeRefresh={controller.refresh}
           onNotify={controller.notify}
         />
+      ) : activeView === "projects" ? (
+        <ProjectBoardWorkspace api={api} controller={projects} kanban={kanban} project={bootstrap?.project}
+          taskError={taskHealth?.state === "error" ? taskHealth.error : undefined} onOpenSidebar={openSidebar}
+          onViewTasks={viewProjectTasks} onOpenWorkspace={openProjectWorkspace}
+          onRetryTasks={() => runAction("重试任务数据", () => capabilities.retry("task"))}
+          onError={(message) => controller.notify(message, "error")} createRequest={createProjectRequest} onCreateRequestConsumed={() => setCreateProjectRequest(0)} />
       ) : activeView === "team" && teamFeaturesEnabled ? (
         <TeamWorkspace
           api={api}
@@ -804,9 +846,13 @@ export function App({ api }: AppProps) {
         />
       ) : activeView === "kanban" ? (
         <KanbanWorkspace
+          key={kanbanLocation?.request ?? "current"}
           api={api}
           controller={kanban}
           project={bootstrap?.project}
+          projects={projects.snapshot?.projects}
+          initialProjectPath={kanbanLocation?.path}
+          initialTaskId={kanbanLocation?.taskId}
           executionEnabled={piReady}
           executionBackends={executionBackends.state.snapshot}
           teamFeaturesEnabled={teamFeaturesEnabled}
@@ -884,7 +930,7 @@ export function App({ api }: AppProps) {
         setRenameOpen(false);
         runAction("重命名会话", () => controller.command({ type: "set_session_name", name }, true));
       }} />}
-      {settingsOpen && bootstrap && (
+      {settingsOpen && (
         <SettingsDialog
           bootstrap={bootstrap}
           preferences={preferences}
@@ -912,7 +958,7 @@ export function App({ api }: AppProps) {
           onAutoCompactionChange={(enabled) => runAction("更新自动压缩设置", () => controller.command({ type: "set_auto_compaction", enabled }, true))}
           onSteeringModeChange={(mode) => runAction("更新 Steering 模式", () => controller.command({ type: "set_steering_mode", mode }, true))}
           onFollowUpModeChange={(mode) => runAction("更新 Follow-up 模式", () => controller.command({ type: "set_follow_up_mode", mode }, true))}
-          onRestartTrust={(trusted) => runAction("切换项目信任模式", () => controller.openProject(bootstrap.project.cwd, trusted))}
+          onRestartTrust={(trusted) => { if (bootstrap) runAction("切换项目信任模式", () => controller.openProject(bootstrap.project.cwd, trusted)); }}
           onOpenLink={(url) => runAction("打开外部链接", () => api.openExternal(url))}
           onClose={() => setSettingsOpen(false)}
         />

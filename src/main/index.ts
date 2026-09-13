@@ -81,6 +81,9 @@ import { InteractiveCommandRouter } from "./interactive-command-router";
 import { identifySnapshotMessages } from "./session-message-identity";
 import { sameRuntimeScope, type RuntimeScope } from "../shared/runtime-scope";
 import { AtomicJsonFile } from "./atomic-json-file";
+import { ProjectRegistryService } from "./project-registry-service";
+import { discoverKnownProjects } from "./project-discovery";
+import { requireTaskProject, UNASSIGNED_PROJECT_NAME } from "../shared/task-project";
 import { NativeSubmissionService } from "./native-submission-service";
 import { SerialOperationQueue } from "./serial-operation-queue";
 import { NativeDiagnostics, validateDiagnosticLayout } from "./native-diagnostics";
@@ -252,6 +255,7 @@ let localFilePreviewService: LocalFilePreviewService;
 let composerDraftStore: ComposerDraftStore;
 let nativeSubmissionService: NativeSubmissionService;
 const nativeOperations = new SerialOperationQueue();
+let projectRegistryService: ProjectRegistryService;
 const nativeDiagnostics = new NativeDiagnostics(() => new Date().toISOString());
 let companionControlPlane: MainCompanionControlPlane | undefined;
 let companionPairingStore: CompanionPairingStore | undefined;
@@ -260,7 +264,7 @@ let companionCommandService: CompanionCommandService | undefined;
 let companionGateway: CompanionGateway | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
-function broadcast(source: "pi" | "runtime" | "board" | "capability" | "execution-backend" | "companion", payload: unknown, scope?: RuntimeScope): void {
+function broadcast(source: "pi" | "runtime" | "board" | "project" | "capability" | "execution-backend" | "companion", payload: unknown, scope?: RuntimeScope): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("stella:event", { source, payload, scope });
 }
@@ -466,7 +470,7 @@ function validatedCreateTask(value: unknown): CreateTaskInput {
     description: textValue(input.description, "description"),
     acceptanceCriteria: textValue(input.acceptanceCriteria, "acceptanceCriteria"),
     priority: priority as CreateTaskInput["priority"],
-    projectPath: textValue(input.projectPath, "projectPath"),
+    projectPath: input.projectPath === undefined ? undefined : requiredString(input.projectPath, "projectPath"),
     projectName: textValue(input.projectName, "projectName"),
     trusted: booleanValue(input.trusted, "trusted"),
     executionTarget,
@@ -729,8 +733,9 @@ async function deleteAutopilot(autopilotId: string): Promise<BoardBootstrap> {
 
 async function createBoardTaskForCurrentProject(value: unknown): Promise<BoardBootstrap> {
   assertTaskCapability();
-  if (!currentProject) throw new Error("尚未选择项目");
   const input = validatedCreateTask(value);
+  if (input.projectPath === undefined) return boardService.createTask({ ...input, projectName: UNASSIGNED_PROJECT_NAME, trusted: false });
+  if (!currentProject || currentProject.implicitDefault) throw new Error("尚未选择项目");
   if (!sameProject(input.projectPath, currentProject.cwd)) {
     throw new Error("任务项目必须与当前主进程工作区一致");
   }
@@ -1198,7 +1203,7 @@ async function currentProjectTask(taskId: string): Promise<KanbanTask> {
   const state = await boardStore.read();
   const task = state.tasks.find((candidate) => candidate.id === taskId);
   if (!task) throw new Error(`找不到任务: ${taskId}`);
-  assertCurrentProjectPath(task.projectPath, "任务");
+  if (task.projectPath) assertCurrentProjectPath(task.projectPath, "任务");
   return task;
 }
 
@@ -1211,7 +1216,7 @@ async function assertCurrentProjectAutopilot(autopilotId: string): Promise<void>
 
 async function revokeProjectExecutions(projectPath: string): Promise<void> {
   const state = await boardStore.read();
-  const activeTasks = state.tasks.filter((task) => sameProject(task.projectPath, projectPath));
+  const activeTasks = state.tasks.filter((task) => task.projectPath && sameProject(task.projectPath, projectPath));
   for (const task of activeTasks) {
     if (task.activeRunId) await workflowOrchestrator.abort(task.id);
     else if (task.activeAgentTaskId) await agentTaskRunner.abortTask(task.id);
@@ -1420,7 +1425,7 @@ async function openTaskSession(value: unknown): Promise<RuntimeBootstrap> {
   const input = validatedOpenTaskSession(value);
   const task = state.tasks.find((candidate) => candidate.id === input.taskId);
   if (!task) throw new Error(`找不到任务: ${input.taskId}`);
-  assertCurrentProjectPath(task.projectPath, "任务");
+  assertCurrentProjectPath(requireTaskProject(task), "任务");
   const target = resolveTaskSessionTarget(state, input, canonicalSessionPath);
   const trusted = await resolveProjectTrust(target.projectPath);
   const requestedProjectPath = resolve(target.projectPath);
@@ -1782,6 +1787,18 @@ function registerIpcHandlers(): void {
     return runtime.respondToExtension(validatedExtensionResponse(response));
   });
   ipcMain.handle("stella:choose-project", () => chooseProject());
+  ipcMain.handle("stella:projects:initialize", (event) => {
+    assertMainWindowFrame(event);
+    return projectRegistryService.initialize();
+  });
+  ipcMain.handle("stella:projects:add", (event, input: unknown) => {
+    assertMainWindowFrame(event);
+    return projectRegistryService.add(input);
+  });
+  ipcMain.handle("stella:projects:update", (event, input: unknown) => {
+    assertMainWindowFrame(event);
+    return projectRegistryService.update(input);
+  });
   ipcMain.handle("stella:skin-artwork:initialize", () => initializeSkinArtwork());
   ipcMain.handle("stella:skin-artwork:choose", (_event, skin: unknown) => chooseSkinArtwork(skin));
   ipcMain.handle("stella:skin-artwork:reset", async (_event, skin: unknown) => {
@@ -1870,6 +1887,19 @@ function registerIpcHandlers(): void {
     return bootstrap;
   });
   ipcMain.handle("stella:board:create-task", (_event, input: unknown) => createBoardTaskForCurrentProject(input));
+  ipcMain.handle("stella:board:assign-task-project", (event, taskId: unknown, projectPath: unknown) => {
+    assertMainWindowFrame(event);
+    const id = requiredString(taskId, "taskId");
+    const expectedPath = requiredString(projectPath, "projectPath");
+    return nativeOperations.run(async () => {
+      assertTaskCapability();
+      if (!currentProject || currentProject.implicitDefault) throw new Error("请先打开要绑定的项目工作区");
+      if (!sameProject(currentProject.cwd, expectedPath)) throw new Error("当前工作区已变化，请核对要绑定的项目后重试");
+      const project = await getProjectMeta(currentProject);
+      const path = await canonicalExecutionProjectPath(project.cwd, project.trusted);
+      return boardService.assignTaskProject(id, { path, name: project.name, trusted: project.trusted });
+    });
+  });
   ipcMain.handle("stella:board:launch-team-task", (_event, input: unknown) => launchTeamTaskForCurrentProject(input));
   ipcMain.handle("stella:board:update-task", async (_event, input: unknown) => {
     assertTaskCapability();
@@ -2037,6 +2067,27 @@ if (!singleInstanceLock) {
 
   void app.whenReady().then(() => {
     stateStore = new StateStore(join(app.getPath("userData"), "stella-state.json"));
+    projectRegistryService = new ProjectRegistryService({
+      storage: new AtomicJsonFile(join(app.getPath("userData"), "projects.json")),
+      now: () => new Date().toISOString(),
+      id: randomUUID,
+      emitChanged: () => broadcast("project", { type: "changed" }),
+      discover: async () => {
+        const state = await stateStore.read();
+        const health = capabilityHealth.snapshot().task;
+        const board = health.state === "ready" ? await boardStore.read() : undefined;
+        return { projects: discoverKnownProjects(state.recentProjects, board, currentProject ? {
+          cwd: currentProject.cwd, name: basename(currentProject.cwd), requiresSelection: currentProject.implicitDefault,
+        } : undefined), warning: health.state === "ready" ? undefined : `历史任务项目尚未完整读取：${health.error ?? health.state}` };
+      },
+      inspectDirectory: async (path) => {
+        try { return { state: "available", canonicalPath: await canonicalProjectDirectory(path) }; }
+        catch (cause) {
+          const code = (cause as NodeJS.ErrnoException).code;
+          return { state: code === "ENOENT" || code === "ENOTDIR" ? "missing" : "unavailable", detail: `无法访问目录 ${path}：${errorMessage(cause)}` };
+        }
+      },
+    });
     skinArtworkService = new SkinArtworkService({
       directory: join(app.getPath("userData"), "skin-artwork"),
       storage: Object.freeze({

@@ -144,8 +144,11 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
         run: |
           mkdir -p android-ci
-          cp apps/companion/android/app/build/outputs/apk/debug/app-debug.apk android-ci/Stella-Companion-0.5.0-android-debug-vc6.apk
-          sha256sum android-ci/Stella-Companion-0.5.0-android-debug-vc6.apk > android-ci/SHA256SUMS-android-debug.txt
+          stella_version=$(node -p "require('./apps/companion/package.json').version")
+          stella_version_code=$(node -p "require('./apps/companion/package.json').androidVersionCode")
+          stella_artifact="android-ci/Stella-Companion-${stella_version}-android-debug-vc${stella_version_code}.apk"
+          cp apps/companion/android/app/build/outputs/apk/debug/app-debug.apk "$stella_artifact"
+          sha256sum "$stella_artifact" > android-ci/SHA256SUMS-android-debug.txt
 
       - name: Decode Android release keystore
         if: startsWith(github.ref, 'refs/tags/v')
@@ -162,7 +165,6 @@ jobs:
           STELLA_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           STELLA_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           STELLA_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          STELLA_ANDROID_VERSION_CODE: "6"
         run: npm run companion:apk:release
 
       - name: Upload Android debug artifact

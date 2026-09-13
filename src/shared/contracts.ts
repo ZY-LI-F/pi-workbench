@@ -64,6 +64,7 @@ import type {
   CompanionGatewayStatus,
   CompanionPairingOffer,
 } from "./companion-protocol";
+import type { AddProjectInput, ProjectRegistrySnapshot, UpdateProjectInput } from "./project-registry";
 
 type WithoutRequestId<T> = T extends { id?: string } ? Omit<T, "id"> : never;
 
@@ -245,6 +246,7 @@ export type BridgeEvent =
   | { readonly source: "pi"; readonly payload: AgentSessionEvent | RpcExtensionUIRequest; readonly scope?: RuntimeScope }
   | { readonly source: "runtime"; readonly payload: RuntimeSignal; readonly scope?: RuntimeScope }
   | { readonly source: "board"; readonly payload: BoardBridgeEvent }
+  | { readonly source: "project"; readonly payload: { readonly type: "changed" } }
   | { readonly source: "capability"; readonly payload: { readonly type: "capability-health"; readonly snapshot: CapabilityHealthSnapshot } }
   | { readonly source: "execution-backend"; readonly payload: ExecutionBackendCatalogSnapshot }
   | { readonly source: "companion"; readonly payload: { readonly type: "gateway-status"; readonly status: CompanionGatewayStatus } };
@@ -270,6 +272,9 @@ export interface StellaDesktopApi {
   refresh(): Promise<RuntimeBootstrap>;
   respondToExtension(response: PiExtensionResponse): Promise<void>;
   chooseProject(): Promise<ProjectSelection | null>;
+  projectsInitialize(): Promise<ProjectRegistrySnapshot>;
+  projectsAdd(input: AddProjectInput): Promise<ProjectRegistrySnapshot>;
+  projectsUpdate(input: UpdateProjectInput): Promise<ProjectRegistrySnapshot>;
   skinArtworkInitialize(): Promise<readonly SkinArtworkDescriptor[]>;
   chooseSkinArtwork(skin: SkinId): Promise<SkinArtworkDescriptor | null>;
   resetSkinArtwork(skin: SkinId): Promise<void>;
@@ -294,6 +299,7 @@ export interface StellaDesktopApi {
   modelConfigurationDeleteProvider(providerId: string): Promise<PiModelConfigurationSnapshot>;
   boardInitialize(): Promise<BoardBootstrap>;
   boardCreateTask(input: CreateTaskInput): Promise<BoardBootstrap>;
+  boardAssignTaskProject(taskId: string, projectPath: string): Promise<BoardBootstrap>;
   boardLaunchTeamTask(input: LaunchTeamTaskInput): Promise<BoardBootstrap>;
   boardUpdateTask(input: UpdateTaskInput): Promise<BoardBootstrap>;
   boardMoveTask(taskId: string, stage: ManualTaskStage): Promise<BoardBootstrap>;

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { requireTaskProject } from "../shared/task-project";
 import type { BoardRepository } from "./board-repository";
 import type {
   BoardBootstrap,
@@ -64,7 +65,7 @@ export class SquadService {
       if (normalized.scope === "project") {
         const identity = this.#projectIdentity(normalized.projectPath!);
         if (current.tasks.some((task) => task.executionTarget.kind === "squad" && task.executionTarget.squadId === existing.id
-          && this.#projectIdentity(task.projectPath) !== identity)) throw new Error("已有其他项目任务引用该 Squad，不能改变为当前项目作用域");
+          && this.#projectIdentity(requireTaskProject(task)) !== identity)) throw new Error("已有其他项目任务引用该 Squad，不能改变为当前项目作用域");
         if (current.autopilots.some((autopilot) => autopilot.executionTarget.kind === "squad" && autopilot.executionTarget.squadId === existing.id
           && this.#projectIdentity(autopilot.projectPath) !== identity)) throw new Error("已有其他项目 Autopilot 引用该 Squad，不能改变为当前项目作用域");
       }

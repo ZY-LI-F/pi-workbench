@@ -1,4 +1,5 @@
 import type { AgentTask, BoardBootstrap, BoardBridgeEvent } from "../shared/kanban";
+import { requireTaskProject } from "../shared/task-project";
 import { backgroundSessionName } from "../shared/session-policy";
 import { AgentTaskRuntimeExpiredError, AgentTaskService, type ClaimedAgentTask } from "./agent-task-service";
 import { ExecutionAbortedError, ExecutionProtocolError, type ExecutionBackend, type ExecutionEvent, type ExecutionOutcome } from "./execution-backend";
@@ -192,7 +193,7 @@ export class AgentTaskRunner {
     try {
       capacity = await this.#capacity.acquire(`agent-task:${queued.agentTask.id}`, waiting.controller.signal);
       workspace = await this.#workspace.acquire({
-        projectPath: queued.task.projectPath,
+        projectPath: requireTaskProject(queued.task),
         preference: queued.agentTask.taskSpec.executionWorkspace ?? queued.task.executionWorkspace,
         existingPlacement: queued.agentTask.workspacePlacement,
         executionAttempt: queued.agentTask.executionAttempt,

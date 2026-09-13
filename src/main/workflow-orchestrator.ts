@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { requireTaskProject } from "../shared/task-project";
 import { backgroundSessionName } from "../shared/session-policy";
 import {
   type AgentArtifact,
@@ -120,7 +121,7 @@ export class WorkflowOrchestrator {
     const previewAgents = Object.freeze([...previewAgentIds].map((agentId) => this.#agent(agentId)));
     this.#assertWorkflowProfile(previewTask.executionProfileId, previewAgents);
     this.#backendRegistry.resolve(previewTask.executionProfileId);
-    await this.#workspace.resolve(previewTask.projectPath, previewTask.executionWorkspace);
+    await this.#workspace.resolve(requireTaskProject(previewTask), previewTask.executionWorkspace);
     const now = this.#now();
     let runId = "";
     const bootstrap = await this.#commit((current) => {
@@ -360,7 +361,7 @@ export class WorkflowOrchestrator {
     try {
       capacity = await this.#capacity.acquire(`workflow:${run.id}:${step.stepId}`, controller.signal);
       workspace = await this.#workspace.acquire({
-        projectPath: task.projectPath,
+        projectPath: requireTaskProject(task),
         preference: run.taskSpec.executionWorkspace ?? task.executionWorkspace,
         existingPlacement: run.workspacePlacement,
         executionAttempt: run.executionAttempt,

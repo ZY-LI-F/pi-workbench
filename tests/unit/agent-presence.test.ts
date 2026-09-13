@@ -31,6 +31,12 @@ function customAgent(id: string, projectPath: string): ProjectAgentDefinition {
 }
 
 describe("Agent Presence projection", () => {
+  it("keeps project-scoped Agents visible across Windows path spelling variants without merging POSIX case", () => {
+    const state = { ...EMPTY_BOARD_STATE, customAgents: [customAgent("windows", "C:/One"), customAgent("posix", "/work/One")] };
+    const catalog = catalogForBoard(BUILTIN_ORCHESTRATION_CATALOG, state);
+    expect(deriveAgentPresences(state, catalog, "c:\\one\\", NOW).some((presence) => presence.agent.id === "windows")).toBe(true);
+    expect(deriveAgentPresences(state, catalog, "/work/one", NOW).some((presence) => presence.agent.id === "posix")).toBe(false);
+  });
   it("derives live state from executions and filters project-scoped Agents", () => {
     const state = parseBoardState({
       version: BOARD_SCHEMA_VERSION,

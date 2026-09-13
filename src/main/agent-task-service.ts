@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { requireTaskProject } from "../shared/task-project";
+import { sameProjectPath } from "../shared/project-path";
 import type { BoardRepository } from "./board-repository";
 import { availableMentionAgentsForTask, parseAgentMentions } from "../shared/agent-mentions";
 import { coordinatorActionMessage, isCoordinatorRootAgentTask, normalizeSquadLeaderInstructions, parseCoordinatorAction, type CoordinatorAction, type CoordinatorDelegation } from "../shared/coordinator-protocol";
@@ -191,7 +193,7 @@ export class AgentTaskService {
     if (previewMentions.length > 0 || previewResumesCoordinator) {
       this.#assertMentionExecution(previewTask, previewMentions, previewResumesCoordinator ? previewRoot : undefined);
     }
-    await this.#skills.assertAgentsReady(previewTask.projectPath, previewTask.trusted, previewMentions);
+    if (previewMentions.length > 0) await this.#skills.assertAgentsReady(requireTaskProject(previewTask), previewTask.trusted, previewMentions);
     const now = this.#now();
     return this.#commit((current) => {
       const task = this.#task(current, input.taskId);
@@ -926,11 +928,11 @@ export class AgentTaskService {
     return this.#repository.read();
   }
 
-  #dispatchableTask(state: BoardState, taskId: string): KanbanTask {
+  #dispatchableTask(state: BoardState, taskId: string): KanbanTask & { readonly projectPath: string } {
     const task = this.#task(state, taskId);
     if (task.activeRunId || task.activeAgentTaskId) throw new Error("任务已有正在进行的执行");
     if (task.stage === "completed") throw new Error("已完成任务需先移回待规划列才能重新分发");
-    return task;
+    return { ...task, projectPath: requireTaskProject(task) };
   }
 
   #rootAgentTask(
@@ -1118,7 +1120,7 @@ export class AgentTaskService {
     const agent = this.#catalogFor(state).agents.find((candidate) => candidate.id === agentId);
     if (!agent) throw new Error(`未知 Agent: ${agentId}`);
     const scoped = agent as AgentDefinition & { readonly projectPath?: string };
-    if (scoped.projectPath && scoped.projectPath !== projectPath) throw new Error(`Agent ${agent.id} 属于其他项目`);
+    if (scoped.projectPath && !sameProjectPath(scoped.projectPath, projectPath)) throw new Error(`Agent ${agent.id} 属于其他项目`);
     return agent;
   }
 

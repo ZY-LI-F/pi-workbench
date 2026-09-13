@@ -156,7 +156,7 @@ function taskSummary(
     title: requiredCompactText(task.title, COMPANION_PROJECTION_LIMITS.titleText),
     priority: task.priority,
     stage: task.stage,
-    projectPath: requiredCompactText(task.projectPath, COMPANION_PROJECTION_LIMITS.pathText),
+    ...(task.projectPath ? { projectPath: requiredCompactText(task.projectPath, COMPANION_PROJECTION_LIMITS.pathText) } : {}),
     projectName: requiredCompactText(task.projectName, COMPANION_PROJECTION_LIMITS.titleText),
     attentionCount: attentionCounts.get(task.id) ?? 0,
     agentCount: agentCounts.get(task.id) ?? 0,
@@ -226,6 +226,7 @@ function projectProjects(
     updatedAt: string;
   }>();
   for (const task of board.tasks) {
+    if (!task.projectPath) continue;
     const current = byPath.get(task.projectPath);
     byPath.set(task.projectPath, {
       name: task.projectName,

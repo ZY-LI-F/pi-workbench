@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { UNASSIGNED_PROJECT_NAME } from "../shared/task-project";
 import type { BoardRepository } from "./board-repository";
 import {
   AGENT_THINKING_LEVELS,
@@ -87,13 +88,13 @@ export class BoardService {
     const now = this.#now();
     return this.#commit((current) => {
       const changedTasks = current.tasks.filter(
-        (task) => this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted,
+        (task) => task.projectPath !== undefined && this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted,
       );
       const changedAutopilots = current.autopilots.filter(
         (autopilot) => this.#projectIdentity(autopilot.projectPath) === identity && autopilot.trusted !== trusted,
       );
       const tasks = current.tasks.map((task) =>
-        this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted
+        task.projectPath !== undefined && this.#projectIdentity(task.projectPath) === identity && task.trusted !== trusted
           ? Object.freeze({ ...task, trusted, updatedAt: now })
           : task,
       );
@@ -135,8 +136,8 @@ export class BoardService {
         description: normalizedText(input.description, "任务说明", false),
         acceptanceCriteria: normalizedText(input.acceptanceCriteria, "验收标准", false),
         priority: input.priority,
-        projectPath: normalizedText(input.projectPath, "项目路径", true),
-        projectName: normalizedText(input.projectName, "项目名称", true),
+        projectPath: input.projectPath === undefined ? undefined : normalizedText(input.projectPath, "项目路径", true),
+        projectName: input.projectPath === undefined ? UNASSIGNED_PROJECT_NAME : normalizedText(input.projectName, "项目名称", true),
         trusted: input.trusted,
         executionTarget: Object.freeze({ ...input.executionTarget }),
         executionProfileId,
@@ -157,6 +158,19 @@ export class BoardService {
         tasks: [task, ...current.tasks],
         activities: [...current.activities, this.#activity(task.id, "task", "任务已创建", undefined, now)],
       };
+    });
+  }
+
+  async assignTaskProject(taskId: string, project: { readonly path: string; readonly name: string; readonly trusted: boolean }): Promise<BoardBootstrap> {
+    const path = normalizedText(project.path, "项目路径", true);
+    const name = normalizedText(project.name, "项目名称", true);
+    const now = this.#now();
+    return this.#commit((current) => {
+      const task = this.#task(current, taskId);
+      if (task.projectPath !== undefined) throw new Error("任务已经归属项目，不能通过绑定操作迁移项目");
+      const updated = Object.freeze({ ...task, projectPath: path, projectName: name, trusted: project.trusted, specRevision: task.specRevision + 1, updatedAt: now });
+      return { ...current, tasks: current.tasks.map((item) => item.id === taskId ? updated : item),
+        activities: [...current.activities, this.#activity(taskId, "task", `任务已绑定项目 ${name}`, path, now)] };
     });
   }
 
@@ -295,7 +309,7 @@ export class BoardService {
     return this.#commit((current) => {
       const existing = current.customAgents.find((agent) => agent.id === input.agentId);
       if (!existing) throw new Error(`找不到自定义 Agent: ${input.agentId}`);
-      if (existing.projectPath !== input.projectPath) throw new Error("自定义 Agent 不能跨项目迁移");
+      if (this.#projectIdentity(existing.projectPath) !== this.#projectIdentity(input.projectPath)) throw new Error("自定义 Agent 不能跨项目迁移");
       const draft = this.#validatedProjectAgent(input, now, existing);
       const duplicate = this.#catalogFor(current).agents.find((agent) => agent.id !== existing.id && agent.callsign.toLocaleLowerCase() === draft.callsign.toLocaleLowerCase());
       if (duplicate) throw new Error(`Agent 呼号已存在: @${draft.callsign}`);
@@ -321,8 +335,9 @@ export class BoardService {
     return task;
   }
 
-  #assertExecutionTarget(state: BoardState, target: ExecutionTarget, projectPath: string): void {
+  #assertExecutionTarget(state: BoardState, target: ExecutionTarget, projectPath: string | undefined): void {
     if (target.kind === "manual") return;
+    if (projectPath === undefined) throw new Error("任务尚未归属项目，请先绑定工作区再选择自动执行");
     const catalog = this.#catalogFor(state);
     if (target.kind === "workflow" && !this.#catalog.workflows.some((workflow) => workflow.id === target.workflowId)) {
       throw new Error(`未知流程模板: ${target.workflowId}`);
@@ -331,7 +346,7 @@ export class BoardService {
       const agent = catalog.agents.find((candidate) => candidate.id === target.agentId);
       if (!agent) throw new Error(`未知 Agent: ${target.agentId}`);
       const scoped = agent as Partial<ProjectAgentDefinition>;
-      if (scoped.projectPath && scoped.projectPath !== projectPath) throw new Error(`Agent ${agent.id} 属于其他项目`);
+      if (scoped.projectPath && this.#projectIdentity(scoped.projectPath) !== this.#projectIdentity(projectPath)) throw new Error(`Agent ${agent.id} 属于其他项目`);
     }
     if (target.kind === "squad") {
       const squad = state.squads.find((candidate) => candidate.id === target.squadId);
@@ -342,7 +357,7 @@ export class BoardService {
       const scopedAgents = [squad.leaderAgentId, ...squad.memberAgentIds]
         .map((agentId) => catalog.agents.find((agent) => agent.id === agentId) as Partial<ProjectAgentDefinition> | undefined)
         .filter((agent): agent is Partial<ProjectAgentDefinition> => Boolean(agent?.projectPath));
-      if (scopedAgents.some((agent) => agent.projectPath !== projectPath)) throw new Error(`Squad ${squad.id} 包含其他项目的自定义 Agent`);
+      if (scopedAgents.some((agent) => this.#projectIdentity(agent.projectPath!) !== this.#projectIdentity(projectPath))) throw new Error(`Squad ${squad.id} 包含其他项目的自定义 Agent`);
     }
   }
 

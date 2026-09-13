@@ -1,4 +1,5 @@
 import type { AgentDefinition, BoardState, OrchestrationCatalog, ProjectAgentDefinition } from "./kanban";
+import { sameProjectPath } from "./project-path";
 import { deriveAgentTaskQueue } from "./agent-task-scheduler";
 
 export type AgentPresenceState = "available" | "queued" | "running" | "waiting" | "attention";
@@ -25,7 +26,7 @@ interface PresenceSignal {
 
 function isVisibleInProject(agent: AgentDefinition, projectPath?: string): boolean {
   const scoped = agent as Partial<ProjectAgentDefinition>;
-  return scoped.projectPath === undefined || projectPath === undefined || scoped.projectPath === projectPath;
+  return scoped.projectPath === undefined || projectPath === undefined || sameProjectPath(scoped.projectPath, projectPath);
 }
 
 export function deriveAgentPresences(
@@ -44,7 +45,7 @@ export function deriveAgentPresences(
 
   for (const agentTask of board.agentTasks) {
     const task = tasks.get(agentTask.taskId);
-    if (!task || (projectPath && task.projectPath !== projectPath)) continue;
+    if (!task || (projectPath && !sameProjectPath(task.projectPath, projectPath))) continue;
     let root = agentTask;
     const visited = new Set<string>([root.id]);
     while (root.parentAgentTaskId) {
@@ -76,7 +77,7 @@ export function deriveAgentPresences(
 
   for (const run of board.runs) {
     const task = tasks.get(run.taskId);
-    if (!task || (projectPath && task.projectPath !== projectPath)) continue;
+    if (!task || (projectPath && !sameProjectPath(task.projectPath, projectPath))) continue;
     const currentExecution = task.activeRunId === run.id;
     const latestAttempt = run.executionAttempt === task.executionAttempt && run.taskSpec.revision === task.specRevision;
     const firstPendingStepId = run.steps.find((step) => step.status === "pending")?.stepId;

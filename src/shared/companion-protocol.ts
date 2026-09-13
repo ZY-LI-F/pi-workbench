@@ -110,7 +110,7 @@ export interface CompanionTaskSummary {
   readonly title: string;
   readonly priority: TaskPriority;
   readonly stage: TaskStage;
-  readonly projectPath: string;
+  readonly projectPath?: string;
   readonly projectName: string;
   readonly attentionCount: number;
   readonly agentCount: number;

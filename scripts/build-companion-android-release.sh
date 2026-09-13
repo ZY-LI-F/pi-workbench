@@ -42,7 +42,9 @@ stella_apksigner="${stella_apksigner_candidates[${#stella_apksigner_candidates[@
 "${stella_apksigner}" verify --verbose --print-certs "${stella_unsigned_path}"
 
 stella_release_dir="${stella_repo_dir}/release"
-stella_artifact_name="Stella-Companion-0.5.0-android-vc${STELLA_ANDROID_VERSION_CODE:-6}.apk"
+stella_version="$(node -p "require('${stella_companion_dir}/package.json').version")"
+stella_default_version_code="$(node -p "require('${stella_companion_dir}/package.json').androidVersionCode")"
+stella_artifact_name="Stella-Companion-${stella_version}-android-vc${STELLA_ANDROID_VERSION_CODE:-${stella_default_version_code}}.apk"
 mkdir -p "${stella_release_dir}"
 cp "${stella_unsigned_path}" "${stella_release_dir}/${stella_artifact_name}"
 (

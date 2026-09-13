@@ -69,6 +69,8 @@ interface TaskDetailPanelProps {
   readonly executionDisabledReason?: string;
   readonly readOnly?: boolean;
   readonly onOpenProject?: () => Promise<void>;
+  readonly onAssignProject?: () => Promise<void>;
+  readonly assignmentProjectName?: string;
   readonly onClose: () => void;
   readonly onEdit: () => void;
   readonly onDispatch: () => Promise<void>;
@@ -133,6 +135,8 @@ export function TaskDetailPanel({
   executionDisabledReason,
   readOnly = false,
   onOpenProject,
+  onAssignProject,
+  assignmentProjectName,
   onClose,
   onEdit,
   onDispatch,
@@ -345,6 +349,10 @@ export function TaskDetailPanel({
           </div>
         )}
         {task.blockedReason && <div className="task-detail__blocked"><XCircle size={14} /><span>{task.blockedReason}</span></div>}
+        {!task.projectPath && <div className="task-detail__unassigned" role="status">
+          <p>未归属项目：可以直接编辑、评论和手工推进。需要本地执行时，先打开工作区并绑定项目。</p>
+          {onAssignProject && <button type="button" className="button-secondary" disabled={busy} onClick={() => void perform(onAssignProject)}>绑定到 {assignmentProjectName}</button>}
+        </div>}
         {readOnly && (
           <div className="task-detail__blocked">
             <ExternalLink size={14} />

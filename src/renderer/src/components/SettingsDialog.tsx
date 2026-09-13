@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { Check, Copy, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, Smartphone, Sun, Unplug } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Copy, ExternalLink, ImagePlus, Keyboard, Monitor, Moon, RefreshCw, RotateCcw, ShieldCheck, ShieldOff, Smartphone, Sun, Unplug } from "lucide-react";
 import type { RuntimeBootstrap } from "@shared/contracts";
 import type { CompanionGatewayStatus, CompanionPairingOffer } from "@shared/companion-protocol";
 import type {
@@ -13,9 +13,10 @@ import type { SkinArtworkBySkin, SkinId } from "@shared/skin-artwork";
 import type { FontSizePreference, Preferences, ThemePreference } from "../hooks/use-preferences";
 import { SKIN_OPTIONS, skinDefinition } from "../lib/skins";
 import { Modal } from "./Modal";
+import { FeatureGuideDialog } from "../features/help/FeatureGuideDialog";
 
 interface SettingsDialogProps {
-  readonly bootstrap: RuntimeBootstrap;
+  readonly bootstrap?: RuntimeBootstrap;
   readonly preferences: Preferences;
   readonly customArtwork: SkinArtworkBySkin;
   readonly artworkBusySkin: SkinId | null;
@@ -143,7 +144,7 @@ function CompanionSetting({
   const stateLabel = status?.state === "listening" ? "正在监听" : status?.state === "error" ? "启动失败" : "已停止";
   return (
     <section className="settings-section settings-section--companion">
-      <div className="settings-section__heading"><span>Android Companion</span><small>v0.5.0 · 支持一部手机连接多台电脑</small></div>
+      <div className="settings-section__heading"><span>Android Companion</span><small>支持一部手机连接多台电脑</small></div>
       <div className="companion-gateway-card">
         <Smartphone size={19} />
         <span><strong>{status?.host.name ?? "Stella Desktop"}</strong><small>{stateLabel}{status?.port ? ` · 端口 ${status.port}` : ""}</small>{status?.connectionUrls[0] && <small title={status.connectionUrls[0]}>首选地址 · {status.connectionUrls[0]}</small>}</span>
@@ -197,12 +198,14 @@ export function SettingsDialog({
   onOpenLink,
   onClose,
 }: SettingsDialogProps) {
+  const [guideOpen, setGuideOpen] = useState(false);
   const selectedSkin = skinDefinition(preferences.skin);
   const selectedArtwork = customArtwork[preferences.skin];
   const artworkBusy = artworkBusySkin === preferences.skin;
   return (
-    <Modal title="偏好设置" eyebrow="STELLA SETTINGS" onClose={onClose} className="settings-dialog">
+    <><Modal title="偏好设置" eyebrow="STELLA SETTINGS" onClose={onClose} className="settings-dialog">
       <div className="settings-scroll">
+        <button type="button" className="settings-guide-entry" onClick={() => setGuideOpen(true)}><BookOpen size={26} /><span><strong>功能介绍与操作说明</strong><small>项目看板、任务、Pi 会话与手机连接 · 图文三步上手</small></span><ArrowRight size={18} /></button>
         <section className="settings-section settings-section--skins">
           <div className="settings-section__heading"><span>皮肤</span><small>选择一套完整的视觉性格</small></div>
           <div className="skin-options" role="radiogroup" aria-label="界面皮肤">
@@ -309,7 +312,7 @@ export function SettingsDialog({
           onCopyOffer={onCopyCompanionOffer}
         />
 
-        <section className="settings-section">
+        {bootstrap && <><section className="settings-section">
           <div className="settings-section__heading"><span>Pi 运行方式</span><small>立即作用于当前会话</small></div>
           <div className="setting-row"><span><strong>自动压缩上下文</strong><small>接近模型窗口上限时生成摘要</small></span><Toggle label="自动压缩上下文" checked={bootstrap.state.autoCompactionEnabled} onChange={onAutoCompactionChange} /></div>
           <div className="setting-row"><span><strong>自动重试</strong><small>提供方拥塞、限流或 5xx 时重试</small></span><Toggle label="自动重试" checked={preferences.autoRetry} onChange={(checked) => onPreferencesChange(Object.freeze({ ...preferences, autoRetry: checked }))} /></div>
@@ -326,16 +329,17 @@ export function SettingsDialog({
           </div>
         </section>
 
+        </>}
         <section className="settings-section">
           <div className="settings-section__heading"><span>快捷键</span><Keyboard size={14} /></div>
-          <div className="shortcut-grid"><span>新建会话 <kbd>Ctrl N</kbd></span><span>搜索与命令 <kbd>Ctrl K</kbd></span><span>聚焦输入框 <kbd>Ctrl L</kbd></span><span>停止生成 <kbd>Esc</kbd></span><span>打开终端 <kbd>Ctrl `</kbd></span><span>切换检查器 <kbd>Ctrl I</kbd></span></div>
+          <div className="shortcut-grid"><span>当前页新建 <kbd>Ctrl N</kbd></span><span>搜索与命令 <kbd>Ctrl K</kbd></span><span>聚焦当前页输入 <kbd>Ctrl L</kbd></span><span>停止生成 <kbd>Esc</kbd></span><span>打开终端 <kbd>Ctrl `</kbd></span><span>切换检查器 <kbd>Ctrl I</kbd></span></div>
         </section>
 
         <section className="settings-section settings-about">
-          <div><span className="settings-about__signature">Stella</span><p>Pi Workbench · Pi v{bootstrap.piVersion}</p></div>
+          <div><span className="settings-about__signature">Stella</span><p>Pi Workbench · {bootstrap ? `Pi v${bootstrap.piVersion}` : "Pi 尚未就绪"}</p></div>
           <div><button type="button" onClick={() => onOpenLink("https://github.com/earendil-works/pi")}>Pi 项目 <ExternalLink size={12} /></button><button type="button" onClick={() => onOpenLink("https://github.com/Fei-Away/Codex-Dream-Skin")}>视觉参考 <ExternalLink size={12} /></button></div>
         </section>
       </div>
-    </Modal>
+    </Modal>{guideOpen && <FeatureGuideDialog onClose={() => setGuideOpen(false)} />}</>
   );
 }

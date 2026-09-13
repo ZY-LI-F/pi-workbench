@@ -1,4 +1,5 @@
 import type { AgentDefinition, KanbanTask, OrchestrationCatalog, ProjectAgentDefinition, Squad } from "./kanban";
+import { sameProjectPath } from "./project-path";
 
 const MENTION_PATTERN = /(?:^|\s)@([A-Za-z0-9_-]+)/gu;
 const ACTIVE_MENTION_PATTERN = /(?:^|\s)@([\p{L}\p{N}_-]*)$/u;
@@ -104,9 +105,10 @@ export function availableMentionAgentsForTask(
   catalog: Pick<OrchestrationCatalog, "agents">,
   squads: readonly Squad[],
 ): readonly AgentDefinition[] {
+  if (!task.projectPath) return Object.freeze([]);
   const inProject = (agent: AgentDefinition): boolean => {
     const scoped = agent as Partial<ProjectAgentDefinition>;
-    return scoped.projectPath === undefined || scoped.projectPath === task.projectPath;
+    return scoped.projectPath === undefined || sameProjectPath(scoped.projectPath, task.projectPath);
   };
   const executionTarget = task.executionTarget;
   if (executionTarget.kind !== "squad") return Object.freeze(catalog.agents.filter(inProject));

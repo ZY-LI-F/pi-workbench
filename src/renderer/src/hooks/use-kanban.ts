@@ -86,6 +86,7 @@ function reducer(state: KanbanUiState, action: KanbanAction): KanbanUiState {
 export interface KanbanController {
   readonly state: KanbanUiState;
   createTask(input: CreateTaskInput): Promise<BoardBootstrap>;
+  assignTaskProject(taskId: string, projectPath: string): Promise<BoardBootstrap>;
   launchTeamTask(input: LaunchTeamTaskInput): Promise<BoardBootstrap>;
   updateTask(input: UpdateTaskInput): Promise<BoardBootstrap>;
   moveTask(taskId: string, stage: ManualTaskStage): Promise<BoardBootstrap>;
@@ -189,6 +190,7 @@ export function useKanban(api: StellaDesktopApi): KanbanController {
   }, []);
 
   const createTask = useCallback((input: CreateTaskInput) => perform("create", () => api.boardCreateTask(input)), [api, perform]);
+  const assignTaskProject = useCallback((taskId: string, projectPath: string) => perform(taskId, () => api.boardAssignTaskProject(taskId, projectPath)), [api, perform]);
   const launchTeamTask = useCallback((input: LaunchTeamTaskInput) => perform("team:launch", () => api.boardLaunchTeamTask(input)), [api, perform]);
   const updateTask = useCallback((input: UpdateTaskInput) => perform(input.taskId, () => api.boardUpdateTask(input)), [api, perform]);
   const moveTask = useCallback((taskId: string, stage: ManualTaskStage) => perform(taskId, () => api.boardMoveTask(taskId, stage)), [api, perform]);
@@ -212,6 +214,7 @@ export function useKanban(api: StellaDesktopApi): KanbanController {
   return useMemo(() => ({
     state,
     createTask,
+    assignTaskProject,
     launchTeamTask,
     updateTask,
     moveTask,
@@ -231,5 +234,5 @@ export function useKanban(api: StellaDesktopApi): KanbanController {
     resolveGate,
     reviewExecution,
     abortTask,
-  }), [abortTask, addComment, createAgent, createAutopilot, createSquad, createTask, deleteAgent, deleteAutopilot, deleteSquad, deleteTask, dispatchTask, launchTeamTask, moveTask, resolveGate, reviewExecution, state, triggerAutopilot, updateAgent, updateAutopilot, updateSquad, updateTask]);
+  }), [abortTask, addComment, assignTaskProject, createAgent, createAutopilot, createSquad, createTask, deleteAgent, deleteAutopilot, deleteSquad, deleteTask, dispatchTask, launchTeamTask, moveTask, resolveGate, reviewExecution, state, triggerAutopilot, updateAgent, updateAutopilot, updateSquad, updateTask]);
 }

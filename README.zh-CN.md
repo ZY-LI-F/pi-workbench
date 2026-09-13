@@ -2,6 +2,8 @@
 
 [English](README.md) | **简体中文**
 
+当前源码版本：**v0.7.1** · Android versionCode：**9**。
+
 > **Pi 原生桌面工作台 + 本地多 CLI Agent 控制面。** 在同一个应用里完成真实 Pi 会话、Pi/Codex/Claude 任务执行、外部 CLI 活动查看、任务看板、人工验收、产物与自动化。
 
 Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造的 local-first Electron 工作台。它直接运行安装包内置的 Pi JSONL RPC，不模拟 Agent 回复，不绕开 Pi 的会话、模型、Skill 或扩展系统。Pi 原生工作台默认可独立使用；Team、Kanban、Workflow、Autopilot 以及用户本机可选安装的 Codex/Claude CLI 组成具有独立故障边界的第二能力面。
@@ -35,6 +37,34 @@ Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造�
 ![Stella Team Workspace：任务频道、Task Room 与 Agent Pulse](docs/team-chat-stella.png)
 
 当前 Team 改进的完整上游证据、采用/拒绝矩阵和固定提交链接见 [`docs/research/team-multica-hiclaw-2026-08.md`](docs/research/team-multica-hiclaw-2026-08.md)；已实现的不变量与后续 Room/Plan DAG 边界见 [`docs/specs/stella-team-reliability-v1.md`](docs/specs/stella-team-reliability-v1.md)、[ADR 0005](docs/adr/0005-dependency-aware-agent-task-scheduling.md) 和 [ADR 0006](docs/adr/0006-use-one-typed-coordinator-protocol-for-team-leaders.md)。
+
+## 项目看板
+
+从侧栏 **任务栏 → 项目看板** 进入，或在命令面板选择“打开项目看板”。项目入口始终可用，无需开启团队功能。
+
+- **长期项目清单**：登记本地目录，编辑名称与说明，置顶、归档或恢复。当前项目、最近访问及历史任务中的项目会增量加入，清单不受最近访问 12 项的限制。
+- **总览与阶段看板**：同一批项目支持卡片总览及“待安排 / 进行中 / 暂缓 / 已收尾”四列。拖动卡片或使用阶段菜单整理计划；搜索可以命中项目、目录和任务内容。
+- **真实任务进度**：按原 Task 汇总完成比例、阶段分布、执行/排队和需处理事项。手工任务待审核、当前报告待验收、Coordinator 等待回复和 Workflow 人工关卡都能被看到；没有任务和无法读取任务分别显示。
+- **跨项目下钻**：从项目进入原有任务看板与任务详情，浏览过程中保留当前 Pi 会话。需要编辑或运行任务时，通过“打开项目”进入所属工作区；添加项目本身不授予信任。
+- **不选项目也能记任务**：任务看板默认显示不限项目的全部任务，新建表单可选择“不选择项目”。未归属任务可以编辑、评论和手工推进；需要本地执行时，在详情中绑定已打开的工作区。首次启动也能直接使用任务看板。
+- **长列表可滚动**：任务列各自纵向滚动，窄窗口内横向滚动查看其他列；项目详情的任务列表单独滚动，可访问全部任务。
+- **可恢复的本地数据**：元数据独立保存在应用数据目录的 `projects.json`。目录丢失或存储损坏会明确报错并保留历史，项目状态不复制 Task 状态。
+
+项目阶段表达计划；“暂缓”、归档和“已收尾”不会停止执行、关闭自动化或代替任务验收。收尾项目仍有未完成任务时，卡片会明确标出。
+
+为保存未归属任务，Board 数据格式升级至 v10；首次读取旧 v9 数据会先保留备份，再原样迁移已有项目归属和任务历史。
+
+![Stella 项目看板：项目总览与真实任务进度](docs/project-board-overview.png)
+
+完整的源码分析、领域设计、持久化与故障处理见 [设计说明](docs/specs/stella-project-board.md)。上游依据包括 [Orca 专项研究](docs/research/orca-project-board-2026-09-13.md) 和 [九个相关项目的比较与取舍](docs/research/project-board-comparison-2026-09-13.md)；实际验证范围见 [验收记录](docs/testing/stella-project-board-acceptance.md)。
+
+## 功能介绍与操作说明
+
+在桌面「偏好设置」顶部打开 **功能介绍与操作说明**，用配图和三步操作了解项目看板、无项目任务、长列表滚动、Pi 会话、执行验收及手机连接。图文随安装包提供，离线也能阅读；窄窗口支持主题条和内容区分别滚动。
+
+Android 首页右上角的 **设置** 提供同名入口，介绍配对、工作动态、回复验收和断线状态，未配对时也可查看。说明与实现约定见 [图文指南设计](docs/specs/stella-user-guide.md)；构建产物、旧数据迁移和本机安装实测见 [0.7.0 安装验收](docs/testing/stella-v0.7.0-installation-acceptance.md)。
+
+![Stella 设置内的图文操作说明](docs/user-guide-desktop.png)
 
 ## Pi 模型路由与配置
 
@@ -388,7 +418,7 @@ npm run companion:apk:debug
 npm run companion:apk:release
 ```
 
-设置 `STELLA_ANDROID_VERSION_CODE=7` 后，签名脚本输出 `release/Stella-Companion-0.5.0-android-vc7.apk` 与 `release/SHA256SUMS-android.txt`。产品版本、Android versionCode 和 Wire Protocol 独立演进。Tag 构建使用上表四个 Android GitHub Secrets，仓库不保存签名 Key。构建、签名和 AVD 验收方法见 [`apps/companion/README.md`](apps/companion/README.md)，扫码验收证据见 [`docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md`](docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md)。
+签名脚本从 `apps/companion/package.json` 读取 `version` 与 `androidVersionCode`，输出 `release/Stella-Companion-{version}-android-vc{versionCode}.apk` 与 `release/SHA256SUMS-android.txt`；可用 `STELLA_ANDROID_VERSION_CODE` 显式覆盖构建编号。产品版本、Android versionCode 和 Wire Protocol 独立演进。Tag 构建使用上表四个 Android GitHub Secrets，仓库不保存签名 Key。构建、签名和 AVD 验收方法见 [`apps/companion/README.md`](apps/companion/README.md)，扫码验收证据见 [`docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md`](docs/testing/android-companion-qr-pairing-acceptance-2026-08-29.md)。
 
 ## 验证
 
@@ -419,6 +449,7 @@ src/
 ├─ renderer/src/
 │  ├─ components/        会话、输入器、检查器、终端、弹窗和导航
 │  ├─ features/kanban/   看板、Task Room、Workflow DAG、Agent 执行图、Pi 桥接与 Autopilot
+│  ├─ features/projects/ 项目总览、计划阶段看板、项目编辑与任务下钻
 │  ├─ features/team/     任务启动台、Task Channel、Agent Pulse 与频道注意投影
 │  ├─ hooks/             Pi/看板状态同步与本地偏好
 │  ├─ assets/skins/      七张原创、可由用户替换的皮肤主视觉
@@ -433,9 +464,9 @@ src/
 
 | 快捷键 | 操作 |
 | --- | --- |
-| `Ctrl/Cmd + N` | 团队页聚焦任务启动台；看板打开结构化任务；聊天新建会话 |
+| `Ctrl/Cmd + N` | 项目页添加项目；团队页聚焦任务启动台；任务看板新建任务；聊天新建会话 |
 | `Ctrl/Cmd + K` | 搜索与命令 |
-| `Ctrl/Cmd + L` | 聚焦输入框 |
+| `Ctrl/Cmd + L` | 项目页和任务看板聚焦搜索；团队页聚焦频道搜索；聊天聚焦输入框 |
 | <code>Ctrl/Cmd + `</code> | 切换本地命令抽屉 |
 | `Ctrl/Cmd + I` | 切换会话检查器 |
 | `Esc` | 停止生成或关闭当前弹窗 |

@@ -42,6 +42,7 @@ import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "../shared/co
 import type { PiSkillInstallResult, PiSkillInstallScope } from "../shared/pi-skill";
 import type { NativeSubmissionInput } from "../shared/native-submission";
 import type { NativeDiagnosticLayout } from "../shared/native-diagnostics";
+import type { AddProjectInput, UpdateProjectInput } from "../shared/project-registry";
 import type {
   ContinueExternalExecutionInput,
   ExternalExecutionScope,
@@ -80,6 +81,9 @@ const api: StellaDesktopApi = Object.freeze({
   respondToExtension: (response: PiExtensionResponse) =>
     ipcRenderer.invoke("stella:extension-response", response) as Promise<void>,
   chooseProject: () => ipcRenderer.invoke("stella:choose-project") as Promise<ProjectSelection | null>,
+  projectsInitialize: () => ipcRenderer.invoke("stella:projects:initialize"),
+  projectsAdd: (input: AddProjectInput) => ipcRenderer.invoke("stella:projects:add", input),
+  projectsUpdate: (input: UpdateProjectInput) => ipcRenderer.invoke("stella:projects:update", input),
   skinArtworkInitialize: () =>
     ipcRenderer.invoke("stella:skin-artwork:initialize") as Promise<readonly SkinArtworkDescriptor[]>,
   chooseSkinArtwork: (skin: SkinId) =>
@@ -121,6 +125,7 @@ const api: StellaDesktopApi = Object.freeze({
   modelConfigurationDeleteProvider: (providerId: string) =>
     ipcRenderer.invoke("stella:model-configuration:delete-provider", providerId) as Promise<PiModelConfigurationSnapshot>,
   boardInitialize: () => ipcRenderer.invoke("stella:board:initialize") as Promise<BoardBootstrap>,
+  boardAssignTaskProject: (taskId: string, projectPath: string) => ipcRenderer.invoke("stella:board:assign-task-project", taskId, projectPath),
   boardCreateTask: (input: CreateTaskInput) =>
     ipcRenderer.invoke("stella:board:create-task", input) as Promise<BoardBootstrap>,
   boardLaunchTeamTask: (input: LaunchTeamTaskInput) =>

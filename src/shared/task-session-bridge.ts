@@ -1,4 +1,5 @@
 import type { BoardState, OpenTaskSessionInput } from "./kanban";
+import { requireTaskProject } from "./task-project";
 
 export interface TaskSessionTarget {
   readonly taskId: string;
@@ -27,7 +28,7 @@ export function resolveTaskSessionTarget(
   if (!persisted) throw new Error("所选 Pi session 不属于该任务的来源或执行记录");
   return Object.freeze({
     taskId: task.id,
-    projectPath: task.projectPath,
+    projectPath: requireTaskProject(task),
     trusted: task.trusted,
     sessionPath: persisted,
   });

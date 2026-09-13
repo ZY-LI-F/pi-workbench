@@ -13,6 +13,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
+import { projectPathKey, sameProjectPath } from "@shared/project-path";
+import type { RegisteredProject } from "@shared/project-registry";
 import { deriveAgentPresences } from "@shared/agent-presence";
 import { deriveAgentTaskQueue } from "@shared/agent-task-scheduler";
 import {
@@ -44,6 +46,9 @@ interface KanbanWorkspaceProps {
   readonly api: StellaDesktopApi;
   readonly controller: KanbanController;
   readonly project?: ProjectMeta;
+  readonly projects?: readonly RegisteredProject[];
+  readonly initialProjectPath?: string;
+  readonly initialTaskId?: string;
   readonly executionEnabled: boolean;
   readonly executionBackends?: ExecutionBackendCatalogSnapshot;
   readonly teamFeaturesEnabled: boolean;
@@ -83,21 +88,13 @@ function executionLabelForTask(task: KanbanTask, catalog: OrchestrationCatalog, 
   return `${squads.find((squad) => squad.id === target.squadId)?.name ?? target.squadId} · ${profileLabel}`;
 }
 
-function sameProjectPath(left: string | undefined, right: string | undefined): boolean {
-  if (!left || !right) return false;
-  const normalize = (value: string) => {
-    const normalized = value.replaceAll("\\", "/").replace(/\/+$/u, "");
-    return /^[A-Za-z]:\//u.test(normalized) || normalized.startsWith("//")
-      ? normalized.toLocaleLowerCase("en-US")
-      : normalized;
-  };
-  return normalize(left) === normalize(right);
-}
-
 export function KanbanWorkspace({
   api,
   controller,
   project,
+  projects,
+  initialProjectPath,
+  initialTaskId,
   executionEnabled,
   executionBackends,
   teamFeaturesEnabled,
@@ -116,23 +113,25 @@ export function KanbanWorkspace({
 }: KanbanWorkspaceProps) {
   const { state } = controller;
   const [query, setQuery] = useState("");
-  const [projectScope, setProjectScope] = useState<"current" | "all">(project ? "current" : "all");
+  const [projectScope, setProjectScope] = useState(initialProjectPath ?? "all");
   const [executionFilter, setExecutionFilter] = useState("all");
   const [draggingTaskId, setDraggingTaskId] = useState<string>();
-  const [selectedTaskId, setSelectedTaskId] = useState<string>();
+  const [selectedTaskId, setSelectedTaskId] = useState<string | undefined>(initialTaskId);
   const [editorTaskId, setEditorTaskId] = useState<string | "new">();
   const [newTaskDraft, setNewTaskDraft] = useState<PiTaskDraft>();
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [automationOpen, setAutomationOpen] = useState(false);
   const [surface, setSurface] = useState<"stella" | "external" | "all">("stella");
-  const externalScope = useMemo<ExternalExecutionScope>(() => projectScope === "current" && project
-    ? Object.freeze({ kind: "project", projectPath: project.cwd })
-    : Object.freeze({ kind: "all" }), [project, projectScope]);
+  const scopedProjectPath = projectScope === "current" ? project?.cwd : projectScope === "all" || projectScope === "unassigned" ? undefined : projectScope;
+  const canCreateInScope = !scopedProjectPath || Boolean(project && !project.requiresSelection && sameProjectPath(scopedProjectPath, project.cwd));
+  const externalScope = useMemo<ExternalExecutionScope>(() => scopedProjectPath
+    ? Object.freeze({ kind: "project", projectPath: scopedProjectPath })
+    : Object.freeze({ kind: "all" }), [scopedProjectPath]);
   const externalExecutions = useExternalExecutions(api, externalScope, surface !== "stella" && state.phase === "ready");
 
   // 打开编辑器后立即消费请求计数，避免 project 变化或组件重挂载时重新弹出幽灵对话框。
   useEffect(() => {
-    if (createRequest > 0 && project) {
+    if (createRequest > 0) {
       onCreateRequestConsumed();
       setNewTaskDraft(createDraft);
       setEditorTaskId("new");
@@ -141,8 +140,8 @@ export function KanbanWorkspace({
   }, [createDraft, createRequest, project]);
 
   useEffect(() => {
-    if (!project) setProjectScope("all");
-  }, [project]);
+    if (!project && projectScope === "current") setProjectScope("all");
+  }, [project, projectScope]);
 
   useEffect(() => {
     if (!teamFeaturesEnabled && executionFilter !== "all" && executionFilter !== "manual") setExecutionFilter("all");
@@ -151,11 +150,25 @@ export function KanbanWorkspace({
   const bootstrap = state.bootstrap;
   const board = bootstrap?.board;
   const catalog = bootstrap?.catalog;
+  const projectOptions = useMemo(() => {
+    const options = new Map<string, { path: string; name: string }>();
+    for (const task of board?.tasks ?? []) if (task.projectPath) options.set(projectPathKey(task.projectPath), { path: task.projectPath, name: task.projectName });
+    for (const item of projects ?? []) options.set(projectPathKey(item.path), { path: item.path, name: item.name });
+    if (scopedProjectPath && !options.has(projectPathKey(scopedProjectPath))) options.set(projectPathKey(scopedProjectPath), { path: scopedProjectPath, name: scopedProjectPath });
+    return [...options.values()].map((item) => sameProjectPath(item.path, scopedProjectPath) ? { ...item, path: scopedProjectPath! } : item);
+  }, [board?.tasks, projects, scopedProjectPath]);
   const selectedTask = board?.tasks.find((task) => task.id === selectedTaskId);
+  const changeProjectScope = (scope: string) => {
+    setProjectScope(scope);
+    if (scope === "unassigned") {
+      setSurface("stella");
+      if (selectedTask?.projectPath) setSelectedTaskId(undefined);
+    }
+  };
   const editorTask = editorTaskId && editorTaskId !== "new"
     ? board?.tasks.find((task) => task.id === editorTaskId)
     : undefined;
-  const editorProject: ProjectMeta | undefined = editorTask
+  const editorProject: ProjectMeta | undefined = editorTask?.projectPath
     ? sameProjectPath(editorTask.projectPath, project?.cwd)
       ? project
       : Object.freeze({
@@ -167,7 +180,7 @@ export function KanbanWorkspace({
         })
     : project;
   const draggingTask = board?.tasks.find((task) => task.id === draggingTaskId);
-  const selectedTaskReadOnly = Boolean(selectedTask && !sameProjectPath(selectedTask.projectPath, project?.cwd));
+  const selectedTaskReadOnly = Boolean(selectedTask?.projectPath && !sameProjectPath(selectedTask.projectPath, project?.cwd));
   const executionAvailability = (task: KanbanTask): { readonly enabled: boolean; readonly reason?: string } => {
     if (!task.executionProfileId) return { enabled: false, reason: "任务未选择执行环境" };
     const profile = executionProfile(task.executionProfileId);
@@ -185,12 +198,12 @@ export function KanbanWorkspace({
   }, [board, selectedTaskId]);
 
   useEffect(() => {
-    if (projectScope !== "current" || !project || !selectedTask || sameProjectPath(selectedTask.projectPath, project.cwd)) return;
+    if (!scopedProjectPath || !selectedTask || sameProjectPath(selectedTask.projectPath, scopedProjectPath)) return;
     setSelectedTaskId(undefined);
-  }, [project, projectScope, selectedTask]);
+  }, [scopedProjectPath, selectedTask]);
 
   useEffect(() => {
-    if (!editorTask || sameProjectPath(editorTask.projectPath, project?.cwd)) return;
+    if (!editorTask?.projectPath || sameProjectPath(editorTask.projectPath, project?.cwd)) return;
     setEditorTaskId(undefined);
   }, [editorTask, project?.cwd]);
 
@@ -198,7 +211,8 @@ export function KanbanWorkspace({
     if (!board) return [];
     const normalizedQuery = query.trim().toLocaleLowerCase();
     return board.tasks
-      .filter((task) => projectScope === "all" || sameProjectPath(task.projectPath, project?.cwd))
+      .filter((task) => !scopedProjectPath || sameProjectPath(task.projectPath, scopedProjectPath))
+      .filter((task) => projectScope !== "unassigned" || task.projectPath === undefined)
       .filter((task) => executionFilter === "all"
         || (executionFilter === "manual"
           ? task.executionTarget.kind === "manual"
@@ -209,7 +223,7 @@ export function KanbanWorkspace({
               : task.executionTarget.kind === "workflow" && task.executionTarget.workflowId === executionFilter))
       .filter((task) => !normalizedQuery || `${task.title} ${task.description} ${task.acceptanceCriteria} ${task.projectName}`.toLocaleLowerCase().includes(normalizedQuery))
       .sort((left, right) => PRIORITY_ORDER[left.priority] - PRIORITY_ORDER[right.priority] || Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
-  }, [board, executionFilter, project?.cwd, projectScope, query]);
+  }, [board, executionFilter, scopedProjectPath, projectScope, query]);
 
   const report = (cause: unknown) => {
     const message = cause instanceof Error ? cause.message : String(cause);
@@ -240,7 +254,7 @@ export function KanbanWorkspace({
     const taskId = event.dataTransfer.getData("application/x-stella-task");
     if (!taskId) return;
     const task = board?.tasks.find((candidate) => candidate.id === taskId);
-    if (!task || !sameProjectPath(task.projectPath, project?.cwd) || !canMoveTaskManually(task, lane)) return;
+    if (!task || (task.projectPath && !sameProjectPath(task.projectPath, project?.cwd)) || !canMoveTaskManually(task, lane)) return;
     setDraggingTaskId(undefined);
     void move(taskId, lane as ManualTaskStage).catch(() => undefined);
   };
@@ -285,14 +299,14 @@ export function KanbanWorkspace({
         <div className="kanban-header__actions">
           <div className="kanban-surface-switch" role="tablist" aria-label="任务视图">
             <button type="button" role="tab" aria-selected={surface === "stella"} className={surface === "stella" ? "is-active" : ""} onClick={() => setSurface("stella")}><FolderKanban size={13} />Stella Tasks</button>
-            <button type="button" role="tab" aria-selected={surface === "external"} className={surface === "external" ? "is-active" : ""} onClick={() => { setSelectedTaskId(undefined); setSurface("external"); }}><RadioTower size={13} />CLI Tasks</button>
-            <button type="button" role="tab" aria-selected={surface === "all"} className={surface === "all" ? "is-active" : ""} onClick={() => setSurface("all")}><Workflow size={13} />全部</button>
+            <button type="button" role="tab" disabled={projectScope === "unassigned"} title={projectScope === "unassigned" ? "外部 CLI 活动需要实际项目目录" : undefined} aria-selected={surface === "external"} className={surface === "external" ? "is-active" : ""} onClick={() => { setSelectedTaskId(undefined); setSurface("external"); }}><RadioTower size={13} />CLI Tasks</button>
+            <button type="button" role="tab" disabled={projectScope === "unassigned"} title={projectScope === "unassigned" ? "外部 CLI 活动需要实际项目目录" : undefined} aria-selected={surface === "all"} className={surface === "all" ? "is-active" : ""} onClick={() => setSurface("all")}><Workflow size={13} />全部</button>
           </div>
           <span className="current-model-chip" title="所有页面共享的当前 Pi 模型">{modelLabel ?? "未选择模型"}</span>
           {teamFeaturesEnabled && <button type="button" className="button-secondary" onClick={() => setCatalogOpen(true)}><Users size={15} />编排目录</button>}
           {teamFeaturesEnabled && <button type="button" className="button-secondary" disabled={!project} onClick={() => setAutomationOpen(true)}><Zap size={15} />自动化</button>}
           <button type="button" className="icon-button" disabled={!project} aria-label="打开命令终端" onClick={onOpenTerminal}><TerminalSquare size={16} /></button>
-          <button type="button" className="button-primary" disabled={!project} onClick={() => { setNewTaskDraft(undefined); setEditorTaskId("new"); }}><Plus size={15} />新建任务</button>
+          <button type="button" className="button-primary" disabled={!canCreateInScope} title={!canCreateInScope ? "请先打开所查看的项目工作区" : undefined} onClick={() => { setNewTaskDraft(undefined); setEditorTaskId("new"); }}><Plus size={15} />新建任务</button>
           <HeaderOverflowMenu
             className="kanban-header__more"
             ariaLabel="更多看板操作"
@@ -327,7 +341,11 @@ export function KanbanWorkspace({
 
       <div className="kanban-controls">
         <div className="kanban-search"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={surface === "external" ? "搜索外部任务、目录或 Session" : surface === "all" ? "搜索 Stella Task 与 CLI 活动" : "搜索任务、说明或验收标准"} />{query && <button type="button" onClick={() => setQuery("")}>清除</button>}</div>
-        <label className="kanban-select"><span>项目</span><select value={projectScope} disabled={!project} onChange={(event) => setProjectScope(event.target.value as "current" | "all")}>{project && <option value="current">{project.name}</option>}<option value="all">全部项目</option></select><ChevronDown size={13} /></label>
+        <label className="kanban-select"><span>项目</span><select aria-label="筛选任务项目" value={projectScope} onChange={(event) => changeProjectScope(event.target.value)}>
+          <option value="all">全部任务（不限项目）</option><option value="unassigned">未归属项目</option>
+          {project && !project.requiresSelection && <option value="current">当前 · {project.name}</option>}
+          {projectOptions.map((item) => <option key={item.path} value={item.path}>{item.name}</option>)}
+        </select><ChevronDown size={13} /></label>
         {surface !== "external" && <label className="kanban-select"><Workflow size={13} /><select value={executionFilter} onChange={(event) => setExecutionFilter(event.target.value)}><option value="all">全部方式</option><option value="manual">自己推进</option>{teamFeaturesEnabled && <option value="agent">单 Agent</option>}{teamFeaturesEnabled && <option value="squad">Squad</option>}{teamFeaturesEnabled && catalog.workflows.map((workflow) => <option value={workflow.id} key={workflow.id}>{workflow.shortName}</option>)}</select><ChevronDown size={13} /></label>}
         <span className="kanban-controls__count">{surface === "stella" ? `显示 ${visibleTasks.length} / ${board.tasks.length} 项` : surface === "external" ? `外部任务 ${externalExecutions.snapshot?.sources.reduce((total, source) => total + source.items.length, 0) ?? 0} 项` : `${visibleTasks.length} Task · ${externalExecutions.snapshot?.sources.reduce((total, source) => total + source.items.filter((item) => item.association?.relation !== "managed").length, 0) ?? 0} CLI`}</span>
       </div>
@@ -370,7 +388,7 @@ export function KanbanWorkspace({
         <div className="kanban-board" aria-label="任务看板">
           {LANE_CONFIG.map((lane) => {
             const tasks = visibleTasks.filter((task) => task.stage === lane.id);
-            const acceptsDraggedTask = Boolean(draggingTask && sameProjectPath(draggingTask.projectPath, project?.cwd) && canMoveTaskManually(draggingTask, lane.id));
+            const acceptsDraggedTask = Boolean(draggingTask && (!draggingTask.projectPath || sameProjectPath(draggingTask.projectPath, project?.cwd)) && canMoveTaskManually(draggingTask, lane.id));
             return (
               <section
                 className={`kanban-lane kanban-lane--${lane.id} ${MANUAL_LANES.has(lane.id) ? "is-droppable" : ""} ${acceptsDraggedTask ? "is-drop-target" : ""}`}
@@ -382,7 +400,7 @@ export function KanbanWorkspace({
                   <div><i /><span><small>{lane.code}</small><strong>{lane.label}</strong></span></div>
                   <b>{tasks.length}</b>
                 </header>
-                <div className="kanban-lane__body">
+                <div className="kanban-lane__body" tabIndex={0} role="region" aria-label={`${lane.label}任务列表`}>
                   {tasks.map((task) => {
                     const runs = taskRuns(task.id);
                     const run = runs.find((candidate) => candidate.id === task.activeRunId) ?? runs[0];
@@ -405,7 +423,7 @@ export function KanbanWorkspace({
                         busy={state.pending.includes(task.id)}
                         executionEnabled={availability.enabled}
                         executionDisabledReason={availability.reason}
-                        readOnly={!sameProjectPath(task.projectPath, project?.cwd)}
+                        readOnly={Boolean(task.projectPath && !sameProjectPath(task.projectPath, project?.cwd))}
                         onOpen={() => setSelectedTaskId(task.id)}
                         onDispatch={() => void dispatch(task.id).catch(() => undefined)}
                         onDragStart={(event) => {
@@ -439,7 +457,12 @@ export function KanbanWorkspace({
             executionEnabled={executionAvailability(selectedTask).enabled}
             executionDisabledReason={executionAvailability(selectedTask).reason}
             readOnly={selectedTaskReadOnly}
-            onOpenProject={() => onOpenProject(selectedTask.projectPath, selectedTask.trusted)}
+            onOpenProject={selectedTask.projectPath ? () => onOpenProject(selectedTask.projectPath!, selectedTask.trusted) : undefined}
+            onAssignProject={!selectedTask.projectPath && project && !project.requiresSelection ? async () => {
+              try { await controller.assignTaskProject(selectedTask.id, project.cwd); setProjectScope("all"); }
+              catch (cause) { report(cause); throw cause; }
+            } : undefined}
+            assignmentProjectName={project && !project.requiresSelection ? project.name : undefined}
             onClose={() => setSelectedTaskId(undefined)}
             onEdit={() => setEditorTaskId(selectedTask.id)}
             onDispatch={() => dispatch(selectedTask.id)}
@@ -464,29 +487,30 @@ export function KanbanWorkspace({
               try { await controller.reviewExecution(input); }
               catch (cause) { report(cause); throw cause; }
             }}
-            onRevealPath={(path) => void api.revealPath(path)}
+            onRevealPath={(path) => { void api.revealPath(path).catch(report); }}
             onContinueInPi={(sessionPath) => onContinueTaskSession(selectedTask.id, sessionPath)}
-            agentPresences={deriveAgentPresences(board, catalog, selectedTask.projectPath)}
-            mentionsEnabled={teamFeaturesEnabled}
+            agentPresences={selectedTask.projectPath ? deriveAgentPresences(board, catalog, selectedTask.projectPath) : []}
+            mentionsEnabled={teamFeaturesEnabled && Boolean(selectedTask.projectPath)}
           />
         )}
         </div>
       </div>}
 
-      {editorTaskId && editorProject && (
+      {editorTaskId && (
         <TaskEditorDialog
           task={editorTask}
           draft={editorTaskId === "new" ? newTaskDraft : undefined}
           project={editorProject}
+          defaultUnassigned={projectScope === "unassigned"}
           workflows={catalog.workflows}
-          agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === editorProject.cwd)}
-          squads={board.squads.filter((squad) => squad.scope === "global" || sameProjectPath(squad.projectPath, editorProject.cwd))}
+          agents={catalog.agents.filter((agent) => !("projectPath" in agent) || sameProjectPath((agent as ProjectAgentDefinition).projectPath, editorProject?.cwd))}
+          squads={board.squads.filter((squad) => squad.scope === "global" || sameProjectPath(squad.projectPath, editorProject?.cwd))}
           automationEnabled={teamFeaturesEnabled}
           executionBackends={executionBackends}
           piExecutionEnabled={executionEnabled}
           busy={state.pending.includes(editorTaskId === "new" ? "create" : editorTaskId)}
           onClose={() => setEditorTaskId(undefined)}
-          onCreate={async (input) => { await controller.createTask(input); }}
+          onCreate={async (input) => { await controller.createTask(input); if (!input.projectPath) changeProjectScope("unassigned"); }}
           onUpdate={async (input) => { await controller.updateTask(input); }}
         />
       )}

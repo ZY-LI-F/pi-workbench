@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Bot, CircleAlert, CircleDot, Hash, Menu, MessageSquarePlus, Orbit, Pencil, Plus, Search, Sparkles, UsersRound, X } from "lucide-react";
 import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
+import { sameProjectPath } from "@shared/project-path";
 import { deriveAgentPresences } from "@shared/agent-presence";
 import { deriveAgentTaskQueue } from "@shared/agent-task-scheduler";
 import { availableMentionAgentsForTask } from "@shared/agent-mentions";
@@ -57,7 +58,7 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, exec
   const projectTasks = useMemo(() => {
     if (!board) return [];
     return board.tasks
-      .filter((task) => !project || task.projectPath === project.cwd)
+      .filter((task) => !project || sameProjectPath(task.projectPath, project.cwd))
       .sort((left, right) => Number(Boolean(right.activeRunId || right.activeAgentTaskId)) - Number(Boolean(left.activeRunId || left.activeAgentTaskId)) || Date.parse(right.updatedAt) - Date.parse(left.updatedAt));
   }, [board, project]);
 
@@ -265,9 +266,9 @@ export function TeamWorkspace({ api, controller, project, executionEnabled, exec
       />}
       {editingTask && selectedTask && <TaskEditorDialog
         task={selectedTask}
-        project={Object.freeze({ cwd: selectedTask.projectPath, name: selectedTask.projectName, trusted: selectedTask.trusted, requiresTrust: false, requiresSelection: false })}
+        project={selectedTask.projectPath ? Object.freeze({ cwd: selectedTask.projectPath, name: selectedTask.projectName, trusted: selectedTask.trusted, requiresTrust: false, requiresSelection: false }) : undefined}
         workflows={catalog.workflows}
-        agents={catalog.agents.filter((agent) => !("projectPath" in agent) || (agent as ProjectAgentDefinition).projectPath === selectedTask.projectPath)}
+        agents={catalog.agents.filter((agent) => !("projectPath" in agent) || sameProjectPath((agent as ProjectAgentDefinition).projectPath, selectedTask.projectPath))}
         squads={board.squads}
         executionBackends={executionBackends}
         piExecutionEnabled={executionEnabled}

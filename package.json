@@ -1,6 +1,6 @@
 {
   "name": "stella-pi-workbench",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "productName": "Stella Pi Workbench",
   "private": true,
   "description": "A local-first Pi desktop workbench with native chat, multi-CLI task execution, external agent activity, Kanban, workflows, and artifact previews.",

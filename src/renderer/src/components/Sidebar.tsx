@@ -5,6 +5,7 @@ import {
   CirclePlus,
   Command,
   Folder,
+  FolderKanban,
   GitFork,
   LayoutDashboard,
   MessagesSquare,
@@ -47,7 +48,7 @@ interface SidebarProps {
   readonly onModelChange: (model: ModelSummary) => void;
 }
 
-export type WorkspaceView = "chat" | "team" | "kanban" | "models" | "skills";
+export type WorkspaceView = "chat" | "team" | "kanban" | "projects" | "models" | "skills";
 type SidebarTab = "tasks" | "native";
 
 const CAPABILITY_LABEL: Readonly<Record<CapabilityName, string>> = Object.freeze({
@@ -183,8 +184,8 @@ export function Sidebar({
   }, [query, sessions]);
   const taskReady = capabilities?.task.state === "ready";
   const piReady = capabilities?.pi.state === "ready" && Boolean(bootstrap);
-  const taskSurface = activeView === "kanban" || activeView === "team";
-  const primaryActionDisabled = taskSurface ? !taskReady || !bootstrap : !piReady;
+  const taskSurface = activeView === "kanban" || activeView === "team" || activeView === "projects";
+  const primaryActionDisabled = activeView === "projects" ? false : activeView === "kanban" ? !taskReady : taskSurface ? !taskReady || !bootstrap : !piReady;
   const visibleCapabilities: readonly CapabilityName[] = teamFeaturesEnabled
     ? Object.keys(CAPABILITY_LABEL) as CapabilityName[]
     : Object.freeze(["pi", "task"] as const);
@@ -271,7 +272,7 @@ export function Sidebar({
 
         <button type="button" className="new-session-button" disabled={primaryActionDisabled} onClick={taskSurface ? onNewTask : onNewSession}>
           <CirclePlus size={18} />
-          <span>{activeView === "team" ? "新建团队任务" : activeView === "kanban" ? "新建看板任务" : "新建会话"}</span>
+          <span>{activeView === "projects" ? "添加项目" : activeView === "team" ? "新建团队任务" : activeView === "kanban" ? "新建看板任务" : "新建会话"}</span>
           <kbd>Ctrl N</kbd>
         </button>
 
@@ -294,6 +295,9 @@ export function Sidebar({
           <div className="sidebar-panel sidebar-panel--tasks" id={taskPanelId} role="tabpanel" aria-label="任务栏">
             <nav className="quick-nav quick-nav--tasks" aria-label="任务工具">
               <span className="quick-nav__section-label quick-nav__section-label--team">任务工作台</span>
+              <button type="button" aria-current={activeView === "projects" ? "page" : undefined} className={activeView === "projects" ? "is-active" : ""} onClick={() => onSwitchView("projects")}>
+                <FolderKanban size={16} /><span>项目看板</span>
+              </button>
               <button type="button" aria-current={activeView === "kanban" ? "page" : undefined} className={activeView === "kanban" ? "is-active" : ""} onClick={() => onSwitchView("kanban")}>
                 <LayoutDashboard size={16} />
                 <span>任务看板</span>
@@ -360,7 +364,7 @@ export function Sidebar({
         )}
 
         <div className="sidebar__footer">
-          <button type="button" onClick={onOpenSettings} disabled={!bootstrap}><Settings2 size={16} /><span>偏好设置</span></button>
+          <button type="button" onClick={onOpenSettings}><Settings2 size={16} /><span>偏好设置</span></button>
           <div className="capability-ledger" aria-label="能力状态">
             {visibleCapabilities.map((name) => {
               const health = capabilities?.[name];
