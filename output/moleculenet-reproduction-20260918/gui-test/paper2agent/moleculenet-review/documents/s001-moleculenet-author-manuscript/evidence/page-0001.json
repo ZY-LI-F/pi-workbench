@@ -1,0 +1,521 @@
+{
+  "page": 1,
+  "lines": [
+    {
+      "text": "MoleculeNet: A Benchmark for Molecular",
+      "bbox": [
+        106.99299621582031,
+        121.32422637939453,
+        505.0148010253906,
+        139.6725311279297
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Machine Learning",
+      "bbox": [
+        221.97198486328125,
+        162.54425048828125,
+        390.04083251953125,
+        180.89256286621094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Zhenqin Wu,†,∥Bharath Ramsundar,‡,∥Evan N. Feinberg,¶,⊥Joseph Gomes,†,⊥",
+      "bbox": [
+        75.61198425292969,
+        211.44406127929688,
+        535.8919067382812,
+        226.90516662597656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Caleb Geniesse,¶ Aneesh S. Pappu,‡ Karl Leswing,§ and Vijay Pande∗,†",
+      "bbox": [
+        100.28598022460938,
+        238.63772583007812,
+        511.2113952636719,
+        256.5831604003906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "†Department of Chemistry, Stanford University",
+      "bbox": [
+        184.7449951171875,
+        280.4476013183594,
+        427.27398681640625,
+        291.7333068847656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "‡Department of Computer Science, Stanford University",
+      "bbox": [
+        164.71998596191406,
+        304.3555908203125,
+        447.2989807128906,
+        315.64129638671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "¶Program in Biophysics, Stanford School of Medicine",
+      "bbox": [
+        169.24798583984375,
+        328.2635803222656,
+        442.76043701171875,
+        339.5492858886719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "§Schrodinger Inc.",
+      "bbox": [
+        261.4889831542969,
+        352.17156982421875,
+        350.5242614746094,
+        363.457275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "∥Joint First Authorship",
+      "bbox": [
+        245.4539794921875,
+        376.0785827636719,
+        366.5485534667969,
+        387.3642883300781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "⊥Joint Second Authorship",
+      "bbox": [
+        238.86798095703125,
+        399.986572265625,
+        373.1336975097656,
+        411.27227783203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "E-mail: pande@stanford.edu",
+      "bbox": [
+        237.8999786376953,
+        436.2700500488281,
+        374.0697937011719,
+        446.8862609863281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Abstract",
+      "bbox": [
+        281.99896240234375,
+        478.4030456542969,
+        329.9989929199219,
+        488.09033203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Molecular machine learning has been maturing rapidly over the last few years.",
+      "bbox": [
+        117.62896728515625,
+        507.50604248046875,
+        510.7821044921875,
+        517.193359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Improved methods and the presence of larger datasets have enabled machine learning",
+      "bbox": [
+        101.26496887207031,
+        529.9300537109375,
+        510.759765625,
+        539.6173706054688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "algorithms to make increasingly accurate predictions about molecular properties. How-",
+      "bbox": [
+        101.26496887207031,
+        552.35400390625,
+        510.759765625,
+        562.0413208007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ever, algorithmic progress has been limited due to the lack of a standard benchmark to",
+      "bbox": [
+        101.26496887207031,
+        574.7770385742188,
+        510.77081298828125,
+        584.46435546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "compare the eﬃcacy of proposed methods; most new algorithms are benchmarked on",
+      "bbox": [
+        101.26496887207031,
+        597.2010498046875,
+        510.73809814453125,
+        606.8883666992188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "diﬀerent datasets making it challenging to gauge the quality of proposed methods. This",
+      "bbox": [
+        101.26496887207031,
+        619.625,
+        510.7817077636719,
+        629.3123168945312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "work introduces MoleculeNet, a large scale benchmark for molecular machine learn-",
+      "bbox": [
+        101.26496887207031,
+        642.0490112304688,
+        510.7488098144531,
+        651.736328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ing. MoleculeNet curates multiple public datasets, establishes metrics for evaluation,",
+      "bbox": [
+        101.26496887207031,
+        664.4730224609375,
+        510.75970458984375,
+        674.1603393554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "and oﬀers high quality open-source implementations of multiple previously proposed",
+      "bbox": [
+        101.26496887207031,
+        686.8970336914062,
+        510.7925109863281,
+        696.5843505859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "molecular featurization and learning algorithms (released as part of the DeepChem",
+      "bbox": [
+        101.26496887207031,
+        709.321044921875,
+        510.770751953125,
+        719.0083618164062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "1",
+      "bbox": [
+        303.073974609375,
+        741.5910034179688,
+        308.9320373535156,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv:1703.00564v3  [cs.LG]  26 Oct 2018",
+      "bbox": [
+        10.940000534057617,
+        213.3800048828125,
+        37.619998931884766,
+        560.0
+      ],
+      "direction": [
+        0.0,
+        -1.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 1
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "page-header",
+        "bbox": [
+          18,
+          213,
+          36,
+          560
+        ],
+        "pos": [
+          0,
+          0
+        ]
+      },
+      {
+        "index": 1,
+        "class": "title",
+        "bbox": [
+          106,
+          121,
+          506,
+          182
+        ],
+        "pos": [
+          0,
+          64
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          75,
+          211,
+          536,
+          257
+        ],
+        "pos": [
+          64,
+          379
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          184,
+          280,
+          428,
+          292
+        ],
+        "pos": [
+          379,
+          429
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          164,
+          304,
+          448,
+          316
+        ],
+        "pos": [
+          429,
+          486
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          169,
+          328,
+          443,
+          340
+        ],
+        "pos": [
+          486,
+          542
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          261,
+          352,
+          351,
+          364
+        ],
+        "pos": [
+          542,
+          564
+        ]
+      },
+      {
+        "index": 7,
+        "class": "text",
+        "bbox": [
+          245,
+          376,
+          367,
+          389
+        ],
+        "pos": [
+          564,
+          592
+        ]
+      },
+      {
+        "index": 8,
+        "class": "text",
+        "bbox": [
+          238,
+          400,
+          374,
+          412
+        ],
+        "pos": [
+          592,
+          621
+        ]
+      },
+      {
+        "index": 9,
+        "class": "text",
+        "bbox": [
+          237,
+          436,
+          375,
+          447
+        ],
+        "pos": [
+          621,
+          650
+        ]
+      },
+      {
+        "index": 10,
+        "class": "section-header",
+        "bbox": [
+          281,
+          478,
+          330,
+          487
+        ],
+        "pos": [
+          650,
+          668
+        ]
+      },
+      {
+        "index": 11,
+        "class": "text",
+        "bbox": [
+          101,
+          507,
+          511,
+          720
+        ],
+        "pos": [
+          668,
+          1504
+        ]
+      },
+      {
+        "index": 12,
+        "class": "page-footer",
+        "bbox": [
+          303,
+          741,
+          309,
+          750
+        ],
+        "pos": [
+          1504,
+          1508
+        ]
+      }
+    ],
+    "text": "# **MoleculeNet: A Benchmark for Molecular Machine Learning** \n\nZhenqin Wu,<sup>_†_,</sup><sup>_∥_</sup> Bharath Ramsundar,<sup>_‡_,</sup><sup>_∥_</sup> Evan N. Feinberg,<sup>_¶_,</sup><sup>_⊥_</sup> Joseph Gomes,<sup>_†_,</sup><sup>_⊥_</sup> Caleb Geniesse,<sup>_¶_</sup> Aneesh S. Pappu,<sup>_‡_</sup> Karl Leswing,<sup>_§_</sup> and Vijay Pande<sup>_∗_,</sup><sup>_†_</sup> \n\n_†Department of Chemistry, Stanford University_ \n\n_‡Department of Computer Science, Stanford University_ \n\n_¶Program in Biophysics, Stanford School of Medicine_ \n\n_§Schrodinger Inc._ \n\n_∥Joint First Authorship_ \n\n_⊥Joint Second Authorship_ \n\nE-mail: pande@stanford.edu \n\n## **Abstract** \n\nMolecular machine learning has been maturing rapidly over the last few years. Improved methods and the presence of larger datasets have enabled machine learning algorithms to make increasingly accurate predictions about molecular properties. However, algorithmic progress has been limited due to the lack of a standard benchmark to compare the efficacy of proposed methods; most new algorithms are benchmarked on different datasets making it challenging to gauge the quality of proposed methods. This work introduces MoleculeNet, a large scale benchmark for molecular machine learning. MoleculeNet curates multiple public datasets, establishes metrics for evaluation, and offers high quality open-source implementations of multiple previously proposed molecular featurization and learning algorithms (released as part of the DeepChem \n\n1 \n\n"
+  }
+}

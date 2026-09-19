@@ -1,0 +1,463 @@
+{
+  "page": 26,
+  "lines": [
+    {
+      "text": "four paths from two original features to two updated features) and concatenated to form",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0819702148438,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "new atomic and pair features. After stacking several weave modules, a similar gather layer",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.05810546875,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "combines atomic features together to form molecular features that are fed into task-speciﬁc",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        540.0462646484375,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "layers.",
+      "bbox": [
+        72.0,
+        147.38113403320312,
+        104.26708984375,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Directed Acyclic Graph models",
+      "bbox": [
+        72.0,
+        188.01815795898438,
+        257.150146484375,
+        198.63436889648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Directed Acyclic Graph (DAG) models regard molecules as directed graphs. While chemical",
+      "bbox": [
+        72.0,
+        219.64718627929688,
+        540.0101318359375,
+        230.26339721679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "bonds typically do not have natural directions, one can arbitrarily generate a DAG on a",
+      "bbox": [
+        72.0,
+        243.55520629882812,
+        540.0938720703125,
+        254.17141723632812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "molecule by designating a central atom and then deﬁne directions of all bonds in certain ori-",
+      "bbox": [
+        72.0,
+        267.4632263183594,
+        540.0580444335938,
+        278.0794372558594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "entations towards the atom.14 In the case of small molecules, taking all possible orientations",
+      "bbox": [
+        72.0,
+        287.0322265625,
+        540.034423828125,
+        301.9874267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "is computationally feasible. In other words, for a molecule with na atoms, the model will",
+      "bbox": [
+        71.99998474121094,
+        315.2782287597656,
+        540.0151977539062,
+        327.6884460449219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "generate na DAGs, each centered on a diﬀerent atom.",
+      "bbox": [
+        71.99996948242188,
+        339.18621826171875,
+        347.03338623046875,
+        351.596435546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "In the actual calculations of a graph, a vector of graph features is calculated for each",
+      "bbox": [
+        89.55896759033203,
+        363.0942077636719,
+        540.0668334960938,
+        373.7104187011719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "atom based on its atomic features (reusing the graph convolutions featurizer) and its parents’",
+      "bbox": [
+        71.99996948242188,
+        387.002197265625,
+        540.070068359375,
+        397.618408203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "graph features. As features gradually propagate through bonds, information converges on",
+      "bbox": [
+        71.99996948242188,
+        410.9101867675781,
+        540.0938720703125,
+        421.5263977050781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the central atom. Then a ﬁnal sum of all graphs gives the molecular features, which are fed",
+      "bbox": [
+        71.99996948242188,
+        434.81817626953125,
+        540.0460815429688,
+        445.43438720703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "into classiﬁcation or regression tasks. Note that na graphs are evaluated for each molecule,",
+      "bbox": [
+        71.99996948242188,
+        458.7251892089844,
+        540.0226440429688,
+        471.1354064941406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "which can cause a signiﬁcant increase in required calculations.",
+      "bbox": [
+        71.99996948242188,
+        482.6331787109375,
+        390.6180114746094,
+        493.2493896484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Deep Tensor Neural Networks",
+      "bbox": [
+        71.99996948242188,
+        523.2701416015625,
+        250.27589416503906,
+        533.8864135742188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Deep Tensor Neural Networks (DTNN) are adaptable extensions of the Coulomb Matrix fea-",
+      "bbox": [
+        71.99996948242188,
+        554.8991088867188,
+        540.0462036132812,
+        565.515380859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "turizer.19 The core idea is to directly use nuclear charge (atom number) and the distance ma-",
+      "bbox": [
+        71.99996948242188,
+        574.4681396484375,
+        540.039794921875,
+        589.4234008789062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "trix to predict energetic, electronic or thermodynamic properties of small molecules. To build",
+      "bbox": [
+        71.99996948242188,
+        602.7151489257812,
+        540.0460815429688,
+        613.3314208984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a learnable system, the model ﬁrst maps atom numbers to trainable embeddings(randomly",
+      "bbox": [
+        71.99996948242188,
+        626.6221313476562,
+        540.05810546875,
+        637.2384033203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "initialized) as atomic features. Then each atomic feature ai is updated based on distance in-",
+      "bbox": [
+        71.99996948242188,
+        650.5301513671875,
+        540.0027465820312,
+        662.939453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "formation dij and other atomic features aj. Comparing with Weave models, DTNNs share the",
+      "bbox": [
+        71.99996948242188,
+        674.4381713867188,
+        540.0119018554688,
+        686.847412109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "same idea in terms of updating based on both atomic and pair features, while the diﬀerence",
+      "bbox": [
+        71.99995422363281,
+        698.3461303710938,
+        540.0341186523438,
+        708.96240234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "26",
+      "bbox": [
+        300.14697265625,
+        741.5911865234375,
+        311.86309814453125,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 26
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          74,
+          541,
+          159
+        ],
+        "pos": [
+          0,
+          282
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          187,
+          258,
+          199
+        ],
+        "pos": [
+          282,
+          320
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          71,
+          218,
+          541,
+          350
+        ],
+        "pos": [
+          320,
+          844
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          71,
+          362,
+          541,
+          494
+        ],
+        "pos": [
+          844,
+          1372
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          71,
+          523,
+          251,
+          534
+        ],
+        "pos": [
+          1372,
+          1408
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          71,
+          554,
+          541,
+          710
+        ],
+        "pos": [
+          1408,
+          2060
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2060,
+          2065
+        ]
+      }
+    ],
+    "text": "four paths from two original features to two updated features) and concatenated to form new atomic and pair features. After stacking several weave modules, a similar gather layer combines atomic features together to form molecular features that are fed into task-specific layers. \n\n# **Directed Acyclic Graph models** \n\nDirected Acyclic Graph (DAG) models regard molecules as directed graphs. While chemical bonds typically do not have natural directions, one can arbitrarily generate a DAG on a molecule by designating a central atom and then define directions of all bonds in certain orientations towards the atom.<sup>14</sup> In the case of small molecules, taking all possible orientations is computationally feasible. In other words, for a molecule with _na_ atoms, the model will generate _na_ DAGs, each centered on a different atom. \n\nIn the actual calculations of a graph, a vector of graph features is calculated for each atom based on its atomic features (reusing the graph convolutions featurizer) and its parents’ graph features. As features gradually propagate through bonds, information converges on the central atom. Then a final sum of all graphs gives the molecular features, which are fed into classification or regression tasks. Note that _na_ graphs are evaluated for each molecule, which can cause a significant increase in required calculations. \n\n# **Deep Tensor Neural Networks** \n\nDeep Tensor Neural Networks (DTNN) are adaptable extensions of the Coulomb Matrix featurizer.<sup>19</sup> The core idea is to directly use nuclear charge (atom number) and the distance matrix to predict energetic, electronic or thermodynamic properties of small molecules. To build a learnable system, the model first maps atom numbers to trainable embeddings(randomly initialized) as atomic features. Then each atomic feature _ai_ is updated based on distance information _dij_ and other atomic features _aj_ . Comparing with Weave models, DTNNs share the same idea in terms of updating based on both atomic and pair features, while the difference \n\n26 \n\n"
+  }
+}

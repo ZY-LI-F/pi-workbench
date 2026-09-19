@@ -1,0 +1,114 @@
+{
+  "page": 8,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0008.png",
+  "reviewed": true,
+  "review_notes": "Table 1 visually checked, including FreeSolv 642; complex table retained as image. QM7 paragraph rejoined around floating table. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0008-b000",
+      "kind": "caption",
+      "bbox": [
+        72,
+        73,
+        541,
+        85
+      ],
+      "markdown": "Table 1: Dataset Details: number of compounds and tasks, recommended splits and metrics",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0008-b001",
+      "kind": "table",
+      "bbox": [
+        72,
+        92,
+        563,
+        227
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 1",
+      "asset_name": "table-1",
+      "rows": null
+    },
+    {
+      "id": "p0008-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        247,
+        541,
+        403
+      ],
+      "markdown": "atoms (C, N, O, S). The 3D Cartesian coordinates of the most stable conformation and electronic properties (atomization energy, HOMO/LUMO eigenvalues, etc.) of each molecule were determined using _ab-initio_ density functional theory (PBE0/tier2 basis set).<sup>17,18</sup> Learning methods benchmarked on QM7/QM7b are responsible for predicting these electronic properties given stable conformational coordinates. For the purpose of more stable performances as well as better comparison, we recommend stratified splitting(introduced in the next subsection) for QM7.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0008-b003",
+      "kind": "heading",
+      "bbox": [
+        72,
+        431,
+        102,
+        443
+      ],
+      "markdown": "### QM8",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0008-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        463,
+        541,
+        594
+      ],
+      "markdown": "The QM8 dataset comes from a recent study on modeling quantum mechanical calculations of electronic spectra and excited state energy of small molecules.<sup>42</sup> Multiple methods, including time-dependent density functional theories (TDDFT) and second-order approximate coupled-cluster (CC2), are applied to a collection of molecules that include up to eight heavy atoms (also a subset of the GDB-17 database<sup>43</sup> ). In total, four excited state properties are calculated by three different methods on 22 thousand samples.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0008-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        623,
+        102,
+        635
+      ],
+      "markdown": "### QM9",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0008-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        655,
+        541,
+        714
+      ],
+      "markdown": "QM9 is a comprehensive dataset that provides geometric, energetic, electronic and thermodynamic properties for a subset of GDB-17 database,<sup>43</sup> comprising 134 thousand stable organic molecules with up to nine heavy atoms.<sup>44</sup> All molecules are modeled using density",
+      "source_class": "text"
+    },
+    {
+      "id": "p0008-b007",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        751
+      ],
+      "markdown": "8",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Table 1 visually checked, including FreeSolv 642; complex table retained as image. QM7 paragraph rejoined around floating table. Reviewed sequentially by the main agent; no independent agent verification."
+}

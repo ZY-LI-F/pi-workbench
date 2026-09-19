@@ -61,6 +61,7 @@ import { Inspector, type InspectorTab } from "./components/Inspector";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { PiVersionNotice } from "./components/PiVersionSetting";
 import { usePiVersion } from "./hooks/use-pi-version";
+import { useSolMode } from "./hooks/use-sol-mode";
 import { Sidebar, type WorkspaceView } from "./components/Sidebar";
 import { TerminalDrawer } from "./components/TerminalDrawer";
 import { TextPromptDialog } from "./components/TextPromptDialog";
@@ -157,6 +158,7 @@ export function App({ api }: AppProps) {
   const capabilities = useCapabilities(api);
   const executionBackends = useExecutionBackends(api);
   const piVersion = usePiVersion(api);
+  const solMode = useSolMode(api);
   const companionGateway = useCompanionGateway(api);
   const { state } = controller;
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
@@ -267,7 +269,7 @@ export function App({ api }: AppProps) {
     setFilePreview(inspection);
     if (sessionViews.key) sessionViews.views.selectFile(sessionViews.key, inspection.canonicalPath);
     setInspectorTab("files");
-    setInspectorWidth((current) => Math.max(current, constrainInspectorWidth(FILE_INSPECTOR_WIDTH, window.innerWidth)));
+    if (!inspectorOpen || inspectorTab !== "files") setInspectorWidth((current) => Math.max(current, constrainInspectorWidth(FILE_INSPECTOR_WIDTH, window.innerWidth)));
     setInspectorOpen(true);
   };
 
@@ -942,6 +944,9 @@ export function App({ api }: AppProps) {
       {settingsOpen && (
         <SettingsDialog
           piVersion={{ state: piVersion.state, onCheck: () => void piVersion.check(), onSync: () => void piVersion.sync() }}
+          solMode={{ state: solMode.state, models: bootstrap?.models ?? [],
+            runtimeBusy: state.streaming || state.compacting || state.queue.steering.length > 0 || state.queue.followUp.length > 0,
+            onApply: (config) => void solMode.apply(config, controller.refresh) }}
           bootstrap={bootstrap}
           preferences={preferences}
           customArtwork={skinArtwork.bySkin}

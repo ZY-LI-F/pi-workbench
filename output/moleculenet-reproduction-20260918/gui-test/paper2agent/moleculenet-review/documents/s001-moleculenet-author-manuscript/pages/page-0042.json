@@ -1,0 +1,63 @@
+{
+  "page": 42,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0042.png",
+  "reviewed": true,
+  "review_notes": "Conclusion continuation and limitations on small/imbalanced/scaffold data. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0042-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        461,
+        87
+      ],
+      "markdown": "we can apply these primitives to the wide range of datasets in MoleculeNet.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0042-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        99,
+        541,
+        565
+      ],
+      "markdown": "Broadly, our results show that graph-based models outperformed other methods by comfortable margins on most datasets(11/17, best performances comparison in Table 3), revealing a clear advantage of learnable featurizations. However, this effect has some caveats: Graph-based methods are not robust enough on complex tasks under data scarcity; on heavily imbalanced classification datasets, conventional methods such as kernel SVM outperform learnable featurizations with respect to recall of positives. Furthermore, for the PDBBind and quantum mechanics datasets, the use of appropriate featurizations which contain pertinent information is very significant. Comparing fully connected neural networks, random forests, and other comparatively simple algorithms, we claim that the PDBbind and QM7 results emphasize the necessity of using specialized features for different tasks. DTNN and MPNN which use distance information perform better on QM datasets than simple graph convolutions. While out of the scope of this paper, we note similarly that customized deep learning algorithms<sup>12</sup> could in principle supplant the need for hand-derived, specialized features in such biophysical settings. On the FreeSolv dataset, comparison between conventional _ab-initio_ calculations and graph-based models for the prediction of solvation energies shows that data-driven methods can outperform physical algorithms with moderate amounts of data. These results suggest that data-driven physical chemistry will become increasingly important as methods mature. Results for biophysical and physiological datasets are currently weaker than for other datasets, suggesting that better featurizations or more data may be required for data-driven physiology to become broadly useful.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0042-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        577,
+        541,
+        709
+      ],
+      "markdown": "By providing a uniform platform for comparison and evaluation, we hope MoleculeNet will facilitate the development of new methods for both chemistry and machine learning. In future work, we hope to extend MoleculeNet to cover a broader range of molecular properties than considered here. For example, 3D protein structure prediction, or DNA topological modeling would benefit from the presence of strong benchmarks to encourage algorithmic development. We hope that the open-source design of MoleculeNet will encourage researchers",
+      "source_class": "text"
+    },
+    {
+      "id": "p0042-b003",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "42",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Conclusion continuation and limitations on small/imbalanced/scaffold data. Reviewed sequentially by the main agent; no independent agent verification."
+}

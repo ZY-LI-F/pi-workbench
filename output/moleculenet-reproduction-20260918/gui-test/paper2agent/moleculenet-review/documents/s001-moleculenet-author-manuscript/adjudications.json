@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {"page":20,"check":"number_differences","fingerprint":"ec7bee780be8ef1130d517c44945fc8ddd134179d1973a3f783b54d7696e42d6","reason":"Full-resolution page 20 shows model name ANI-1 immediately followed by superscript reference 71. Output preserves ANI-1<sup>71</sup>; native parser concatenates -1 and 71 into -171. Independent parser reports no difference. No scientific value changed."},
+    {"page":36,"check":"independent_parser_number_differences","fingerprint":"44446fd2b8c12c227a1e614a1fffb501cbfe1cc38a21a603e95c582ff067e58d","reason":"Full-resolution page 36 first paragraph visibly reads +/- 1.5 kcal/mol. Output preserves decimal 1.5; independent PDF text parser splits decimal into tokens 1 and 5. Native parser agrees. Negative endpoint -25.5 was separately corrected from actual source and now passes native numeric check."},
+    {"page":62,"check":"number_differences","fingerprint":"0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94","reason":"Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27. Tokenizer interprets the rejoined hyphen as a numeric minus sign; this is a citation date, not a changed observation."},
+    {"page":62,"check":"independent_parser_number_differences","fingerprint":"0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94","reason":"Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27; independent tokenizer treats the date separator as numeric sign. All date digits are retained."},
+    {"page":65,"check":"number_differences","fingerprint":"e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe","reason":"Full page 65 shows the access date for reference 85 wrapped 2017-10- then 18. Output rejoins 2017-10-18; parser token 18 becomes -18 solely due to the date hyphen. No scientific number or date changed."},
+    {"page":65,"check":"independent_parser_number_differences","fingerprint":"e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe","reason":"Full page 65 shows reference 85 access date 2017-10-18 across a line break. Rejoined output retains exact date; independent tokenizer changes the last date-token sign, not content."}
+  ]
+}

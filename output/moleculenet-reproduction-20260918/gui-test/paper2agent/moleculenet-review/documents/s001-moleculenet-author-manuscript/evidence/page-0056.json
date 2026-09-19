@@ -1,0 +1,510 @@
+{
+  "page": 56,
+  "lines": [
+    {
+      "text": "previous papers. All model validation scripts and trained models can be found in DeepChem.",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0340576171875,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Note that performances of our models might be diﬀerent from values in the benchmark",
+      "bbox": [
+        89.55899810791016,
+        99.56613159179688,
+        540.0427856445312,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tables due to no limitation imposed on running time(more epochs), diﬀerent random splitting",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        540.05810546875,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "patterns, etc.",
+      "bbox": [
+        72.0,
+        147.38113403320312,
+        139.7023162841797,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolutional models",
+      "bbox": [
+        72.0,
+        188.01815795898438,
+        241.17799377441406,
+        198.63436889648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on ESOL dataset, note that we provide performances based on a",
+      "bbox": [
+        72.0,
+        219.64718627929688,
+        540.0580444335938,
+        230.26339721679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "80/10/10 random train, valid, test splitting, while the original paper reported performance",
+      "bbox": [
+        72.0,
+        243.55520629882812,
+        540.105712890625,
+        254.17141723632812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "under cross validation.22",
+      "bbox": [
+        72.0,
+        265.889892578125,
+        197.02423095703125,
+        278.0794372558594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "RMSE in logS(log solubility in mol per litre):",
+      "bbox": [
+        72.0,
+        315.2782287597656,
+        304.58837890625,
+        325.8944396972656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.52 ± 0.07",
+      "bbox": [
+        89.43399810791016,
+        348.479736328125,
+        240.1650848388672,
+        359.76544189453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 0.39 for valid subset, 0.31 for test subset",
+      "bbox": [
+        89.43399047851562,
+        382.3497314453125,
+        410.6681213378906,
+        393.63543701171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Directed Acyclic Graph models",
+      "bbox": [
+        72.00001525878906,
+        423.6562194824219,
+        257.1501770019531,
+        434.2724304199219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on ESOL dataset with the same splitting pattern, the original paper",
+      "bbox": [
+        72.00001525878906,
+        455.28521728515625,
+        540.0699462890625,
+        465.90142822265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "reported performance under 10-fold cross validation.14",
+      "bbox": [
+        72.00001525878906,
+        477.619873046875,
+        349.85223388671875,
+        489.8094177246094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "RMSE in logS(log solubility in mol per litre):",
+      "bbox": [
+        72.0,
+        527.0081787109375,
+        304.58837890625,
+        537.6244506835938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.58 ± 0.07",
+      "bbox": [
+        89.43399810791016,
+        560.209716796875,
+        240.1650848388672,
+        571.4954833984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 0.68 for valid subset, 0.58 for test subset",
+      "bbox": [
+        89.43399047851562,
+        594.0797119140625,
+        410.6681213378906,
+        605.365478515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Weave models",
+      "bbox": [
+        72.00001525878906,
+        635.3861694335938,
+        155.38751220703125,
+        646.00244140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on Tox21 dataset, using 80/10/10 random train, valid, test splitting.",
+      "bbox": [
+        72.00001525878906,
+        667.0151977539062,
+        540.1179809570312,
+        677.6314697265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The original paper reported performance as median score of 5-fold cross validation.23",
+      "bbox": [
+        72.00001525878906,
+        689.349853515625,
+        508.01324462890625,
+        701.5394287109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "56",
+      "bbox": [
+        300.14703369140625,
+        741.5911865234375,
+        311.8631591796875,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 56
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          87
+        ],
+        "pos": [
+          0,
+          93
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          99,
+          541,
+          158
+        ],
+        "pos": [
+          93,
+          288
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          187,
+          242,
+          199
+        ],
+        "pos": [
+          288,
+          323
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          219,
+          541,
+          276
+        ],
+        "pos": [
+          323,
+          538
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          314,
+          305,
+          327
+        ],
+        "pos": [
+          538,
+          587
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          89,
+          349,
+          241,
+          360
+        ],
+        "pos": [
+          587,
+          630
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          89,
+          382,
+          411,
+          394
+        ],
+        "pos": [
+          630,
+          704
+        ]
+      },
+      {
+        "index": 7,
+        "class": "section-header",
+        "bbox": [
+          72,
+          423,
+          258,
+          435
+        ],
+        "pos": [
+          704,
+          742
+        ]
+      },
+      {
+        "index": 8,
+        "class": "text",
+        "bbox": [
+          72,
+          455,
+          541,
+          490
+        ],
+        "pos": [
+          742,
+          900
+        ]
+      },
+      {
+        "index": 9,
+        "class": "text",
+        "bbox": [
+          72,
+          526,
+          305,
+          539
+        ],
+        "pos": [
+          900,
+          949
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          89,
+          560,
+          241,
+          572
+        ],
+        "pos": [
+          949,
+          992
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          89,
+          594,
+          411,
+          606
+        ],
+        "pos": [
+          992,
+          1066
+        ]
+      },
+      {
+        "index": 12,
+        "class": "section-header",
+        "bbox": [
+          72,
+          635,
+          156,
+          644
+        ],
+        "pos": [
+          1066,
+          1087
+        ]
+      },
+      {
+        "index": 13,
+        "class": "text",
+        "bbox": [
+          72,
+          666,
+          541,
+          702
+        ],
+        "pos": [
+          1087,
+          1278
+        ]
+      },
+      {
+        "index": 14,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1278,
+          1283
+        ]
+      }
+    ],
+    "text": "previous papers. All model validation scripts and trained models can be found in DeepChem. \n\nNote that performances of our models might be different from values in the benchmark tables due to no limitation imposed on running time(more epochs), different random splitting patterns, etc. \n\n# **Graph Convolutional models** \n\nWe evaluate the model on ESOL dataset, note that we provide performances based on a 80/10/10 random train, valid, test splitting, while the original paper reported performance under cross validation.<sup>22</sup> \n\nRMSE in logS(log solubility in mol per litre): \n\n- Original result: 0 _._ 52 _±_ 0 _._ 07 \n\n- Reimplementation: 0 _._ 39 for valid subset, 0 _._ 31 for test subset \n\n# **Directed Acyclic Graph models** \n\nWe evaluate the model on ESOL dataset with the same splitting pattern, the original paper reported performance under 10-fold cross validation.<sup>14</sup> \n\nRMSE in logS(log solubility in mol per litre): \n\n- Original result: 0 _._ 58 _±_ 0 _._ 07 \n\n- Reimplementation: 0 _._ 68 for valid subset, 0 _._ 58 for test subset \n\n# **Weave models** \n\nWe evaluate the model on Tox21 dataset, using 80/10/10 random train, valid, test splitting. The original paper reported performance as median score of 5-fold cross validation.<sup>23</sup> \n\n56 \n\n"
+  }
+}

@@ -1,0 +1,559 @@
+{
+  "page": 59,
+  "lines": [
+    {
+      "text": "(10) Ramsundar, B.; Kearnes, S.; Riley, P.; Webster, D.; Konerding, D.; Pande, V. arXiv",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0078735351562,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "preprint arXiv:1502.02072 2015,",
+      "bbox": [
+        98.66299438476562,
+        99.56613159179688,
+        268.7127990722656,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(11) Unterthiner, T.; Mayr, A.; ¨unter Klambauer, G.; Steijaert, M.; Wenger, J.; Ceule-",
+      "bbox": [
+        72.0,
+        133.43612670898438,
+        540.02197265625,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mans, H.; Hochreiter, S. Deep Learning as an Opportunity in Virtual Screening. Deep",
+      "bbox": [
+        98.66300201416016,
+        157.34414672851562,
+        540.0490112304688,
+        167.96035766601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Learning and Representation Learning Workshop (NIPS 2014). 2014.",
+      "bbox": [
+        98.66300201416016,
+        181.25216674804688,
+        452.6447448730469,
+        191.86837768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(12) Wallach, I.; Dzamba, M.; Heifets, A. arXiv preprint arXiv:1510.02855 2015,",
+      "bbox": [
+        72.0,
+        215.12216186523438,
+        492.2148132324219,
+        225.73837280273438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(13) Delaney, J. S. Journal of Chemical Information and Modeling 2004, 44, 1000–1005.",
+      "bbox": [
+        72.0,
+        248.99313354492188,
+        528.2825317382812,
+        259.6093444824219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(14) Lusci, A.; Pollastri, G.; Baldi, P. Journal of chemical information and modeling 2013,",
+      "bbox": [
+        72.0,
+        282.8631286621094,
+        540.0008544921875,
+        293.4793395996094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "53, 1563–1575.",
+      "bbox": [
+        98.66302490234375,
+        306.7711181640625,
+        173.7424774169922,
+        317.3873291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(15) Mobley, D. L.; Wymer, K. L.; Lim, N. M.; Guthrie, J. P. Journal of Computer-Aided",
+      "bbox": [
+        72.00003051757812,
+        340.6421203613281,
+        540.0084228515625,
+        351.2583312988281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Molecular Design 2014, 28, 135–150.",
+      "bbox": [
+        98.66302490234375,
+        364.54913330078125,
+        289.3774719238281,
+        375.16534423828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(16) Mobley, D. L.; Guthrie, J. P. Journal of Computer-Aided Molecular Design 2014, 28,",
+      "bbox": [
+        72.00003051757812,
+        398.4201354980469,
+        540.0008544921875,
+        409.0363464355469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "711–720.",
+      "bbox": [
+        98.66302490234375,
+        422.328125,
+        142.92117309570312,
+        432.9443359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(17) Rupp, M.; Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. Physical Review Letters",
+      "bbox": [
+        72.0000228881836,
+        456.1981201171875,
+        539.9910888671875,
+        466.8143310546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2012, 108, 058301.",
+      "bbox": [
+        98.66302490234375,
+        480.1061096191406,
+        196.19834899902344,
+        490.7223205566406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(18) Montavon, G.;",
+      "bbox": [
+        72.00003051757812,
+        513.9771118164062,
+        178.0785369873047,
+        524.5933837890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Rupp, M.;",
+      "bbox": [
+        190.23696899414062,
+        513.9771118164062,
+        248.2555694580078,
+        524.5933837890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Gobre, V.;",
+      "bbox": [
+        260.41400146484375,
+        513.9771118164062,
+        319.6400146484375,
+        524.5933837890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Vazquez-Mayagoitia, A.;",
+      "bbox": [
+        331.7984619140625,
+        513.9771118164062,
+        462.181884765625,
+        524.5933837890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Hansen, K.;",
+      "bbox": [
+        474.34033203125,
+        513.9771118164062,
+        540.046142578125,
+        524.5933837890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. New Journal of Physics 2013,",
+      "bbox": [
+        98.66303253173828,
+        537.8840942382812,
+        540.0008544921875,
+        548.5003662109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "15, 095003.",
+      "bbox": [
+        98.66302490234375,
+        561.7920532226562,
+        156.1683349609375,
+        572.4083251953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(19) Sch¨utt, K. T.; Arbabzadah, F.; Chmiela, S.; M¨uller, K. R.; Tkatchenko, A. arXiv",
+      "bbox": [
+        72.00003051757812,
+        595.6630859375,
+        540.0078735351562,
+        606.2793579101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "preprint arXiv:1609.08259 2016,",
+      "bbox": [
+        98.66302490234375,
+        619.570068359375,
+        268.71282958984375,
+        630.1863403320312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(20) McGibbon, R. T.; Taube, A. G.; Donchev, A. G.; Siva, K.; Hern´andez, F.; Hargus, C.;",
+      "bbox": [
+        72.00003051757812,
+        653.4411010742188,
+        540.0220336914062,
+        664.057373046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Law, K.-H.; Klepeis, J. L.; Shaw, D. E. The Journal of Chemical Physics 2017, 147,",
+      "bbox": [
+        98.66303253173828,
+        677.3490600585938,
+        540.0007934570312,
+        687.96533203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "161725.",
+      "bbox": [
+        98.6629638671875,
+        701.257080078125,
+        137.0630645751953,
+        711.8733520507812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "59",
+      "bbox": [
+        300.14697265625,
+        741.5911254882812,
+        311.86309814453125,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 59
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          131
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          72,
+          132,
+          541,
+          193
+        ],
+        "pos": [
+          131,
+          370
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          72,
+          214,
+          493,
+          227
+        ],
+        "pos": [
+          370,
+          461
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          72,
+          248,
+          529,
+          261
+        ],
+        "pos": [
+          461,
+          561
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          72,
+          282,
+          541,
+          318
+        ],
+        "pos": [
+          561,
+          682
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          72,
+          339,
+          541,
+          376
+        ],
+        "pos": [
+          682,
+          819
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          72,
+          397,
+          541,
+          431
+        ],
+        "pos": [
+          819,
+          930
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          72,
+          455,
+          540,
+          491
+        ],
+        "pos": [
+          930,
+          1055
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          72,
+          513,
+          541,
+          573
+        ],
+        "pos": [
+          1055,
+          1239
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          72,
+          594,
+          541,
+          631
+        ],
+        "pos": [
+          1239,
+          1369
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          72,
+          652,
+          541,
+          710
+        ],
+        "pos": [
+          1369,
+          1564
+        ]
+      },
+      {
+        "index": 11,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1564,
+          1569
+        ]
+      }
+    ],
+    "text": "- (10) Ramsundar, B.; Kearnes, S.; Riley, P.; Webster, D.; Konerding, D.; Pande, V. _arXiv preprint arXiv:1502.02072_ **2015** , \n\n- (11) Unterthiner, T.; Mayr, A.; ¨unter Klambauer, G.; Steijaert, M.; Wenger, J.; Ceulemans, H.; Hochreiter, S. Deep Learning as an Opportunity in Virtual Screening. Deep Learning and Representation Learning Workshop (NIPS 2014). 2014. \n\n- (12) Wallach, I.; Dzamba, M.; Heifets, A. _arXiv preprint arXiv:1510.02855_ **2015** , \n\n- (13) Delaney, J. S. _Journal of Chemical Information and Modeling_ **2004** , _44_ , 1000–1005. \n\n- (14) Lusci, A.; Pollastri, G.; Baldi, P. _Journal of chemical information and modeling_ **2013** , _53_ , 1563–1575. \n\n- (15) Mobley, D. L.; Wymer, K. L.; Lim, N. M.; Guthrie, J. P. _Journal of Computer-Aided Molecular Design_ **2014** , _28_ , 135–150. \n\n- (16) Mobley, D. L.; Guthrie, J. P. _Journal of Computer-Aided Molecular Design_ **2014** , _28_ , 711–720. \n\n- (17) Rupp, M.; Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. _Physical Review Letters_ **2012** , _108_ , 058301. \n\n- (18) Montavon, G.; Rupp, M.; Gobre, V.; Vazquez-Mayagoitia, A.; Hansen, K.; Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. _New Journal of Physics_ **2013** , _15_ , 095003. \n\n- (19) Sch¨utt, K. T.; Arbabzadah, F.; Chmiela, S.; M¨uller, K. R.; Tkatchenko, A. _arXiv preprint arXiv:1609.08259_ **2016** , \n\n- (20) McGibbon, R. T.; Taube, A. G.; Donchev, A. G.; Siva, K.; Hern´andez, F.; Hargus, C.; Law, K.-H.; Klepeis, J. L.; Shaw, D. E. _The Journal of Chemical Physics_ **2017** , _147_ , 161725. \n\n59 \n\n"
+  }
+}

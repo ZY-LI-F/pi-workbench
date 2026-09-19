@@ -1,0 +1,195 @@
+{
+  "page": 56,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0056.png",
+  "reviewed": true,
+  "review_notes": "Model validation differences from benchmark and original cited models inspected; decimal emphasis repaired against source. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0056-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        87
+      ],
+      "markdown": "previous papers. All model validation scripts and trained models can be found in DeepChem.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0056-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        99,
+        541,
+        158
+      ],
+      "markdown": "Note that performances of our models might be different from values in the benchmark tables due to no limitation imposed on running time(more epochs), different random splitting patterns, etc.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        187,
+        242,
+        199
+      ],
+      "markdown": "### Graph Convolutional models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0056-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        219,
+        541,
+        276
+      ],
+      "markdown": "We evaluate the model on ESOL dataset, note that we provide performances based on a 80/10/10 random train, valid, test splitting, while the original paper reported performance under cross validation.<sup>22</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        314,
+        305,
+        327
+      ],
+      "markdown": "RMSE in logS(log solubility in mol per litre):",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b005",
+      "kind": "text",
+      "bbox": [
+        89,
+        349,
+        241,
+        360
+      ],
+      "markdown": "- Original result: 0.52 ± 0.07",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0056-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        382,
+        411,
+        394
+      ],
+      "markdown": "- Reimplementation: 0.39 for valid subset, 0.31 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0056-b007",
+      "kind": "heading",
+      "bbox": [
+        72,
+        423,
+        258,
+        435
+      ],
+      "markdown": "### Directed Acyclic Graph models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0056-b008",
+      "kind": "text",
+      "bbox": [
+        72,
+        455,
+        541,
+        490
+      ],
+      "markdown": "We evaluate the model on ESOL dataset with the same splitting pattern, the original paper reported performance under 10-fold cross validation.<sup>14</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b009",
+      "kind": "text",
+      "bbox": [
+        72,
+        526,
+        305,
+        539
+      ],
+      "markdown": "RMSE in logS(log solubility in mol per litre):",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b010",
+      "kind": "text",
+      "bbox": [
+        89,
+        560,
+        241,
+        572
+      ],
+      "markdown": "- Original result: 0.58 ± 0.07",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0056-b011",
+      "kind": "text",
+      "bbox": [
+        89,
+        594,
+        411,
+        606
+      ],
+      "markdown": "- Reimplementation: 0.68 for valid subset, 0.58 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0056-b012",
+      "kind": "heading",
+      "bbox": [
+        72,
+        635,
+        156,
+        644
+      ],
+      "markdown": "### Weave models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0056-b013",
+      "kind": "text",
+      "bbox": [
+        72,
+        666,
+        541,
+        702
+      ],
+      "markdown": "We evaluate the model on Tox21 dataset, using 80/10/10 random train, valid, test splitting. The original paper reported performance as median score of 5-fold cross validation.<sup>23</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0056-b014",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "56",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Model validation differences from benchmark and original cited models inspected; decimal emphasis repaired against source. Reviewed sequentially by the main agent; no independent agent verification."
+}

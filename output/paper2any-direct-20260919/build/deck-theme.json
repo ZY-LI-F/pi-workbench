@@ -1,0 +1,19 @@
+{
+  "palette": {
+    "bg": "#F7F8F4",
+    "panel": "#FFFFFF",
+    "primary": "#176B53",
+    "secondary": "#296B63",
+    "accent": "#A64D27",
+    "text": "#18362F",
+    "muted": "#566C63"
+  },
+  "typography": {
+    "titleFontStack": "Noto Sans SC",
+    "bodyFontStack": "Noto Sans SC",
+    "eyebrowSize": 24,
+    "titleSize": 62,
+    "summarySize": 40,
+    "bodySize": 36
+  }
+}

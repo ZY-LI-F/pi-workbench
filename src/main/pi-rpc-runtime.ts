@@ -48,6 +48,8 @@ export interface PiRuntimeStartOptions {
   readonly disableContextFiles?: boolean;
   /** Explicit trusted extensions; these still load when ambient extension discovery is disabled. */
   readonly extensions?: readonly string[];
+  /** Main-process-owned extension configuration, not renderer-provided environment. */
+  readonly extensionEnvironment?: Readonly<Record<string, string>>;
 }
 
 interface PendingRequest {
@@ -63,6 +65,7 @@ interface ProcessContext {
   readonly generation: string;
   readonly cwd: string;
   readonly pending: Map<string, PendingRequest>;
+  readonly solMode: boolean;
   readonly stdoutDecoder: TextDecoder;
   readonly stderrDecoder: TextDecoder;
   stdoutBuffer: string;
@@ -124,7 +127,7 @@ export class PiRpcRuntime {
   }
 
   get running(): boolean {
-    return this.#context !== null && !this.#context.retired && this.#context.child.exitCode === null;
+    return this.#context !== null && !this.#context.retired && this.#context.child.exitCode === null && !this.#context.child.signalCode;
   }
 
   get scope(): RuntimeScope | undefined {
@@ -186,12 +189,12 @@ export class PiRpcRuntime {
     const processMarker = randomUUID();
     const child = this.#dependencies.spawnProcess(this.#dependencies.executablePath, args, {
       cwd: options.cwd,
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", STELLA_PI_PROCESS_SCOPE: processMarker },
+      env: { ...process.env, STELLA_SOL_MODE: undefined, ...options.extensionEnvironment, ELECTRON_RUN_AS_NODE: "1", STELLA_PI_PROCESS_SCOPE: processMarker },
       windowsHide: true,
       ...(this.#dependencies.launcherPath ? { stdio: ["pipe", "pipe", "pipe", "ipc"] as ("pipe" | "ipc")[] } : {}),
     });
     const context: ProcessContext = {
-      child, generation: randomUUID(), cwd: options.cwd, pending: new Map(),
+      child, generation: randomUUID(), cwd: options.cwd, pending: new Map(), solMode: Boolean(options.extensionEnvironment?.STELLA_SOL_MODE),
       stdoutDecoder: new TextDecoder("utf-8", { fatal: true }), stderrDecoder: new TextDecoder("utf-8", { fatal: true }),
       stdoutBuffer: "", stderrBuffer: "", retired: false, spawned: false, sequence: 0, scope: 0,
       sessionId: options.sessionId, sessionFile: options.sessionPath,
@@ -202,6 +205,11 @@ export class PiRpcRuntime {
     child.stderr.on("data", (chunk: Buffer) => this.#decode(context, "stderr", chunk));
     child.stdout.once("end", () => this.#decode(context, "stdout"));
     child.stderr.once("end", () => this.#decode(context, "stderr"));
+    // Writable emits 'error' even when write's callback observes EPIPE. A state
+    // refresh racing a crashed child must retire transport, not crash Electron.
+    child.stdin.on("error", (error) => {
+      if (!context.retired) this.#protocolFailure(context, `Pi RPC 输入管道已断开: ${error.message}`, "");
+    });
     child.once("error", (error) => {
       if (context.retired) return;
       this.#protocolFailure(context, `Pi RPC 进程错误: ${error.message}`, "");
@@ -260,12 +268,12 @@ export class PiRpcRuntime {
     this.#rejectPending(context, new Error("Pi RPC 已停止；未返回响应的命令执行结果未知"));
     if (!context.spawned) return;
     await new Promise<void>((resolve) => {
-      if (child.exitCode !== null) {
+      if (child.exitCode !== null || child.signalCode) {
         resolve();
         return;
       }
       const timeout = setTimeout(() => {
-        if (child.exitCode === null) child.kill("SIGKILL");
+        if (child.exitCode === null && !child.signalCode) child.kill("SIGKILL");
       }, 2500);
       timeout.unref();
       child.once("exit", () => { clearTimeout(timeout); resolve(); });
@@ -291,6 +299,11 @@ export class PiRpcRuntime {
   send(command: PiCommand, requestId?: string): Promise<PiResponse> {
     const context = this.#context;
     if (!context) throw new Error("Pi RPC 未运行");
+    if (command.type === "abort" && context.solMode && context.child.connected) {
+      context.child.send({ type: "stella:sol-cancel" }, (error) => {
+        if (error) this.#signal(context, { type: "runtime_stderr", message: `Sol 停止通知失败：${error.message}` });
+      });
+    }
     if ((command.type === "abort" || command.type === "abort_bash") && context.supervisor) {
       if (context.abortPromise) return context.abortPromise;
       context.abortPromise = (async () => {
@@ -312,7 +325,7 @@ export class PiRpcRuntime {
 
   #send(context: ProcessContext, command: PiCommand, requestId?: string): Promise<PiResponse> {
     const { child } = context;
-    if (context.retired || child.exitCode !== null || !child.stdin.writable) throw new Error("Pi RPC 未运行");
+    if (context.retired || child.exitCode !== null || child.signalCode || !child.stdin.writable) throw new Error("Pi RPC 未运行");
     const id = requestId ?? randomUUID();
     if (context.pending.has(id)) throw new PiCommandRejectedError(`Pi RPC 已存在请求 ID：${id}`);
     const record = { ...command, id };
@@ -348,7 +361,7 @@ export class PiRpcRuntime {
 
   async respondToExtension(response: PiExtensionResponse): Promise<void> {
     const child = this.#context?.child;
-    if (!child || child.exitCode !== null || !child.stdin.writable) {
+    if (!child || child.exitCode !== null || child.signalCode || !child.stdin.writable) {
       throw new Error("Pi RPC 未运行，无法回复扩展请求");
     }
     await new Promise<void>((resolve, reject) => {

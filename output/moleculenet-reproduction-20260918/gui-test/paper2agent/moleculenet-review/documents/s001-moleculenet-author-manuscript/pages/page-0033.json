@@ -1,0 +1,52 @@
+{
+  "page": 33,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0033.png",
+  "reviewed": true,
+  "review_notes": "Figure 10 learning curves; caption states five runs, not the benchmark's three. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0033-b000",
+      "kind": "figure",
+      "bbox": [
+        113,
+        221,
+        499,
+        518
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 33 (1)",
+      "asset_name": "figure-p0033-000"
+    },
+    {
+      "id": "p0033-b001",
+      "kind": "caption",
+      "bbox": [
+        72,
+        524,
+        541,
+        562
+      ],
+      "markdown": "Figure 10: Out-of-sample performances with different training set sizes on Tox21. Each datapoint is the average of 5 independent runs, with standard deviations shown as error bars.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0033-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "33",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 10 learning curves; caption states five runs, not the benchmark's three. Reviewed sequentially by the main agent; no independent agent verification."
+}

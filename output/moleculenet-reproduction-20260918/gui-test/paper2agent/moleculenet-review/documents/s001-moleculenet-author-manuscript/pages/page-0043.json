@@ -1,0 +1,159 @@
+{
+  "page": 43,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0043.png",
+  "reviewed": true,
+  "review_notes": "Conclusion ending, acknowledgements and Appendix; GP optimization max 20 iterations and original hardware limits inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0043-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        135
+      ],
+      "markdown": "to contribute implementations of other novel algorithms to the benchmark suite. In time, we hope to see MoleculeNet grow into a comprehensive resource for the molecular machine learning community.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0043-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        174,
+        226,
+        190
+      ],
+      "markdown": "## Acknowledgement",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0043-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        213,
+        541,
+        296
+      ],
+      "markdown": "We would like to thank the Stanford Computing Resources for providing us with access to the Sherlock and Xstream GPU nodes. Thanks to Steven Kearnes and Patrick Riley for early discussions about the MoleculeNet concept. Thanks to Aarthi Ramsundar for help with diagram construction.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        308,
+        541,
+        368
+      ],
+      "markdown": "Thanks to Zheng Xu for feedback on the MoleculeNet API. Thanks to Patrick Hop for contribution of the Lipophilicity dataset to MoleculeNet. Thanks to Anthony Gitter and Johnny Israeli for suggesting the addition of AuPRC for imbalanced datasets.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        380,
+        541,
+        417
+      ],
+      "markdown": "The Pande Group is broadly supported by grants from the NIH (R01 GM062868 and U19 AI109662) as well as gift funds and contributions from Folding@home donors.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        428,
+        541,
+        464
+      ],
+      "markdown": "We acknowledge the generous support of Dr. Anders G. Frøseth and Mr. Christian Sundt for our work on machine learning.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        476,
+        414,
+        488
+      ],
+      "markdown": "B.R. was supported by the Fannie and John Hertz Foundation.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b007",
+      "kind": "heading",
+      "bbox": [
+        72,
+        527,
+        155,
+        543
+      ],
+      "markdown": "## Appendix",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0043-b008",
+      "kind": "heading",
+      "bbox": [
+        72,
+        570,
+        433,
+        584
+      ],
+      "markdown": "### Model Training and Hyperparameter Optimization",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0043-b009",
+      "kind": "text",
+      "bbox": [
+        72,
+        603,
+        541,
+        663
+      ],
+      "markdown": "All models were trained on Stanford’s GPU clusters via DeepChem. No model was allowed to train for more than 10 hours(time profile in Table 4. Users can reproduce benchmarks locally by following directions from DeepChem.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b010",
+      "kind": "text",
+      "bbox": [
+        72,
+        675,
+        541,
+        711
+      ],
+      "markdown": "Hyperparameters were determined using Gaussian Process Optimization via pyGPGO (https://github.com/hawk31/pyGPGO), with max number of iterations set to 20. Opti",
+      "source_class": "text"
+    },
+    {
+      "id": "p0043-b011",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "43",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Conclusion ending, acknowledgements and Appendix; GP optimization max 20 iterations and original hardware limits inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

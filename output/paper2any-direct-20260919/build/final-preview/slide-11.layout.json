@@ -1,0 +1,811 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/jetc3ut0",
+    "id": "jetc3ut0",
+    "slide": 11,
+    "layoutId": "/ppt/slideLayouts/slideLayout1.xml",
+    "layoutName": "DEFAULT",
+    "masterLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+    "backgroundColor": "#F7F8F4",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1279.97,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "Office",
+    "colors": {
+      "accent1": "#4472C4",
+      "accent2": "#ED7D31",
+      "accent3": "#A5A5A5",
+      "accent4": "#FFC000",
+      "accent5": "#5B9BD5",
+      "accent6": "#70AD47",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#44546A",
+      "lt2": "#E7E6E6",
+      "hlink": "#0563C1",
+      "folHlink": "#954F72"
+    },
+    "fontScheme": {
+      "name": "Office",
+      "majorFont": {
+        "latinTypeface": "Noto Sans SC"
+      },
+      "minorFont": {
+        "latinTypeface": "Noto Sans SC"
+      }
+    },
+    "typefaces": [
+      "Noto Sans SC"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "/ppt/slideLayouts/slideLayout1.xml",
+      "name": "DEFAULT",
+      "parentLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "/ppt/slideMasters/slideMaster1.xml",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/xcryxg7y",
+      "id": "2",
+      "name": "Text 0",
+      "bbox": [
+        61.76,
+        39.36,
+        1154.85,
+        90.88
+      ],
+      "geometry": "rect",
+      "text": "重复结构限制随机划分的外推解释",
+      "textPreview": "重复结构限制随机划分的外推解释",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "重复结构限制随机划分的外推解释"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "重复结构限制随机划分的外推解释",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "重复结构限制随机划分的外推解释",
+              "fontSize": 45.47,
+              "typeface": "Noto Sans SC",
+              "color": "#18362F",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/wbih4b6d",
+      "id": "3",
+      "name": "Text 1",
+      "bbox": [
+        64,
+        651.2,
+        1047.97,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "来源：verification/summary.json、diagnostics.json。结构按规范 SMILES 核对。",
+      "textPreview": "来源：verification/summary.json、diagnostics.json。结构按规范 SMILES 核对。",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "来源：verification/summary.json、diagnostics.json。结构按规范 SMILES 核对。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "来源：verification/summary.json、diagnostics.json。结构按规范 SMILES 核对。",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "来源：verification/summary.json、diagnostics.json。结构按规范 SMILES 核对。",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/n69grmpw",
+      "id": "4",
+      "name": "Text 2",
+      "bbox": [
+        1139.17,
+        651.2,
+        80,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "11 / 14",
+      "textPreview": "11 / 14",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "11 / 14"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "11 / 14",
+          "resolvedTextStyle": {
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "11 / 14",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "kind": "table",
+      "scope": "slide",
+      "aid": "tb/bu903eds",
+      "id": "9",
+      "name": "Table 0",
+      "bbox": [
+        64,
+        189.6,
+        1151.97,
+        231.2
+      ],
+      "text": "数据集 | 重复结构行 | 训练 / 测试同结构交集\nESOL | 11 | 2 / 2 / 0\nFreeSolv | 0 | 0 / 0 / 0\nLipophilicity | 0 | 0 / 0 / 0",
+      "textPreview": "数据集 | 重复结构行 | 训练 / 测试同结构交集 | ESOL | 11 | 2 / 2 / 0 | FreeSolv | 0 | 0 / 0 / 0 | Lipophilicity | 0 | 0 / 0 / 0",
+      "rows": 4,
+      "cols": 3,
+      "cells": [
+        {
+          "index": 1,
+          "row": 1,
+          "column": 1,
+          "bbox": [
+            64,
+            189.6,
+            383.99,
+            57.8
+          ],
+          "text": "数据集",
+          "textPreview": "数据集",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "数据集",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "数据集",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "row": 1,
+          "column": 2,
+          "bbox": [
+            447.99,
+            189.6,
+            383.99,
+            57.8
+          ],
+          "text": "重复结构行",
+          "textPreview": "重复结构行",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "重复结构行",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "重复结构行",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "row": 1,
+          "column": 3,
+          "bbox": [
+            831.98,
+            189.6,
+            383.99,
+            57.8
+          ],
+          "text": "训练 / 测试同结构交集",
+          "textPreview": "训练 / 测试同结构交集",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "训练 / 测试同结构交集",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "训练 / 测试同结构交集",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "row": 2,
+          "column": 1,
+          "bbox": [
+            64,
+            247.4,
+            383.99,
+            57.8
+          ],
+          "text": "ESOL",
+          "textPreview": "ESOL",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "ESOL",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "ESOL",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "row": 2,
+          "column": 2,
+          "bbox": [
+            447.99,
+            247.4,
+            383.99,
+            57.8
+          ],
+          "text": "11",
+          "textPreview": "11",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "11",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "11",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "row": 2,
+          "column": 3,
+          "bbox": [
+            831.98,
+            247.4,
+            383.99,
+            57.8
+          ],
+          "text": "2 / 2 / 0",
+          "textPreview": "2 / 2 / 0",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "2 / 2 / 0",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "2 / 2 / 0",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "row": 3,
+          "column": 1,
+          "bbox": [
+            64,
+            305.2,
+            383.99,
+            57.8
+          ],
+          "text": "FreeSolv",
+          "textPreview": "FreeSolv",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "FreeSolv",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "FreeSolv",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "row": 3,
+          "column": 2,
+          "bbox": [
+            447.99,
+            305.2,
+            383.99,
+            57.8
+          ],
+          "text": "0",
+          "textPreview": "0",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "row": 3,
+          "column": 3,
+          "bbox": [
+            831.98,
+            305.2,
+            383.99,
+            57.8
+          ],
+          "text": "0 / 0 / 0",
+          "textPreview": "0 / 0 / 0",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0 / 0 / 0",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0 / 0 / 0",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "row": 4,
+          "column": 1,
+          "bbox": [
+            64,
+            363,
+            383.99,
+            57.8
+          ],
+          "text": "Lipophilicity",
+          "textPreview": "Lipophilicity",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "Lipophilicity",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "Lipophilicity",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "row": 4,
+          "column": 2,
+          "bbox": [
+            447.99,
+            363,
+            383.99,
+            57.8
+          ],
+          "text": "0",
+          "textPreview": "0",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "row": 4,
+          "column": 3,
+          "bbox": [
+            831.98,
+            363,
+            383.99,
+            57.8
+          ],
+          "text": "0 / 0 / 0",
+          "textPreview": "0 / 0 / 0",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0 / 0 / 0",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0 / 0 / 0",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/98rytw72",
+      "id": "6",
+      "name": "Text 3",
+      "bbox": [
+        64,
+        442.4,
+        1119.97,
+        49.6
+      ],
+      "geometry": "rect",
+      "text": "交集按种子 123、456、789 顺序列出",
+      "textPreview": "交集按种子 123、456、789 顺序列出",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "交集按种子 123、456、789 顺序列出"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "交集按种子 123、456、789 顺序列出",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "交集按种子 123、456、789 顺序列出",
+              "fontSize": 21.27,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/o7ih0r6h",
+      "id": "7",
+      "name": "Text 4",
+      "bbox": [
+        64,
+        525.6,
+        1143.97,
+        60.8
+      ],
+      "geometry": "rect",
+      "text": "48 次运行均保留逐分子预测与分区索引",
+      "textPreview": "48 次运行均保留逐分子预测与分区索引",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "48 次运行均保留逐分子预测与分区索引"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "48 次运行均保留逐分子预测与分区索引",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "48 次运行均保留逐分子预测与分区索引",
+              "fontSize": 28.6,
+              "typeface": "Noto Sans SC",
+              "color": "#176B53",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 7,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/72t03qp0",
+      "id": "8",
+      "name": "Text 5",
+      "bbox": [
+        64,
+        592.8,
+        1143.97,
+        45.6
+      ],
+      "geometry": "rect",
+      "text": "独立重算指标，并核对标签、单位、哈希与训练集标准化",
+      "textPreview": "独立重算指标，并核对标签、单位、哈希与训练集标准化",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "独立重算指标，并核对标签、单位、哈希与训练集标准化"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "独立重算指标，并核对标签、单位、哈希与训练集标准化",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "独立重算指标，并核对标签、单位、哈希与训练集标准化",
+              "fontSize": 21.27,
+              "typeface": "Noto Sans SC",
+              "color": "#18362F"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    }
+  ],
+  "composeRuns": []
+}

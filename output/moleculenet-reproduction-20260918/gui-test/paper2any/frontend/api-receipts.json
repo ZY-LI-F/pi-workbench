@@ -1,0 +1,402 @@
+[
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 1960
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2438,
+      "completion_tokens": 1979,
+      "total_tokens": 4417,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1063
+      },
+      "prompt_cache_hit_tokens": 0,
+      "prompt_cache_miss_tokens": 2438
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1350
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2509,
+      "completion_tokens": 3400,
+      "total_tokens": 5909,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 2682
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1613
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2510,
+      "completion_tokens": 2259,
+      "total_tokens": 4769,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 842
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1614
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2550,
+      "completion_tokens": 3400,
+      "total_tokens": 5950,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 3400
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1654
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1270
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2542,
+      "completion_tokens": 2702,
+      "total_tokens": 5244,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1459
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1646
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2540,
+      "completion_tokens": 3130,
+      "total_tokens": 5670,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1608
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1644
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2537,
+      "completion_tokens": 3052,
+      "total_tokens": 5589,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1557
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1641
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2580,
+      "completion_tokens": 2402,
+      "total_tokens": 4982,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 978
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1684
+    },
+    "finish_reason": "stop"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1289
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2839,
+      "completion_tokens": 3400,
+      "total_tokens": 6239,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 3400
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1943
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 1400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1960,
+      "completion_tokens": 1400,
+      "total_tokens": 3360,
+      "prompt_tokens_details": {
+        "cached_tokens": 1792
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1400
+      },
+      "prompt_cache_hit_tokens": 1792,
+      "prompt_cache_miss_tokens": 168
+    },
+    "finish_reason": "length"
+  },
+  {
+    "requested_model": "deepseek-flash",
+    "status": 200,
+    "requested_max_tokens": 3400,
+    "response_model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 2421,
+      "completion_tokens": 2607,
+      "total_tokens": 5028,
+      "prompt_tokens_details": {
+        "cached_tokens": 896
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 1597
+      },
+      "prompt_cache_hit_tokens": 896,
+      "prompt_cache_miss_tokens": 1525
+    },
+    "finish_reason": "stop"
+  }
+]

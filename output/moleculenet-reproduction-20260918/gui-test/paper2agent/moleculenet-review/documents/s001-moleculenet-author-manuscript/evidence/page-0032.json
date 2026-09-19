@@ -1,0 +1,501 @@
+{
+  "page": 32,
+  "lines": [
+    {
+      "text": "ﬁt. Similar results are reported in previous graph-based algorithms,14,19,22,23,76 showing that",
+      "bbox": [
+        72.0,
+        71.32009887695312,
+        540.0201416015625,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "learnable featurizations can provide a large boost compared with conventional featurizations.",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.0819702148438,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "For smaller singletask datasets (less than 3000 samples), diﬀerences between models are",
+      "bbox": [
+        89.55899810791016,
+        123.47415161132812,
+        540.0308227539062,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "less clear. Kernel SVM and ensemble tree methods (gradient boosting and random forests)",
+      "bbox": [
+        72.0,
+        147.38113403320312,
+        540.0342407226562,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "are more robust under data scarcity, while they generally need longer running time (see",
+      "bbox": [
+        72.0,
+        171.28915405273438,
+        540.0460205078125,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Table 4). Worse performances of graph-based models are within expectation as complex",
+      "bbox": [
+        72.0,
+        195.19717407226562,
+        540.0460815429688,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "models generally require more training data.",
+      "bbox": [
+        72.0,
+        219.10519409179688,
+        300.0455017089844,
+        229.72140502929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Bypass networks show higher train scores and equal or higher validation/test scores",
+      "bbox": [
+        89.55899810791016,
+        243.01321411132812,
+        540.0548095703125,
+        253.62942504882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "compared with vanilla multitask networks, suggesting that the bypass structure does add",
+      "bbox": [
+        72.0,
+        266.9212341308594,
+        540.0581665039062,
+        277.5374450683594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "robustness. IRV models achieve performance broadly comparable with multitask networks.",
+      "bbox": [
+        72.0,
+        290.8282470703125,
+        540.0460815429688,
+        301.4444580078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "However, the quadratic nearest neighbor search makes the IRV models slower to train than",
+      "bbox": [
+        72.0,
+        314.7362365722656,
+        540.0580444335938,
+        325.3524475097656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the multitask networks (see Table 4).",
+      "bbox": [
+        72.0,
+        338.64422607421875,
+        262.7571716308594,
+        349.26043701171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Three datasets (HIV, BACE, BBBP) in these two categories are evaluated under scaf-",
+      "bbox": [
+        89.55899810791016,
+        362.5522155761719,
+        539.9950561523438,
+        373.1684265136719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "fold splitting.",
+      "bbox": [
+        72.0,
+        386.460205078125,
+        142.3563690185547,
+        397.076416015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "As compounds are divided by their molecular scaﬀolds, increasing diﬀer-",
+      "bbox": [
+        152.5661163330078,
+        386.460205078125,
+        540.0221557617188,
+        397.076416015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ences between train, validation and test performances are observed. Scaﬀold splits provide",
+      "bbox": [
+        72.0,
+        410.3681945800781,
+        540.0341186523438,
+        420.9844055175781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a stronger test of a given model’s generalizability compared with random splitting. Two",
+      "bbox": [
+        72.0,
+        434.27520751953125,
+        540.0698852539062,
+        444.89141845703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "datasets (PCBA, MUV) are evaluated by AUC-PRC, which is more practically useful under",
+      "bbox": [
+        72.0,
+        458.1831970214844,
+        540.0101318359375,
+        468.7994079589844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "high class imbalance as discussed above. Graph convolutional model performs the best on",
+      "bbox": [
+        72.0,
+        482.0911865234375,
+        540.0460815429688,
+        492.7073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "PCBA (positive rate 1.40%), while results on MUV (positive rate 0.20%) are much less sta-",
+      "bbox": [
+        72.0,
+        505.9991760253906,
+        540.0070190429688,
+        516.6154174804688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ble, which is most likely due to its extreme low amount of positive samples. Under such high",
+      "bbox": [
+        72.0,
+        529.9071655273438,
+        540.0220947265625,
+        540.5234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "imbalance, graph-based models are still not robust enough in controlling false positives.",
+      "bbox": [
+        72.0,
+        553.8151245117188,
+        520.9179077148438,
+        564.431396484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Here we performed a more detailed experiment to illustrate how model performances",
+      "bbox": [
+        89.55899810791016,
+        577.72216796875,
+        540.03076171875,
+        588.3384399414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "change with increasing training samples. We trained multiple models on Tox21 with training",
+      "bbox": [
+        72.0,
+        601.6301879882812,
+        540.0579223632812,
+        612.2464599609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sets of diﬀerent size(10% to 90% of the whole dataset) Figure 10 displayed mean out-of-",
+      "bbox": [
+        72.0,
+        625.5381469726562,
+        540.0462036132812,
+        636.1544189453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sample performances (and standard deviations) of ﬁve independent runs. A clear increase",
+      "bbox": [
+        72.0,
+        649.4461669921875,
+        540.0339965820312,
+        660.0624389648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "on performance is observed for each model, and graph-based models (Graph convolutional",
+      "bbox": [
+        72.0,
+        673.3541870117188,
+        540.0580444335938,
+        683.970458984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "model and weave model) always stay on top of the lines.",
+      "bbox": [
+        72.0,
+        697.2611694335938,
+        377.73046875,
+        707.87744140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "By drawing a horizontal line",
+      "bbox": [
+        387.7608947753906,
+        697.2611694335938,
+        540.0582885742188,
+        707.87744140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "32",
+      "bbox": [
+        300.1470031738281,
+        741.5911865234375,
+        311.8631286621094,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 32
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          74,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          204
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          122,
+          541,
+          230
+        ],
+        "pos": [
+          204,
+          601
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          242,
+          541,
+          350
+        ],
+        "pos": [
+          601,
+          989
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          361,
+          541,
+          565
+        ],
+        "pos": [
+          989,
+          1793
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          577,
+          541,
+          709
+        ],
+        "pos": [
+          1793,
+          2316
+        ]
+      },
+      {
+        "index": 5,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2316,
+          2321
+        ]
+      }
+    ],
+    "text": "fit. Similar results are reported in previous graph-based algorithms,<sup>14,19,22,23,76</sup> showing that learnable featurizations can provide a large boost compared with conventional featurizations. \n\nFor smaller singletask datasets (less than 3000 samples), differences between models are less clear. Kernel SVM and ensemble tree methods (gradient boosting and random forests) are more robust under data scarcity, while they generally need longer running time (see Table 4). Worse performances of graph-based models are within expectation as complex models generally require more training data. \n\nBypass networks show higher train scores and equal or higher validation/test scores compared with vanilla multitask networks, suggesting that the bypass structure does add robustness. IRV models achieve performance broadly comparable with multitask networks. However, the quadratic nearest neighbor search makes the IRV models slower to train than the multitask networks (see Table 4). \n\nThree datasets (HIV, BACE, BBBP) in these two categories are evaluated under scaffold splitting. As compounds are divided by their molecular scaffolds, increasing differences between train, validation and test performances are observed. Scaffold splits provide a stronger test of a given model’s generalizability compared with random splitting. Two datasets (PCBA, MUV) are evaluated by AUC-PRC, which is more practically useful under high class imbalance as discussed above. Graph convolutional model performs the best on PCBA (positive rate 1 _._ 40%), while results on MUV (positive rate 0 _._ 20%) are much less stable, which is most likely due to its extreme low amount of positive samples. Under such high imbalance, graph-based models are still not robust enough in controlling false positives. \n\nHere we performed a more detailed experiment to illustrate how model performances change with increasing training samples. We trained multiple models on Tox21 with training sets of different size(10% to 90% of the whole dataset) Figure 10 displayed mean out-ofsample performances (and standard deviations) of five independent runs. A clear increase on performance is observed for each model, and graph-based models (Graph convolutional model and weave model) always stay on top of the lines. By drawing a horizontal line \n\n32 \n\n"
+  }
+}

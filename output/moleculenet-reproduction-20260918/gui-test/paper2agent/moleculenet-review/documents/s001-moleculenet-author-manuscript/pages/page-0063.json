@@ -1,0 +1,170 @@
+{
+  "page": 63,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0063.png",
+  "reviewed": true,
+  "review_notes": "References 58–69 inspected; citation order retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0063-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        109
+      ],
+      "markdown": "- (58) Gayvert, K. M.; Madhukar, N. S.; Elemento, O. _Cell Chemical Biology_ **2016** , _23_ , 1294– 1301.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        132,
+        541,
+        168
+      ],
+      "markdown": "- (59) Artemov, A. V.; Putin, E.; Vanhaelen, Q.; Aliper, A.; Ozerov, I. V.; Zhavoronkov, A. _bioRxiv_ **2016** , 095653.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        190,
+        540,
+        226
+      ],
+      "markdown": "- (60) Novick, P. A.; Ortiz, O. F.; Poelman, J.; Abdulhay, A. Y.; Pande, V. S. _PLOS ONE_ **2013** , _8_ .",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        248,
+        541,
+        284
+      ],
+      "markdown": "- (61) Aggregate Analysis of ClincalTrials.gov (AACT) Database. `https://www. ctti-clinicaltrials.org/aact-database` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        306,
+        532,
+        319
+      ],
+      "markdown": "- (62) Bemis, G. W.; Murcko, M. A. _Journal of Medicinal Chemistry_ **1996** , _39_ , 2887–2893.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        339,
+        541,
+        376
+      ],
+      "markdown": "- (63) Landrum, G. RDKit: Open-Source Cheminformatics Software. `https://www.rdkit. org/` .",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        397,
+        541,
+        431
+      ],
+      "markdown": "- (64) Jain, A. N.; Nicholls, A. _Journal of Computer-Aided Molecular Design_ **2008** , _22_ , 133– 139.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b007",
+      "kind": "text",
+      "bbox": [
+        71,
+        455,
+        540,
+        491
+      ],
+      "markdown": "- (65) Hastie, T.; Tibshirani, R.; Friedman, J. _The Elements of Statistical Learning: Data Mining, Inference, and Prediction_ ; Springer, 2009.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b008",
+      "kind": "text",
+      "bbox": [
+        71,
+        513,
+        541,
+        549
+      ],
+      "markdown": "- (66) Davis, J.; Goadrich, M. The Relationship Between Precision-Recall and ROC Curves. Proceedings of the 23rd International Conference on Machine Learning. 2006.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b009",
+      "kind": "text",
+      "bbox": [
+        71,
+        571,
+        541,
+        631
+      ],
+      "markdown": "- (67) G´omez-Bombarelli, R.; Duvenaud, D.; Hern´andez-Lobato, J. M.; AguileraIparraguirre, J.; Hirzel, T. D.; Adams, R. P.; Aspuru-Guzik, A. _arXiv preprint arXiv:1610.02415_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b010",
+      "kind": "text",
+      "bbox": [
+        71,
+        652,
+        541,
+        688
+      ],
+      "markdown": "- (68) Durrant, J. D.; McCammon, J. A. _Journal of Chemical Information and Modeling_ **2011** , _51_ , 2897–2903.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b011",
+      "kind": "text",
+      "bbox": [
+        71,
+        710,
+        541,
+        723
+      ],
+      "markdown": "- (69) Da, C.; Kireev, D. _Journal of chemical information and modeling_ **2014** , _54_ , 2555–2561.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0063-b012",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "63",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 58–69 inspected; citation order retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

@@ -27,6 +27,7 @@ import type {
 } from "./kanban";
 import type { CapabilityHealthSnapshot, CapabilityName } from "./capabilities";
 import type { PiVersionSnapshot, PiVersionSyncResult } from "./pi-version";
+import type { SolModeConfig, SolModeSnapshot } from "./sol-mode";
 import type {
   ConfigureExecutionBackendInput,
   ExecutionBackendCatalogSnapshot,
@@ -46,6 +47,7 @@ import type {
 } from "./model-configuration";
 import type { LocalPathInspection } from "./local-path";
 import type { LocalFilePreviewData } from "./file-preview";
+import type { ArtifactDirectory, ArtifactLink, ArtifactLinkRequest } from "./artifact-library";
 import type { ComposerDraftSnapshot, SaveComposerDraftInput } from "./composer-draft";
 import type { PiSkillInstallResult, PiSkillInstallScope } from "./pi-skill";
 import type { RuntimeScope } from "./runtime-scope";
@@ -248,6 +250,7 @@ export type RuntimeSignal =
   | { readonly type: "protocol_error"; readonly message: string; readonly record: string };
 
 export type BridgeEvent =
+  | { readonly source: "sol"; readonly payload: SolModeSnapshot }
   | { readonly source: "pi"; readonly payload: AgentSessionEvent | RpcExtensionUIRequest; readonly scope?: RuntimeScope }
   | { readonly source: "runtime"; readonly payload: RuntimeSignal; readonly scope?: RuntimeScope }
   | { readonly source: "board"; readonly payload: BoardBridgeEvent }
@@ -257,6 +260,8 @@ export type BridgeEvent =
   | { readonly source: "companion"; readonly payload: { readonly type: "gateway-status"; readonly status: CompanionGatewayStatus } };
 
 export interface StellaDesktopApi {
+  solModeGet(): Promise<SolModeSnapshot>;
+  solModeApply(config: SolModeConfig): Promise<SolModeSnapshot>;
   piVersionCheck(): Promise<PiVersionSnapshot>;
   piVersionSync(): Promise<PiVersionSyncResult>;
   capabilities(): Promise<CapabilityHealthSnapshot>;
@@ -288,6 +293,9 @@ export interface StellaDesktopApi {
   openProject(path: string, trusted: boolean): Promise<RuntimeBootstrap | null>;
   inspectLocalPath(path: string): Promise<LocalPathInspection>;
   readLocalFilePreview(path: string): Promise<LocalFilePreviewData>;
+  chooseArtifactDirectory(): Promise<LocalPathInspection | null>;
+  listArtifactDirectory(path: string): Promise<ArtifactDirectory>;
+  resolveArtifactLink(request: ArtifactLinkRequest): Promise<ArtifactLink>;
   openPath(path: string): Promise<void>;
   revealPath(path: string): Promise<void>;
   openExternal(url: string): Promise<void>;

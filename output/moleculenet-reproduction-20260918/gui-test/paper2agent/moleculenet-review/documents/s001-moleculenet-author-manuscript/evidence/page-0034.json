@@ -1,0 +1,477 @@
+{
+  "page": 34,
+  "lines": [
+    {
+      "text": "at around 0.80, we can see graph-based models achieve the similar level of accuracy with",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0460815429688,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "multitask networks by using only one-third of the training samples(30% versus 90%).",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        508.5681457519531,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Biophysics Task - PDBbind",
+      "bbox": [
+        72.0,
+        144.31375122070312,
+        266.8500671386719,
+        157.0531768798828
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The PDBBind dataset maps distinct ligand-protein structures to their binding aﬃnities.",
+      "bbox": [
+        72.0,
+        177.60214233398438,
+        540.022216796875,
+        188.21835327148438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "As discussed in the datasets section, we created grid featurizer to harness the joint ligand-",
+      "bbox": [
+        72.0,
+        201.51016235351562,
+        540.0221557617188,
+        212.12637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "protein structural information in PDBBind to build a model that predicts the experimental",
+      "bbox": [
+        72.0,
+        225.41818237304688,
+        540.0460815429688,
+        236.03439331054688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Ki of binding. We applied time splitting to all three subsets: core, reﬁned, and full subsets",
+      "bbox": [
+        72.0,
+        249.32620239257812,
+        540.0140991210938,
+        261.7354431152344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of PDBbind(Core contains roughly 200 structures, reﬁned 4000, and full 15000. The smaller",
+      "bbox": [
+        72.0,
+        273.23419189453125,
+        540.0820922851562,
+        283.85040283203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "datasets are cleaned more thoroughly than larger datasets.), with all results displayed in",
+      "bbox": [
+        72.0,
+        297.1412048339844,
+        540.0699462890625,
+        307.7574157714844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Table 7 and Figure 11. Clearly as dataset size increased, we can see a signiﬁcant boost on",
+      "bbox": [
+        72.0,
+        321.0491943359375,
+        540.0459594726562,
+        331.6654052734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "validation/test set performances. At the same time, for the two larger subsets: reﬁned and",
+      "bbox": [
+        72.0,
+        344.9571838378906,
+        540.0459594726562,
+        355.5733947753906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "full, switching from pure ligand-based ECFP to grid featurizer do increase the performances",
+      "bbox": [
+        72.0,
+        368.86517333984375,
+        540.0221557617188,
+        379.48138427734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "by a small margin in both Singletask networks and random forests. While for core subset, all",
+      "bbox": [
+        72.0,
+        392.7731628417969,
+        540.070068359375,
+        403.3893737792969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "models are showing relatively high errors and two featurizations do not show clear diﬀerences,",
+      "bbox": [
+        72.0,
+        416.68115234375,
+        540.0581665039062,
+        427.29736328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "which is within expectation as sample amount in core subset is too small to support a stable",
+      "bbox": [
+        72.0,
+        440.5881652832031,
+        540.0459594726562,
+        451.2043762207031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "model performance. Note that models on the full set aren’t signiﬁcantly superior to models",
+      "bbox": [
+        72.0,
+        464.49615478515625,
+        540.046142578125,
+        475.11236572265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "with less data; this eﬀect may be due to the additional data being less clean.",
+      "bbox": [
+        72.0,
+        488.4041442871094,
+        466.12713623046875,
+        499.0203552246094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Note that all models display heavy overﬁtting. Additional clean data may be required to",
+      "bbox": [
+        89.55899810791016,
+        512.3120727539062,
+        540.0907592773438,
+        522.9283447265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "create more accurate models for protein-ligand binding.",
+      "bbox": [
+        72.0,
+        536.2200927734375,
+        356.95220947265625,
+        546.8363647460938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Physical Chemistry Tasks",
+      "bbox": [
+        72.0,
+        580.9678344726562,
+        253.89549255371094,
+        593.7072143554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Solubility, solvation free energy and lipophilicity are basic physical chemistry properties",
+      "bbox": [
+        72.0,
+        614.256103515625,
+        540.0460205078125,
+        624.8723754882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "important for understanding how molecules interact with solvents. Figure 13 and Table 8",
+      "bbox": [
+        72.0,
+        638.1641235351562,
+        540.0579833984375,
+        648.7803955078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "presented performances on predicting these properties.",
+      "bbox": [
+        72.0,
+        662.0720825195312,
+        351.9071044921875,
+        672.6883544921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph-based methods: graph convolutional model, DAG, MPNN and weave model all ex-",
+      "bbox": [
+        89.55899810791016,
+        685.9801025390625,
+        540.0429077148438,
+        696.5963745117188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "hibit signiﬁcant boosts over vanilla singletask network, indicating the advantages of learnable",
+      "bbox": [
+        72.0,
+        709.8871459960938,
+        540.0939331054688,
+        720.50341796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "34",
+      "bbox": [
+        300.1470031738281,
+        741.5911254882812,
+        311.8631286621094,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 34
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          175
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          144,
+          267,
+          158
+        ],
+        "pos": [
+          175,
+          209
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          177,
+          541,
+          500
+        ],
+        "pos": [
+          209,
+          1491
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          512,
+          541,
+          547
+        ],
+        "pos": [
+          1491,
+          1638
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          580,
+          254,
+          594
+        ],
+        "pos": [
+          1638,
+          1671
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          614,
+          541,
+          673
+        ],
+        "pos": [
+          1671,
+          1908
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          72,
+          685,
+          541,
+          721
+        ],
+        "pos": [
+          1908,
+          2087
+        ]
+      },
+      {
+        "index": 7,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2087,
+          2092
+        ]
+      }
+    ],
+    "text": "at around 0.80, we can see graph-based models achieve the similar level of accuracy with multitask networks by using only one-third of the training samples(30% versus 90%). \n\n# **Biophysics Task - PDBbind** \n\nThe PDBBind dataset maps distinct ligand-protein structures to their binding affinities. As discussed in the datasets section, we created grid featurizer to harness the joint ligandprotein structural information in PDBBind to build a model that predicts the experimental _Ki_ of binding. We applied time splitting to all three subsets: core, refined, and full subsets of PDBbind(Core contains roughly 200 structures, refined 4000, and full 15000. The smaller datasets are cleaned more thoroughly than larger datasets.), with all results displayed in Table 7 and Figure 11. Clearly as dataset size increased, we can see a significant boost on validation/test set performances. At the same time, for the two larger subsets: refined and full, switching from pure ligand-based ECFP to grid featurizer do increase the performances by a small margin in both Singletask networks and random forests. While for core subset, all models are showing relatively high errors and two featurizations do not show clear differences, which is within expectation as sample amount in core subset is too small to support a stable model performance. Note that models on the full set aren’t significantly superior to models with less data; this effect may be due to the additional data being less clean. \n\nNote that all models display heavy overfitting. Additional clean data may be required to create more accurate models for protein-ligand binding. \n\n# **Physical Chemistry Tasks** \n\nSolubility, solvation free energy and lipophilicity are basic physical chemistry properties important for understanding how molecules interact with solvents. Figure 13 and Table 8 presented performances on predicting these properties. \n\nGraph-based methods: graph convolutional model, DAG, MPNN and weave model all exhibit significant boosts over vanilla singletask network, indicating the advantages of learnable \n\n34 \n\n"
+  }
+}

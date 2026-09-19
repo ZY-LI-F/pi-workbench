@@ -1,0 +1,89 @@
+{
+  "page": 40,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0040.png",
+  "reviewed": true,
+  "review_notes": "Quantum continuation, Figure 15 and featurization discussion; floating figures repositioned around continuation. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0040-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        111
+      ],
+      "markdown": "magnitudes). In total, ANI-1, DTNN and MPNN covered the best-performing models on 28/39 of all tasks in this category, again reflecting the superiority of learnable featurization.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0040-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        123,
+        541,
+        302
+      ],
+      "markdown": "Another variable training size experiment is performed on QM7: predicting atomization energy. All mean absolute error performances are displayed in Figure 15. Clearly incorporation of spatial position creates the huge gap between models, DTNN and multitask networks(CM) reach similar level of accuracy as reported in previous work on this dataset. (There is still a gap between the MoleculeNet implementation and best reported numbers from previous work,<sup>18,19</sup> which should be closed by training models longer, as indicated in Appendix, model validation part). ANI-1 reached the best performance on this task, illustrating overall lower mean absolute errors.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0040-b002",
+      "kind": "figure",
+      "bbox": [
+        113,
+        310,
+        499,
+        607
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 40 (3)",
+      "asset_name": "figure-p0040-002"
+    },
+    {
+      "id": "p0040-b003",
+      "kind": "caption",
+      "bbox": [
+        72,
+        613,
+        541,
+        651
+      ],
+      "markdown": "Figure 15: Out-of-sample performances with different training set sizes on QM7. Each datapoint is the average of 5 independent runs, with standard deviations shown as error bars.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0040-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        682,
+        541,
+        718
+      ],
+      "markdown": "For QM series, proper choice of featurization appears critical. As mentioned previously, ECFP only consider graph substructures, while Coulomb Matrix and graph featurizations",
+      "source_class": "text"
+    },
+    {
+      "id": "p0040-b005",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "40",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Quantum continuation, Figure 15 and featurization discussion; floating figures repositioned around continuation. Reviewed sequentially by the main agent; no independent agent verification."
+}

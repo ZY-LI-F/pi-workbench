@@ -1,0 +1,87 @@
+{
+  "page": 2,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0002.png",
+  "reviewed": true,
+  "review_notes": "Abstract continuation and Introduction; abstract joined across page break. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0002-b000",
+      "kind": "text",
+      "bbox": [
+        101,
+        75,
+        511,
+        199
+      ],
+      "markdown": "open source library). MoleculeNet benchmarks demonstrate that learnable representations are powerful tools for molecular machine learning and broadly offer the best performance. However, this result comes with caveats. Learnable representations still struggle to deal with complex tasks under data scarcity and highly imbalanced classification. For quantum mechanical and biophysical datasets, the use of physics-aware featurizations can be more important than choice of particular learning algorithm.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0002-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        238,
+        179,
+        251
+      ],
+      "markdown": "## Introduction",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0002-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        277,
+        541,
+        432
+      ],
+      "markdown": "Overlap between chemistry and statistical learning has had a long history. The field of cheminformatics has been utilizing machine learning methods in chemical modeling(e.g. quantitative structure activity relationships, QSAR) for decades.<sup>1–6</sup> In the recent 10 years, with the advent of sophisticated deep learning methods,<sup>7,8</sup> machine learning has gathered increasing amounts of attention from the scientific community. Data-driven analysis has become a routine step in many chemical and biological applications, including virtual screening,<sup>9–12</sup> chemical property prediction,<sup>13–16</sup> and quantum chemistry calculations.<sup>17–20</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0002-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        445,
+        541,
+        600
+      ],
+      "markdown": "In many such applications, machine learning has shown strong potential to compete with or even outperform conventional _ab-initio_ computations.<sup>16,18</sup> It follows that introduction of novel machine learning methods has the potential to reshape research on properties of molecules. However, this potential has been limited by the lack of a standard evaluation platform for proposed machine learning algorithms. Algorithmic papers often benchmark proposed methods on disjoint dataset collections, making it a challenge to gauge whether a proposed technique does in fact improve performance.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0002-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        612,
+        541,
+        720
+      ],
+      "markdown": "Data for molecule-based machine learning tasks are highly heterogeneous and expensive to gather. Obtaining precise and accurate results for chemical properties typically requires specialized instruments as well as expert supervision (contrast with computer speech and vision, where lightly trained workers can annotate data suitable for machine learning systems). As a result, molecular datasets are usually much smaller than those available for",
+      "source_class": "text"
+    },
+    {
+      "id": "p0002-b005",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        750
+      ],
+      "markdown": "2",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Abstract continuation and Introduction; abstract joined across page break. Reviewed sequentially by the main agent; no independent agent verification."
+}

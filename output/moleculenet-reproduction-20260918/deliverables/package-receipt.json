@@ -1,0 +1,14 @@
+{
+  "file": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\deliverables\\MoleculeNet-reproduction-evidence.zip",
+  "bytes": 16957961,
+  "sha256": "961f8581ce2047738ddf6d8094a50a7ab7ad4713723c13026f8d1c638367412d",
+  "files": 473,
+  "excluded": [
+    "venvs",
+    "Pi profile and auth configuration",
+    "full conversational logs",
+    "model checkpoints",
+    "excluded wrong-unit experiment",
+    "private build previews"
+  ]
+}

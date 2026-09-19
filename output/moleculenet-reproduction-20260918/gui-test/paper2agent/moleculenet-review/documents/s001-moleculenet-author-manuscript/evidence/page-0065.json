@@ -1,0 +1,94 @@
+{
+  "page": 65,
+  "lines": [
+    {
+      "text": "(85) eXtreme Gradient Boosting. https://github.com/dmlc/xgboost, Accessed: 2017-10-",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0087890625,
+        86.60906982421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "18.",
+      "bbox": [
+        98.66302490234375,
+        99.56613159179688,
+        113.63093566894531,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "65",
+      "bbox": [
+        300.14703369140625,
+        741.5911254882812,
+        311.8631591796875,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 65
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          109
+        ],
+        "pos": [
+          0,
+          93
+        ]
+      },
+      {
+        "index": 1,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          93,
+          98
+        ]
+      }
+    ],
+    "text": "- (85) eXtreme Gradient Boosting. `https://github.com/dmlc/xgboost` , Accessed: 2017-1018. \n\n65 \n\n"
+  }
+}

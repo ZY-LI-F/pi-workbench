@@ -1,0 +1,121 @@
+{
+  "page": 35,
+  "lines": [
+    {
+      "text": "Figure 11: Benchmark performances of PDBbind: 5 models are evaluated by RMSE on",
+      "bbox": [
+        72.0,
+        640.9300537109375,
+        540.0302124023438,
+        651.5463256835938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the three subsets: core, reﬁned and full. Time split is applied to all three subsets. Noe that",
+      "bbox": [
+        71.99996948242188,
+        655.3760375976562,
+        540.010009765625,
+        665.9923095703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for RMSE, lower value indicates better performance(to the right).",
+      "bbox": [
+        71.99996948242188,
+        669.821044921875,
+        409.6148376464844,
+        680.4373168945312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "35",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 35
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          189,
+          109,
+          423,
+          630
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          71,
+          640,
+          541,
+          682
+        ],
+        "pos": [
+          2,
+          251
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          251,
+          256
+        ]
+      }
+    ],
+    "text": "\n\nFigure 11: Benchmark performances of **PDBbind** : 5 models are evaluated by RMSE on the three subsets: core, refined and full. Time split is applied to all three subsets. Noe that for RMSE, lower value indicates better performance(to the right). \n\n35 \n\n"
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "status": "reviewed_with_limitations",
+  "mechanical_ok": true,
+  "all_sources_agent_reviewed": true,
+  "issues": [],
+  "documents": {
+    "s001-moleculenet-author-manuscript": {
+      "status": "reviewed_with_limitations",
+      "mechanical_ok": true,
+      "all_pages_agent_reviewed": true,
+      "applied_adjudications": 6,
+      "stale_adjudications": 0
+    }
+  },
+  "artifact_checks": [
+    {
+      "file": "assets/figure/figure-p0006-003.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0007-003.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-1.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0013-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-2.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0015-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/formula-p0016-002.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0017-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/formula-p0018-002.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/formula-p0023-002.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0024-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0029-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0030-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0031-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0033-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0035-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0036-002.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0038-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0039-000.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/figure/figure-p0040-002.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-3.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-4.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-5.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-6.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-7.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-8.csv",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-9.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-10.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-11.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-12.jpg",
+      "matches_source_conversion": true
+    },
+    {
+      "file": "assets/table/table-13.jpg",
+      "matches_source_conversion": true
+    }
+  ],
+  "workbook_checks": [],
+  "scope": "Compact template and file integrity; reviewed PDF text/crops checked in external evidence. JPEGs checked against deterministic source conversion, not lossless pixels. Review flags and normalized coverage do not certify scientific accuracy."
+}

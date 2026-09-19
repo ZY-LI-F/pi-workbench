@@ -1,0 +1,52 @@
+{
+  "page": 39,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0039.png",
+  "reviewed": true,
+  "review_notes": "Figure 14 quantum panels and full caption; author revision not conflated with publisher results. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0039-b000",
+      "kind": "figure",
+      "bbox": [
+        200,
+        67,
+        412,
+        643
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 39 (1)",
+      "asset_name": "figure-p0039-000"
+    },
+    {
+      "id": "p0039-b001",
+      "kind": "caption",
+      "bbox": [
+        71,
+        649,
+        541,
+        719
+      ],
+      "markdown": "Figure 14: Benchmark performances for quantum mechanics tasks: **QM7** , 8 models are evaluated by MAE on stratified split; **QM7b** , 3 models (QM7b only provides 3D coordinates) are evaluated by MAE on random split; **QM8** , 7 models are evaluated by MAE on random split; **QM9** , 5 models are evaluated by MAE on random split. Note that for MAE, lower value indicates better performance(to the right)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0039-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "39",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 14 quantum panels and full caption; author revision not conflated with publisher results. Reviewed sequentially by the main agent; no independent agent verification."
+}

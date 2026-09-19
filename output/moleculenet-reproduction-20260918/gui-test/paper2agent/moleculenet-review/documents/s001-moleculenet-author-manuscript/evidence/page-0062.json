@@ -1,0 +1,651 @@
+{
+  "page": 62,
+  "lines": [
+    {
+      "text": "(46) Rohrer, S. G.; Baumann, K. Journal of Chemical Information and Modeling 2009, 49,",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0007934570312,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "169–184.",
+      "bbox": [
+        98.6629638671875,
+        99.56613159179688,
+        142.92111206054688,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(47) AIDS Antiviral Screen Data. https://wiki.nci.nih.gov/display/NCIDTPdata/",
+      "bbox": [
+        71.99996185302734,
+        133.43612670898438,
+        540.2075805664062,
+        144.3870849609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "AIDS+Antiviral+Screen+Data, Accessed: 2017-09-27.",
+      "bbox": [
+        98.66297912597656,
+        157.34414672851562,
+        377.436767578125,
+        168.29510498046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(48) Wang, R.; Fang, X.; Lu, Y.; Wang, S. Journal of Medicinal Chemistry 2004, 47, 2977–",
+      "bbox": [
+        71.99998474121094,
+        191.21511840820312,
+        540.0225830078125,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2980.",
+      "bbox": [
+        98.66293334960938,
+        215.12210083007812,
+        125.34693908691406,
+        225.73831176757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(49) Wang, R.; Fang, X.; Lu, Y.; Yang, C.-Y.; Wang, S. Journal of Medicinal Chemistry",
+      "bbox": [
+        71.99993133544922,
+        248.99307250976562,
+        540.01318359375,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2005, 48, 4111–4119.",
+      "bbox": [
+        98.66293334960938,
+        272.90106201171875,
+        207.79440307617188,
+        283.51727294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(50) Liu, Z.; Li, Y.; Han, L.; Li, J.; Liu, J.; Zhao, Z.; Nie, W.; Liu, Y.; Wang, R. Bioinfor-",
+      "bbox": [
+        71.99994659423828,
+        306.77105712890625,
+        540.001220703125,
+        317.38726806640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "matics 2014, 31, 405–412.",
+      "bbox": [
+        98.6629638671875,
+        330.6790466308594,
+        234.14434814453125,
+        341.2952575683594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(51) Subramanian, G.; Ramsundar, B.; Pande, V.; Denny, R. A. Journal of Chemical Infor-",
+      "bbox": [
+        71.99998474121094,
+        364.5490417480469,
+        540.010986328125,
+        375.1652526855469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mation and Modeling 2016, 56, 1936–1949.",
+      "bbox": [
+        98.66299438476562,
+        388.45703125,
+        320.96356201171875,
+        399.0732421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(52) Martins, I. F.; Teixeira, A. L.; Pinheiro, L.; Falcao, A. O. Journal of Chemical Infor-",
+      "bbox": [
+        72.0,
+        422.3280334472656,
+        540.014404296875,
+        432.9442443847656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mation and Modeling 2012, 52, 1686–1697.",
+      "bbox": [
+        98.66299438476562,
+        446.23602294921875,
+        320.96356201171875,
+        456.85223388671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(53) Tox21 Challenge. https://tripod.nih.gov/tox21/challenge/, Accessed: 2017-09-",
+      "bbox": [
+        72.0,
+        480.10601806640625,
+        540.0059204101562,
+        491.0569763183594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "27.",
+      "bbox": [
+        98.66400146484375,
+        504.0140075683594,
+        113.63191223144531,
+        514.6302490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(54) Richard, A. M. et al. Chemical Research in Toxicology 2016, 29, 1225–1251.",
+      "bbox": [
+        72.0,
+        537.8839721679688,
+        490.2685852050781,
+        548.500244140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(55) Kuhn, M.; Letunic, I.; Jensen, L. J.; Bork, P. Nucleic Acids Research 2016, 44, D1075–",
+      "bbox": [
+        72.00003051757812,
+        571.7549438476562,
+        540.0209350585938,
+        582.3712158203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "D41079.",
+      "bbox": [
+        98.66400146484375,
+        595.6629638671875,
+        140.14854431152344,
+        606.2792358398438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(56) Altae-Tran,",
+      "bbox": [
+        72.0,
+        629.532958984375,
+        157.8622589111328,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "H.;",
+      "bbox": [
+        168.17959594726562,
+        629.532958984375,
+        183.45834350585938,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Ramsundar,",
+      "bbox": [
+        196.99163818359375,
+        629.532958984375,
+        259.0152282714844,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "B.;",
+      "bbox": [
+        269.33258056640625,
+        629.532958984375,
+        284.1211242675781,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Pappu,",
+      "bbox": [
+        297.6544189453125,
+        629.532958984375,
+        333.902587890625,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "A.",
+      "bbox": [
+        344.23187255859375,
+        629.532958984375,
+        356.2587890625,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "S.;",
+      "bbox": [
+        366.5761413574219,
+        629.532958984375,
+        379.5833740234375,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Pande,",
+      "bbox": [
+        393.1166687011719,
+        629.532958984375,
+        428.06170654296875,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "V.",
+      "bbox": [
+        438.3909912109375,
+        629.532958984375,
+        450.41790771484375,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv",
+      "bbox": [
+        460.7030029296875,
+        629.532958984375,
+        489.27593994140625,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "preprint",
+      "bbox": [
+        499.35418701171875,
+        629.532958984375,
+        540.0138549804688,
+        640.1492309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv:1611.03199 2016,",
+      "bbox": [
+        98.66400146484375,
+        653.4409790039062,
+        223.88082885742188,
+        664.0572509765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(57) Medical Dictionary for Regulatory Activities. http://www.meddra.org/, Accessed:",
+      "bbox": [
+        72.00001525878906,
+        687.3109741210938,
+        539.987548828125,
+        698.261962890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2017-09-27.",
+      "bbox": [
+        98.6640625,
+        711.218994140625,
+        156.57505798339844,
+        721.8352661132812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "62",
+      "bbox": [
+        300.1470642089844,
+        741.5910034179688,
+        311.8631896972656,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 62
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          109
+        ],
+        "pos": [
+          0,
+          110
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          71,
+          132,
+          541,
+          168
+        ],
+        "pos": [
+          110,
+          245
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          71,
+          190,
+          541,
+          224
+        ],
+        "pos": [
+          245,
+          354
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          71,
+          248,
+          541,
+          284
+        ],
+        "pos": [
+          354,
+          475
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          71,
+          306,
+          541,
+          342
+        ],
+        "pos": [
+          475,
+          608
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          71,
+          363,
+          541,
+          400
+        ],
+        "pos": [
+          608,
+          749
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          72,
+          421,
+          541,
+          457
+        ],
+        "pos": [
+          749,
+          895
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          72,
+          479,
+          541,
+          513
+        ],
+        "pos": [
+          895,
+          986
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          72,
+          537,
+          491,
+          550
+        ],
+        "pos": [
+          986,
+          1080
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          72,
+          571,
+          541,
+          605
+        ],
+        "pos": [
+          1080,
+          1194
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          72,
+          628,
+          541,
+          665
+        ],
+        "pos": [
+          1194,
+          1303
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          72,
+          686,
+          540,
+          720
+        ],
+        "pos": [
+          1303,
+          1407
+        ]
+      },
+      {
+        "index": 12,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1407,
+          1412
+        ]
+      }
+    ],
+    "text": "- (46) Rohrer, S. G.; Baumann, K. _Journal of Chemical Information and Modeling_ **2009** , _49_ , 169–184. \n\n- (47) AIDS Antiviral Screen Data. `https://wiki.nci.nih.gov/display/NCIDTPdata/ AIDS+Antiviral+Screen+Data` , Accessed: 2017-09-27. \n\n- (48) Wang, R.; Fang, X.; Lu, Y.; Wang, S. _Journal of Medicinal Chemistry_ **2004** , _47_ , 2977– 2980. \n\n- (49) Wang, R.; Fang, X.; Lu, Y.; Yang, C.-Y.; Wang, S. _Journal of Medicinal Chemistry_ **2005** , _48_ , 4111–4119. \n\n- (50) Liu, Z.; Li, Y.; Han, L.; Li, J.; Liu, J.; Zhao, Z.; Nie, W.; Liu, Y.; Wang, R. _Bioinformatics_ **2014** , _31_ , 405–412. \n\n- (51) Subramanian, G.; Ramsundar, B.; Pande, V.; Denny, R. A. _Journal of Chemical Information and Modeling_ **2016** , _56_ , 1936–1949. \n\n- (52) Martins, I. F.; Teixeira, A. L.; Pinheiro, L.; Falcao, A. O. _Journal of Chemical Information and Modeling_ **2012** , _52_ , 1686–1697. \n\n- (53) Tox21 Challenge. `https://tripod.nih.gov/tox21/challenge/` , Accessed: 2017-0927. \n\n- (54) Richard, A. M. et al. _Chemical Research in Toxicology_ **2016** , _29_ , 1225–1251. \n\n- (55) Kuhn, M.; Letunic, I.; Jensen, L. J.; Bork, P. _Nucleic Acids Research_ **2016** , _44_ , D1075– D41079. \n\n- (56) Altae-Tran, H.; Ramsundar, B.; Pappu, A. S.; Pande, V. _arXiv preprint arXiv:1611.03199_ **2016** , \n\n- (57) Medical Dictionary for Regulatory Activities. `http://www.meddra.org/` , Accessed: 2017-09-27. \n\n62 \n\n"
+  }
+}

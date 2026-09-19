@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "archive": "MoleculeNet-reproduction-evidence.zip",
+  "sha256": "961f8581ce2047738ddf6d8094a50a7ab7ad4713723c13026f8d1c638367412d",
+  "bytes": 16957961,
+  "verified_manifest_entries": 473,
+  "crc_check_passed": true,
+  "duplicate_entries": 0,
+  "unsafe_extraction_paths": 0,
+  "excluded_private_runtime_paths": 0,
+  "text_files_scanned_for_sk_credential_pattern": 372,
+  "credential_pattern_matches": 0,
+  "fresh_extraction": "build/package-verification-final",
+  "recomputed_from_extracted_raw_data_and_predictions": {
+    "command": "verify_results.py",
+    "status": "verified",
+    "runs": 48,
+    "exit_code": 0
+  },
+  "tests_from_extracted_files": {
+    "command": "-m pytest test_outline_validation.py test_benchmark.py test_verify_results.py test_source_data.py -q",
+    "observed_output": "26 passed in 10.95s",
+    "exit_code": 0
+  },
+  "environment": "Existing local scientific Python 3.10 environment; did not reinstall dependencies on another computer.",
+  "limits": "Archive completeness and numeric/unit tests pass. This does not override failed Paper2Any native generation or Pi GUI long-session acceptance. This receipt is external to the archive to avoid a self-referential archive hash."
+}

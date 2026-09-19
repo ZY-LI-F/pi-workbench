@@ -1,0 +1,21 @@
+{
+  "status": "passed_with_scope_limits",
+  "reviewer": "current Codex main agent; not a human or independent subagent",
+  "final_file": "deliverables/MoleculeNet-复现与Pi工具实测-审定版.pptx",
+  "sha256": "ea76d5936698bc7a5d261731d30fc7d70a793ada60a8f5e123f641fb9646a353",
+  "bytes": 445239,
+  "actual_final_pptx_reimported": true,
+  "slides_rendered_and_visually_inspected": [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+  "observed": "No material text/table/chart clipping or overlap found in the independent full-slide renders; source figures retain attribution and aspect ratio; limitations and native Paper2Any failure remain explicit.",
+  "pi_gui_sampled_slides": [1,2,7],
+  "pi_gui_file_sha_matches": true,
+  "pi_gui_pagination_and_zoom_tested": true,
+  "pi_gui_close_reopen_preserved_page_and_zoom": true,
+  "limits": [
+    "Not opened in native PowerPoint or on macOS.",
+    "Noto Sans SC is not embedded; a missing font can change other-machine rendering.",
+    "Pi GUI's default 100% crops a narrow pane; manual 70% zoom was required.",
+    "Pi preview is not claimed to be pixel-identical to the authored slides.",
+    "Structural gates do not independently validate scientific conclusions; separate prediction audits are retained."
+  ]
+}

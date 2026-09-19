@@ -1,0 +1,11 @@
+.venv/
+.venv-paper2any/
+gui-test/profile/
+gui-test/pi-agent/
+build/
+review/
+sources/
+data/
+models/
+*.log
+__pycache__/

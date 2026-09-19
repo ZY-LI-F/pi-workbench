@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CapabilityHealthSnapshot } from "@shared/capabilities";
 import type { RuntimeBootstrap, StellaDesktopApi } from "@shared/contracts";
 import { EMPTY_BOARD_STATE, type KanbanTask } from "@shared/kanban";
+import { DEFAULT_SOL_MODE } from "@shared/sol-mode";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "@shared/orchestration-catalog";
 import { CapabilityHealthStore } from "../../src/main/capability-health";
 import { App } from "../../src/renderer/src/App";
@@ -114,6 +115,7 @@ describe("Capability Health", () => {
     localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify({ ...DEFAULT_PREFERENCES, teamFeaturesEnabled: true }));
     const snapshot = healthSnapshot("error", "Pi startup injection");
     const api = {
+      solModeGet: vi.fn(async () => ({ config: DEFAULT_SOL_MODE, phase: "disabled", features: [], auxiliaryTokens: 0, activities: [] })),
       capabilities: vi.fn(async () => snapshot),
       retryCapability: vi.fn(async () => snapshot),
       executionBackendsInitialize: vi.fn(async () => ({ health: [], profiles: [] })),
@@ -149,6 +151,7 @@ describe("Capability Health", () => {
     const snapshot = healthSnapshot("error", "provider connection interrupted");
     const drafts = new Map<string, { readonly key: string; readonly text: string; readonly images: readonly never[]; readonly updatedAt: number }>();
     const api = {
+      solModeGet: vi.fn(async () => ({ config: DEFAULT_SOL_MODE, phase: "disabled", features: [], auxiliaryTokens: 0, activities: [] })),
       capabilities: vi.fn(async () => snapshot),
       retryCapability: vi.fn(async () => snapshot),
       executionBackendsInitialize: vi.fn(async () => ({ health: [], profiles: [] })),

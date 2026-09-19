@@ -1,0 +1,111 @@
+{
+  "page": 54,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0054.png",
+  "reviewed": true,
+  "review_notes": "Fingerprint continuation, ClinTox curation and Dataset/model access. Cross-page word rejoined. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0054-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        111
+      ],
+      "markdown": "gerprint with radius of 2) respectively on the atoms from the ligand and atoms in the binding pocket of the protein, and then hashed together to form a vector of length 512.",
+      "source_class": "text",
+      "join_previous": "none"
+    },
+    {
+      "id": "p0054-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        123,
+        541,
+        183
+      ],
+      "markdown": "Then we form three different sets of contacting atom pairs between ligand and protein, whose intra-pair distance falls within bins: 0 _∼_ 2<sup>˚</sup> A, 2 _∼_ 3<sup>˚</sup> Aand 3 _∼_ 4.5<sup>˚</sup> A. Each set of pairs is hashed into a fixed length fingerprint with length 512.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0054-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        195,
+        541,
+        230
+      ],
+      "markdown": "Finally, salt bridges are counted, hydrogen bonds are counted in three different distance bins, forming the last four digits. In total the fingerprints have length of 2052.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0054-b003",
+      "kind": "heading",
+      "bbox": [
+        72,
+        263,
+        128,
+        274
+      ],
+      "markdown": "### ClinTox",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0054-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        297,
+        541,
+        500
+      ],
+      "markdown": "The ClinTox dataset addresses clinical drug toxicity by providing a qualitative comparison of drugs approved by the FDA and those that have failed clinical trials for toxicity reasons. We compiled the FDA-approved drug names from annotations in the SWEETLEAD database. We compiled the names of drugs that failed clinical trials for toxicity reasons from the Aggregate Analysis of ClinicalTrials.gov (AACT) database. To identify these drug names, we relied on annotations from the clinical study table titled ”clinical ~~s~~ tudy ~~n~~ oclob.txt” in the AACT database. From this table, we selected clinical trials where the overall status was ”terminated,” ”suspended,” or ”withdrawn,” and the explanation for the status included the terms ”adverse,” ”toxic,” or ”death.”",
+      "source_class": "text"
+    },
+    {
+      "id": "p0054-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        533,
+        254,
+        544
+      ],
+      "markdown": "### Dataset and model access",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0054-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        566,
+        553,
+        650
+      ],
+      "markdown": "Table 13 listed DeepChem commands to load datasets and models in MoleculeNet. For more detailed instructions please refer to the docs and examples. Tutorial for building customized datasets can be found at `https://github.com/deepchem/deepchem/blob/master/examples/ notebooks/dataset_preparation.ipynb`",
+      "source_class": "text"
+    },
+    {
+      "id": "p0054-b007",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "54",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Fingerprint continuation, ClinTox curation and Dataset/model access. Cross-page word rejoined. Reviewed sequentially by the main agent; no independent agent verification."
+}

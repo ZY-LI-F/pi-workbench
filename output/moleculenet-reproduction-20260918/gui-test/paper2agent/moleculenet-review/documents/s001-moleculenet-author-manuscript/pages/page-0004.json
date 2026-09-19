@@ -1,0 +1,74 @@
+{
+  "page": 4,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0004.png",
+  "reviewed": true,
+  "review_notes": "Benchmark scope and Related Work. Single-column reading order inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0004-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        422
+      ],
+      "markdown": "In particular, MoleculeNet contains data on the properties of over 700,000 compounds. All datasets have been curated and integrated into the open source DeepChem package.<sup>30</sup> Users of DeepChem can easily load all MoleculeNet benchmark data through provided library calls. MoleculeNet also contributes high quality implementations of well known (bio)chemical featurization methods. To facilitate comparison and development of new methods, we also provide high quality implementations of several previously proposed machine learning methods. Our implementations are integrated with DeepChem, and depend on Scikit-Learn<sup>31</sup> and Tensorflow<sup>32</sup> underneath the hood. Finally, evaluation of machine learning algorithms requires defined methods to split datasets into training/validation/test collections. Random splitting, common in machine learning, is often not correct for chemical data.<sup>33</sup> MoleculeNet contributes a library of splitting mechanisms to DeepChem and evaluates all algorithms with multiple choices of data split. MoleculeNet provide a series of benchmark results of implemented machine learning algorithms using various featurizations and splits upon our dataset collections. These results are provided within this paper, and will be maintained online in an ongoing fashion as part of DeepChem.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0004-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        434,
+        541,
+        541
+      ],
+      "markdown": "The related work section will review prior work in the chemistry community on gathering curated datasets and discuss how MoleculeNet differs from these previous efforts. The methods section reviews the dataset collections, metrics, featurization methods, and machine learning models included as part of MoleculeNet. The results section will analyze the benchmarking results to draw conclusions about the algorithms and datasets considered.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0004-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        580,
+        190,
+        593
+      ],
+      "markdown": "## Related Work",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0004-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        619,
+        541,
+        703
+      ],
+      "markdown": "MoleculeNet draws upon a broader movement within the chemical community to gather large sources of curated data. PubChem<sup>34</sup> and PubChem BioAssasy<sup>35</sup> gather together thousands of bioassay results, along with millions of unique molecules tested within these assays. The ChEMBL database offers a similar service, with millions of bioactivity outcomes across thou",
+      "source_class": "text"
+    },
+    {
+      "id": "p0004-b004",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        750
+      ],
+      "markdown": "4",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Benchmark scope and Related Work. Single-column reading order inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

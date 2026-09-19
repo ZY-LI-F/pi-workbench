@@ -1,0 +1,9 @@
+{
+  "provider": "aliyun-maas",
+  "requested_model": "glm-5.3",
+  "status": 403,
+  "seconds": 1.3554065,
+  "enable_thinking": false,
+  "response_format": "json_object",
+  "error": "{\"message\":\"Access to model denied. Please make sure you are eligible for using the model.\",\"id\":\"03bd9b11-d269-4db4-aa66-9e675e4daccc\",\"type\":\"AccessDenied.Unpurchased\",\"code\":\"AccessDenied.Unpurchased\"}"
+}

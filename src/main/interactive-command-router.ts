@@ -32,6 +32,8 @@ export class InteractiveCommandRouter {
   #active?: InteractiveLeaseState;
   #compacting = false;
   #runtimeMaintenance = false;
+  #bashOperations = 0;
+  #turnAdmissions = 0;
 
   constructor(dependencies: InteractiveCommandRouterDependencies) {
     this.#runtime = dependencies.runtime;
@@ -43,17 +45,29 @@ export class InteractiveCommandRouter {
     if (this.#runtimeMaintenance) {
       throw new Error("Pi Runtime 正在重载模型配置；请等待重载完成后再发送命令");
     }
-    if (TURN_COMMANDS.has(command.type)) return this.#sendTurn(command, workspacePath, requestId);
-    if (command.type === "bash") return this.#sendBash(command, workspacePath);
+    if (TURN_COMMANDS.has(command.type)) {
+      this.#turnAdmissions += 1;
+      try { return await this.#sendTurn(command, workspacePath, requestId); }
+      finally { this.#turnAdmissions -= 1; }
+    }
+    if (command.type === "bash") {
+      this.#bashOperations += 1;
+      try { return await this.#sendBash(command, workspacePath); }
+      finally { this.#bashOperations -= 1; }
+    }
     if (command.type === "compact") return this.#sendCompaction(command);
     return this.#runtime.send(command);
   }
 
-  async runRuntimeMaintenance<T>(operation: () => Promise<T>): Promise<T> {
+  assertMaintenanceAvailable(): void {
     if (this.#runtimeMaintenance) throw new Error("Pi Runtime 模型配置重载已在进行中");
-    if (this.#active || this.#compacting) {
-      throw new Error("Pi 正在生成、压缩上下文或处理队列消息；请等待当前操作完成后再修改模型配置");
+    if (this.#active || this.#compacting || this.#bashOperations > 0 || this.#turnAdmissions > 0) {
+      throw new Error("Pi 正在生成、执行命令、压缩上下文或处理队列消息；请等待当前操作完成后再修改运行配置");
     }
+  }
+
+  async runRuntimeMaintenance<T>(operation: () => Promise<T>): Promise<T> {
+    this.assertMaintenanceAvailable();
     this.#runtimeMaintenance = true;
     try {
       return await operation();

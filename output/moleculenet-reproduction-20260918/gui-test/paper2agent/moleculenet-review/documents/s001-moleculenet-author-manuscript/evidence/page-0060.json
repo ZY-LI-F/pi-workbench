@@ -1,0 +1,613 @@
+{
+  "page": 60,
+  "lines": [
+    {
+      "text": "(21) Rogers, D.; Hahn, M. Journal of Chemical Information and Modeling 2010, 50, 742–",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0186157226562,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "754.",
+      "bbox": [
+        98.6629638671875,
+        99.56613159179688,
+        119.48892211914062,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(22) Duvenaud, D.;",
+      "bbox": [
+        71.99996185302734,
+        133.43612670898438,
+        177.3611602783203,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Maclaurin, D.;",
+      "bbox": [
+        187.58285522460938,
+        133.43612670898438,
+        266.0926513671875,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Aguilera-Iparraguirre, J.;",
+      "bbox": [
+        276.3143615722656,
+        133.43612670898438,
+        408.8138122558594,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "G´omez-Bombarelli, R.;",
+      "bbox": [
+        419.0355224609375,
+        133.43612670898438,
+        540.0579833984375,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Hirzel, T.; Aspuru-Guzik, A.; Adams, R. P. arXiv preprint arXiv:1509.09292 2015,",
+      "bbox": [
+        98.6629638671875,
+        157.34414672851562,
+        528.2927856445312,
+        167.96035766601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(23) Kearnes, S.;",
+      "bbox": [
+        71.99996948242188,
+        191.21511840820312,
+        164.0789337158203,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "McCloskey, K.;",
+      "bbox": [
+        174.28868103027344,
+        191.21511840820312,
+        255.61990356445312,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Berndl, M.;",
+      "bbox": [
+        265.82965087890625,
+        191.21511840820312,
+        328.72589111328125,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Pande, V.;",
+      "bbox": [
+        338.9356384277344,
+        191.21511840820312,
+        397.2769775390625,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Riley, P. arXiv preprint",
+      "bbox": [
+        407.4986877441406,
+        191.21511840820312,
+        540.0243530273438,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv:1603.00856 2016,",
+      "bbox": [
+        98.6629638671875,
+        215.12210083007812,
+        223.8807830810547,
+        225.73831176757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(24) Miller, G. A. Communications of the ACM 1995, 38, 39–41.",
+      "bbox": [
+        71.99996948242188,
+        248.99307250976562,
+        409.88726806640625,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(25) Deng, J.; Dong, W.; Socher, R.; Li, L.-J.; Li, K.; Fei-Fei, L. ImageNet: A Large-Scale",
+      "bbox": [
+        71.99993896484375,
+        282.8630676269531,
+        540.0457153320312,
+        293.4792785644531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Hierarchical Image Database. CVPR09. 2009.",
+      "bbox": [
+        98.6639404296875,
+        306.77105712890625,
+        332.400146484375,
+        317.38726806640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(26) Russakovsky, O.; Deng, J.; Su, H.; Krause, J.; Satheesh, S.; Ma, S.; Huang, Z.; Karpa-",
+      "bbox": [
+        71.99993896484375,
+        340.6420593261719,
+        540.057861328125,
+        351.2582702636719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "thy, A.; Khosla, A.; Bernstein, M.; Berg, A. C.; Fei-Fei, L. International Journal of",
+      "bbox": [
+        98.6639404296875,
+        364.549072265625,
+        540.0045776367188,
+        375.165283203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Computer Vision (IJCV) 2015, 115, 211–252.",
+      "bbox": [
+        98.6639404296875,
+        388.4570617675781,
+        335.60137939453125,
+        399.0732727050781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(27) Krizhevsky, A.; Sutskever, I.; Hinton, G. E. ImageNet Classiﬁcation with Deep Convo-",
+      "bbox": [
+        71.99993896484375,
+        422.32806396484375,
+        540.0338745117188,
+        432.94427490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lutional Neural Networks. NIPS Proceedings. 2012.",
+      "bbox": [
+        98.6639404296875,
+        446.2360534667969,
+        360.5665588378906,
+        456.8522644042969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(28) Szegedy, C.; Liu, W.; Jia, Y.; Sermanet, P.; Reed, S.; Anguelov, D.; Erhan, D.; Van-",
+      "bbox": [
+        71.99993896484375,
+        480.1060485839844,
+        540.0458984375,
+        490.7222595214844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "houcke, V.; Rabinovich, A. arXiv preprint arXiv:1409.4842 2014,",
+      "bbox": [
+        98.6639404296875,
+        504.0140075683594,
+        436.7597351074219,
+        514.6302490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(29) He, K.; Zhang, X.; Ren, S.; Sun, J. arXiv preprint arXiv:1512.03385 2015,",
+      "bbox": [
+        71.99993896484375,
+        537.8839721679688,
+        484.5147399902344,
+        548.500244140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(30) DeepChem: Deep-learning models for Drug Discovery and Quantum Chemistry. https:",
+      "bbox": [
+        71.99993896484375,
+        571.7550048828125,
+        540.0304565429688,
+        582.7059936523438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "//github.com/deepchem/deepchem, Accessed: 2017-09-27.",
+      "bbox": [
+        98.6639404296875,
+        595.6630249023438,
+        402.0447082519531,
+        606.614013671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(31) others,, et al. Journal of Machine Learning Research 2011, 12, 2825–2830.",
+      "bbox": [
+        71.99992370605469,
+        629.5330200195312,
+        481.8084716796875,
+        640.1492919921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(32) others,, et al. arXiv preprint arXiv:1603.04467 2016,",
+      "bbox": [
+        71.99990844726562,
+        663.4039916992188,
+        373.064697265625,
+        674.020263671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(33) Sheridan, R. P. Journal of chemical information and modeling 2013, 53, 783–790.",
+      "bbox": [
+        71.99990844726562,
+        697.2739868164062,
+        519.5433349609375,
+        707.8902587890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "60",
+      "bbox": [
+        300.1468505859375,
+        741.5910034179688,
+        311.86297607421875,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 60
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          109
+        ],
+        "pos": [
+          0,
+          105
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          71,
+          132,
+          541,
+          168
+        ],
+        "pos": [
+          105,
+          281
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          71,
+          190,
+          541,
+          226
+        ],
+        "pos": [
+          281,
+          396
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          71,
+          248,
+          410,
+          261
+        ],
+        "pos": [
+          396,
+          472
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          71,
+          282,
+          541,
+          318
+        ],
+        "pos": [
+          472,
+          611
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          71,
+          339,
+          541,
+          400
+        ],
+        "pos": [
+          611,
+          844
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          71,
+          421,
+          541,
+          457
+        ],
+        "pos": [
+          844,
+          987
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          71,
+          479,
+          541,
+          515
+        ],
+        "pos": [
+          987,
+          1150
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          71,
+          537,
+          485,
+          550
+        ],
+        "pos": [
+          1150,
+          1240
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          71,
+          571,
+          541,
+          607
+        ],
+        "pos": [
+          1240,
+          1386
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          71,
+          628,
+          482,
+          641
+        ],
+        "pos": [
+          1386,
+          1479
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          71,
+          662,
+          374,
+          675
+        ],
+        "pos": [
+          1479,
+          1549
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          71,
+          696,
+          520,
+          709
+        ],
+        "pos": [
+          1549,
+          1648
+        ]
+      },
+      {
+        "index": 13,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1648,
+          1653
+        ]
+      }
+    ],
+    "text": "- (21) Rogers, D.; Hahn, M. _Journal of Chemical Information and Modeling_ **2010** , _50_ , 742– 754. \n\n- (22) Duvenaud, D.; Maclaurin, D.; Aguilera-Iparraguirre, J.; G´omez-Bombarelli, R.; Hirzel, T.; Aspuru-Guzik, A.; Adams, R. P. _arXiv preprint arXiv:1509.09292_ **2015** , \n\n- (23) Kearnes, S.; McCloskey, K.; Berndl, M.; Pande, V.; Riley, P. _arXiv preprint arXiv:1603.00856_ **2016** , \n\n- (24) Miller, G. A. _Communications of the ACM_ **1995** , _38_ , 39–41. \n\n- (25) Deng, J.; Dong, W.; Socher, R.; Li, L.-J.; Li, K.; Fei-Fei, L. ImageNet: A Large-Scale Hierarchical Image Database. CVPR09. 2009. \n\n- (26) Russakovsky, O.; Deng, J.; Su, H.; Krause, J.; Satheesh, S.; Ma, S.; Huang, Z.; Karpathy, A.; Khosla, A.; Bernstein, M.; Berg, A. C.; Fei-Fei, L. _International Journal of Computer Vision (IJCV)_ **2015** , _115_ , 211–252. \n\n- (27) Krizhevsky, A.; Sutskever, I.; Hinton, G. E. ImageNet Classification with Deep Convolutional Neural Networks. NIPS Proceedings. 2012. \n\n- (28) Szegedy, C.; Liu, W.; Jia, Y.; Sermanet, P.; Reed, S.; Anguelov, D.; Erhan, D.; Vanhoucke, V.; Rabinovich, A. _arXiv preprint arXiv:1409.4842_ **2014** , \n\n- (29) He, K.; Zhang, X.; Ren, S.; Sun, J. _arXiv preprint arXiv:1512.03385_ **2015** , \n\n- (30) DeepChem: Deep-learning models for Drug Discovery and Quantum Chemistry. `https: //github.com/deepchem/deepchem` , Accessed: 2017-09-27. \n\n- (31) others,, et al. _Journal of Machine Learning Research_ **2011** , _12_ , 2825–2830. \n\n- (32) others,, et al. _arXiv preprint arXiv:1603.04467_ **2016** , \n\n- (33) Sheridan, R. P. _Journal of chemical information and modeling_ **2013** , _53_ , 783–790. \n\n60 \n\n"
+  }
+}

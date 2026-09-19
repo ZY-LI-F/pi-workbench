@@ -1,0 +1,4681 @@
+[
+  {
+    "slide_id": "1",
+    "page_num": 1,
+    "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fixed",
+    "template_key": "title_cover",
+    "layout_family": "title_cover",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+        "items": []
+      },
+      {
+        "key": "presenter",
+        "label": "Presenter",
+        "type": "text",
+        "value": "汇报人：请填写",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 20,
+        "padding": 0,
+        "align": "center",
+        "justify": "center"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "cover_stack",
+          "style": {
+            "direction": "column",
+            "gap": 24,
+            "align": "center",
+            "justify": "center"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "title",
+              "component": "heading",
+              "props": {
+                "text_ref": "title"
+              }
+            },
+            {
+              "type": "component",
+              "id": "presenter",
+              "component": "text",
+              "props": {
+                "text_ref": "presenter"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "content": {
+      "eyebrow": "第 01/10 页",
+      "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+      "presenter": "汇报人：请填写",
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "node_styles": {
+        "cover_stack": {
+          "text_align": "center"
+        },
+        "eyebrow": {
+          "color": "#7dd3fc",
+          "font_size": 20,
+          "text_align": "center"
+        },
+        "title": {
+          "font_size": 56,
+          "font_weight": "700",
+          "text_align": "center"
+        },
+        "presenter": {
+          "color": "#94a3b8",
+          "font_size": 26,
+          "text_align": "center"
+        }
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#7dd3fc",
+          "font_size": 26
+        }
+      }
+    },
+    "generation_note": "Cover slide normalized from layout intent.",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "presenter"
+      ],
+      "defined_content_keys": [
+        "eyebrow",
+        "presenter",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "eyebrow"
+      ],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+      "render_engine": "canvas",
+      "layout_family": "text_focus",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 24,
+          "align": "stretch",
+          "padding": 0
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "hero",
+            "style": {
+              "direction": "column",
+              "gap": 18,
+              "weight": 1,
+              "align": "center",
+              "justify": "center"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "slide_title",
+                "component": "heading",
+                "props": {
+                  "text_ref": "title"
+                }
+              },
+              {
+                "type": "component",
+                "id": "slide_subtitle",
+                "component": "text",
+                "props": {
+                  "text_ref": "subtitle"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "meta_row",
+            "style": {
+              "direction": "row",
+              "gap": 18,
+              "align": "center",
+              "justify": "space-between"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "presenter",
+                "component": "text",
+                "props": {
+                  "text_ref": "presenter"
+                }
+              },
+              {
+                "type": "component",
+                "id": "page_label",
+                "component": "text",
+                "props": {
+                  "text_ref": "page_label"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+        "subtitle": "论文原始基准 vs. 本次局部现代环境复现",
+        "presenter": "汇报人：请填写",
+        "page_label": "第 01/10 页 · Paper2Any Frontend PPT",
+        "key_points": [
+          "汇报人：请填写",
+          "论文原始基准 vs. 本次局部现代环境复现"
+        ]
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15, 23, 42, 0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700,
+            "color": "#e2e8f0",
+            "align": "center"
+          },
+          "text": {
+            "font_size": 24,
+            "color": "#94a3b8"
+          },
+          "text_emphasis": {
+            "font_size": 26,
+            "color": "#7dd3fc"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "封面页以大标题居中呈现主题，副标题点明论文基准与现代环境复现的对照，底部仅保留汇报人与页码信息。"
+    }
+  },
+  {
+    "slide_id": "2",
+    "page_num": 2,
+    "title": "研究背景：分子机器学习缺少统一评价平台",
+    "schema_version": "ppt_canvas_schema_v1",
+    "layout_mode": "fluid",
+    "template_key": "text_focus",
+    "blocks": [
+      {
+        "id": "eyebrow",
+        "type": "text",
+        "role": "eyebrow",
+        "content": "第 02/10 页",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 1,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "role": "title",
+        "content": "研究背景：分子机器学习缺少统一评价平台",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 2,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "high"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "text",
+        "role": "summary",
+        "content": "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 3,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "key_points",
+        "type": "list",
+        "role": "key_points",
+        "content": "",
+        "items": [
+          "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+          "分子数据异质、获取昂贵、规模通常小于视觉与语音数据集",
+          "输入分子尺寸与连接方式多变，需要特征化转为固定维度表示",
+          "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现"
+        ],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 4,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "takeaway",
+        "type": "text",
+        "role": "takeaway",
+        "content": "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 8,
+          "order": 5,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "footer",
+        "type": "text",
+        "role": "footer",
+        "content": "Paper2Any Frontend PPT",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 4,
+          "order": 6,
+          "preferred_width": "third",
+          "preferred_side": "right",
+          "emphasis": "low"
+        }
+      }
+    ],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "研究背景：分子机器学习缺少统一评价平台",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+        "items": []
+      },
+      {
+        "key": "key_points",
+        "label": "Key Points",
+        "type": "list",
+        "value": "",
+        "items": [
+          "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+          "分子数据异质、获取昂贵、规模通常小于视觉与语音数据集",
+          "输入分子尺寸与连接方式多变，需要特征化转为固定维度表示",
+          "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现"
+        ]
+      },
+      {
+        "key": "takeaway",
+        "label": "Takeaway",
+        "type": "text",
+        "value": "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "eyebrow_size": 18,
+        "title_size": 56,
+        "summary_size": 26,
+        "body_size": 24
+      },
+      "surface": {
+        "background": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8",
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_family": "Georgia, \"Times New Roman\", serif",
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "callout": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#f59e0b",
+          "font_size": 24
+        },
+        "figure": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "border_color": "#7dd3fc",
+          "image_fit": "contain"
+        },
+        "table": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#7dd3fc",
+          "font_size": 18
+        }
+      }
+    },
+    "generation_note": "Fallback template used because frontend code generation failed: Expecting ',' delimiter: line 111 column 4 (char 2736)",
+    "status": "done",
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 24,
+        "padding": 0,
+        "align": "stretch",
+        "justify": "start"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "header",
+          "style": {
+            "direction": "column",
+            "gap": 12,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "title",
+              "component": "heading",
+              "props": {
+                "text_ref": "title"
+              },
+              "style": {
+                "emphasis": "high"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "column",
+            "gap": 24,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "main_left",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "summary",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "summary"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "key_points",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "key_points"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "footer",
+          "style": {
+            "direction": "row",
+            "gap": 16,
+            "align": "end",
+            "justify": "between"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "takeaway",
+              "component": "text",
+              "props": {
+                "text_ref": "takeaway"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            },
+            {
+              "type": "component",
+              "id": "footer",
+              "component": "text",
+              "props": {
+                "text_ref": "footer"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "render_engine": "canvas",
+    "content": {
+      "eyebrow": "第 02/10 页",
+      "title": "研究背景：分子机器学习缺少统一评价平台",
+      "summary": "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+      "points_label": "Key Points",
+      "key_points": [
+        "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+        "分子数据异质、获取昂贵、规模通常小于视觉与语音数据集",
+        "输入分子尺寸与连接方式多变，需要特征化转为固定维度表示",
+        "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现"
+      ],
+      "takeaway_label": "Takeaway",
+      "takeaway": "MoleculeNet 原始基准目标：提供数据集、指标、划分方式与开源算法实现",
+      "footer": "Paper2Any Frontend PPT",
+      "assets": {}
+    },
+    "layout_family": "text_focus",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "key_points",
+        "takeaway",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "eyebrow",
+        "footer",
+        "key_points",
+        "points_label",
+        "summary",
+        "takeaway",
+        "takeaway_label",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "eyebrow",
+        "points_label",
+        "takeaway_label"
+      ],
+      "empty_components": [],
+      "issues": [
+        {
+          "severity": "repairable",
+          "code": "duplicate_node_id",
+          "node_id": "footer",
+          "message": "Duplicate canvas node id: footer"
+        }
+      ]
+    },
+    "_raw_ai_payload": {
+      "error": "Expecting ',' delimiter: line 111 column 4 (char 2736)",
+      "fallback": true
+    }
+  },
+  {
+    "slide_id": "3",
+    "page_num": 3,
+    "title": "MoleculeNet 的总体设计",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "two_column",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "MoleculeNet 的总体设计",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "MoleculeNet 以统一接口，把数据集、特征化方法、划分方式与学习模型组合为可复现的分子机器学习基准框架。",
+        "items": []
+      },
+      {
+        "key": "hub_text",
+        "label": "Hub Text",
+        "type": "text",
+        "value": "MoleculeNet：统一基准枢纽；数据集、评估指标、特征化与学习模型四条主线均可替换与重新组合。",
+        "items": []
+      },
+      {
+        "key": "stat_datasets",
+        "label": "Stat Datasets",
+        "type": "text",
+        "value": "17 个数据集",
+        "items": []
+      },
+      {
+        "key": "stat_compounds",
+        "label": "Stat Compounds",
+        "type": "text",
+        "value": "70 万+ 化合物",
+        "items": []
+      },
+      {
+        "key": "stat_tasks",
+        "label": "Stat Tasks",
+        "type": "text",
+        "value": "800+ 任务",
+        "items": []
+      },
+      {
+        "key": "pillars_heading",
+        "label": "Pillars Heading",
+        "type": "text",
+        "value": "任务分类与开源集成",
+        "items": []
+      },
+      {
+        "key": "key_points",
+        "label": "Key Points",
+        "type": "list",
+        "value": "",
+        "items": [
+          "任务分为四类：量子力学、物理化学、生物物理、生理效应",
+          "统一集成到开源 DeepChem，提供数据加载、特征化、划分与模型接口",
+          "强调可替换的 featurization、split 与 learning model 组合",
+          "本次复现仅覆盖 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集"
+        ]
+      },
+      {
+        "key": "scope_note",
+        "label": "Scope Note",
+        "type": "text",
+        "value": "复现范围声明：仅使用 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集，不覆盖其余任务类别。",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 22,
+        "align": "stretch",
+        "padding": 62
+      },
+      "children": [
+        {
+          "type": "component",
+          "id": "title",
+          "component": "heading",
+          "props": {
+            "text_ref": "title"
+          }
+        },
+        {
+          "type": "component",
+          "id": "summary",
+          "component": "text",
+          "props": {
+            "text_ref": "summary"
+          }
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "row",
+            "gap": 24,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "left_col",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "hub",
+                  "component": "callout",
+                  "props": {
+                    "text_ref": "hub_text"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "stat_datasets",
+                  "component": "stat",
+                  "props": {
+                    "text_ref": "stat_datasets"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "stat_compounds",
+                  "component": "stat",
+                  "props": {
+                    "text_ref": "stat_compounds"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "stat_tasks",
+                  "component": "stat",
+                  "props": {
+                    "text_ref": "stat_tasks"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "right_col",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "pillars_heading",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "pillars_heading"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "key_points",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "key_points"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "scope_note",
+                  "component": "callout",
+                  "props": {
+                    "text_ref": "scope_note"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "content": {
+      "title": "MoleculeNet 的总体设计",
+      "summary": "MoleculeNet 以统一接口，把数据集、特征化方法、划分方式与学习模型组合为可复现的分子机器学习基准框架。",
+      "hub_text": "MoleculeNet：统一基准枢纽；数据集、评估指标、特征化与学习模型四条主线均可替换与重新组合。",
+      "stat_datasets": "17 个数据集",
+      "stat_compounds": "70 万+ 化合物",
+      "stat_tasks": "800+ 任务",
+      "pillars_heading": "任务分类与开源集成",
+      "key_points": [
+        "任务分为四类：量子力学、物理化学、生物物理、生理效应",
+        "统一集成到开源 DeepChem，提供数据加载、特征化、划分与模型接口",
+        "强调可替换的 featurization、split 与 learning model 组合",
+        "本次复现仅覆盖 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集"
+      ],
+      "scope_note": "复现范围声明：仅使用 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集，不覆盖其余任务类别。",
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "eyebrow_size": 18,
+        "title_size": 56,
+        "summary_size": 26,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#e2e8f0",
+          "font_size": 24
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 24
+        },
+        "callout": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "font_size": 24
+        },
+        "stat": {
+          "color": "#7dd3fc",
+          "font_size": 30
+        }
+      }
+    },
+    "generation_note": "以两列报告式版式呈现 MoleculeNet 中心枢纽：左侧数字与枢纽说明，右侧任务分类、集成方式与复现范围。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "hub_text",
+        "stat_datasets",
+        "stat_compounds",
+        "stat_tasks",
+        "pillars_heading",
+        "key_points",
+        "scope_note"
+      ],
+      "defined_content_keys": [
+        "hub_text",
+        "key_points",
+        "pillars_heading",
+        "scope_note",
+        "stat_compounds",
+        "stat_datasets",
+        "stat_tasks",
+        "summary",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "MoleculeNet 的总体设计",
+      "render_engine": "canvas",
+      "layout_family": "two_column",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 22,
+          "align": "stretch",
+          "padding": 62
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          },
+          {
+            "type": "component",
+            "id": "summary",
+            "component": "text",
+            "props": {
+              "text_ref": "summary"
+            }
+          },
+          {
+            "type": "container",
+            "id": "main",
+            "style": {
+              "direction": "row",
+              "gap": 24,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "left_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 18,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "hub",
+                    "component": "callout",
+                    "props": {
+                      "text_ref": "hub_text"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "stat_datasets",
+                    "component": "stat",
+                    "props": {
+                      "text_ref": "stat_datasets"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "stat_compounds",
+                    "component": "stat",
+                    "props": {
+                      "text_ref": "stat_compounds"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "stat_tasks",
+                    "component": "stat",
+                    "props": {
+                      "text_ref": "stat_tasks"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "container",
+                "id": "right_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 18,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "pillars_heading",
+                    "component": "text",
+                    "props": {
+                      "text_ref": "pillars_heading"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "key_points",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "key_points"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "scope_note",
+                    "component": "callout",
+                    "props": {
+                      "text_ref": "scope_note"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "title": "MoleculeNet 的总体设计",
+        "summary": "MoleculeNet 以统一接口，把数据集、特征化方法、划分方式与学习模型组合为可复现的分子机器学习基准框架。",
+        "hub_text": "MoleculeNet：统一基准枢纽；数据集、评估指标、特征化与学习模型四条主线均可替换与重新组合。",
+        "stat_datasets": "17 个数据集",
+        "stat_compounds": "70 万+ 化合物",
+        "stat_tasks": "800+ 任务",
+        "pillars_heading": "任务分类与开源集成",
+        "key_points": [
+          "任务分为四类：量子力学、物理化学、生物物理、生理效应",
+          "统一集成到开源 DeepChem，提供数据加载、特征化、划分与模型接口",
+          "强调可替换的 featurization、split 与 learning model 组合",
+          "本次复现仅覆盖 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集"
+        ],
+        "scope_note": "复现范围声明：仅使用 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集，不覆盖其余任务类别。"
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15, 23, 42, 0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24,
+          "summary_size": 26,
+          "eyebrow_size": 18
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700,
+            "color": "#e2e8f0"
+          },
+          "text": {
+            "font_size": 24,
+            "color": "#e2e8f0"
+          },
+          "bullets": {
+            "font_size": 24,
+            "color": "#e2e8f0",
+            "marker_color": "#7dd3fc"
+          },
+          "callout": {
+            "font_size": 24,
+            "color": "#e2e8f0",
+            "accent_color": "#7dd3fc",
+            "background": "rgba(15, 23, 42, 0.92)"
+          },
+          "stat": {
+            "font_size": 30,
+            "color": "#7dd3fc",
+            "label_color": "#94a3b8"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "以两列报告式版式呈现 MoleculeNet 中心枢纽：左侧数字与枢纽说明，右侧任务分类、集成方式与复现范围。"
+    }
+  },
+  {
+    "slide_id": "4",
+    "page_num": 4,
+    "title": "数据集覆盖：从量子性质到人体生理效应",
+    "schema_version": "ppt_canvas_schema_v1",
+    "layout_mode": "fluid",
+    "template_key": "text_focus",
+    "blocks": [
+      {
+        "id": "eyebrow",
+        "type": "text",
+        "role": "eyebrow",
+        "content": "第 04/10 页",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 1,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "role": "title",
+        "content": "数据集覆盖：从量子性质到人体生理效应",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 2,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "high"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "text",
+        "role": "summary",
+        "content": "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 3,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "key_points",
+        "type": "list",
+        "role": "key_points",
+        "content": "",
+        "items": [
+          "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+          "物理化学：ESOL、FreeSolv、Lipophilicity，预测溶解度、水合自由能、脂溶性（本次复现涉及）",
+          "生物物理：PCBA、MUV、HIV、BACE、PDBbind，涉及生物活性与结合亲和力",
+          "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用"
+        ],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 4,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "takeaway",
+        "type": "text",
+        "role": "takeaway",
+        "content": "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 8,
+          "order": 5,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "footer",
+        "type": "text",
+        "role": "footer",
+        "content": "Paper2Any Frontend PPT",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 4,
+          "order": 6,
+          "preferred_width": "third",
+          "preferred_side": "right",
+          "emphasis": "low"
+        }
+      }
+    ],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "数据集覆盖：从量子性质到人体生理效应",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+        "items": []
+      },
+      {
+        "key": "key_points",
+        "label": "Key Points",
+        "type": "list",
+        "value": "",
+        "items": [
+          "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+          "物理化学：ESOL、FreeSolv、Lipophilicity，预测溶解度、水合自由能、脂溶性（本次复现涉及）",
+          "生物物理：PCBA、MUV、HIV、BACE、PDBbind，涉及生物活性与结合亲和力",
+          "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用"
+        ]
+      },
+      {
+        "key": "takeaway",
+        "label": "Takeaway",
+        "type": "text",
+        "value": "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "eyebrow_size": 18,
+        "title_size": 56,
+        "summary_size": 26,
+        "body_size": 24
+      },
+      "surface": {
+        "background": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8",
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_family": "Georgia, \"Times New Roman\", serif",
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "callout": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#f59e0b",
+          "font_size": 24
+        },
+        "figure": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "border_color": "#7dd3fc",
+          "image_fit": "contain"
+        },
+        "table": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#7dd3fc",
+          "font_size": 18
+        }
+      }
+    },
+    "generation_note": "Fallback template used because frontend code generation failed: Expecting value: line 1 column 1 (char 0)",
+    "status": "done",
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 24,
+        "padding": 0,
+        "align": "stretch",
+        "justify": "start"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "header",
+          "style": {
+            "direction": "column",
+            "gap": 12,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "title",
+              "component": "heading",
+              "props": {
+                "text_ref": "title"
+              },
+              "style": {
+                "emphasis": "high"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "column",
+            "gap": 24,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "main_left",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "summary",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "summary"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "key_points",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "key_points"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "footer",
+          "style": {
+            "direction": "row",
+            "gap": 16,
+            "align": "end",
+            "justify": "between"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "takeaway",
+              "component": "text",
+              "props": {
+                "text_ref": "takeaway"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            },
+            {
+              "type": "component",
+              "id": "footer",
+              "component": "text",
+              "props": {
+                "text_ref": "footer"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "render_engine": "canvas",
+    "content": {
+      "eyebrow": "第 04/10 页",
+      "title": "数据集覆盖：从量子性质到人体生理效应",
+      "summary": "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+      "points_label": "Key Points",
+      "key_points": [
+        "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+        "物理化学：ESOL、FreeSolv、Lipophilicity，预测溶解度、水合自由能、脂溶性（本次复现涉及）",
+        "生物物理：PCBA、MUV、HIV、BACE、PDBbind，涉及生物活性与结合亲和力",
+        "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用"
+      ],
+      "takeaway_label": "Takeaway",
+      "takeaway": "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用",
+      "footer": "Paper2Any Frontend PPT",
+      "assets": {}
+    },
+    "layout_family": "text_focus",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "key_points",
+        "takeaway",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "eyebrow",
+        "footer",
+        "key_points",
+        "points_label",
+        "summary",
+        "takeaway",
+        "takeaway_label",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "eyebrow",
+        "points_label",
+        "takeaway_label"
+      ],
+      "empty_components": [],
+      "issues": [
+        {
+          "severity": "repairable",
+          "code": "duplicate_node_id",
+          "node_id": "footer",
+          "message": "Duplicate canvas node id: footer"
+        }
+      ]
+    },
+    "_raw_ai_payload": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "fallback": true
+    }
+  },
+  {
+    "slide_id": "5",
+    "page_num": 5,
+    "title": "数据划分与评价指标",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "two_column",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "数据划分与评价指标",
+        "items": []
+      },
+      {
+        "key": "eyebrow",
+        "label": "Eyebrow",
+        "type": "text",
+        "value": "研究方法 · 第 05/10 页",
+        "items": []
+      },
+      {
+        "key": "section_split",
+        "label": "Section Split",
+        "type": "text",
+        "value": "划分方案",
+        "items": []
+      },
+      {
+        "key": "section_metric",
+        "label": "Section Metric",
+        "type": "text",
+        "value": "指标选择逻辑",
+        "items": []
+      },
+      {
+        "key": "bullets_split",
+        "label": "Bullets Split",
+        "type": "list",
+        "value": "",
+        "items": [
+          "论文原始基准：所有数据集按 80/10/10 划分为训练集、验证集与测试集。",
+          "本次复现：三个数据集采用随机 80/10/10 划分；ESOL 另有骨架划分诊断。",
+          "支持随机划分、骨架划分、分层划分与时间划分；骨架划分将不同二维结构框架的分子分开，更考验泛化能力。"
+        ]
+      },
+      {
+        "key": "bullets_metric",
+        "label": "Bullets Metric",
+        "type": "list",
+        "value": "",
+        "items": [
+          "回归任务常用 MAE 与 RMSE，RMSE 越低越好。",
+          "分类任务常用 AUC-ROC 与 AUC-PRC。",
+          "正例率低于 2% 时论文推荐 AUC-PRC，否则推荐 AUC-ROC。"
+        ]
+      },
+      {
+        "key": "callout",
+        "label": "Callout",
+        "type": "text",
+        "value": "高不平衡场景（正例率 < 2%）：优先 AUC-PRC；RMSE 方向为越低越好。",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT ｜ 第 05/10 页",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 22,
+        "align": "stretch"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "header",
+          "style": {
+            "direction": "column",
+            "gap": 10,
+            "align": "start"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "eyebrow",
+              "component": "heading",
+              "props": {
+                "text_ref": "eyebrow"
+              }
+            },
+            {
+              "type": "component",
+              "id": "title",
+              "component": "heading",
+              "props": {
+                "text_ref": "title"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "row",
+            "gap": 22,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "left_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "left_heading",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "section_split"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "left_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "bullets_split"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "right_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "right_heading",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "section_metric"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "right_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "bullets_metric"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "footer_bar",
+          "style": {
+            "direction": "row",
+            "gap": 18,
+            "align": "center",
+            "justify": "space-between"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "callout",
+              "component": "callout",
+              "props": {
+                "text_ref": "callout"
+              }
+            },
+            {
+              "type": "component",
+              "id": "footer",
+              "component": "text",
+              "props": {
+                "text_ref": "footer"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "content": {
+      "title": "数据划分与评价指标",
+      "eyebrow": "研究方法 · 第 05/10 页",
+      "section_split": "划分方案",
+      "section_metric": "指标选择逻辑",
+      "bullets_split": [
+        "论文原始基准：所有数据集按 80/10/10 划分为训练集、验证集与测试集。",
+        "本次复现：三个数据集采用随机 80/10/10 划分；ESOL 另有骨架划分诊断。",
+        "支持随机划分、骨架划分、分层划分与时间划分；骨架划分将不同二维结构框架的分子分开，更考验泛化能力。"
+      ],
+      "bullets_metric": [
+        "回归任务常用 MAE 与 RMSE，RMSE 越低越好。",
+        "分类任务常用 AUC-ROC 与 AUC-PRC。",
+        "正例率低于 2% 时论文推荐 AUC-PRC，否则推荐 AUC-ROC。"
+      ],
+      "callout": "高不平衡场景（正例率 < 2%）：优先 AUC-PRC；RMSE 方向为越低越好。",
+      "footer": "Paper2Any Frontend PPT ｜ 第 05/10 页",
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15,23,42,0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "font_size": 34,
+          "font_weight": "600"
+        },
+        "figure": {
+          "image_fit": "contain"
+        }
+      }
+    },
+    "generation_note": "左右两栏分别呈现划分方案与指标选择逻辑，底部条带突出高不平衡场景与 RMSE 方向约束。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "eyebrow",
+        "title",
+        "section_split",
+        "bullets_split",
+        "section_metric",
+        "bullets_metric",
+        "callout",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "bullets_metric",
+        "bullets_split",
+        "callout",
+        "eyebrow",
+        "footer",
+        "section_metric",
+        "section_split",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "数据划分与评价指标",
+      "render_engine": "canvas",
+      "layout_family": "two_column",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 22,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "header",
+            "style": {
+              "direction": "column",
+              "gap": 10,
+              "align": "start"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "eyebrow",
+                "component": "heading",
+                "props": {
+                  "text_ref": "eyebrow"
+                }
+              },
+              {
+                "type": "component",
+                "id": "title",
+                "component": "heading",
+                "props": {
+                  "text_ref": "title"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "main",
+            "style": {
+              "direction": "row",
+              "gap": 22,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "left_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "left_heading",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "section_split"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "left_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "bullets_split"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "container",
+                "id": "right_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "right_heading",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "section_metric"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "right_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "bullets_metric"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "footer_bar",
+            "style": {
+              "direction": "row",
+              "gap": 18,
+              "align": "center",
+              "justify": "space-between"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "callout",
+                "component": "callout",
+                "props": {
+                  "text_ref": "callout"
+                }
+              },
+              {
+                "type": "component",
+                "id": "footer",
+                "component": "text",
+                "props": {
+                  "text_ref": "footer"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "content": {
+        "title": "数据划分与评价指标",
+        "eyebrow": "研究方法 · 第 05/10 页",
+        "section_split": "划分方案",
+        "section_metric": "指标选择逻辑",
+        "bullets_split": [
+          "论文原始基准：所有数据集按 80/10/10 划分为训练集、验证集与测试集。",
+          "本次复现：三个数据集采用随机 80/10/10 划分；ESOL 另有骨架划分诊断。",
+          "支持随机划分、骨架划分、分层划分与时间划分；骨架划分将不同二维结构框架的分子分开，更考验泛化能力。"
+        ],
+        "bullets_metric": [
+          "回归任务常用 MAE 与 RMSE，RMSE 越低越好。",
+          "分类任务常用 AUC-ROC 与 AUC-PRC。",
+          "正例率低于 2% 时论文推荐 AUC-PRC，否则推荐 AUC-ROC。"
+        ],
+        "callout": "高不平衡场景（正例率 < 2%）：优先 AUC-PRC；RMSE 方向为越低越好。",
+        "footer": "Paper2Any Frontend PPT ｜ 第 05/10 页"
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15,23,42,0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 34,
+            "font_weight": 600
+          },
+          "figure": {
+            "image_fit": "contain"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "左右两栏分别呈现划分方案与指标选择逻辑，底部条带突出高不平衡场景与 RMSE 方向约束。"
+    }
+  },
+  {
+    "slide_id": "6",
+    "page_num": 6,
+    "title": "特征化与学习模型",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "two_column",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "特征化与学习模型",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "特征化方式决定分子表征：固定表征与传统模型配对，可学习表征对应图模型；标注为本次复现涉及的部分。",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_h_0",
+        "label": "Table 1 Header 1",
+        "type": "text",
+        "value": "特征化方法",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_h_1",
+        "label": "Table 1 Header 2",
+        "type": "text",
+        "value": "表征性质",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_0_0",
+        "label": "Table 1 R1C1",
+        "type": "text",
+        "value": "ECFP（默认）",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_0_1",
+        "label": "Table 1 R1C2",
+        "type": "text",
+        "value": "固定表征",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_1_0",
+        "label": "Table 1 R2C1",
+        "type": "text",
+        "value": "Coulomb Matrix",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_1_1",
+        "label": "Table 1 R2C2",
+        "type": "text",
+        "value": "固定表征（部分任务）",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_2_0",
+        "label": "Table 1 R3C1",
+        "type": "text",
+        "value": "Grid",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_2_1",
+        "label": "Table 1 R3C2",
+        "type": "text",
+        "value": "固定表征（部分任务）",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_3_0",
+        "label": "Table 1 R4C1",
+        "type": "text",
+        "value": "Symmetry Function",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_3_1",
+        "label": "Table 1 R4C2",
+        "type": "text",
+        "value": "固定表征",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_4_0",
+        "label": "Table 1 R5C1",
+        "type": "text",
+        "value": "Graph Convolutions（★复现）",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_4_1",
+        "label": "Table 1 R5C2",
+        "type": "text",
+        "value": "可学习表征",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_5_0",
+        "label": "Table 1 R6C1",
+        "type": "text",
+        "value": "Weave",
+        "items": []
+      },
+      {
+        "key": "table_1_cell_5_1",
+        "label": "Table 1 R6C2",
+        "type": "text",
+        "value": "可学习表征",
+        "items": []
+      },
+      {
+        "key": "traditional_label",
+        "label": "Traditional Label",
+        "type": "text",
+        "value": "传统模型（默认 ECFP，部分任务使用 CM 或 Grid）",
+        "items": []
+      },
+      {
+        "key": "traditional_items",
+        "label": "Traditional Items",
+        "type": "list",
+        "value": "",
+        "items": [
+          "Logistic Regression",
+          "Kernel SVM",
+          "KRR（★复现）",
+          "Random Forest（★复现）",
+          "XGBoost",
+          "Multitask / Singletask",
+          "Bypass 与 IRV"
+        ]
+      },
+      {
+        "key": "graph_label",
+        "label": "Graph Label",
+        "type": "text",
+        "value": "图模型（使用可学习表征）",
+        "items": []
+      },
+      {
+        "key": "graph_items",
+        "label": "Graph Items",
+        "type": "list",
+        "value": "",
+        "items": [
+          "GC — Graph Convolution（★复现）",
+          "Weave",
+          "DAG — Directed Acyclic Graph",
+          "DTNN",
+          "ANI-1",
+          "MPNN"
+        ]
+      },
+      {
+        "key": "scope_note",
+        "label": "Scope Note",
+        "type": "text",
+        "value": "本次复现仅涉及四种设置：mean 基线、Random Forest、KRR、Graph Convolution。",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 22,
+        "align": "stretch",
+        "padding": 62
+      },
+      "children": [
+        {
+          "type": "component",
+          "id": "title",
+          "component": "heading",
+          "props": {
+            "text_ref": "title"
+          }
+        },
+        {
+          "type": "component",
+          "id": "summary",
+          "component": "text",
+          "props": {
+            "text_ref": "summary"
+          }
+        },
+        {
+          "type": "component",
+          "id": "feature_matrix",
+          "component": "table",
+          "props": {
+            "table_ref": "table_1"
+          }
+        },
+        {
+          "type": "container",
+          "id": "model_compare",
+          "style": {
+            "direction": "row",
+            "gap": 24,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "traditional_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "traditional_label",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "traditional_label"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "traditional_items",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "traditional_items"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "graph_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "graph_label",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "graph_label"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "graph_items",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "graph_items"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "component",
+          "id": "scope_note",
+          "component": "callout",
+          "props": {
+            "text_ref": "scope_note"
+          }
+        }
+      ]
+    },
+    "content": {
+      "title": "特征化与学习模型",
+      "summary": "特征化方式决定分子表征：固定表征与传统模型配对，可学习表征对应图模型；标注为本次复现涉及的部分。",
+      "key_points": [
+        "特征化包括 ECFP、Coulomb Matrix、Grid、Symmetry Function、Graph Convolutions、Weave",
+        "传统模型包括 Logistic Regression、Kernel SVM、KRR、Random Forest、XGBoost、Multitask/Singletask、Bypass、IRV",
+        "图模型包括 GC、Weave、DAG、DTNN、ANI-1、MPNN",
+        "图模型使用可学习表征，传统模型默认使用 ECFP，部分任务使用 CM 或 Grid",
+        "本次复现仅涉及 mean 基线、Random Forest、KRR、Graph Convolution 四种设置"
+      ],
+      "table_1": {
+        "headers": [
+          "特征化方法",
+          "表征性质"
+        ],
+        "rows": [
+          [
+            "ECFP（默认）",
+            "固定表征"
+          ],
+          [
+            "Coulomb Matrix",
+            "固定表征（部分任务）"
+          ],
+          [
+            "Grid",
+            "固定表征（部分任务）"
+          ],
+          [
+            "Symmetry Function",
+            "固定表征"
+          ],
+          [
+            "Graph Convolutions（★复现）",
+            "可学习表征"
+          ],
+          [
+            "Weave",
+            "可学习表征"
+          ]
+        ]
+      },
+      "traditional_label": "传统模型（默认 ECFP，部分任务使用 CM 或 Grid）",
+      "traditional_items": [
+        "Logistic Regression",
+        "Kernel SVM",
+        "KRR（★复现）",
+        "Random Forest（★复现）",
+        "XGBoost",
+        "Multitask / Singletask",
+        "Bypass 与 IRV"
+      ],
+      "graph_label": "图模型（使用可学习表征）",
+      "graph_items": [
+        "GC — Graph Convolution（★复现）",
+        "Weave",
+        "DAG — Directed Acyclic Graph",
+        "DTNN",
+        "ANI-1",
+        "MPNN"
+      ],
+      "scope_note": "本次复现仅涉及四种设置：mean 基线、Random Forest、KRR、Graph Convolution。",
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15,23,42,0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#94a3b8",
+          "font_size": 24
+        },
+        "bullets": {
+          "font_size": 22
+        },
+        "table": {
+          "border_color": "rgba(148,163,184,0.35)",
+          "font_size": 20
+        },
+        "callout": {
+          "font_size": 22
+        }
+      }
+    },
+    "generation_note": "上表下双列的结构先给出特征化方法矩阵，再并置传统模型与图模型，并以标签标出本次复现涉及的四种设置。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "table_1",
+        "traditional_label",
+        "traditional_items",
+        "graph_label",
+        "graph_items",
+        "scope_note"
+      ],
+      "defined_content_keys": [
+        "graph_items",
+        "graph_label",
+        "key_points",
+        "scope_note",
+        "summary",
+        "table_1",
+        "title",
+        "traditional_items",
+        "traditional_label"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "key_points"
+      ],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "特征化与学习模型",
+      "render_engine": "canvas",
+      "layout_family": "two_column",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 22,
+          "align": "stretch",
+          "padding": 62
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          },
+          {
+            "type": "component",
+            "id": "summary",
+            "component": "text",
+            "props": {
+              "text_ref": "summary"
+            }
+          },
+          {
+            "type": "component",
+            "id": "feature_matrix",
+            "component": "table",
+            "props": {
+              "table_ref": "table_1"
+            }
+          },
+          {
+            "type": "container",
+            "id": "model_compare",
+            "style": {
+              "direction": "row",
+              "gap": 24,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "traditional_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "traditional_label",
+                    "component": "text",
+                    "props": {
+                      "text_ref": "traditional_label"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "traditional_items",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "traditional_items"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "container",
+                "id": "graph_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "graph_label",
+                    "component": "text",
+                    "props": {
+                      "text_ref": "graph_label"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "graph_items",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "graph_items"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "component",
+            "id": "scope_note",
+            "component": "callout",
+            "props": {
+              "text_ref": "scope_note"
+            }
+          }
+        ]
+      },
+      "content": {
+        "title": "特征化与学习模型",
+        "summary": "特征化方式决定分子表征：固定表征与传统模型配对，可学习表征对应图模型；标注为本次复现涉及的部分。",
+        "key_points": [
+          "特征化包括 ECFP、Coulomb Matrix、Grid、Symmetry Function、Graph Convolutions、Weave",
+          "传统模型包括 Logistic Regression、Kernel SVM、KRR、Random Forest、XGBoost、Multitask/Singletask、Bypass、IRV",
+          "图模型包括 GC、Weave、DAG、DTNN、ANI-1、MPNN",
+          "图模型使用可学习表征，传统模型默认使用 ECFP，部分任务使用 CM 或 Grid",
+          "本次复现仅涉及 mean 基线、Random Forest、KRR、Graph Convolution 四种设置"
+        ],
+        "table_1": {
+          "headers": [
+            "特征化方法",
+            "表征性质"
+          ],
+          "rows": [
+            [
+              "ECFP（默认）",
+              "固定表征"
+            ],
+            [
+              "Coulomb Matrix",
+              "固定表征（部分任务）"
+            ],
+            [
+              "Grid",
+              "固定表征（部分任务）"
+            ],
+            [
+              "Symmetry Function",
+              "固定表征"
+            ],
+            [
+              "Graph Convolutions（★复现）",
+              "可学习表征"
+            ],
+            [
+              "Weave",
+              "可学习表征"
+            ]
+          ]
+        },
+        "traditional_label": "传统模型（默认 ECFP，部分任务使用 CM 或 Grid）",
+        "traditional_items": [
+          "Logistic Regression",
+          "Kernel SVM",
+          "KRR（★复现）",
+          "Random Forest（★复现）",
+          "XGBoost",
+          "Multitask / Singletask",
+          "Bypass 与 IRV"
+        ],
+        "graph_label": "图模型（使用可学习表征）",
+        "graph_items": [
+          "GC — Graph Convolution（★复现）",
+          "Weave",
+          "DAG — Directed Acyclic Graph",
+          "DTNN",
+          "ANI-1",
+          "MPNN"
+        ],
+        "scope_note": "本次复现仅涉及四种设置：mean 基线、Random Forest、KRR、Graph Convolution。",
+        "assets": {}
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15,23,42,0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700
+          },
+          "text": {
+            "font_size": 24,
+            "color": "#94a3b8"
+          },
+          "bullets": {
+            "font_size": 22,
+            "line_gap": 10,
+            "marker_color": "#7dd3fc"
+          },
+          "table": {
+            "font_size": 20,
+            "header_color": "#7dd3fc",
+            "border_color": "rgba(148,163,184,0.35)"
+          },
+          "callout": {
+            "font_size": 22,
+            "accent_color": "#f59e0b"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "上表下双列的结构先给出特征化方法矩阵，再并置传统模型与图模型，并以标签标出本次复现涉及的四种设置。"
+    }
+  },
+  {
+    "slide_id": "7",
+    "page_num": 7,
+    "title": "论文主要结论",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "two_column",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "论文主要结论",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "优势、局限与条件依赖三类判据，均以论文原始基准的完整评测为准。",
+        "items": []
+      },
+      {
+        "key": "advantage_title",
+        "label": "Advantage Title",
+        "type": "text",
+        "value": "结论优势",
+        "items": []
+      },
+      {
+        "key": "advantage_bullets",
+        "label": "Advantage Bullets",
+        "type": "list",
+        "value": "",
+        "items": [
+          "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+          "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度"
+        ]
+      },
+      {
+        "key": "limit_title",
+        "label": "Limit Title",
+        "type": "text",
+        "value": "局限与条件依赖",
+        "items": []
+      },
+      {
+        "key": "limit_bullets",
+        "label": "Limit Bullets",
+        "type": "list",
+        "value": "",
+        "items": [
+          "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+          "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+          "量子力学与生物物理任务中，物理感知特征化比模型选择更关键"
+        ]
+      },
+      {
+        "key": "caveat",
+        "label": "Caveat",
+        "type": "text",
+        "value": "结论依据：论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论。",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT · 第 07/10 页",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 22,
+        "align": "stretch",
+        "padding": 62
+      },
+      "children": [
+        {
+          "type": "component",
+          "id": "title",
+          "component": "heading",
+          "props": {
+            "text_ref": "title"
+          }
+        },
+        {
+          "type": "component",
+          "id": "lead",
+          "component": "text",
+          "props": {
+            "text_ref": "summary"
+          }
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "row",
+            "gap": 22,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "panel_advantage",
+              "style": {
+                "direction": "column",
+                "gap": 16,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "advantage_title",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "advantage_title"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "advantage_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "advantage_bullets"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "panel_limit",
+              "style": {
+                "direction": "column",
+                "gap": 16,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "limit_title",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "limit_title"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "limit_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "limit_bullets"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "component",
+          "id": "caveat",
+          "component": "callout",
+          "props": {
+            "text_ref": "caveat"
+          }
+        },
+        {
+          "type": "component",
+          "id": "footer",
+          "component": "text",
+          "props": {
+            "text_ref": "footer"
+          }
+        }
+      ]
+    },
+    "content": {
+      "title": "论文主要结论",
+      "summary": "优势、局限与条件依赖三类判据，均以论文原始基准的完整评测为准。",
+      "key_points": [
+        "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+        "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+        "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+        "量子力学与生物物理任务中，物理感知特征化比模型选择更关键",
+        "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度",
+        "上述结论来自论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论"
+      ],
+      "advantage_title": "结论优势",
+      "advantage_bullets": [
+        "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+        "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度"
+      ],
+      "limit_title": "局限与条件依赖",
+      "limit_bullets": [
+        "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+        "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+        "量子力学与生物物理任务中，物理感知特征化比模型选择更关键"
+      ],
+      "caveat": "结论依据：论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论。",
+      "footer": "Paper2Any Frontend PPT · 第 07/10 页",
+      "table_1": {
+        "headers": [
+          "维度",
+          "判据"
+        ],
+        "rows": [
+          [
+            "优势",
+            "图模型在 11/17 数据集上更优"
+          ],
+          [
+            "局限",
+            "小数据与高不平衡下传统方法更稳"
+          ],
+          [
+            "条件依赖",
+            "物理感知特征化比模型选择更关键"
+          ]
+        ]
+      },
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#94a3b8",
+          "font_size": 18
+        },
+        "bullets": {
+          "font_size": 22,
+          "line_height": 8
+        },
+        "callout": {
+          "color": "#f59e0b",
+          "font_size": 20
+        },
+        "figure": {
+          "image_fit": "contain"
+        }
+      }
+    },
+    "generation_note": "两栏结论卡对比优势与局限，底部以提示条标注结论所依据的原始基准范围。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "advantage_title",
+        "advantage_bullets",
+        "limit_title",
+        "limit_bullets",
+        "caveat",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "advantage_bullets",
+        "advantage_title",
+        "caveat",
+        "footer",
+        "key_points",
+        "limit_bullets",
+        "limit_title",
+        "summary",
+        "table_1",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "key_points",
+        "table_1"
+      ],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "论文主要结论",
+      "render_engine": "canvas",
+      "layout_family": "two_column",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 22,
+          "align": "stretch",
+          "padding": 62
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          },
+          {
+            "type": "component",
+            "id": "lead",
+            "component": "text",
+            "props": {
+              "text_ref": "summary"
+            }
+          },
+          {
+            "type": "container",
+            "id": "main",
+            "style": {
+              "direction": "row",
+              "gap": 22,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "panel_advantage",
+                "style": {
+                  "direction": "column",
+                  "gap": 16,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "advantage_title",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "advantage_title"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "advantage_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "advantage_bullets"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "container",
+                "id": "panel_limit",
+                "style": {
+                  "direction": "column",
+                  "gap": 16,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "limit_title",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "limit_title"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "limit_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "limit_bullets"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "component",
+            "id": "caveat",
+            "component": "callout",
+            "props": {
+              "text_ref": "caveat"
+            }
+          },
+          {
+            "type": "component",
+            "id": "footer",
+            "component": "text",
+            "props": {
+              "text_ref": "footer"
+            }
+          }
+        ]
+      },
+      "content": {
+        "title": "论文主要结论",
+        "summary": "优势、局限与条件依赖三类判据，均以论文原始基准的完整评测为准。",
+        "key_points": [
+          "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+          "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+          "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+          "量子力学与生物物理任务中，物理感知特征化比模型选择更关键",
+          "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度",
+          "上述结论来自论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论"
+        ],
+        "advantage_title": "结论优势",
+        "advantage_bullets": [
+          "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+          "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度"
+        ],
+        "limit_title": "局限与条件依赖",
+        "limit_bullets": [
+          "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+          "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+          "量子力学与生物物理任务中，物理感知特征化比模型选择更关键"
+        ],
+        "caveat": "结论依据：论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论。",
+        "footer": "Paper2Any Frontend PPT · 第 07/10 页",
+        "table_1": {
+          "headers": [
+            "维度",
+            "判据"
+          ],
+          "rows": [
+            [
+              "优势",
+              "图模型在 11/17 数据集上更优"
+            ],
+            [
+              "局限",
+              "小数据与高不平衡下传统方法更稳"
+            ],
+            [
+              "条件依赖",
+              "物理感知特征化比模型选择更关键"
+            ]
+          ]
+        },
+        "assets": {}
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15, 23, 42, 0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700
+          },
+          "subheading": {
+            "font_size": 30,
+            "font_weight": 600,
+            "color": "#7dd3fc"
+          },
+          "bullets": {
+            "font_size": 22,
+            "line_height": 1.45
+          },
+          "callout": {
+            "font_size": 20,
+            "color": "#f59e0b"
+          },
+          "footer": {
+            "font_size": 18,
+            "color": "#94a3b8"
+          },
+          "figure": {
+            "image_fit": "contain"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "两栏结论卡对比优势与局限，底部以提示条标注结论所依据的原始基准范围。"
+    }
+  },
+  {
+    "slide_id": "8",
+    "page_num": 8,
+    "title": "本次复现实验设置与证据边界",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "two_column",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "本次复现实验设置与证据边界",
+        "items": []
+      },
+      {
+        "key": "config_heading",
+        "label": "Config Heading",
+        "type": "text",
+        "value": "实验配置",
+        "items": []
+      },
+      {
+        "key": "config_items",
+        "label": "Config Items",
+        "type": "list",
+        "value": "",
+        "items": [
+          "共 48 次运行，覆盖 ESOL、FreeSolv、Lipophilicity 三个数据集",
+          "模型设置：mean 基线、Random Forest、KRR、Graph Convolution",
+          "随机 80/10/10 划分；随机种子 123、456、789",
+          "报告三次运行的样本标准差（ddof=1）",
+          "运行环境：DeepChem 2.8.0 与 TensorFlow 2.15.1"
+        ]
+      },
+      {
+        "key": "boundary_heading",
+        "label": "Boundary Heading",
+        "type": "text",
+        "value": "证据边界与偏差",
+        "items": []
+      },
+      {
+        "key": "boundary_items",
+        "label": "Boundary Items",
+        "type": "list",
+        "value": "",
+        "items": [
+          "局部现代环境复现，不是论文原始基准的完整复现",
+          "无超参数搜索，未使用论文的高斯过程超参优化",
+          "运行环境为现代版本，不是 2017 年原始环境",
+          "ESOL 骨架划分仅作为额外诊断，不是论文原始协议"
+        ]
+      },
+      {
+        "key": "disclaimer",
+        "label": "Disclaimer",
+        "type": "text",
+        "value": "本次复现仅评估分子性质预测指标，不能据此认定任何临床有效性或药物疗效。",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT · 第 08/10 页",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 20,
+        "align": "stretch",
+        "padding": 0
+      },
+      "children": [
+        {
+          "type": "component",
+          "id": "title",
+          "component": "heading",
+          "props": {
+            "text_ref": "title"
+          }
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "row",
+            "gap": 22,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "config_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "config_heading",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "config_heading"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "config_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "config_items"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "container",
+              "id": "boundary_col",
+              "style": {
+                "direction": "column",
+                "gap": 14,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "boundary_heading",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "boundary_heading"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "boundary_bullets",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "boundary_items"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "component",
+          "id": "disclaimer",
+          "component": "callout",
+          "props": {
+            "text_ref": "disclaimer"
+          }
+        },
+        {
+          "type": "component",
+          "id": "footer",
+          "component": "text",
+          "props": {
+            "text_ref": "footer"
+          }
+        }
+      ]
+    },
+    "content": {
+      "title": "本次复现实验设置与证据边界",
+      "config_heading": "实验配置",
+      "config_items": [
+        "共 48 次运行，覆盖 ESOL、FreeSolv、Lipophilicity 三个数据集",
+        "模型设置：mean 基线、Random Forest、KRR、Graph Convolution",
+        "随机 80/10/10 划分；随机种子 123、456、789",
+        "报告三次运行的样本标准差（ddof=1）",
+        "运行环境：DeepChem 2.8.0 与 TensorFlow 2.15.1"
+      ],
+      "boundary_heading": "证据边界与偏差",
+      "boundary_items": [
+        "局部现代环境复现，不是论文原始基准的完整复现",
+        "无超参数搜索，未使用论文的高斯过程超参优化",
+        "运行环境为现代版本，不是 2017 年原始环境",
+        "ESOL 骨架划分仅作为额外诊断，不是论文原始协议"
+      ],
+      "disclaimer": "本次复现仅评估分子性质预测指标，不能据此认定任何临床有效性或药物疗效。",
+      "footer": "Paper2Any Frontend PPT · 第 08/10 页",
+      "table_1": {
+        "headers": [
+          "配置维度",
+          "本次设置"
+        ],
+        "rows": [
+          [
+            "运行规模",
+            "48 次运行 / 3 个数据集"
+          ],
+          [
+            "数据划分",
+            "随机 80/10/10，种子 123/456/789"
+          ],
+          [
+            "环境版本",
+            "DeepChem 2.8.0 + TensorFlow 2.15.1"
+          ]
+        ]
+      },
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15,23,42,0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#94a3b8",
+          "font_size": 18
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 22
+        },
+        "callout": {
+          "fill": "rgba(15,23,42,0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#f59e0b",
+          "font_size": 22
+        },
+        "figure": {
+          "image_fit": "contain"
+        }
+      }
+    },
+    "generation_note": "上部双栏并列实验配置与证据边界，底部以强调框收束结论适用范围。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "config_heading",
+        "config_items",
+        "boundary_heading",
+        "boundary_items",
+        "disclaimer",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "boundary_heading",
+        "boundary_items",
+        "config_heading",
+        "config_items",
+        "disclaimer",
+        "footer",
+        "table_1",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "table_1"
+      ],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "本次复现实验设置与证据边界",
+      "render_engine": "canvas",
+      "layout_family": "two_column",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 20,
+          "align": "stretch",
+          "padding": 0
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          },
+          {
+            "type": "container",
+            "id": "main",
+            "style": {
+              "direction": "row",
+              "gap": 22,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "config_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "config_heading",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "config_heading"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "config_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "config_items"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "container",
+                "id": "boundary_col",
+                "style": {
+                  "direction": "column",
+                  "gap": 14,
+                  "weight": 1,
+                  "align": "stretch"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "boundary_heading",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "boundary_heading"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "boundary_bullets",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "boundary_items"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "component",
+            "id": "disclaimer",
+            "component": "callout",
+            "props": {
+              "text_ref": "disclaimer"
+            }
+          },
+          {
+            "type": "component",
+            "id": "footer",
+            "component": "text",
+            "props": {
+              "text_ref": "footer"
+            }
+          }
+        ]
+      },
+      "content": {
+        "title": "本次复现实验设置与证据边界",
+        "summary": "上方为本次复现的实际实验配置，下方为必须同时说明的协议边界与结论适用范围。",
+        "config_heading": "实验配置",
+        "config_items": [
+          "共 48 次运行，覆盖 ESOL、FreeSolv、Lipophilicity 三个数据集",
+          "模型设置：mean 基线、Random Forest、KRR、Graph Convolution",
+          "随机 80/10/10 划分；随机种子 123、456、789",
+          "报告三次运行的样本标准差（ddof=1）",
+          "运行环境：DeepChem 2.8.0 与 TensorFlow 2.15.1"
+        ],
+        "boundary_heading": "证据边界与偏差",
+        "boundary_items": [
+          "局部现代环境复现，不是论文原始基准的完整复现",
+          "无超参数搜索，未使用论文的高斯过程超参优化",
+          "运行环境为现代版本，不是 2017 年原始环境",
+          "ESOL 骨架划分仅作为额外诊断，不是论文原始协议"
+        ],
+        "disclaimer": "本次复现仅评估分子性质预测指标，不能据此认定任何临床有效性或药物疗效。",
+        "footer": "Paper2Any Frontend PPT · 第 08/10 页",
+        "table_1": {
+          "headers": [
+            "配置维度",
+            "本次设置"
+          ],
+          "rows": [
+            [
+              "运行规模",
+              "48 次运行 / 3 个数据集"
+            ],
+            [
+              "数据划分",
+              "随机 80/10/10，种子 123/456/789"
+            ],
+            [
+              "环境版本",
+              "DeepChem 2.8.0 + TensorFlow 2.15.1"
+            ]
+          ]
+        },
+        "assets": {}
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15,23,42,0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700,
+            "color": "#e2e8f0"
+          },
+          "text": {
+            "font_size": 18,
+            "color": "#94a3b8"
+          },
+          "bullets": {
+            "font_size": 22,
+            "color": "#e2e8f0",
+            "marker_color": "#7dd3fc"
+          },
+          "callout": {
+            "font_size": 22,
+            "color": "#e2e8f0",
+            "border_color": "#f59e0b",
+            "background": "rgba(15,23,42,0.92)"
+          },
+          "figure": {
+            "image_fit": "contain"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "上部双栏并列实验配置与证据边界，底部以强调框收束结论适用范围。"
+    }
+  },
+  {
+    "slide_id": "9",
+    "page_num": 9,
+    "title": "复现实验结果：三个数据集的关键数值",
+    "schema_version": "ppt_canvas_schema_v1",
+    "layout_mode": "fluid",
+    "template_key": "text_focus",
+    "blocks": [
+      {
+        "id": "eyebrow",
+        "type": "text",
+        "role": "eyebrow",
+        "content": "第 09/10 页",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 1,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "role": "title",
+        "content": "复现实验结果：三个数据集的关键数值",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "header",
+          "span": 12,
+          "order": 2,
+          "preferred_width": "full",
+          "preferred_side": "auto",
+          "emphasis": "high"
+        }
+      },
+      {
+        "id": "summary",
+        "type": "text",
+        "role": "summary",
+        "content": "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 3,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "key_points",
+        "type": "list",
+        "role": "key_points",
+        "content": "",
+        "items": [
+          "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+          "论文原始基准（Table 8）随机划分 RMSE：FreeSolv RF 2.03±0.22，KRR 2.11±0.07，GC 1.40±0.16",
+          "论文原始基准（Table 8）随机划分 RMSE：Lipophilicity RF 0.876±0.040，KRR 0.899±0.043，GC 0.655±0.036",
+          "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106"
+        ],
+        "asset_key": "",
+        "layout": {
+          "zone": "main",
+          "span": 12,
+          "order": 4,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "medium"
+        }
+      },
+      {
+        "id": "takeaway",
+        "type": "text",
+        "role": "takeaway",
+        "content": "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 8,
+          "order": 5,
+          "preferred_width": "wide",
+          "preferred_side": "auto",
+          "emphasis": "low"
+        }
+      },
+      {
+        "id": "footer",
+        "type": "text",
+        "role": "footer",
+        "content": "Paper2Any Frontend PPT",
+        "items": [],
+        "asset_key": "",
+        "layout": {
+          "zone": "footer",
+          "span": 4,
+          "order": 6,
+          "preferred_width": "third",
+          "preferred_side": "right",
+          "emphasis": "low"
+        }
+      }
+    ],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "复现实验结果：三个数据集的关键数值",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+        "items": []
+      },
+      {
+        "key": "key_points",
+        "label": "Key Points",
+        "type": "list",
+        "value": "",
+        "items": [
+          "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+          "论文原始基准（Table 8）随机划分 RMSE：FreeSolv RF 2.03±0.22，KRR 2.11±0.07，GC 1.40±0.16",
+          "论文原始基准（Table 8）随机划分 RMSE：Lipophilicity RF 0.876±0.040，KRR 0.899±0.043，GC 0.655±0.036",
+          "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106"
+        ]
+      },
+      {
+        "key": "takeaway",
+        "label": "Takeaway",
+        "type": "textarea",
+        "value": "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106",
+        "items": []
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "eyebrow_size": 18,
+        "title_size": 56,
+        "summary_size": 26,
+        "body_size": 24
+      },
+      "surface": {
+        "background": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8",
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#e2e8f0",
+          "font_size": 56,
+          "font_family": "Georgia, \"Times New Roman\", serif",
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 24,
+          "font_family": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif"
+        },
+        "callout": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#f59e0b",
+          "font_size": 24
+        },
+        "figure": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "border_color": "#7dd3fc",
+          "image_fit": "contain"
+        },
+        "table": {
+          "fill": "rgba(15, 23, 42, 0.92)",
+          "color": "#e2e8f0",
+          "border_color": "#7dd3fc",
+          "font_size": 18
+        }
+      }
+    },
+    "generation_note": "Fallback template used because frontend code generation failed: Expecting value: line 1 column 1 (char 0)",
+    "status": "done",
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 24,
+        "padding": 0,
+        "align": "stretch",
+        "justify": "start"
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "header",
+          "style": {
+            "direction": "column",
+            "gap": 12,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "title",
+              "component": "heading",
+              "props": {
+                "text_ref": "title"
+              },
+              "style": {
+                "emphasis": "high"
+              }
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "column",
+            "gap": 24,
+            "weight": 1,
+            "align": "stretch"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "main_left",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "weight": 1,
+                "align": "stretch"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "summary",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "summary"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "key_points",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "key_points"
+                  },
+                  "style": {
+                    "emphasis": "medium"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "container",
+          "id": "footer",
+          "style": {
+            "direction": "row",
+            "gap": 16,
+            "align": "end",
+            "justify": "between"
+          },
+          "children": [
+            {
+              "type": "component",
+              "id": "takeaway",
+              "component": "text",
+              "props": {
+                "text_ref": "takeaway"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            },
+            {
+              "type": "component",
+              "id": "footer",
+              "component": "text",
+              "props": {
+                "text_ref": "footer"
+              },
+              "style": {
+                "emphasis": "low"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "render_engine": "canvas",
+    "content": {
+      "eyebrow": "第 09/10 页",
+      "title": "复现实验结果：三个数据集的关键数值",
+      "summary": "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+      "points_label": "Key Points",
+      "key_points": [
+        "论文原始基准（Table 8）随机划分 RMSE：ESOL RF 1.07±0.19，KRR 1.53±0.06，GC 0.97±0.01",
+        "论文原始基准（Table 8）随机划分 RMSE：FreeSolv RF 2.03±0.22，KRR 2.11±0.07，GC 1.40±0.16",
+        "论文原始基准（Table 8）随机划分 RMSE：Lipophilicity RF 0.876±0.040，KRR 0.899±0.043，GC 0.655±0.036",
+        "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106"
+      ],
+      "takeaway_label": "Takeaway",
+      "takeaway": "本次复现随机 80/10/10 RMSE：ESOL mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106",
+      "footer": "Paper2Any Frontend PPT",
+      "assets": {}
+    },
+    "layout_family": "text_focus",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "title",
+        "summary",
+        "key_points",
+        "takeaway",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "eyebrow",
+        "footer",
+        "key_points",
+        "points_label",
+        "summary",
+        "takeaway",
+        "takeaway_label",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [
+        "eyebrow",
+        "points_label",
+        "takeaway_label"
+      ],
+      "empty_components": [],
+      "issues": [
+        {
+          "severity": "repairable",
+          "code": "duplicate_node_id",
+          "node_id": "footer",
+          "message": "Duplicate canvas node id: footer"
+        }
+      ]
+    },
+    "_raw_ai_payload": {
+      "error": "Expecting value: line 1 column 1 (char 0)",
+      "fallback": true
+    }
+  },
+  {
+    "slide_id": "10",
+    "page_num": 10,
+    "title": "致谢 / Thank You",
+    "schema_version": "ppt_canvas_schema_v1",
+    "render_engine": "canvas",
+    "layout_mode": "fluid",
+    "template_key": "section_divider",
+    "layout_family": "text_focus",
+    "blocks": [],
+    "html_template": "\n<div class=\"slide-root\">\n  <div class=\"slide-shell\">\n    <div class=\"grid-layer\"></div>\n    <div class=\"hero\">\n      <div class=\"hero-copy\">\n        <div class=\"eyebrow\">{{field:eyebrow}}</div>\n        <h1 class=\"title\">{{field:title}}</h1>\n        <p class=\"summary\">{{field:summary}}</p>\n        \n      </div>\n      \n      <div class=\"stat-card\">\n        <div class=\"card-label\">{{field:points_label}}</div>\n        <ul class=\"bullet-list\">{{list:key_points}}</ul>\n      </div>\n</div>\n    <div class=\"footer-row\">\n      <div class=\"takeaway-card\">\n        <div class=\"takeaway-label\">{{field:takeaway_label}}</div>\n        <p class=\"takeaway-text\">{{field:takeaway}}</p>\n      </div>\n      <div class=\"footer-tag\">{{field:footer}}</div>\n    </div>\n  </div>\n</div>",
+    "css_code": ".slide-root {\n  width: 100%;\n  height: 100%;\n  background:\n    radial-gradient(circle at top right, #38bdf833 0%, transparent 28%),\n    radial-gradient(circle at bottom left, #f59e0b22 0%, transparent 32%),\n    #0b1020;\n  color: #e2e8f0;\n  overflow: hidden;\n}\n.slide-root * {\n  box-sizing: border-box;\n}\n.slide-shell {\n  position: relative;\n  width: 100%;\n  height: 100%;\n  padding: 68px 72px;\n}\n.grid-layer {\n  position: absolute;\n  inset: 0;\n  background-image:\n    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),\n    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);\n  background-size: 48px 48px;\n  opacity: 0.22;\n}\n.hero {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.5fr 0.95fr;\n  gap: 28px;\n  height: calc(100% - 120px);\n}\n.hero-copy {\n  display: flex;\n  flex-direction: column;\n  justify-content: center;\n  gap: 20px;\n}\n.eyebrow {\n  display: inline-flex;\n  align-self: flex-start;\n  padding: 8px 14px;\n  border-radius: 999px;\n  background: #38bdf822;\n  border: 1px solid #7dd3fc55;\n  color: #7dd3fc;\n  font-size: 18px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n.title {\n  margin: 0;\n  max-width: 880px;\n  font-size: 56px;\n  line-height: 1.04;\n  letter-spacing: 0;\n  font-family: Georgia, \"Times New Roman\", serif;\n}\n.summary {\n  margin: 0;\n  max-width: 840px;\n  font-size: 26px;\n  line-height: 1.42;\n  color: #94a3b8;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.stat-card, .takeaway-card, .visual-card {\n  border-radius: 28px;\n  border: 1px solid #7dd3fc30;\n  background: rgba(15, 23, 42, 0.92);\n  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);\n  backdrop-filter: blur(10px);\n}\n.stat-card {\n  align-self: center;\n  padding: 28px;\n}\n.visual-card {\n  padding: 18px;\n  min-height: 420px;\n  display: flex;\n  flex-direction: column;\n  gap: 14px;\n}\n.visual-card.visual-card-grid {\n  justify-content: stretch;\n}\n.visual-shell {\n  width: 100%;\n  height: 100%;\n  min-height: 384px;\n  border-radius: 22px;\n  overflow: hidden;\n}\n.visual-card.visual-card-grid .visual-shell {\n  flex: 1 1 0;\n  min-height: 160px;\n}\n.visual-card.visual-card-grid .visual-shell-1 {\n  min-height: 236px;\n}\n.card-label, .takeaway-label {\n  font-size: 18px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: #7dd3fc;\n  margin-bottom: 14px;\n  font-weight: 700;\n}\n.bullet-list {\n  margin: 0;\n  padding-left: 26px;\n  display: grid;\n  gap: 14px;\n  font-size: 24px;\n  line-height: 1.35;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.bullet-list li {\n  color: #e2e8f0;\n}\n.bullet-list.compact {\n  max-width: 720px;\n  gap: 10px;\n  font-size: 22px;\n}\n.footer-row {\n  position: relative;\n  z-index: 1;\n  display: grid;\n  grid-template-columns: 1.4fr auto;\n  align-items: end;\n  gap: 18px;\n}\n.takeaway-card {\n  padding: 24px 28px;\n}\n.takeaway-text {\n  margin: 0;\n  font-size: 24px;\n  line-height: 1.4;\n  color: #e2e8f0;\n  white-space: pre-wrap;\n  font-family: \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif;\n}\n.footer-tag {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  min-width: 220px;\n  padding: 14px 18px;\n  border-radius: 999px;\n  border: 1px solid #f59e0b55;\n  color: #f59e0b;\n  font-size: 18px;\n  font-weight: 700;\n  background: rgba(15, 23, 42, 0.45);\n}",
+    "editable_fields": [
+      {
+        "key": "title",
+        "label": "Title",
+        "type": "text",
+        "value": "致谢 / Thank You",
+        "items": []
+      },
+      {
+        "key": "eyebrow",
+        "label": "Eyebrow",
+        "type": "text",
+        "value": "第 10/10 页 · 致谢",
+        "items": []
+      },
+      {
+        "key": "summary",
+        "label": "Summary",
+        "type": "text",
+        "value": "感谢聆听，敬请各位老师与同学批评指正。",
+        "items": []
+      },
+      {
+        "key": "key_points",
+        "label": "Key Points",
+        "type": "list",
+        "value": "",
+        "items": [
+          "感谢聆听",
+          "欢迎批评指正",
+          "本次汇报仅代表局部现代环境复现结果"
+        ]
+      },
+      {
+        "key": "footer",
+        "label": "Footer",
+        "type": "text",
+        "value": "Paper2Any Frontend PPT",
+        "items": []
+      }
+    ],
+    "visual_assets": [],
+    "root": {
+      "type": "container",
+      "id": "root",
+      "style": {
+        "direction": "column",
+        "gap": 24,
+        "align": "stretch",
+        "padding": 22
+      },
+      "children": [
+        {
+          "type": "container",
+          "id": "main",
+          "style": {
+            "direction": "column",
+            "gap": 22,
+            "weight": 1,
+            "align": "center",
+            "justify": "center"
+          },
+          "children": [
+            {
+              "type": "container",
+              "id": "closing_block",
+              "style": {
+                "direction": "column",
+                "gap": 18,
+                "align": "center",
+                "justify": "center"
+              },
+              "children": [
+                {
+                  "type": "component",
+                  "id": "eyebrow",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "eyebrow"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "title",
+                  "component": "heading",
+                  "props": {
+                    "text_ref": "title"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "summary",
+                  "component": "text",
+                  "props": {
+                    "text_ref": "summary"
+                  }
+                },
+                {
+                  "type": "component",
+                  "id": "points",
+                  "component": "bullets",
+                  "props": {
+                    "items_ref": "key_points"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "component",
+          "id": "footer",
+          "component": "text",
+          "props": {
+            "text_ref": "footer"
+          }
+        }
+      ]
+    },
+    "content": {
+      "title": "致谢 / Thank You",
+      "eyebrow": "第 10/10 页 · 致谢",
+      "summary": "感谢聆听，敬请各位老师与同学批评指正。",
+      "key_points": [
+        "感谢聆听",
+        "欢迎批评指正",
+        "本次汇报仅代表局部现代环境复现结果"
+      ],
+      "footer": "Paper2Any Frontend PPT",
+      "assets": {}
+    },
+    "visual_spec": {
+      "version": "ppt_canvas_visual_spec_v1",
+      "palette": {
+        "bg": "#0b1020",
+        "panel": "rgba(15, 23, 42, 0.92)",
+        "primary": "#7dd3fc",
+        "secondary": "#38bdf8",
+        "accent": "#f59e0b",
+        "text": "#e2e8f0",
+        "muted": "#94a3b8"
+      },
+      "typography": {
+        "title_font_stack": "Georgia, \"Times New Roman\", serif",
+        "body_font_stack": "Noto Sans SC, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+        "title_size": 56,
+        "body_size": 24
+      },
+      "surface": {
+        "card_radius": 24,
+        "card_padding": 22,
+        "section_gap": 22
+      },
+      "layout": {
+        "safe_margin": 62,
+        "section_gap": 22,
+        "content_gap": 18,
+        "max_columns": 2
+      },
+      "component_styles": {
+        "heading": {
+          "color": "#7dd3fc",
+          "font_size": 56,
+          "font_weight": "700"
+        },
+        "text": {
+          "color": "#94a3b8",
+          "font_size": 18
+        },
+        "bullets": {
+          "color": "#e2e8f0",
+          "font_size": 24
+        }
+      }
+    },
+    "generation_note": "简洁致谢页：居中感谢语与三条收束要点，保留页脚与页码信息。",
+    "status": "done",
+    "constraints": {
+      "min_font_size": 18,
+      "max_font_size": 56,
+      "allow_overflow": false,
+      "fit_mode": "browser_measure"
+    },
+    "editable_map": {},
+    "canvas_validation": {
+      "ok": true,
+      "used_refs": [
+        "eyebrow",
+        "title",
+        "summary",
+        "key_points",
+        "footer"
+      ],
+      "defined_content_keys": [
+        "eyebrow",
+        "footer",
+        "key_points",
+        "summary",
+        "title"
+      ],
+      "missing_refs": [],
+      "orphan_content_keys": [],
+      "empty_components": [],
+      "issues": []
+    },
+    "_raw_ai_payload": {
+      "title": "致谢 / Thank You",
+      "render_engine": "canvas",
+      "layout_family": "text_focus",
+      "root": {
+        "type": "container",
+        "id": "root",
+        "style": {
+          "direction": "column",
+          "gap": 24,
+          "align": "stretch",
+          "padding": 22
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "main",
+            "style": {
+              "direction": "column",
+              "gap": 22,
+              "weight": 1,
+              "align": "center",
+              "justify": "center"
+            },
+            "children": [
+              {
+                "type": "container",
+                "id": "closing_block",
+                "style": {
+                  "direction": "column",
+                  "gap": 18,
+                  "align": "center",
+                  "justify": "center"
+                },
+                "children": [
+                  {
+                    "type": "component",
+                    "id": "eyebrow",
+                    "component": "text",
+                    "props": {
+                      "text_ref": "eyebrow"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "title",
+                    "component": "heading",
+                    "props": {
+                      "text_ref": "title"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "summary",
+                    "component": "text",
+                    "props": {
+                      "text_ref": "summary"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "id": "points",
+                    "component": "bullets",
+                    "props": {
+                      "items_ref": "key_points"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "component",
+            "id": "footer",
+            "component": "text",
+            "props": {
+              "text_ref": "footer"
+            }
+          }
+        ]
+      },
+      "content": {
+        "title": "致谢 / Thank You",
+        "eyebrow": "第 10/10 页 · 致谢",
+        "summary": "感谢聆听，敬请各位老师与同学批评指正。",
+        "key_points": [
+          "感谢聆听",
+          "欢迎批评指正",
+          "本次汇报仅代表局部现代环境复现结果"
+        ],
+        "footer": "Paper2Any Frontend PPT",
+        "assets": {}
+      },
+      "visual_spec": {
+        "palette": {
+          "bg": "#0b1020",
+          "panel": "rgba(15, 23, 42, 0.92)",
+          "primary": "#7dd3fc",
+          "secondary": "#38bdf8",
+          "accent": "#f59e0b",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8"
+        },
+        "typography": {
+          "title_font_stack": "Georgia, \"Times New Roman\", serif",
+          "body_font_stack": "Noto Sans SC, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+          "title_size": 56,
+          "body_size": 24
+        },
+        "surface": {
+          "card_radius": 24,
+          "card_padding": 22,
+          "section_gap": 22
+        },
+        "layout": {
+          "safe_margin": 62,
+          "section_gap": 22,
+          "content_gap": 18,
+          "max_columns": 2
+        },
+        "component_styles": {
+          "heading": {
+            "font_size": 56,
+            "font_weight": 700,
+            "color": "#7dd3fc"
+          },
+          "text": {
+            "font_size": 26,
+            "color": "#e2e8f0"
+          },
+          "bullets": {
+            "font_size": 24,
+            "color": "#e2e8f0",
+            "marker_color": "#f59e0b"
+          },
+          "footer": {
+            "font_size": 18,
+            "color": "#94a3b8"
+          }
+        }
+      },
+      "constraints": {
+        "min_font_size": 18,
+        "max_font_size": 56,
+        "allow_overflow": false,
+        "fit_mode": "browser_measure"
+      },
+      "generation_note": "简洁致谢页：居中感谢语与三条收束要点，保留页脚与页码信息。"
+    }
+  }
+]

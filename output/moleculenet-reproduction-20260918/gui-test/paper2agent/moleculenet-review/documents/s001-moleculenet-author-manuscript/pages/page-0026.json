@@ -1,0 +1,99 @@
+{
+  "page": 26,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0026.png",
+  "reviewed": true,
+  "review_notes": "Weave continuation, DAG and DTNN; graph vs physical-distance distinction retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0026-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        159
+      ],
+      "markdown": "four paths from two original features to two updated features) and concatenated to form new atomic and pair features. After stacking several weave modules, a similar gather layer combines atomic features together to form molecular features that are fed into task-specific layers.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0026-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        187,
+        258,
+        199
+      ],
+      "markdown": "### Directed Acyclic Graph models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0026-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        218,
+        541,
+        350
+      ],
+      "markdown": "Directed Acyclic Graph (DAG) models regard molecules as directed graphs. While chemical bonds typically do not have natural directions, one can arbitrarily generate a DAG on a molecule by designating a central atom and then define directions of all bonds in certain orientations towards the atom.<sup>14</sup> In the case of small molecules, taking all possible orientations is computationally feasible. In other words, for a molecule with _na_ atoms, the model will generate _na_ DAGs, each centered on a different atom.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0026-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        362,
+        541,
+        494
+      ],
+      "markdown": "In the actual calculations of a graph, a vector of graph features is calculated for each atom based on its atomic features (reusing the graph convolutions featurizer) and its parents’ graph features. As features gradually propagate through bonds, information converges on the central atom. Then a final sum of all graphs gives the molecular features, which are fed into classification or regression tasks. Note that _na_ graphs are evaluated for each molecule, which can cause a significant increase in required calculations.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0026-b004",
+      "kind": "heading",
+      "bbox": [
+        71,
+        523,
+        251,
+        534
+      ],
+      "markdown": "### Deep Tensor Neural Networks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0026-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        554,
+        541,
+        710
+      ],
+      "markdown": "Deep Tensor Neural Networks (DTNN) are adaptable extensions of the Coulomb Matrix featurizer.<sup>19</sup> The core idea is to directly use nuclear charge (atom number) and the distance matrix to predict energetic, electronic or thermodynamic properties of small molecules. To build a learnable system, the model first maps atom numbers to trainable embeddings(randomly initialized) as atomic features. Then each atomic feature _ai_ is updated based on distance information _dij_ and other atomic features _aj_ . Comparing with Weave models, DTNNs share the same idea in terms of updating based on both atomic and pair features, while the difference",
+      "source_class": "text"
+    },
+    {
+      "id": "p0026-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "26",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Weave continuation, DAG and DTNN; graph vs physical-distance distinction retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

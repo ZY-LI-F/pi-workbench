@@ -1,0 +1,464 @@
+{
+  "page": 11,
+  "lines": [
+    {
+      "text": "permits structure-based featurization that is aware of the protein-ligand binding geometry.",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.05810546875,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We use the “reﬁned” and “core” subsets of the database,50 more carefully processed for data",
+      "bbox": [
+        72.0,
+        95.22714233398438,
+        540.0245361328125,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "artifacts, as additional benchmarking targets. Samples in PDBbind dataset are collected",
+      "bbox": [
+        71.99996948242188,
+        123.47415161132812,
+        540.0580444335938,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "over a relatively long period of time(since 1982), hence a time splitting pattern(introduced",
+      "bbox": [
+        71.99996948242188,
+        147.38113403320312,
+        540.081787109375,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "in the next subsection) is recommended to mimic actual development in the ﬁeld.",
+      "bbox": [
+        71.99996948242188,
+        171.28915405273438,
+        490.3721618652344,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "BACE",
+      "bbox": [
+        71.99996948242188,
+        211.92617797851562,
+        109.89794921875,
+        222.54238891601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The BACE dataset provides quantitative (IC50) and qualitative (binary label) binding results",
+      "bbox": [
+        71.99996948242188,
+        243.55520629882812,
+        540.0416870117188,
+        255.19134521484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for a set of inhibitors of human β-secretase 1 (BACE-1).51 All data are experimental values",
+      "bbox": [
+        71.99998474121094,
+        263.1242370605469,
+        540.0252075195312,
+        278.0794372558594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "reported in scientiﬁc literature over the past decade, some with detailed crystal structures",
+      "bbox": [
+        71.99996948242188,
+        291.3712158203125,
+        540.0341796875,
+        301.9874267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "available. We merged a collection of 1522 compounds with their 2D structures and binary",
+      "bbox": [
+        71.99996948242188,
+        315.2782287597656,
+        540.0701904296875,
+        325.8944396972656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "labels in MoleculeNet, built as a classiﬁcation task. Similarly, regarding a single protein",
+      "bbox": [
+        71.99996948242188,
+        339.18621826171875,
+        540.0579833984375,
+        349.80242919921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "target, scaﬀold splitting will be more practically useful.",
+      "bbox": [
+        71.99996948242188,
+        363.0942077636719,
+        355.7685852050781,
+        373.7104187011719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "BBBP",
+      "bbox": [
+        71.99996948242188,
+        403.731201171875,
+        109.8860092163086,
+        414.347412109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The Blood-brain barrier penetration (BBBP) dataset comes from a recent study52 on the",
+      "bbox": [
+        71.99996948242188,
+        431.0212097167969,
+        540.0020141601562,
+        445.9764099121094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "modeling and prediction of the barrier permeability. As a membrane separating circulating",
+      "bbox": [
+        71.99996948242188,
+        459.2681884765625,
+        540.0698852539062,
+        469.8843994140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "blood and brain extracellular ﬂuid, the blood-brain barrier blocks most drugs, hormones and",
+      "bbox": [
+        71.99996948242188,
+        483.1752014160156,
+        540.0819702148438,
+        493.7914123535156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "neurotransmitters. Thus penetration of the barrier forms a long-standing issue in develop-",
+      "bbox": [
+        71.99996948242188,
+        507.0832214355469,
+        540.046142578125,
+        517.699462890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ment of drugs targeting central nervous system. This dataset includes binary labels for over",
+      "bbox": [
+        71.99996948242188,
+        530.9911499023438,
+        540.0580444335938,
+        541.607421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2000 compounds on their permeability properties. Scaﬀold splitting is also recommended for",
+      "bbox": [
+        71.99996948242188,
+        554.899169921875,
+        540.057861328125,
+        565.5154418945312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "this well-deﬁned target.",
+      "bbox": [
+        71.99996948242188,
+        578.8071899414062,
+        192.69969177246094,
+        589.4234619140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tox21",
+      "bbox": [
+        71.99996948242188,
+        619.4431762695312,
+        107.14826965332031,
+        630.0594482421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The “Toxicology in the 21st Century” (Tox21) initiative created a public database mea-",
+      "bbox": [
+        71.99996948242188,
+        651.0722045898438,
+        540.0819702148438,
+        661.6884765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "suring toxicity of compounds, which has been used in the 2014 Tox21 Data Challenge.53",
+      "bbox": [
+        71.99996948242188,
+        673.4078369140625,
+        539.4981689453125,
+        685.596435546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "This dataset contains qualitative toxicity measurements for 8014 compounds on 12 diﬀerent",
+      "bbox": [
+        71.99993896484375,
+        698.88818359375,
+        540.0819091796875,
+        709.5044555664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "11",
+      "bbox": [
+        300.1469421386719,
+        741.5911865234375,
+        311.8630676269531,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 11
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          71,
+          75,
+          541,
+          183
+        ],
+        "pos": [
+          0,
+          460
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          71,
+          211,
+          110,
+          221
+        ],
+        "pos": [
+          460,
+          473
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          71,
+          242,
+          541,
+          374
+        ],
+        "pos": [
+          473,
+          1013
+        ]
+      },
+      {
+        "index": 3,
+        "class": "section-header",
+        "bbox": [
+          71,
+          403,
+          110,
+          413
+        ],
+        "pos": [
+          1013,
+          1026
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          71,
+          434,
+          541,
+          590
+        ],
+        "pos": [
+          1026,
+          1608
+        ]
+      },
+      {
+        "index": 5,
+        "class": "section-header",
+        "bbox": [
+          71,
+          619,
+          108,
+          628
+        ],
+        "pos": [
+          1608,
+          1622
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          71,
+          650,
+          541,
+          710
+        ],
+        "pos": [
+          1622,
+          1897
+        ]
+      },
+      {
+        "index": 7,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          1897,
+          1902
+        ]
+      }
+    ],
+    "text": "permits structure-based featurization that is aware of the protein-ligand binding geometry. We use the “refined” and “core” subsets of the database,<sup>50</sup> more carefully processed for data artifacts, as additional benchmarking targets. Samples in PDBbind dataset are collected over a relatively long period of time(since 1982), hence a time splitting pattern(introduced in the next subsection) is recommended to mimic actual development in the field. \n\n# **BACE** \n\nThe BACE dataset provides quantitative ( _IC_ 50) and qualitative (binary label) binding results for a set of inhibitors of human _β_ -secretase 1 (BACE-1).<sup>51</sup> All data are experimental values reported in scientific literature over the past decade, some with detailed crystal structures available. We merged a collection of 1522 compounds with their 2D structures and binary labels in MoleculeNet, built as a classification task. Similarly, regarding a single protein target, scaffold splitting will be more practically useful. \n\n# **BBBP** \n\nThe Blood-brain barrier penetration (BBBP) dataset comes from a recent study<sup>52</sup> on the modeling and prediction of the barrier permeability. As a membrane separating circulating blood and brain extracellular fluid, the blood-brain barrier blocks most drugs, hormones and neurotransmitters. Thus penetration of the barrier forms a long-standing issue in development of drugs targeting central nervous system. This dataset includes binary labels for over 2000 compounds on their permeability properties. Scaffold splitting is also recommended for this well-defined target. \n\n# **Tox21** \n\nThe “Toxicology in the 21st Century” (Tox21) initiative created a public database measuring toxicity of compounds, which has been used in the 2014 Tox21 Data Challenge.<sup>53</sup> This dataset contains qualitative toxicity measurements for 8014 compounds on 12 different \n\n11 \n\n"
+  }
+}

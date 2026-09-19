@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "sources": [
+    {
+      "id": "s001-moleculenet-author-manuscript",
+      "filename": "moleculenet-author-manuscript.pdf",
+      "original_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\sources\\moleculenet-author-manuscript.pdf",
+      "snapshot": "originals/s001-moleculenet-author-manuscript.pdf",
+      "sha256": "a017e94ab6a9b3165a99035b4839a10646e07f632f9406de98dd4c220cae3701",
+      "kind": "pdf",
+      "artifacts": [],
+      "warnings": []
+    }
+  ]
+}

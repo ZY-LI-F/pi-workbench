@@ -1,0 +1,106 @@
+{
+  "provider": "aliyun-maas",
+  "status": 200,
+  "models": [
+    {
+      "id": "qwen3.6-plus",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen-image-2.0",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen-image-2.0-pro",
+      "owned_by": "system"
+    },
+    {
+      "id": "wan2.7-image",
+      "owned_by": "system"
+    },
+    {
+      "id": "wan2.7-image-pro",
+      "owned_by": "system"
+    },
+    {
+      "id": "deepseek-v3.2",
+      "owned_by": "system"
+    },
+    {
+      "id": "glm-5",
+      "owned_by": "system"
+    },
+    {
+      "id": "MiniMax-M2.5",
+      "owned_by": "system"
+    },
+    {
+      "id": "kimi-k2.5",
+      "owned_by": "system"
+    },
+    {
+      "id": "kimi-k2.6",
+      "owned_by": "system"
+    },
+    {
+      "id": "glm-5.1",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen3.6-flash",
+      "owned_by": "system"
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "owned_by": "system"
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen3.7-max",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen3.7-plus",
+      "owned_by": "system"
+    },
+    {
+      "id": "glm-5.2",
+      "owned_by": "system"
+    },
+    {
+      "id": "kimi-k2.7-code",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen-audio-3.0-tts-plus",
+      "owned_by": "system"
+    },
+    {
+      "id": "deepseek-v4-flash-0731",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen3.8-max",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen-audio-3.0-realtime-plus",
+      "owned_by": "system"
+    },
+    {
+      "id": "qwen3.8-flash",
+      "owned_by": "system"
+    },
+    {
+      "id": "deepseek-v4.1-flash",
+      "owned_by": "system"
+    },
+    {
+      "id": "glm-5.3",
+      "owned_by": "system"
+    }
+  ]
+}

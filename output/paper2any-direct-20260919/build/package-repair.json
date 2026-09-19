@@ -1,0 +1,22 @@
+{
+  "initial_integrity_status": "failed",
+  "error": "content_type_target_missing",
+  "removed_unreferenced_declarations": [
+    "ppt/slideMasters/slideMaster2.xml",
+    "ppt/slideMasters/slideMaster3.xml",
+    "ppt/slideMasters/slideMaster4.xml",
+    "ppt/slideMasters/slideMaster5.xml",
+    "ppt/slideMasters/slideMaster6.xml",
+    "ppt/slideMasters/slideMaster7.xml",
+    "ppt/slideMasters/slideMaster8.xml",
+    "ppt/slideMasters/slideMaster9.xml",
+    "ppt/slideMasters/slideMaster10.xml",
+    "ppt/slideMasters/slideMaster11.xml",
+    "ppt/slideMasters/slideMaster12.xml",
+    "ppt/slideMasters/slideMaster13.xml",
+    "ppt/slideMasters/slideMaster14.xml"
+  ],
+  "removed_package_parts": [],
+  "slide_content_unchanged": true,
+  "raw_export_preserved": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\paper2any-direct-20260919\\build\\paper2any-native-export.pptx"
+}

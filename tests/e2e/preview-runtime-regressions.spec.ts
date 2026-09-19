@@ -119,7 +119,8 @@ test("version settings compare the installed CLI with the bundled core and cance
     expect(before.bundledVersion).toBe(metadata.dependencies["@earendil-works/pi-coding-agent"]);
     await fixture.window.getByRole("button", { name: "偏好设置", exact: true }).click();
     await expect(fixture.window.getByRole("region", { name: "Pi 版本管理" })).toContainText(before.bundledVersion);
-    await expect(fixture.window.getByText("Sol-Pi · 尚未接入", { exact: true })).toBeVisible();
+    await expect(fixture.window.getByRole("region", { name: "Sol 模式", exact: true })
+      .getByRole("switch", { name: "启用 Sol 模式", exact: true })).not.toBeChecked();
     if (before.canSync) {
       await fixture.app.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false }); });
       await fixture.window.getByRole("button", { name: `同步到 v${before.bundledVersion}` }).click();

@@ -1,0 +1,16 @@
+{
+  "source": "actual project extractLocalPaths implementation",
+  "inputPath": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-stage1-report.md",
+  "observed": {
+    "plain": [
+      "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-stage1-report.md"
+    ],
+    "bold": [],
+    "inlineCode": [
+      "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-stage1-report.md"
+    ],
+    "markdownLink": [
+      "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-stage1-report.md"
+    ]
+  }
+}

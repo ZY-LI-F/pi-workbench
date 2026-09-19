@@ -1,0 +1,319 @@
+{
+  "page": 13,
+  "lines": [
+    {
+      "text": "Figure 3: Representation of Data Splits in MoleculeNet.",
+      "bbox": [
+        162.3000030517578,
+        356.60809326171875,
+        449.7389221191406,
+        367.22430419921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "train models, while validation sets were used for tuning hyperparameters, and test sets were",
+      "bbox": [
+        72.0,
+        392.82208251953125,
+        540.0340576171875,
+        403.43829345703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "used for evaluation of models.",
+      "bbox": [
+        72.0,
+        416.7300720214844,
+        224.978759765625,
+        427.3462829589844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "As mentioned previously, random splitting of molecular data isn’t always best for eval-",
+      "bbox": [
+        89.55899810791016,
+        440.6370849609375,
+        540.0549926757812,
+        451.2532958984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "uating machine learning methods. Consequently, MoleculeNet implements multiple diﬀer-",
+      "bbox": [
+        72.0,
+        464.5450744628906,
+        540.010009765625,
+        475.1612854003906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ent splittings for each dataset. Random splitting randomly splits samples into the train-",
+      "bbox": [
+        72.0,
+        488.45306396484375,
+        540.0579833984375,
+        499.06927490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ing/validation/test subsets. Scaﬀold splitting splits the samples based on their two-dimensional",
+      "bbox": [
+        72.0,
+        512.3610229492188,
+        549.669921875,
+        522.977294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "structural frameworks,62 as implemented in RDKit.63 Since scaﬀold splitting attempts to sep-",
+      "bbox": [
+        72.0,
+        531.9299926757812,
+        540.0091552734375,
+        546.8853149414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arate structurally diﬀerent molecules into diﬀerent subsets, it oﬀers a greater challenge for",
+      "bbox": [
+        71.99996948242188,
+        560.1770629882812,
+        540.0460205078125,
+        570.7933349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "learning algorithms than the random split.",
+      "bbox": [
+        71.99996948242188,
+        584.0840454101562,
+        290.68450927734375,
+        594.7003173828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "In addition, a stratiﬁed random sampling method is implemented on the QM7 dataset",
+      "bbox": [
+        89.55896759033203,
+        607.9920043945312,
+        540.0546875,
+        618.6082763671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to reproduce the results from the original work.18 This method sorts datapoints in order of",
+      "bbox": [
+        71.99996948242188,
+        627.5620727539062,
+        540.0328369140625,
+        642.5162963867188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "increasing label value (note this is only deﬁned for real-valued output). This sorted list is then",
+      "bbox": [
+        71.99996948242188,
+        655.8080444335938,
+        540.0340576171875,
+        666.42431640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "split into training/validation/test by ensuring that each set contains the full range of provided",
+      "bbox": [
+        71.99996948242188,
+        679.716064453125,
+        540.0819702148438,
+        690.3323364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "labels. Time splitting is also adopted for dataset that includes time information(PDBbind).",
+      "bbox": [
+        71.99996948242188,
+        703.6240844726562,
+        540.0460205078125,
+        714.2403564453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "13",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 13
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          189,
+          71,
+          423,
+          345
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          162,
+          356,
+          450,
+          368
+        ],
+        "pos": [
+          2,
+          60
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          392,
+          541,
+          426
+        ],
+        "pos": [
+          60,
+          186
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          71,
+          440,
+          550,
+          595
+        ],
+        "pos": [
+          186,
+          799
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          71,
+          607,
+          541,
+          715
+        ],
+        "pos": [
+          799,
+          1277
+        ]
+      },
+      {
+        "index": 5,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1277,
+          1282
+        ]
+      }
+    ],
+    "text": "\n\nFigure 3: Representation of Data Splits in MoleculeNet. \n\ntrain models, while validation sets were used for tuning hyperparameters, and test sets were used for evaluation of models. \n\nAs mentioned previously, random splitting of molecular data isn’t always best for evaluating machine learning methods. Consequently, MoleculeNet implements multiple different splittings for each dataset. Random splitting randomly splits samples into the training/validation/test subsets. Scaffold splitting splits the samples based on their two-dimensional structural frameworks,<sup>62</sup> as implemented in RDKit.<sup>63</sup> Since scaffold splitting attempts to separate structurally different molecules into different subsets, it offers a greater challenge for learning algorithms than the random split. \n\nIn addition, a stratified random sampling method is implemented on the QM7 dataset to reproduce the results from the original work.<sup>18</sup> This method sorts datapoints in order of increasing label value (note this is only defined for real-valued output). This sorted list is then split into training/validation/test by ensuring that each set contains the full range of provided labels. Time splitting is also adopted for dataset that includes time information(PDBbind). \n\n13 \n\n"
+  }
+}

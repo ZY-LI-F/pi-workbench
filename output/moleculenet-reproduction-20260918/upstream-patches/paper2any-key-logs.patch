@@ -1,0 +1,26 @@
+diff --git a/dataflow_agent/agentroles/cores/base_agent.py b/dataflow_agent/agentroles/cores/base_agent.py
+index 8a27186..c82f072 100644
+--- a/dataflow_agent/agentroles/cores/base_agent.py
++++ b/dataflow_agent/agentroles/cores/base_agent.py
+@@ -557,7 +557,7 @@ class BaseAgent(ABC):
+         
+         log.info(f"[create_llm:]创建LLM实例，温度: {self.temperature}, "
+                  f"最大token: {self.max_tokens}, 模型: {actual_model}, "
+-                 f"接口URL: {actual_url}, API Key: {state.request.api_key}")
++                 f"接口URL: {actual_url}, API Key: [REDACTED]")
+         
+         # 创建 LLM 实例
+         llm = ChatOpenAI(
+diff --git a/dataflow_agent/llm_callers/text.py b/dataflow_agent/llm_callers/text.py
+index 9f7903b..a9c5335 100644
+--- a/dataflow_agent/llm_callers/text.py
++++ b/dataflow_agent/llm_callers/text.py
+@@ -32,7 +32,7 @@ class TextLLMCaller(BaseLLMCaller):
+         response = await llm.ainvoke(messages)
+         log.info(
+             "[LLM Output]\n"
+-            f"api_key={self.state.request.api_key}\n"
++            "api_key=[REDACTED]\n"
+             f"model={self.model_name}\n"
+             "output=\n"
+             f"{response.content}"

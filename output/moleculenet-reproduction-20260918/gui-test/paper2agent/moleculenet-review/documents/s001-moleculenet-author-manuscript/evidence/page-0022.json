@@ -1,0 +1,463 @@
+{
+  "page": 22,
+  "lines": [
+    {
+      "text": "Multitask/Singletask Network",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        250.02488708496094,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "In a multitask network,10 input featurizations are processed by fully connected neural net-",
+      "bbox": [
+        72.0,
+        102.94815063476562,
+        540.0180053710938,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "work layers. The processed output is shared among all learning tasks in a dataset, and",
+      "bbox": [
+        71.99998474121094,
+        131.19515991210938,
+        540.070068359375,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "then fed into separate linear classiﬁers/regressors for each diﬀerent task. In the case that",
+      "bbox": [
+        71.99998474121094,
+        155.10317993164062,
+        540.0341186523438,
+        165.71939086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a dataset contains only a single task, multitask networks are just fully connected neural",
+      "bbox": [
+        71.99998474121094,
+        179.01016235351562,
+        540.0579833984375,
+        189.62637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "networks(Singletask Network). Since multitask networks are trained on the joint data avail-",
+      "bbox": [
+        71.99998474121094,
+        202.91818237304688,
+        540.0819702148438,
+        213.53439331054688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "able for various tasks, the parameters of the shared layers are encouraged to produce a joint",
+      "bbox": [
+        71.99998474121094,
+        226.82620239257812,
+        540.0819091796875,
+        237.44241333007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "representation which can share information between learning tasks. This eﬀect does seem",
+      "bbox": [
+        71.99998474121094,
+        250.73422241210938,
+        540.0100708007812,
+        261.3504333496094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to have limitations; merging data from uncorrelated tasks has only moderate eﬀect.80 As a",
+      "bbox": [
+        71.99998474121094,
+        270.3031921386719,
+        540.0044555664062,
+        285.2584228515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "result, MoleculeNet does not attempt to train extremely large multitask networks combining",
+      "bbox": [
+        71.99996948242188,
+        298.5491943359375,
+        540.0580444335938,
+        309.1654052734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "all data for all datasets.",
+      "bbox": [
+        71.99996948242188,
+        322.4571838378906,
+        194.0984344482422,
+        333.0733947753906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Bypass Multitask Networks",
+      "bbox": [
+        71.99996948242188,
+        363.09417724609375,
+        234.90150451660156,
+        373.71038818359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Multitask modeling relies on the fact that some features have explanatory power that is",
+      "bbox": [
+        71.99996948242188,
+        394.7231750488281,
+        540.0581665039062,
+        405.3393859863281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "shared among multiple tasks. Note that the opposite may well be true; features useful for",
+      "bbox": [
+        71.99996948242188,
+        418.63116455078125,
+        540.0460815429688,
+        429.24737548828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "one task can be detrimental to other tasks. As a result, vanilla multitask networks can",
+      "bbox": [
+        71.99996948242188,
+        442.5391540527344,
+        540.0700073242188,
+        453.1553649902344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lack the power to explain unrelated variations in the samples. Bypass networks attempt",
+      "bbox": [
+        71.99996948242188,
+        466.4461669921875,
+        540.0581665039062,
+        477.0623779296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to overcome this variation by merging in per-task independent layers that “bypass” shared",
+      "bbox": [
+        71.99996948242188,
+        490.3541564941406,
+        540.0701293945312,
+        500.9703674316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "layers to directly connect inputs with outputs.74 In other words, bypass multitask networks",
+      "bbox": [
+        71.99996948242188,
+        509.9241638183594,
+        540.0279541015625,
+        524.87841796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "consist of ntasks + 1 independent components: one “multitask” layer mapping all inputs to",
+      "bbox": [
+        71.99998474121094,
+        538.1701049804688,
+        540.0620727539062,
+        550.5794067382812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "shared representations, and ntasks “bypass” layers mapping inputs for each speciﬁc task to",
+      "bbox": [
+        71.99999237060547,
+        562.078125,
+        540.0382080078125,
+        574.4874267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "their labels. As the two groups have separate parameters, bypass networks may have greater",
+      "bbox": [
+        72.0,
+        585.9861450195312,
+        540.0701904296875,
+        596.6024169921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "explanatory power than vanilla multitask networks.",
+      "bbox": [
+        72.0,
+        609.8931274414062,
+        335.8992004394531,
+        620.5093994140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Inﬂuence Relevance Voting",
+      "bbox": [
+        72.0,
+        650.5300903320312,
+        231.57797241210938,
+        661.1463623046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Inﬂuence Relevance Voting (IRV) systems are reﬁned K-nearest neighbor classiﬁers.75 Using",
+      "bbox": [
+        72.0,
+        677.8211059570312,
+        540.0032958984375,
+        692.775390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the hypothesis that compounds with similar substructures have similar functionality, the",
+      "bbox": [
+        72.0,
+        706.067138671875,
+        540.0460815429688,
+        716.6834106445312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "22",
+      "bbox": [
+        300.1470031738281,
+        741.5911254882812,
+        311.8631286621094,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 22
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          74,
+          251,
+          87
+        ],
+        "pos": [
+          0,
+          37
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          71,
+          105,
+          541,
+          331
+        ],
+        "pos": [
+          37,
+          905
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          71,
+          363,
+          235,
+          374
+        ],
+        "pos": [
+          905,
+          939
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          71,
+          394,
+          541,
+          621
+        ],
+        "pos": [
+          939,
+          1817
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          650,
+          232,
+          662
+        ],
+        "pos": [
+          1817,
+          1852
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          680,
+          541,
+          717
+        ],
+        "pos": [
+          1852,
+          2047
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          2047,
+          2052
+        ]
+      }
+    ],
+    "text": "# **Multitask/Singletask Network** \n\nIn a multitask network,<sup>10</sup> input featurizations are processed by fully connected neural network layers. The processed output is shared among all learning tasks in a dataset, and then fed into separate linear classifiers/regressors for each different task. In the case that a dataset contains only a single task, multitask networks are just fully connected neural networks(Singletask Network). Since multitask networks are trained on the joint data available for various tasks, the parameters of the shared layers are encouraged to produce a joint representation which can share information between learning tasks. This effect does seem to have limitations; merging data from uncorrelated tasks has only moderate effect.<sup>80</sup> As a result, MoleculeNet does not attempt to train extremely large multitask networks combining all data for all datasets. \n\n# **Bypass Multitask Networks** \n\nMultitask modeling relies on the fact that some features have explanatory power that is shared among multiple tasks. Note that the opposite may well be true; features useful for one task can be detrimental to other tasks. As a result, vanilla multitask networks can lack the power to explain unrelated variations in the samples. Bypass networks attempt to overcome this variation by merging in per-task independent layers that “bypass” shared layers to directly connect inputs with outputs.<sup>74</sup> In other words, bypass multitask networks consist of _n_ tasks + 1 independent components: one “multitask” layer mapping all inputs to shared representations, and _n_ tasks “bypass” layers mapping inputs for each specific task to their labels. As the two groups have separate parameters, bypass networks may have greater explanatory power than vanilla multitask networks. \n\n# **Influence Relevance Voting** \n\nInfluence Relevance Voting (IRV) systems are refined K-nearest neighbor classifiers.<sup>75</sup> Using the hypothesis that compounds with similar substructures have similar functionality, the \n\n22 \n\n"
+  }
+}

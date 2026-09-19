@@ -1,0 +1,182 @@
+{
+  "page": 60,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0060.png",
+  "reviewed": true,
+  "review_notes": "References 21–33 inspected; source URLs retained; historical API names not executed. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0060-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        109
+      ],
+      "markdown": "- (21) Rogers, D.; Hahn, M. _Journal of Chemical Information and Modeling_ **2010** , _50_ , 742– 754.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        132,
+        541,
+        168
+      ],
+      "markdown": "- (22) Duvenaud, D.; Maclaurin, D.; Aguilera-Iparraguirre, J.; G´omez-Bombarelli, R.; Hirzel, T.; Aspuru-Guzik, A.; Adams, R. P. _arXiv preprint arXiv:1509.09292_ **2015** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        190,
+        541,
+        226
+      ],
+      "markdown": "- (23) Kearnes, S.; McCloskey, K.; Berndl, M.; Pande, V.; Riley, P. _arXiv preprint arXiv:1603.00856_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        248,
+        410,
+        261
+      ],
+      "markdown": "- (24) Miller, G. A. _Communications of the ACM_ **1995** , _38_ , 39–41.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        282,
+        541,
+        318
+      ],
+      "markdown": "- (25) Deng, J.; Dong, W.; Socher, R.; Li, L.-J.; Li, K.; Fei-Fei, L. ImageNet: A Large-Scale Hierarchical Image Database. CVPR09. 2009.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        339,
+        541,
+        400
+      ],
+      "markdown": "- (26) Russakovsky, O.; Deng, J.; Su, H.; Krause, J.; Satheesh, S.; Ma, S.; Huang, Z.; Karpathy, A.; Khosla, A.; Bernstein, M.; Berg, A. C.; Fei-Fei, L. _International Journal of Computer Vision (IJCV)_ **2015** , _115_ , 211–252.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        421,
+        541,
+        457
+      ],
+      "markdown": "- (27) Krizhevsky, A.; Sutskever, I.; Hinton, G. E. ImageNet Classification with Deep Convolutional Neural Networks. NIPS Proceedings. 2012.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b007",
+      "kind": "text",
+      "bbox": [
+        71,
+        479,
+        541,
+        515
+      ],
+      "markdown": "- (28) Szegedy, C.; Liu, W.; Jia, Y.; Sermanet, P.; Reed, S.; Anguelov, D.; Erhan, D.; Vanhoucke, V.; Rabinovich, A. _arXiv preprint arXiv:1409.4842_ **2014** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b008",
+      "kind": "text",
+      "bbox": [
+        71,
+        537,
+        485,
+        550
+      ],
+      "markdown": "- (29) He, K.; Zhang, X.; Ren, S.; Sun, J. _arXiv preprint arXiv:1512.03385_ **2015** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b009",
+      "kind": "text",
+      "bbox": [
+        71,
+        571,
+        541,
+        607
+      ],
+      "markdown": "- (30) DeepChem: Deep-learning models for Drug Discovery and Quantum Chemistry. `https: //github.com/deepchem/deepchem` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b010",
+      "kind": "text",
+      "bbox": [
+        71,
+        628,
+        482,
+        641
+      ],
+      "markdown": "- (31) others,, et al. _Journal of Machine Learning Research_ **2011** , _12_ , 2825–2830.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b011",
+      "kind": "text",
+      "bbox": [
+        71,
+        662,
+        374,
+        675
+      ],
+      "markdown": "- (32) others,, et al. _arXiv preprint arXiv:1603.04467_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b012",
+      "kind": "text",
+      "bbox": [
+        71,
+        696,
+        520,
+        709
+      ],
+      "markdown": "- (33) Sheridan, R. P. _Journal of chemical information and modeling_ **2013** , _53_ , 783–790.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0060-b013",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "60",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 21–33 inspected; source URLs retained; historical API names not executed. Reviewed sequentially by the main agent; no independent agent verification."
+}

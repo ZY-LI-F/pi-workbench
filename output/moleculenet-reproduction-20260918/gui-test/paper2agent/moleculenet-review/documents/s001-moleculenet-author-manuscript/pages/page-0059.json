@@ -1,0 +1,158 @@
+{
+  "page": 59,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0059.png",
+  "reviewed": true,
+  "review_notes": "References 10–20 inspected. Searchable text retained; accented-author typography may be imperfect. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0059-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        111
+      ],
+      "markdown": "- (10) Ramsundar, B.; Kearnes, S.; Riley, P.; Webster, D.; Konerding, D.; Pande, V. _arXiv preprint arXiv:1502.02072_ **2015** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        132,
+        541,
+        193
+      ],
+      "markdown": "- (11) Unterthiner, T.; Mayr, A.; ¨unter Klambauer, G.; Steijaert, M.; Wenger, J.; Ceulemans, H.; Hochreiter, S. Deep Learning as an Opportunity in Virtual Screening. Deep Learning and Representation Learning Workshop (NIPS 2014). 2014.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        214,
+        493,
+        227
+      ],
+      "markdown": "- (12) Wallach, I.; Dzamba, M.; Heifets, A. _arXiv preprint arXiv:1510.02855_ **2015** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        248,
+        529,
+        261
+      ],
+      "markdown": "- (13) Delaney, J. S. _Journal of Chemical Information and Modeling_ **2004** , _44_ , 1000–1005.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        282,
+        541,
+        318
+      ],
+      "markdown": "- (14) Lusci, A.; Pollastri, G.; Baldi, P. _Journal of chemical information and modeling_ **2013** , _53_ , 1563–1575.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        339,
+        541,
+        376
+      ],
+      "markdown": "- (15) Mobley, D. L.; Wymer, K. L.; Lim, N. M.; Guthrie, J. P. _Journal of Computer-Aided Molecular Design_ **2014** , _28_ , 135–150.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        397,
+        541,
+        431
+      ],
+      "markdown": "- (16) Mobley, D. L.; Guthrie, J. P. _Journal of Computer-Aided Molecular Design_ **2014** , _28_ , 711–720.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b007",
+      "kind": "text",
+      "bbox": [
+        72,
+        455,
+        540,
+        491
+      ],
+      "markdown": "- (17) Rupp, M.; Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. _Physical Review Letters_ **2012** , _108_ , 058301.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b008",
+      "kind": "text",
+      "bbox": [
+        72,
+        513,
+        541,
+        573
+      ],
+      "markdown": "- (18) Montavon, G.; Rupp, M.; Gobre, V.; Vazquez-Mayagoitia, A.; Hansen, K.; Tkatchenko, A.; M¨uller, K.-R.; Lilienfeld, O. A. v. _New Journal of Physics_ **2013** , _15_ , 095003.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b009",
+      "kind": "text",
+      "bbox": [
+        72,
+        594,
+        541,
+        631
+      ],
+      "markdown": "- (19) Sch¨utt, K. T.; Arbabzadah, F.; Chmiela, S.; M¨uller, K. R.; Tkatchenko, A. _arXiv preprint arXiv:1609.08259_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b010",
+      "kind": "text",
+      "bbox": [
+        72,
+        652,
+        541,
+        710
+      ],
+      "markdown": "- (20) McGibbon, R. T.; Taube, A. G.; Donchev, A. G.; Siva, K.; Hern´andez, F.; Hargus, C.; Law, K.-H.; Klepeis, J. L.; Shaw, D. E. _The Journal of Chemical Physics_ **2017** , _147_ , 161725.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0059-b011",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "59",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 10–20 inspected. Searchable text retained; accented-author typography may be imperfect. Reviewed sequentially by the main agent; no independent agent verification."
+}

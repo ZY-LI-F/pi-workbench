@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "executed_by": "current Codex main agent, real local pytest process",
+  "interpreter": ".venv/Scripts/python.exe",
+  "command": "-m pytest test_outline_validation.py test_benchmark.py test_verify_results.py test_source_data.py -q",
+  "observed_output": "26 passed in 9.79s",
+  "previous_observed_output": "26 passed in 11.40s",
+  "coverage": [
+    "benchmark partition and metric boundary cases",
+    "independent metric calculation and physical-unit validation",
+    "all 642 FreeSolv source rows and z-score relationship",
+    "upstream outline output schema and invented-image rejection"
+  ],
+  "limits": "Unit tests do not replace actual 48-run verification or real Paper2Any API execution."
+}

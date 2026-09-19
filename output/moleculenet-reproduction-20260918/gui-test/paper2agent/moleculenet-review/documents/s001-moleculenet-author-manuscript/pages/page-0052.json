@@ -1,0 +1,80 @@
+{
+  "page": 52,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0052.png",
+  "reviewed": true,
+  "review_notes": "Tables 9 and 10 retained as complete source images, including units/merged groups; no inferred cell values. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0052-b000",
+      "kind": "caption",
+      "bbox": [
+        110,
+        73,
+        502,
+        86
+      ],
+      "markdown": "Table 9: QM7, QM7b, QM8 and QM9 Performances (Mean Absolute Error)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0052-b001",
+      "kind": "table",
+      "bbox": [
+        102,
+        93,
+        506,
+        433
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 9",
+      "asset_name": "table-9",
+      "rows": null
+    },
+    {
+      "id": "p0052-b002",
+      "kind": "caption",
+      "bbox": [
+        113,
+        461,
+        500,
+        474
+      ],
+      "markdown": "Table 10: QM7b Test Set Performances of All Tasks(Mean Absolute Error)",
+      "source_class": "text"
+    },
+    {
+      "id": "p0052-b003",
+      "kind": "table",
+      "bbox": [
+        72,
+        481,
+        557,
+        700
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 10",
+      "asset_name": "table-10",
+      "rows": null
+    },
+    {
+      "id": "p0052-b004",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "52",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Tables 9 and 10 retained as complete source images, including units/merged groups; no inferred cell values. Reviewed sequentially by the main agent; no independent agent verification."
+}

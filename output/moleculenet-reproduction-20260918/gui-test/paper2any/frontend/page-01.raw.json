@@ -1,0 +1,135 @@
+{
+  "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+  "render_engine": "canvas",
+  "layout_family": "text_focus",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 24,
+      "align": "stretch",
+      "padding": 0
+    },
+    "children": [
+      {
+        "type": "container",
+        "id": "hero",
+        "style": {
+          "direction": "column",
+          "gap": 18,
+          "weight": 1,
+          "align": "center",
+          "justify": "center"
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "slide_title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          },
+          {
+            "type": "component",
+            "id": "slide_subtitle",
+            "component": "text",
+            "props": {
+              "text_ref": "subtitle"
+            }
+          }
+        ]
+      },
+      {
+        "type": "container",
+        "id": "meta_row",
+        "style": {
+          "direction": "row",
+          "gap": 18,
+          "align": "center",
+          "justify": "space-between"
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "presenter",
+            "component": "text",
+            "props": {
+              "text_ref": "presenter"
+            }
+          },
+          {
+            "type": "component",
+            "id": "page_label",
+            "component": "text",
+            "props": {
+              "text_ref": "page_label"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "title": "MoleculeNet：分子机器学习基准——论文原始基准解读与局部现代环境复现",
+    "subtitle": "论文原始基准 vs. 本次局部现代环境复现",
+    "presenter": "汇报人：请填写",
+    "page_label": "第 01/10 页 · Paper2Any Frontend PPT",
+    "key_points": [
+      "汇报人：请填写",
+      "论文原始基准 vs. 本次局部现代环境复现"
+    ]
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15, 23, 42, 0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Segoe UI\", \"Noto Sans SC\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700,
+        "color": "#e2e8f0",
+        "align": "center"
+      },
+      "text": {
+        "font_size": 24,
+        "color": "#94a3b8"
+      },
+      "text_emphasis": {
+        "font_size": 26,
+        "color": "#7dd3fc"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "封面页以大标题居中呈现主题，副标题点明论文基准与现代环境复现的对照，底部仅保留汇报人与页码信息。"
+}

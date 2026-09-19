@@ -1,0 +1,17 @@
+.sol-setting { display: grid; gap: 14px; }
+.sol-setting p { margin: 0; line-height: 1.65; }
+.sol-setting small { color: var(--text-muted); line-height: 1.6; }
+.sol-setting__option { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 0; }
+.sol-setting__option > span { display: grid; gap: 5px; min-width: 0; }
+.sol-setting__option input { width: 22px; height: 22px; flex: 0 0 22px; accent-color: var(--accent); cursor: pointer; }
+.sol-setting__features { border-top: 1px solid var(--border); }
+.sol-setting summary { cursor: pointer; padding: 10px 0; line-height: 1.6; }
+.sol-setting__field { display: grid; gap: 8px; margin: 6px 0 16px; }
+.sol-setting__field :is(select, input) { width: 100%; min-width: 0; padding: 10px; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 9px; }
+.sol-setting__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.sol-setting__effective { padding: 12px; background: var(--accent-soft); border-radius: 10px; overflow-wrap: anywhere; }
+.sol-setting__error, .sol-setting__status.is-error { color: var(--danger, #b44343) !important; overflow-wrap: anywhere; }
+.sol-setting__activity ol { max-height: 260px; overflow: auto; padding-left: 22px; }
+.sol-setting__activity li { padding: 5px 0; overflow-wrap: anywhere; }
+.sol-setting__activity time { color: var(--text-muted); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.sol-setting__activity .is-warning { color: var(--warning, #996324); }

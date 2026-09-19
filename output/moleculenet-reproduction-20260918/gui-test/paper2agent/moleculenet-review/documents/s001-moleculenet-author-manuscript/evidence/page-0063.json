@@ -1,0 +1,690 @@
+{
+  "page": 63,
+  "lines": [
+    {
+      "text": "(58) Gayvert, K. M.; Madhukar, N. S.; Elemento, O. Cell Chemical Biology 2016, 23, 1294–",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0221557617188,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "1301.",
+      "bbox": [
+        98.6629638671875,
+        99.56613159179688,
+        125.34696960449219,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(59) Artemov, A. V.; Putin, E.; Vanhaelen, Q.; Aliper, A.; Ozerov, I. V.; Zhavoronkov, A.",
+      "bbox": [
+        71.99996185302734,
+        133.43612670898438,
+        540.0579223632812,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "bioRxiv 2016, 095653.",
+      "bbox": [
+        98.6629638671875,
+        157.34414672851562,
+        214.1202850341797,
+        167.96035766601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(60) Novick, P. A.; Ortiz, O. F.; Poelman, J.; Abdulhay, A. Y.; Pande, V. S. PLOS ONE",
+      "bbox": [
+        71.99996948242188,
+        191.21511840820312,
+        539.989990234375,
+        201.83132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2013, 8.",
+      "bbox": [
+        98.6629638671875,
+        215.12210083007812,
+        143.57278442382812,
+        225.73831176757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(61) Aggregate",
+      "bbox": [
+        71.99996948242188,
+        248.99307250976562,
+        150.3902130126953,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Analysis",
+      "bbox": [
+        164.37779235839844,
+        248.99307250976562,
+        207.42845153808594,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of",
+      "bbox": [
+        221.41603088378906,
+        248.99307250976562,
+        230.8486785888672,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ClincalTrials.gov",
+      "bbox": [
+        244.82431030273438,
+        248.99307250976562,
+        330.4235534667969,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(AACT)",
+      "bbox": [
+        344.4111328125,
+        248.99307250976562,
+        387.6411437988281,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Database.",
+      "bbox": [
+        401.61676025390625,
+        248.99307250976562,
+        452.259033203125,
+        259.6092834472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "https://www.",
+      "bbox": [
+        466.1769714355469,
+        249.9853515625,
+        540.06005859375,
+        259.94403076171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ctti-clinicaltrials.org/aact-database, Accessed: 2017-09-27.",
+      "bbox": [
+        98.6629638671875,
+        272.90106201171875,
+        446.1037292480469,
+        283.8520202636719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(62) Bemis, G. W.; Murcko, M. A. Journal of Medicinal Chemistry 1996, 39, 2887–2893.",
+      "bbox": [
+        71.99993896484375,
+        306.77105712890625,
+        531.5903930664062,
+        317.38726806640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(63) Landrum, G. RDKit: Open-Source Cheminformatics Software. https://www.rdkit.",
+      "bbox": [
+        71.9998779296875,
+        340.6420593261719,
+        540.0894775390625,
+        351.593017578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "org/.",
+      "bbox": [
+        98.66290283203125,
+        364.549072265625,
+        126.52272033691406,
+        375.5000305175781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(64) Jain, A. N.; Nicholls, A. Journal of Computer-Aided Molecular Design 2008, 22, 133–",
+      "bbox": [
+        71.99990844726562,
+        398.4200744628906,
+        540.0252075195312,
+        409.0362854003906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "139.",
+      "bbox": [
+        98.662841796875,
+        422.32806396484375,
+        119.48880004882812,
+        432.94427490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(65) Hastie, T.; Tibshirani, R.; Friedman, J. The Elements of Statistical Learning: Data",
+      "bbox": [
+        71.99983978271484,
+        456.19805908203125,
+        539.9925537109375,
+        466.81427001953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Mining, Inference, and Prediction; Springer, 2009.",
+      "bbox": [
+        98.66282653808594,
+        480.1060485839844,
+        356.42938232421875,
+        490.7222595214844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(66) Davis, J.; Goadrich, M. The Relationship Between Precision-Recall and ROC Curves.",
+      "bbox": [
+        71.99980163574219,
+        513.9769897460938,
+        540.02197265625,
+        524.59326171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Proceedings of the 23rd International Conference on Machine Learning. 2006.",
+      "bbox": [
+        98.66280364990234,
+        537.884033203125,
+        496.1255187988281,
+        548.5003051757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(67) G´omez-Bombarelli,",
+      "bbox": [
+        71.99980163574219,
+        571.7550048828125,
+        196.46542358398438,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "R.;",
+      "bbox": [
+        207.38052368164062,
+        571.7550048828125,
+        222.5038604736328,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Duvenaud,",
+      "bbox": [
+        236.90988159179688,
+        571.7550048828125,
+        292.0233459472656,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "D.;",
+      "bbox": [
+        302.9384460449219,
+        571.7550048828125,
+        318.384521484375,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Hern´andez-Lobato,",
+      "bbox": [
+        332.79052734375,
+        571.7550048828125,
+        430.1895751953125,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "J.",
+      "bbox": [
+        441.09271240234375,
+        571.7550048828125,
+        450.35797119140625,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "M.;",
+      "bbox": [
+        461.2611083984375,
+        571.7550048828125,
+        478.488525390625,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Aguilera-",
+      "bbox": [
+        492.906494140625,
+        571.7550048828125,
+        540.0458374023438,
+        582.3712768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Iparraguirre, J.; Hirzel, T. D.; Adams, R. P.; Aspuru-Guzik, A. arXiv preprint",
+      "bbox": [
+        98.66280364990234,
+        595.6630249023438,
+        540.0245971679688,
+        606.279296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv:1610.02415 2016,",
+      "bbox": [
+        98.66281127929688,
+        619.571044921875,
+        223.88063049316406,
+        630.1873168945312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(68) Durrant, J. D.; McCammon, J. A. Journal of Chemical Information and Modeling",
+      "bbox": [
+        71.99981689453125,
+        653.4410400390625,
+        540.0079345703125,
+        664.0573120117188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2011, 51, 2897–2903.",
+      "bbox": [
+        98.66282653808594,
+        677.3490600585938,
+        207.79527282714844,
+        687.96533203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(69) Da, C.; Kireev, D. Journal of chemical information and modeling 2014, 54, 2555–2561.",
+      "bbox": [
+        71.99981689453125,
+        711.2190551757812,
+        540.0411376953125,
+        721.8353271484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "63",
+      "bbox": [
+        300.14678955078125,
+        741.5910034179688,
+        311.8629150390625,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 63
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          109
+        ],
+        "pos": [
+          0,
+          109
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          71,
+          132,
+          541,
+          168
+        ],
+        "pos": [
+          109,
+          232
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          71,
+          190,
+          540,
+          226
+        ],
+        "pos": [
+          232,
+          341
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          71,
+          248,
+          541,
+          284
+        ],
+        "pos": [
+          341,
+          484
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          71,
+          306,
+          532,
+          319
+        ],
+        "pos": [
+          484,
+          583
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          71,
+          339,
+          541,
+          376
+        ],
+        "pos": [
+          583,
+          677
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          71,
+          397,
+          541,
+          431
+        ],
+        "pos": [
+          677,
+          785
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          71,
+          455,
+          540,
+          491
+        ],
+        "pos": [
+          785,
+          932
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          71,
+          513,
+          541,
+          549
+        ],
+        "pos": [
+          932,
+          1099
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          71,
+          571,
+          541,
+          631
+        ],
+        "pos": [
+          1099,
+          1288
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          71,
+          652,
+          541,
+          688
+        ],
+        "pos": [
+          1288,
+          1405
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          71,
+          710,
+          541,
+          723
+        ],
+        "pos": [
+          1405,
+          1509
+        ]
+      },
+      {
+        "index": 12,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1509,
+          1514
+        ]
+      }
+    ],
+    "text": "- (58) Gayvert, K. M.; Madhukar, N. S.; Elemento, O. _Cell Chemical Biology_ **2016** , _23_ , 1294– 1301. \n\n- (59) Artemov, A. V.; Putin, E.; Vanhaelen, Q.; Aliper, A.; Ozerov, I. V.; Zhavoronkov, A. _bioRxiv_ **2016** , 095653. \n\n- (60) Novick, P. A.; Ortiz, O. F.; Poelman, J.; Abdulhay, A. Y.; Pande, V. S. _PLOS ONE_ **2013** , _8_ . \n\n- (61) Aggregate Analysis of ClincalTrials.gov (AACT) Database. `https://www. ctti-clinicaltrials.org/aact-database` , Accessed: 2017-09-27. \n\n- (62) Bemis, G. W.; Murcko, M. A. _Journal of Medicinal Chemistry_ **1996** , _39_ , 2887–2893. \n\n- (63) Landrum, G. RDKit: Open-Source Cheminformatics Software. `https://www.rdkit. org/` . \n\n- (64) Jain, A. N.; Nicholls, A. _Journal of Computer-Aided Molecular Design_ **2008** , _22_ , 133– 139. \n\n- (65) Hastie, T.; Tibshirani, R.; Friedman, J. _The Elements of Statistical Learning: Data Mining, Inference, and Prediction_ ; Springer, 2009. \n\n- (66) Davis, J.; Goadrich, M. The Relationship Between Precision-Recall and ROC Curves. Proceedings of the 23rd International Conference on Machine Learning. 2006. \n\n- (67) G´omez-Bombarelli, R.; Duvenaud, D.; Hern´andez-Lobato, J. M.; AguileraIparraguirre, J.; Hirzel, T. D.; Adams, R. P.; Aspuru-Guzik, A. _arXiv preprint arXiv:1610.02415_ **2016** , \n\n- (68) Durrant, J. D.; McCammon, J. A. _Journal of Chemical Information and Modeling_ **2011** , _51_ , 2897–2903. \n\n- (69) Da, C.; Kireev, D. _Journal of chemical information and modeling_ **2014** , _54_ , 2555–2561. \n\n63 \n\n"
+  }
+}

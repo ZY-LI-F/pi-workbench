@@ -1,0 +1,112 @@
+{
+  "page": 6,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0006.png",
+  "reviewed": true,
+  "review_notes": "Methods, DeepChem workflow Figure 1 complete with caption, Datasets opening. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0006-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        72,
+        147,
+        85
+      ],
+      "markdown": "## Methods",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0006-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        110,
+        553,
+        242
+      ],
+      "markdown": "MoleculeNet is based on the open source package DeepChem.<sup>30</sup> Figure 1 shows an annotated DeepChem benchmark script. Note how different choices for data splitting, featurization, and model are available. DeepChem also directly provides molnet sub-module to support benchmarking. The single line below runs benchmarking on the specified dataset, model and featurizer. User defined models capable of handling DeepChem datasets are also supported. deepchem.molnet.run ~~b~~ enchmark(datasets, model, split, featurizer)",
+      "source_class": "text"
+    },
+    {
+      "id": "p0006-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        278,
+        541,
+        314
+      ],
+      "markdown": "In this section, we will further elaborate the benchmarking system, introducing available datasets as well as implemented splitting, metrics, featurization, and learning methods.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0006-b003",
+      "kind": "figure",
+      "bbox": [
+        67,
+        322,
+        546,
+        508
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 6 (4)",
+      "asset_name": "figure-p0006-003"
+    },
+    {
+      "id": "p0006-b004",
+      "kind": "caption",
+      "bbox": [
+        72,
+        514,
+        541,
+        540
+      ],
+      "markdown": "Figure 1: Example code for benchmark evaluation with DeepChem, multiple methods are provided for data splitting, featurization and learning.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0006-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        590,
+        133,
+        600
+      ],
+      "markdown": "### Datasets",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0006-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        623,
+        541,
+        706
+      ],
+      "markdown": "MoleculeNet is built upon multiple public databases. The full collection currently includes over 700,000 compounds tested on a range of different properties. These properties can be subdivided into four categories: quantum mechanics, physical chemistry, biophysics and physiology. As illustrated in Figure 2, separate datasets in the MoleculeNet collection cover",
+      "source_class": "text"
+    },
+    {
+      "id": "p0006-b007",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        751
+      ],
+      "markdown": "6",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Methods, DeepChem workflow Figure 1 complete with caption, Datasets opening. Reviewed sequentially by the main agent; no independent agent verification."
+}

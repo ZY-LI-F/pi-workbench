@@ -1,0 +1,113 @@
+[
+  {
+    "title": "MoleculeNet：分子机器学习基准——论文解读与复现实验",
+    "layout_description": "封面页：居中大标题，副标题说明汇报主题；下方仅保留汇报人信息，不添加正文内容。",
+    "key_points": [
+      "汇报人：请填写"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "研究背景：分子机器学习缺少统一评价平台",
+    "layout_description": "左文右图式背景页：左侧列出三点核心问题，右侧可留白或使用示意框，不放论文原图。",
+    "key_points": [
+      "分子机器学习发展迅速，但算法常在不同数据集上各自评测，难以横向比较",
+      "分子数据异质、获取昂贵、规模通常小于视觉与语音数据集",
+      "输入分子尺寸与连接方式多变，需要特征化转为固定维度表示",
+      "MoleculeNet 目标：提供数据集、指标、划分方式与开源算法实现"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "MoleculeNet 的总体设计",
+    "layout_description": "中心辐射式版式：中心为 MoleculeNet，四个分支展示数据集、指标、特征化、学习模型。",
+    "key_points": [
+      "论文收集 17 个数据集、70 万以上化合物、覆盖 800 多个任务",
+      "任务分为四类：量子力学、物理化学、生物物理、生理效应",
+      "统一集成到开源 DeepChem，提供数据加载、特征化、划分与模型接口",
+      "强调可替换的 featurization、split 与 learning model 组合"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "数据集覆盖：从量子性质到人体生理效应",
+    "layout_description": "四象限卡片版式：每个象限对应一类属性，列出代表数据集与任务特点。",
+    "key_points": [
+      "量子力学：QM7、QM7b、QM8、QM9，预测电子、能量与热力学性质",
+      "物理化学：ESOL、FreeSolv、Lipophilicity，预测溶解度、水合自由能、脂溶性",
+      "生物物理：PCBA、MUV、HIV、BACE、PDBbind，涉及生物活性与结合亲和力",
+      "生理效应：BBBP、Tox21、ToxCast、SIDER、ClinTox，关注毒性与副作用"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "数据划分与评价指标",
+    "layout_description": "左右对照版式：左侧为 split 方法，右侧为指标选择逻辑，底部突出高不平衡场景。",
+    "key_points": [
+      "所有数据集按 80/10/10 划分为训练、验证与测试集",
+      "支持随机划分、骨架划分、分层划分与时间划分",
+      "回归任务常用 MAE 与 RMSE，分类任务常用 AUC-ROC 与 AUC-PRC",
+      "正例率低于 2% 时论文推荐 AUC-PRC，否则推荐 AUC-ROC",
+      "骨架划分将不同二维结构框架的分子分开，更考验泛化能力"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "特征化与学习模型",
+    "layout_description": "上半部分为特征化方法矩阵，下半部分为传统模型与图模型对比列表。",
+    "key_points": [
+      "特征化包括 ECFP、Coulomb Matrix、Grid、Symmetry Function、Graph Convolutions、Weave",
+      "传统模型包括 Logistic Regression、Kernel SVM、KRR、Random Forest、XGBoost、Multitask/Singletask、Bypass、IRV",
+      "图模型包括 GC、Weave、DAG、DTNN、ANI-1、MPNN",
+      "图模型使用可学习表征，传统模型默认使用 ECFP，部分任务使用 CM 或 Grid"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "论文主要结论",
+    "layout_description": "三栏结论卡：优势、局限、条件依赖，每栏用短句概括。",
+    "key_points": [
+      "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+      "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+      "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+      "量子力学与生物物理任务中，物理感知特征化比模型选择更关键",
+      "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "本次复现实验设置与证据边界",
+    "layout_description": "上下结构：上方列出实验配置，下方用醒目边框强调边界与偏差。",
+    "key_points": [
+      "共 48 次运行，覆盖 ESOL、FreeSolv、Lipophilicity 三个数据集",
+      "模型设置包括 mean 基线、Random Forest、KRR、Graph Convolution",
+      "随机种子为 123、456、789，报告三次运行的样本标准差 ddof=1",
+      "运行环境为现代 DeepChem 2.8.0 与 TensorFlow 2.15.1",
+      "未使用论文的高斯过程超参优化，未复现全部 17 个数据集",
+      "ESOL 骨架划分仅作为额外诊断，不是论文原始协议"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "复现实验结果：三个数据集的关键数值",
+    "layout_description": "表格与要点结合版式：上表为 RMSE 对比，下方列出观察与偏差说明。",
+    "key_points": [
+      "ESOL 随机划分：mean 2.137，RF 1.190±0.159，KRR 1.485±0.119，GC 1.046±0.106",
+      "ESOL 骨架划分诊断：mean 2.315，RF 1.691±0.018，KRR 2.472±0.000，GC 1.370±0.036",
+      "FreeSolv 随机划分：mean 3.963，RF 2.061±0.664，KRR 1.999±0.410，GC 2.151±0.232",
+      "Lipophilicity 随机划分：mean 1.169，RF 0.838±0.011，KRR 0.835±0.016，GC 0.704±0.016",
+      "与论文 Table 8 相比，趋势大体一致，但绝对数值与标准差存在差异",
+      "差异来源包括现代软件环境、新随机种子、无超参优化以及未使用原始划分索引"
+    ],
+    "asset_ref": null
+  },
+  {
+    "title": "致谢 / Thank You",
+    "layout_description": "致谢页：居中显示感谢语，背景简洁，不放论文图片与额外正文。",
+    "key_points": [
+      "感谢聆听",
+      "欢迎批评指正"
+    ],
+    "asset_ref": null
+  }
+]

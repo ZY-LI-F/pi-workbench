@@ -1,0 +1,11 @@
+{
+  "appRoot": "C:\\Users\\qq108\\Documents\\PI-GUI",
+  "project": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918",
+  "profile": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\profile",
+  "agentDir": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-agent",
+  "pid": 45120,
+  "model": "deepseek-flash",
+  "modelName": "DeepSeek V4.1 Flash",
+  "launchedAt": "2026-09-18T13:11:05.556Z",
+  "credentials": "Resolved from existing Pi storage into child process environment only; not written to disk"
+}

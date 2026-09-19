@@ -1,0 +1,123 @@
+{
+  "page": 9,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0009.png",
+  "reviewed": true,
+  "review_notes": "QM9 continuation, ESOL, FreeSolv and Lipophilicity descriptions; pH 7.4 and sample counts inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0009-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        135
+      ],
+      "markdown": "functional theory (B3LYP/6-31G(2df,p) based DFT). In our benchmark, geometric properties (atomic coordinates) are integrated into features, which are then applied to predict other properties.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0009-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        146,
+        541,
+        206
+      ],
+      "markdown": "The datasets introduced above (QM7, QM7b, QM8, QM9) were curated as part of the Quantum-Machine effort,<sup>39</sup> which has processed a number of datasets to measure the efficacy of machine-learning methods for quantum chemistry.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0009-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        235,
+        107,
+        245
+      ],
+      "markdown": "### ESOL",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0009-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        266,
+        541,
+        350
+      ],
+      "markdown": "ESOL is a small dataset consisting of water solubility data for 1128 compounds.<sup>13</sup> The dataset has been used to train models that estimate solubility directly from chemical structures (as encoded in SMILES strings).<sup>22</sup> Note that these structures don’t include 3D coordinates, since solubility is a property of a molecule and not of its particular conformers.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0009-b004",
+      "kind": "heading",
+      "bbox": [
+        71,
+        379,
+        123,
+        389
+      ],
+      "markdown": "### FreeSolv",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0009-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        410,
+        541,
+        518
+      ],
+      "markdown": "The Free Solvation Database (FreeSolv) provides experimental and calculated hydration free energy of small molecules in water.<sup>16</sup> A subset of the compounds in the dataset are also used in the SAMPL blind prediction challenge.<sup>15</sup> The calculated values are derived from alchemical free energy calculations using molecular dynamics simulations. We include the experimental values in the benchmark collection, and use calculated values for comparison.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0009-b006",
+      "kind": "heading",
+      "bbox": [
+        71,
+        547,
+        147,
+        559
+      ],
+      "markdown": "### Lipophilicity",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0009-b007",
+      "kind": "text",
+      "bbox": [
+        71,
+        579,
+        541,
+        639
+      ],
+      "markdown": "Lipophilicity is an important feature of drug molecules that affects both membrane permeability and solubility. This dataset, curated from ChEMBL database,<sup>45</sup> provides experimental results of octanol/water distribution coefficient (logD at pH 7.4) of 4200 compounds.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0009-b008",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        751
+      ],
+      "markdown": "9",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "QM9 continuation, ESOL, FreeSolv and Lipophilicity descriptions; pH 7.4 and sample counts inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

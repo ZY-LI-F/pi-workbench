@@ -1,0 +1,98 @@
+{
+  "page": 20,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0020.png",
+  "reviewed": true,
+  "review_notes": "Weave and conventional models, logistic regression; source heading hierarchy normalized. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0020-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        75,
+        110,
+        85
+      ],
+      "markdown": "### Weave",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0020-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        107,
+        541,
+        263
+      ],
+      "markdown": "Similar to graph convolutions, the weave featurization encodes both local chemical environment and connectivity of atoms in a molecule. Atomic feature vectors are exactly the same, while connectivity is represented by more detailed pair features instead of neighbor listing. The weave featurization calculates a feature vector for each pair of atoms in the molecule, including bond properties (if directly connected), graph distance and ring info, forming a feature matrix. The method supports graph-based models that utilize properties of both nodes (atoms) and edges (bonds).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0020-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        295,
+        288,
+        306
+      ],
+      "markdown": "### Models - Conventional Models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0020-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        328,
+        541,
+        579
+      ],
+      "markdown": "MoleculeNet tests the performance of various machine learning models on the datasets discussed previously. These models could be further categorized into conventional methods and graph-based methods according to their structures and input types. The following sections will give brief introductions to benchmarked algorithms. The results section will discuss performance numbers in detail. Here we briefly review conventional methods including logistic regression, support vector classification, kernel ridge regression, random forests,<sup>72</sup> gradient boosting,<sup>73</sup> multitask networks,<sup>9,10</sup> bypass networks<sup>74</sup> and influence relevance voting.<sup>75</sup> The next section graph-based models will give introductions to graph convolutional models,<sup>22</sup> weave models,<sup>23</sup> directed acyclic graph models,<sup>14</sup> deep tensor neural networks,<sup>19</sup> ANI-1<sup>71</sup> and message passing neural networks.<sup>76</sup> As part of this work, all methods are implemented in the open source DeepChem package.<sup>30</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0020-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        608,
+        186,
+        620
+      ],
+      "markdown": "### Logistic Regression",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0020-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        639,
+        541,
+        723
+      ],
+      "markdown": "Logistic regression models (Logreg) apply the logistic function to weighted linear combinations of their input features to obtain model predictions. It is often common to use regularization to encourage learned weights to be sparse.<sup>77</sup> Note that logistic regression models are only defined for classification tasks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0020-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "20",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Weave and conventional models, logistic regression; source heading hierarchy normalized. Reviewed sequentially by the main agent; no independent agent verification."
+}

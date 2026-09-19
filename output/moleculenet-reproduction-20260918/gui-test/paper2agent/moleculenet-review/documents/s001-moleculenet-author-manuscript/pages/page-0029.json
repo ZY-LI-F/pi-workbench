@@ -1,0 +1,52 @@
+{
+  "page": 29,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0029.png",
+  "reviewed": true,
+  "review_notes": "Figure 7 all biophysics panels and complete caption inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0029-b000",
+      "kind": "figure",
+      "bbox": [
+        67,
+        158,
+        546,
+        552
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 29 (1)",
+      "asset_name": "figure-p0029-000"
+    },
+    {
+      "id": "p0029-b001",
+      "kind": "caption",
+      "bbox": [
+        71,
+        558,
+        541,
+        628
+      ],
+      "markdown": "Figure 7: Benchmark performances for biophysics tasks: **PCBA** , 4 models are evaluated by AUC-PRC on random split; **MUV** , 8 models are evaluated by AUC-PRC on random split; **HIV** , 8 models are evaluated by AUC-ROC on scaffold split; **BACE** , 9 models are evaluated by AUC-ROC on scaffold split. For AUC-ROC and AUC-PRC, higher value indicates better performance(to the right).",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0029-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "29",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 7 all biophysics panels and complete caption inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

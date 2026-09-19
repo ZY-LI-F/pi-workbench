@@ -6,6 +6,8 @@ type RealpathResolver = (absolutePath: string) => Promise<string>;
 interface CanonicalPathDependencies {
   readonly resolveRealPath?: RealpathResolver;
   readonly platform?: NodeJS.Platform;
+  /** Already-canonical read grants must not inherit access after a root is retargeted. */
+  readonly pinnedRootPaths?: readonly string[];
 }
 
 function requiredPath(value: string): string {
@@ -66,7 +68,8 @@ export async function canonicalPathWithinRoots(
   for (const rootPath of rootPaths) {
     let root: string;
     try {
-      root = await canonicalExistingPath(rootPath, dependencies);
+      const pinned = dependencies.pinnedRootPaths?.some((path) => pathComparisonKey(path, dependencies.platform) === pathComparisonKey(rootPath, dependencies.platform));
+      root = pinned ? normalize(resolve(rootPath)) : await canonicalExistingPath(rootPath, dependencies);
     } catch (cause) {
       // 不存在的允许目录不可能包含一个已存在的候选路径，因此不授予访问权。
       if (missingPath(cause)) continue;

@@ -1,0 +1,74 @@
+{
+  "page": 37,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0037.png",
+  "reviewed": true,
+  "review_notes": "FreeSolv discussion, Quantum Mechanics Tasks; author-manuscript numbering retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0037-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        278
+      ],
+      "markdown": "For Figure 12, we similarly generated a series of models with different training set volumes and calculated their out-of-sample RMSE. Each data point displayed is the average of 5 independent runs, with standard deviations displayed as error bars. Both graph convolutional model and weave model are capable of achieving better performances with enough training samples (50% and 30% of the data respectively). Given the size of FreeSolv dataset is only around 600 compounds, a weave model can reach state-of-the-art free energy calculation performances by training on merely 200 samples. On the other hand, comparing with singletask network’s performance, weave model achieved the same level of accuracy with only one-third of the training samples.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0037-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        311,
+        262,
+        325
+      ],
+      "markdown": "### Quantum Mechanics Tasks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0037-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        344,
+        541,
+        452
+      ],
+      "markdown": "The QM datasets (QM7, QM7b, QM8, QM9) represent another distinct category of properties that are typically calculated through solving Schr¨odinger’s equation (approximately using techniques such as DFT). As most conventional methods are slower than data-driven methods by orders of magnitude, we hope to learn effective approximators by training on existing datasets.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0037-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        464,
+        541,
+        715
+      ],
+      "markdown": "Table 9 and Figure 14 display the performances in mean absolute error of multiple methods. Table 10, 11 and 12 show detailed performances for each task.(Due to difference in range of labels, mean performances of QM7b and QM9 are more skewed) Unsurprisingly, significant boosts on performances and less overfitting are observed for models incorporating distance information (multitask networks and KRR with Coulomb Matrix featurization, ANI-1, DTNN, MPNN). In particular, KRR and multitask networks(CM) outperform their corresponding baseline models in QM7 and QM9 by a large margin, while ANI-1, DTNN and MPNN display less error comparing with graph convolutional models as well. At the same time, graph-based methods gain better performances than multitask networks and KRR (CM) on most tasks. Table 10 shows that DTNN outperforms KRR(CM) on 12/14 tasks in QM7b(Though the mean error shows the opposite result due to averaging errors on different",
+      "source_class": "text"
+    },
+    {
+      "id": "p0037-b004",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "37",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "FreeSolv discussion, Quantum Mechanics Tasks; author-manuscript numbering retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

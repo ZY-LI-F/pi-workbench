@@ -1,0 +1,201 @@
+{
+  "title": "数据划分与评价指标",
+  "render_engine": "canvas",
+  "layout_family": "two_column",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 22,
+      "align": "stretch"
+    },
+    "children": [
+      {
+        "type": "container",
+        "id": "header",
+        "style": {
+          "direction": "column",
+          "gap": 10,
+          "align": "start"
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "eyebrow",
+            "component": "heading",
+            "props": {
+              "text_ref": "eyebrow"
+            }
+          },
+          {
+            "type": "component",
+            "id": "title",
+            "component": "heading",
+            "props": {
+              "text_ref": "title"
+            }
+          }
+        ]
+      },
+      {
+        "type": "container",
+        "id": "main",
+        "style": {
+          "direction": "row",
+          "gap": 22,
+          "weight": 1,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "left_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "left_heading",
+                "component": "heading",
+                "props": {
+                  "text_ref": "section_split"
+                }
+              },
+              {
+                "type": "component",
+                "id": "left_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "bullets_split"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "right_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "right_heading",
+                "component": "heading",
+                "props": {
+                  "text_ref": "section_metric"
+                }
+              },
+              {
+                "type": "component",
+                "id": "right_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "bullets_metric"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "container",
+        "id": "footer_bar",
+        "style": {
+          "direction": "row",
+          "gap": 18,
+          "align": "center",
+          "justify": "space-between"
+        },
+        "children": [
+          {
+            "type": "component",
+            "id": "callout",
+            "component": "callout",
+            "props": {
+              "text_ref": "callout"
+            }
+          },
+          {
+            "type": "component",
+            "id": "footer",
+            "component": "text",
+            "props": {
+              "text_ref": "footer"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "title": "数据划分与评价指标",
+    "eyebrow": "研究方法 · 第 05/10 页",
+    "section_split": "划分方案",
+    "section_metric": "指标选择逻辑",
+    "bullets_split": [
+      "论文原始基准：所有数据集按 80/10/10 划分为训练集、验证集与测试集。",
+      "本次复现：三个数据集采用随机 80/10/10 划分；ESOL 另有骨架划分诊断。",
+      "支持随机划分、骨架划分、分层划分与时间划分；骨架划分将不同二维结构框架的分子分开，更考验泛化能力。"
+    ],
+    "bullets_metric": [
+      "回归任务常用 MAE 与 RMSE，RMSE 越低越好。",
+      "分类任务常用 AUC-ROC 与 AUC-PRC。",
+      "正例率低于 2% 时论文推荐 AUC-PRC，否则推荐 AUC-ROC。"
+    ],
+    "callout": "高不平衡场景（正例率 < 2%）：优先 AUC-PRC；RMSE 方向为越低越好。",
+    "footer": "Paper2Any Frontend PPT ｜ 第 05/10 页"
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15,23,42,0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 34,
+        "font_weight": 600
+      },
+      "figure": {
+        "image_fit": "contain"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "左右两栏分别呈现划分方案与指标选择逻辑，底部条带突出高不平衡场景与 RMSE 方向约束。"
+}

@@ -90,6 +90,30 @@ describe("WorkspaceAdmission", () => {
 });
 
 describe("InteractiveCommandRouter", () => {
+  it("rejects maintenance immediately during shell execution, then permits it after completion", async () => {
+    const admission = new WorkspaceAdmission({ canonicalize });
+    let finish!: (response: PiResponse) => void;
+    const runtime = { send: vi.fn(() => new Promise<PiResponse>((resolve) => { finish = resolve; })) };
+    const router = new InteractiveCommandRouter({ runtime, admission });
+    const running = router.send({ type: "bash", command: "long check" }, "C:/repo");
+    expect(() => router.assertMaintenanceAvailable()).toThrow("等待当前操作");
+    await expect(router.runRuntimeMaintenance(async () => undefined)).rejects.toThrow("等待当前操作");
+    await vi.waitFor(() => expect(runtime.send).toHaveBeenCalled());
+    finish({ id: "bash", type: "response", command: "bash", success: true, data: {} } as PiResponse);
+    await running;
+    expect(() => router.assertMaintenanceAvailable()).not.toThrow();
+  });
+
+  it("does not start maintenance in the asynchronous prompt-admission gap", async () => {
+    const admission = new WorkspaceAdmission({ canonicalize });
+    const runtime = { send: vi.fn(async () => ({ type: "response", command: "prompt", success: true } as PiResponse)) };
+    const router = new InteractiveCommandRouter({ runtime, admission });
+    const sending = router.send({ type: "prompt", message: "start" }, "C:/repo");
+    expect(() => router.assertMaintenanceAvailable()).toThrow("等待当前操作");
+    await sending;
+    router.handlePiEvent({ type: "agent_settled" });
+    expect(() => router.assertMaintenanceAvailable()).not.toThrow();
+  });
   it("holds a turn lease until agent_settled and delays background launch", async () => {
     const admission = new WorkspaceAdmission({ canonicalize });
     const runtime = { send: vi.fn(async (command: PiCommand): Promise<PiResponse> => ({ id: "1", type: "response", command: command.type, success: true })) };

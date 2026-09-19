@@ -1,0 +1,54 @@
+{
+  "theme_name": "scholarly_signal",
+  "visual_mood": "学术研究报告，简洁排版，保留提供的数字与限制，中文字体使用 Noto Sans SC。",
+  "style_family": "academic",
+  "palette": {
+    "bg": "#0b1020",
+    "panel": "rgba(15, 23, 42, 0.92)",
+    "primary": "#7dd3fc",
+    "secondary": "#38bdf8",
+    "accent": "#f59e0b",
+    "text": "#e2e8f0",
+    "muted": "#94a3b8"
+  },
+  "typography": {
+    "title_font_stack": "Georgia, \"Times New Roman\", serif",
+    "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+    "eyebrow_size": 18,
+    "title_size": 56,
+    "summary_size": 26,
+    "body_size": 24
+  },
+  "layout_rules": [
+    "Keep generous white or paper-like breathing room and stable reading rhythm.",
+    "Prefer section, bullets, two-column, and comparison layouts over showy hero frames.",
+    "Use image_focus only for genuinely visual pages.",
+    "Reserve a quiet footer for provenance or page identity."
+  ],
+  "component_rules": [
+    "Use restrained panels, subtle dividers, and report-like hierarchy.",
+    "Keep decoration secondary to text structure and evidence density.",
+    "Avoid billboard marketing blocks or exaggerated hero cards."
+  ],
+  "theme_lock": {
+    "must_keep": [
+      "Use only the deck palette colors for fills, borders, and emphasis.",
+      "Keep the same serif title style and sans body style across the deck.",
+      "Keep the visual language rigorous, airy, and report-like rather than glossy."
+    ],
+    "preferred_layout_patterns": [
+      "section_break",
+      "split_report_grid",
+      "comparison_columns",
+      "timeline_overview"
+    ],
+    "component_signature": "Refined report-style panels, paper-like spacing, and calm academic hierarchy.",
+    "avoid": [
+      "Do not introduce unrelated bright color families.",
+      "Do not use more than two main columns.",
+      "Do not use neon glow, oversized promo badges, or playful sticker motifs."
+    ]
+  },
+  "footer_text": "Paper2Any Frontend PPT",
+  "section_label_template": "第 {page_num:02d}/{slide_count:02d} 页"
+}

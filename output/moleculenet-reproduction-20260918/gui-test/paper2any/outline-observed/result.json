@@ -1,0 +1,91 @@
+{
+  "status": "passed",
+  "model": "deepseek-flash",
+  "resolved_model_name": "DeepSeek V4.1 Flash",
+  "upstream_commit": "b538531e25798d9b9d41afd5fa93c9222949b5a5",
+  "stages": [
+    "upstream outline_agent simple mode",
+    "upstream outline_refine_agent simple mode"
+  ],
+  "pages": 10,
+  "outline_seconds": 29.19262639999215,
+  "refine_seconds": 14.729254700010642,
+  "api_calls": [
+    {
+      "requested_model": "deepseek-flash",
+      "response_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "token_usage": {
+        "completion_tokens": 5973,
+        "prompt_tokens": 25941,
+        "total_tokens": 31914,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 4462,
+          "rejected_prediction_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 25728
+        },
+        "prompt_cache_hit_tokens": 25728,
+        "prompt_cache_miss_tokens": 213
+      },
+      "usage_metadata": {
+        "input_tokens": 25941,
+        "output_tokens": 5973,
+        "total_tokens": 31914,
+        "input_token_details": {
+          "cache_read": 25728
+        },
+        "output_token_details": {
+          "reasoning": 4462
+        }
+      }
+    },
+    {
+      "requested_model": "deepseek-flash",
+      "response_model": "deepseek-flash",
+      "finish_reason": "stop",
+      "token_usage": {
+        "completion_tokens": 3495,
+        "prompt_tokens": 27062,
+        "total_tokens": 30557,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": null,
+          "reasoning_tokens": 1685,
+          "rejected_prediction_tokens": null
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": null,
+          "cached_tokens": 25472
+        },
+        "prompt_cache_hit_tokens": 25472,
+        "prompt_cache_miss_tokens": 1590
+      },
+      "usage_metadata": {
+        "input_tokens": 27062,
+        "output_tokens": 3495,
+        "total_tokens": 30557,
+        "input_token_details": {
+          "cache_read": 25472
+        },
+        "output_token_details": {
+          "reasoning": 1685
+        }
+      }
+    }
+  ],
+  "source_sha256": "f8b5a55b095f99b75816b2b6c154dc843fcb873a2fe07966e399cf9b51618ef9",
+  "limits": [
+    "Component-level real API test; not the complete Paper2Any web app or multimodal pipeline",
+    "No image model or MinerU/SAM service used; input is reviewed text extracted by Paper2Agent",
+    "Sequential library calls, no autonomous subagent orchestration",
+    "Schema success does not certify scientific accuracy; main-agent content review required"
+  ],
+  "privacy_patches": [
+    "redacted API key in text.py and base_agent.py logs"
+  ]
+}

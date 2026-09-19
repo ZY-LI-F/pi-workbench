@@ -1,0 +1,1 @@
+{"providers":{"visual-fixture":{"baseUrl":"http://127.0.0.1:9/v1","api":"openai-completions","models":[{"id":"preview-only","name":"视觉验收夹具（不运行模型）","reasoning":false,"input":["text"],"contextWindow":100000,"maxTokens":4096}]}}}

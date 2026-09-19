@@ -1,0 +1,170 @@
+{
+  "page": 61,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0061.png",
+  "reviewed": true,
+  "review_notes": "References 34–45 inspected; accented-author typography may be imperfect. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0061-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        111
+      ],
+      "markdown": "- (34) Bolton, E. E.; Wang, Y.; Thiessen, P. A.; Bryant, S. H. _Annual reports in computational chemistry_ **2008** , _4_ , 217–241.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        132,
+        541,
+        192
+      ],
+      "markdown": "- (35) Wang, T.; Xiao, J.; Suzek, T. O.; Zhang, J.; Wang, J.; Zhou, Z.; Han, L.; Karapetyan, K.; Dracheva, S.; Shoemaker, B. A.; Bolton, E.; Gindulyte, A.; Bryant, S. H. _Nucleic Acids Research_ **2012** , _40_ , D400–D412.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        214,
+        541,
+        274
+      ],
+      "markdown": "- (36) Graˇzulis, S.; Chateigner, D.; Downs, R. T.; Yokochi, A.; Quir´os, M.; Lutterotti, L.; Manakova, E.; Butkus, J.; Moeck, P.; Le Bail, A. _Journal of Applied Crystallography_ **2009** , _42_ , 726–729.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        296,
+        541,
+        332
+      ],
+      "markdown": "- (37) Groom, C. R.; Bruno, I. J.; Lightfoot, M. P.; Ward, S. C. _Acta Crystallographica Section B: Structural Science, Crystal Engineering and Materials_ **2016** , _72_ , 171–179.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        353,
+        541,
+        390
+      ],
+      "markdown": "- (38) Berman, H.; Henrick, K.; Nakamura, H. _Nature Structural & Molecular Biology_ **2003** , _10_ , 980–980.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        411,
+        541,
+        424
+      ],
+      "markdown": "- (39) Quantum Machine. `http://quantum-machine.org/datasets/` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        445,
+        541,
+        458
+      ],
+      "markdown": "- (40) Weininger, D. _Journal of chemical information and computer sciences_ **1988** , _28_ , 31–36.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b007",
+      "kind": "text",
+      "bbox": [
+        71,
+        479,
+        541,
+        513
+      ],
+      "markdown": "- (41) Blum, L. C.; Reymond, J.-L. _Journal of the American Chemical Society_ **2009** , _131_ , 8732–8733.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b008",
+      "kind": "text",
+      "bbox": [
+        71,
+        537,
+        540,
+        573
+      ],
+      "markdown": "- (42) Ramakrishnan, R.; Hartmann, M.; Tapavicza, E.; Lilienfeld, O. A. v. _The Journal of Chemical Physics_ **2015** , _143_ , 084111.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b009",
+      "kind": "text",
+      "bbox": [
+        71,
+        594,
+        541,
+        631
+      ],
+      "markdown": "- (43) Ruddigkeit, L.; Deursen, R. v.; Blum, L. C.; Reymond, J.-L. _Journal of Chemical Information and Modeling_ **2012** , _52_ , 2864–2875.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b010",
+      "kind": "text",
+      "bbox": [
+        71,
+        652,
+        541,
+        686
+      ],
+      "markdown": "- (44) Ramakrishnan, R.; Dral, P. O.; Rupp, M.; Lilienfeld, O. A. v. _Scientific Data_ **2014** , _1_ , 140022.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b011",
+      "kind": "text",
+      "bbox": [
+        71,
+        710,
+        409,
+        723
+      ],
+      "markdown": "- (45) Hersey, A. _ChEMBL Deposited Data Set - AZ_ _~~d~~ ataset_ ; 2015.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0061-b012",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "61",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 34–45 inspected; accented-author typography may be imperfect. Reviewed sequentially by the main agent; no independent agent verification."
+}

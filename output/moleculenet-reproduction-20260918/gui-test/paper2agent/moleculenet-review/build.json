@@ -1,0 +1,3098 @@
+{
+  "schema_version": 2,
+  "layout": "compact",
+  "output": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-paper",
+  "settings": {
+    "dpi": 180,
+    "max_image_side": 2800,
+    "jpeg_quality": 90
+  },
+  "assets": [
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0006-003.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0006-003.png",
+      "kind": "image",
+      "label": "Figure on PDF page 6 (4)",
+      "item": "p0006-b003",
+      "source_page": 6
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0007-003.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0007-003.png",
+      "kind": "image",
+      "label": "Figure on PDF page 7 (4)",
+      "item": "p0007-b003",
+      "source_page": 7
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-1.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-1.png",
+      "kind": "image",
+      "label": "Table 1",
+      "item": "p0008-b001",
+      "source_page": 8
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0013-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0013-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 13 (1)",
+      "item": "p0013-b000",
+      "source_page": 13
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-2.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-2.png",
+      "kind": "image",
+      "label": "Table 2",
+      "item": "p0014-b005",
+      "source_page": 14
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0015-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0015-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 15 (1)",
+      "item": "p0015-b000",
+      "source_page": 15
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/formula-p0016-002.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\formula-p0016-002.png",
+      "kind": "image",
+      "label": "Formula on PDF page 16 (3)",
+      "item": "p0016-b002",
+      "source_page": 16
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0017-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0017-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 17 (1)",
+      "item": "p0017-b000",
+      "source_page": 17
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/formula-p0018-002.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\formula-p0018-002.png",
+      "kind": "image",
+      "label": "Formula on PDF page 18 (3)",
+      "item": "p0018-b002",
+      "source_page": 18
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/formula-p0023-002.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\formula-p0023-002.png",
+      "kind": "image",
+      "label": "Formula on PDF page 23 (3)",
+      "item": "p0023-b002",
+      "source_page": 23
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0024-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0024-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 24 (1)",
+      "item": "p0024-b000",
+      "source_page": 24
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0029-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0029-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 29 (1)",
+      "item": "p0029-b000",
+      "source_page": 29
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0030-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0030-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 30 (1)",
+      "item": "p0030-b000",
+      "source_page": 30
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0031-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0031-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 31 (1)",
+      "item": "p0031-b000",
+      "source_page": 31
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0033-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0033-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 33 (1)",
+      "item": "p0033-b000",
+      "source_page": 33
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0035-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0035-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 35 (1)",
+      "item": "p0035-b000",
+      "source_page": 35
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0036-002.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0036-002.png",
+      "kind": "image",
+      "label": "Figure on PDF page 36 (3)",
+      "item": "p0036-b002",
+      "source_page": 36
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0038-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0038-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 38 (1)",
+      "item": "p0038-b000",
+      "source_page": 38
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0039-000.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0039-000.png",
+      "kind": "image",
+      "label": "Figure on PDF page 39 (1)",
+      "item": "p0039-b000",
+      "source_page": 39
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/figure/figure-p0040-002.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\figure-p0040-002.png",
+      "kind": "image",
+      "label": "Figure on PDF page 40 (3)",
+      "item": "p0040-b002",
+      "source_page": 40
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-3.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-3.png",
+      "kind": "image",
+      "label": "Table 3",
+      "item": "p0041-b003",
+      "source_page": 41
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-4.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-4.png",
+      "kind": "image",
+      "label": "Table 4",
+      "item": "p0048-b001",
+      "source_page": 48
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-5.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-5.png",
+      "kind": "image",
+      "label": "Table 5",
+      "item": "p0049-b002",
+      "source_page": 49
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-6.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-6.png",
+      "kind": "image",
+      "label": "Table 6",
+      "item": "p0050-b001",
+      "source_page": 50
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-7.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-7.png",
+      "kind": "image",
+      "label": "Table 7",
+      "item": "p0051-b001",
+      "source_page": 51
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-8.csv",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\references\\s001-moleculenet-author-manuscript\\table-8.csv",
+      "kind": "csv",
+      "label": "Table 8",
+      "item": "p0051-b003",
+      "source_page": 51
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-9.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-9.png",
+      "kind": "image",
+      "label": "Table 9",
+      "item": "p0052-b001",
+      "source_page": 52
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-10.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-10.png",
+      "kind": "image",
+      "label": "Table 10",
+      "item": "p0052-b003",
+      "source_page": 52
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-11.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-11.png",
+      "kind": "image",
+      "label": "Table 11",
+      "item": "p0053-b001",
+      "source_page": 53
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-12.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-12.png",
+      "kind": "image",
+      "label": "Table 12",
+      "item": "p0053-b003",
+      "source_page": 53
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "file": "assets/table/table-13.jpg",
+      "evidence": "renders\\3ebdcd5389b347aa967004f6290b4626\\s001-moleculenet-author-manuscript\\assets\\s001-moleculenet-author-manuscript\\table-13.png",
+      "kind": "image",
+      "label": "Table 13",
+      "item": "p0055-b001",
+      "source_page": 55
+    }
+  ],
+  "provenance": [
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 1,
+      "item": "p0001-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 2,
+      "item": "p0002-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 2,
+      "item": "p0002-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 2,
+      "item": "p0002-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 2,
+      "item": "p0002-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 2,
+      "item": "p0002-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 3,
+      "item": "p0003-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 3,
+      "item": "p0003-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 3,
+      "item": "p0003-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 4,
+      "item": "p0004-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 4,
+      "item": "p0004-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 4,
+      "item": "p0004-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 4,
+      "item": "p0004-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 5,
+      "item": "p0005-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 5,
+      "item": "p0005-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 5,
+      "item": "p0005-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 6,
+      "item": "p0006-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 7,
+      "item": "p0007-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 8,
+      "item": "p0008-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 9,
+      "item": "p0009-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 10,
+      "item": "p0010-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 11,
+      "item": "p0011-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 12,
+      "item": "p0012-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 13,
+      "item": "p0013-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 13,
+      "item": "p0013-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 13,
+      "item": "p0013-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 13,
+      "item": "p0013-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 13,
+      "item": "p0013-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 14,
+      "item": "p0014-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 15,
+      "item": "p0015-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 15,
+      "item": "p0015-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 15,
+      "item": "p0015-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 15,
+      "item": "p0015-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 16,
+      "item": "p0016-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 17,
+      "item": "p0017-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 17,
+      "item": "p0017-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 17,
+      "item": "p0017-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 17,
+      "item": "p0017-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 18,
+      "item": "p0018-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 19,
+      "item": "p0019-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 20,
+      "item": "p0020-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 21,
+      "item": "p0021-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 22,
+      "item": "p0022-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 23,
+      "item": "p0023-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 24,
+      "item": "p0024-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 24,
+      "item": "p0024-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 24,
+      "item": "p0024-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 24,
+      "item": "p0024-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 25,
+      "item": "p0025-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 26,
+      "item": "p0026-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 27,
+      "item": "p0027-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 28,
+      "item": "p0028-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 29,
+      "item": "p0029-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 29,
+      "item": "p0029-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 30,
+      "item": "p0030-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 30,
+      "item": "p0030-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 31,
+      "item": "p0031-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 32,
+      "item": "p0032-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 32,
+      "item": "p0032-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 32,
+      "item": "p0032-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 32,
+      "item": "p0032-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 32,
+      "item": "p0032-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 33,
+      "item": "p0033-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 33,
+      "item": "p0033-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 34,
+      "item": "p0034-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 36,
+      "item": "p0036-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 35,
+      "item": "p0035-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 35,
+      "item": "p0035-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 36,
+      "item": "p0036-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 36,
+      "item": "p0036-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 36,
+      "item": "p0036-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 37,
+      "item": "p0037-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 37,
+      "item": "p0037-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 37,
+      "item": "p0037-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 37,
+      "item": "p0037-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 40,
+      "item": "p0040-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 38,
+      "item": "p0038-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 38,
+      "item": "p0038-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 39,
+      "item": "p0039-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 39,
+      "item": "p0039-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 40,
+      "item": "p0040-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 40,
+      "item": "p0040-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 40,
+      "item": "p0040-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 40,
+      "item": "p0040-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 41,
+      "item": "p0041-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 42,
+      "item": "p0042-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 42,
+      "item": "p0042-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 42,
+      "item": "p0042-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 43,
+      "item": "p0043-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b014",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 44,
+      "item": "p0044-b015",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b014",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b015",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b016",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 45,
+      "item": "p0045-b017",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b014",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b015",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b016",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b017",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 46,
+      "item": "p0046-b018",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 47,
+      "item": "p0047-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 48,
+      "item": "p0048-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 48,
+      "item": "p0048-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 48,
+      "item": "p0048-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 49,
+      "item": "p0049-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 49,
+      "item": "p0049-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 49,
+      "item": "p0049-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 50,
+      "item": "p0050-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 50,
+      "item": "p0050-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 51,
+      "item": "p0051-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 51,
+      "item": "p0051-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 51,
+      "item": "p0051-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 51,
+      "item": "p0051-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 52,
+      "item": "p0052-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 52,
+      "item": "p0052-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 52,
+      "item": "p0052-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 52,
+      "item": "p0052-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 53,
+      "item": "p0053-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 54,
+      "item": "p0054-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 55,
+      "item": "p0055-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 56,
+      "item": "p0056-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 57,
+      "item": "p0057-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 58,
+      "item": "p0058-b014",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 59,
+      "item": "p0059-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 60,
+      "item": "p0060-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 61,
+      "item": "p0061-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 62,
+      "item": "p0062-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 63,
+      "item": "p0063-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b000",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b001",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b002",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b003",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b004",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b005",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b006",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b007",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b008",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b009",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b010",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b011",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b012",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b013",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 64,
+      "item": "p0064-b014",
+      "document": "references/paper.md"
+    },
+    {
+      "source": "s001-moleculenet-author-manuscript",
+      "page": 65,
+      "item": "p0065-b000",
+      "document": "references/paper.md"
+    }
+  ],
+  "files": {
+    "SKILL.md": "06984d555d383d4746c11058c21437ff21407ea5a62caf043332b6daf5dbf783",
+    "references\\index.md": "ae36fd6b44389f4b21518628681bc7938f21e3ddc35e7c3525835e82caae4b4d",
+    "references\\paper.md": "0ecffc62a40b56060010d39be97668b1e24996548a075ffe2698e89e19399cd9",
+    "references\\supplement.md": "e8ea00dfc8548017cf4afbd41315267a33b376cedb946213e07de100e7b4e44e",
+    "assets\\figure\\figure-p0006-003.jpg": "9bdc01a134059709150bb20087bf5785a0a7e09fb5a9cc0311ec20408e4015ff",
+    "assets\\figure\\figure-p0007-003.jpg": "f4b36cae698c2615b956dc0842ffdb174837ab8f79a7d1aa14ad098cad353420",
+    "assets\\figure\\figure-p0013-000.jpg": "815010ab05e7da99c218c20e6896f91524944d4d2680ee9daf54b8fba67e1ed0",
+    "assets\\figure\\figure-p0015-000.jpg": "76083f119269d6adceec747400787fc5f0c4d7a68c72165da82c7f75041c57ff",
+    "assets\\figure\\figure-p0017-000.jpg": "79220a2544879f2e3262a84fb0076149abfdfe1cb43523b41e28adf890b41e49",
+    "assets\\figure\\figure-p0024-000.jpg": "5045c2656b5dff2c9f605ba0f751de4fa18ba13a76ae8baef263af011678d72a",
+    "assets\\figure\\figure-p0029-000.jpg": "59429b2837a680f8edbac0a6a3dc5d9c53d18d9ae3e93501551f73d0a2022e15",
+    "assets\\figure\\figure-p0030-000.jpg": "ce8b90e3b905da01310243b7ced14d6b7d0cc6f5549fe4f512d4b4e5f2a696a1",
+    "assets\\figure\\figure-p0031-000.jpg": "ad0a7244edb07481411047bc9453262a26c119858f93772028942a7e51e6c56f",
+    "assets\\figure\\figure-p0033-000.jpg": "2f6fc8db1ae59f175921facc4e7740e8e985be7fb87ce321b3e76146110af664",
+    "assets\\figure\\figure-p0035-000.jpg": "f3445b8153cfdfb60a553c43e0bd3778b099603ff41c8d636f0f2676a579f2f8",
+    "assets\\figure\\figure-p0036-002.jpg": "7d4613faa77889b6f2505ed573bf14527e9305687c1e6702cd31abf8a47e0195",
+    "assets\\figure\\figure-p0038-000.jpg": "407f294414694e7116119bbe5ced9560106ff5db89f902c839dcbcf326684a69",
+    "assets\\figure\\figure-p0039-000.jpg": "01c50f922af5158027b146f87d0fd707433246960501ae7721af4de84e50e024",
+    "assets\\figure\\figure-p0040-002.jpg": "16d8bbd9f3e4b94dfdda2784f83a276212e4e2ec8c2add0248bb81d4f4c0363f",
+    "assets\\figure\\formula-p0016-002.jpg": "9612ef414a8c140db2ec42420134a2107455ee99b313d1dd7b0f545e0a9aef0c",
+    "assets\\figure\\formula-p0018-002.jpg": "c00581e45100451d9f408226a0177e3f78766ed7d49de6a38017fc5aa2f7bcbf",
+    "assets\\figure\\formula-p0023-002.jpg": "a08f38842e950fef2a906711b66da48ef7d5a3c11f51921ec4d6769a1c549036",
+    "assets\\table\\table-1.jpg": "920aa150c02006563eabfa708af21dc2e4f90042cadd39dd8532796b8979f0cb",
+    "assets\\table\\table-10.jpg": "40e985e2758eea66ca4efd205650355dd6cd5261597657d4f612e46191c8d98f",
+    "assets\\table\\table-11.jpg": "8d540e40615f8addcf071fe7e7023459b8dc6af0fc899bace8ef10677d38d773",
+    "assets\\table\\table-12.jpg": "d993eaf3bdeee982a8fd9eca53d1b3e019fc3c101a7c31e989512a59868f96d8",
+    "assets\\table\\table-13.jpg": "98bd6f4292cd2006b1c26ed9b6f31ed900b06381e100f3bf3a6976d63a2ab1bb",
+    "assets\\table\\table-2.jpg": "281295c2bc2adda4cf14148c4f2ec89b681c0d998d83b73e248af46d49a547ce",
+    "assets\\table\\table-3.jpg": "fc94af7cca8b331b2dee35a5b4fee18899af56e7bb0b9927646e4e21f52db7dd",
+    "assets\\table\\table-4.jpg": "c9e082790e0f76188c132898aa09c715699dac37b93e198daeea49226ba4b020",
+    "assets\\table\\table-5.jpg": "44e65fe6e5f47ddde32cb2662fee892b1ece067a5900e89e0c0e015a01022bc2",
+    "assets\\table\\table-6.jpg": "4d762f79bd0f2c0c5e0104dfa9e16e90304c3b53223aae5d211992db8711888d",
+    "assets\\table\\table-7.jpg": "f1d6a48bea4c4656343c855b958cb56e6505899b6d9776e21b49bce4210c0b16",
+    "assets\\table\\table-8.csv": "3e8ac2a219d3129c4e1d7cf734603e887eed7b7870d06b0ab4460ef7683e007d",
+    "assets\\table\\table-9.jpg": "2a6ecb3e1d9d8b07e20eb091f4aca95c5d1c2f10be27fcfed62eb9e2e54c0a80"
+  },
+  "review_inputs": {
+    "bundle.json": "13e9acb96d84a88ee6034eb5187bfd3b4bb722c882f49234bca9785f90275f3c",
+    "inventory.json": "0068027cdddf07fba59876fba292ff044fea8245044431eafdb6b7b683c095b5"
+  },
+  "documents": [
+    "s001-moleculenet-author-manuscript"
+  ],
+  "compact_omissions": []
+}

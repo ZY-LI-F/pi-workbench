@@ -1,0 +1,77 @@
+{
+  "page": 36,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0036.png",
+  "reviewed": true,
+  "review_notes": "Physical chemistry continuation and FreeSolv learning curve Figure 12; not the final journal's Figure 12. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0036-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        135
+      ],
+      "markdown": "featurizations. Differences between graph-based methods are rather minor and task-specific. The best-performing models in this category can already reach the accuracy level of _ab-initio_ predictions(+/- 0.5 for ESOL, +/- 1.5 kcal/mol for FreeSolv).",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0036-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        147,
+        541,
+        350
+      ],
+      "markdown": "We performed a more detailed comparison between data-driven methods and _ab-initio_ calculations on FreeSolv. Hydration free energy has been widely used as a test of computational chemistry methods. With free energy values ranging from −25.5 to 3.4 kcal/mol in the FreeSolv dataset, RMSE for calculated results reached up to 1.5 kcal/mol.<sup>15</sup> On the other hand, though machine learning methods typically need large amounts of training data to acquire predictive power, they can achieve higher accuracies given enough data. We investigated how the performance of machine learning methods on FreeSolv changes with the volume of training data. In particular, we want to know the amount of data required for machine learning to achieve accuracy similar to that of physically inspired algorithms.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0036-b002",
+      "kind": "figure",
+      "bbox": [
+        113,
+        358,
+        499,
+        655
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 36 (3)",
+      "asset_name": "figure-p0036-002"
+    },
+    {
+      "id": "p0036-b003",
+      "kind": "caption",
+      "bbox": [
+        72,
+        661,
+        541,
+        699
+      ],
+      "markdown": "Figure 12: Out-of-sample performances with different training set sizes on FreeSolv. Each datapoint is the average of 5 independent runs, with standard deviations shown as error bars.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0036-b004",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "36",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Physical chemistry continuation and FreeSolv learning curve Figure 12; not the final journal's Figure 12. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check."
+}

@@ -1,0 +1,101 @@
+{
+  "page": 55,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0055.png",
+  "reviewed": true,
+  "review_notes": "Table 13 commands retained as image because automatic extraction breaks underscores/identifiers. Footnotes and Model validation preserved. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0055-b000",
+      "kind": "caption",
+      "bbox": [
+        115,
+        73,
+        497,
+        85
+      ],
+      "markdown": "Table 13: DeepChem commands to load MoleculeNet datasets and models",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0055-b001",
+      "kind": "table",
+      "bbox": [
+        88,
+        93,
+        524,
+        589
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 13",
+      "asset_name": "table-13",
+      "rows": null
+    },
+    {
+      "id": "p0055-b002",
+      "kind": "text",
+      "bbox": [
+        88,
+        590,
+        335,
+        602
+      ],
+      "markdown": "> _a_ These models are based on scikit-learn package. 84",
+      "source_class": "text"
+    },
+    {
+      "id": "p0055-b003",
+      "kind": "text",
+      "bbox": [
+        88,
+        603,
+        291,
+        616
+      ],
+      "markdown": "> _b_ XGBoost is based on xgboost package. 85",
+      "source_class": "text"
+    },
+    {
+      "id": "p0055-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        651,
+        192,
+        662
+      ],
+      "markdown": "### Model validation",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0055-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        685,
+        541,
+        720
+      ],
+      "markdown": "MoleculeNet includes multiple models that are previously proposed. To validate our reimplementation, here we compare the performances of our implementation with reported values in",
+      "source_class": "text"
+    },
+    {
+      "id": "p0055-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "55",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Table 13 commands retained as image because automatic extraction breaks underscores/identifiers. Footnotes and Model validation preserved. Reviewed sequentially by the main agent; no independent agent verification."
+}

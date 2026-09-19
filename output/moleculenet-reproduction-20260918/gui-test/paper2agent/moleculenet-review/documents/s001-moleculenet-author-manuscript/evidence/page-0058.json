@@ -1,0 +1,550 @@
+{
+  "page": 58,
+  "lines": [
+    {
+      "text": "Inﬂuence Relevance Voting",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        231.57797241210938,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on the HIV dataset, using 80/10/10 random train, valid, test split-",
+      "bbox": [
+        72.0,
+        107.28713989257812,
+        540.0822143554688,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ting. The original paper reported performance under 10-fold cross validation.75",
+      "bbox": [
+        72.0,
+        129.621826171875,
+        477.6422424316406,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ROC-AUC:",
+      "bbox": [
+        72.0,
+        179.01016235351562,
+        130.6880645751953,
+        189.62637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.845",
+      "bbox": [
+        89.43399810791016,
+        208.47567749023438,
+        210.60113525390625,
+        219.76138305664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 0.840 for valid subset, 0.852 for test subset",
+      "bbox": [
+        89.43399047851562,
+        241.10067749023438,
+        422.3791809082031,
+        252.38638305664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "References",
+      "bbox": [
+        72.0,
+        291.7655944824219,
+        162.62185668945312,
+        307.0528564453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(1) Gasteiger, J.; Zupan, J. Angewandte Chemie International Edition 1993, 32, 503–527.",
+      "bbox": [
+        77.85299682617188,
+        331.1631774902344,
+        540.0379028320312,
+        341.7793884277344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(2) Zupan, J.; Gasteiger, J. Neural networks in chemistry and drug design; John Wiley &",
+      "bbox": [
+        77.85296630859375,
+        363.7881774902344,
+        540.01220703125,
+        374.4043884277344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Sons, Inc., 1999.",
+      "bbox": [
+        98.6629638671875,
+        387.6961669921875,
+        182.31350708007812,
+        398.3123779296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(3) Varnek, A.; Baskin, I. Journal of chemical information and modeling 2012, 52, 1413–",
+      "bbox": [
+        77.85296630859375,
+        420.3211669921875,
+        540.0276489257812,
+        430.9373779296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "1437.",
+      "bbox": [
+        98.66293334960938,
+        444.2291564941406,
+        125.34693908691406,
+        454.8453674316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(4) Mitchell, J. B. Wiley Interdisciplinary Reviews:",
+      "bbox": [
+        77.85293579101562,
+        476.8541564941406,
+        354.05364990234375,
+        487.4703674316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Computational Molecular Science",
+      "bbox": [
+        364.31121826171875,
+        476.8541564941406,
+        540.0167236328125,
+        487.4703674316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2014, 4, 468–481.",
+      "bbox": [
+        98.66293334960938,
+        500.76214599609375,
+        190.10130310058594,
+        511.37835693359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(5) Devillers, J. Neural networks in QSAR and drug design; Academic Press, 1996.",
+      "bbox": [
+        77.85293579101562,
+        533.3871459960938,
+        505.04632568359375,
+        544.00341796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(6) Schneider, G.; Wrede, P. Progress in biophysics and molecular biology 1998, 70, 175–",
+      "bbox": [
+        77.85293579101562,
+        566.0121459960938,
+        540.0238037109375,
+        576.62841796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "222.",
+      "bbox": [
+        98.66293334960938,
+        589.9201049804688,
+        119.4888916015625,
+        600.536376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(7) LeCun, Y.; Bengio, Y.; Hinton, G. Nature 2015, 521, 436–444.",
+      "bbox": [
+        77.85293579101562,
+        622.5451049804688,
+        421.60137939453125,
+        633.161376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(8) Schmidhuber, J. Neural networks 2015, 61, 85–117.",
+      "bbox": [
+        77.85293579101562,
+        655.1701049804688,
+        364.6042785644531,
+        665.786376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(9) Ma, J.; Sheridan, R. P.; Liaw, A.; Dahl, G. E.; Svetnik, V. Journal of chemical infor-",
+      "bbox": [
+        77.8529052734375,
+        687.7951049804688,
+        540.01025390625,
+        698.411376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mation and modeling 2015, 55, 263–274.",
+      "bbox": [
+        98.66290283203125,
+        711.703125,
+        308.3283386230469,
+        722.3193969726562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "58",
+      "bbox": [
+        300.14691162109375,
+        741.5911254882812,
+        311.863037109375,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 58
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          75,
+          232,
+          87
+        ],
+        "pos": [
+          0,
+          36
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          106,
+          541,
+          142
+        ],
+        "pos": [
+          36,
+          217
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          178,
+          131,
+          188
+        ],
+        "pos": [
+          217,
+          231
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          89,
+          209,
+          211,
+          220
+        ],
+        "pos": [
+          231,
+          262
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          89,
+          241,
+          423,
+          253
+        ],
+        "pos": [
+          262,
+          338
+        ]
+      },
+      {
+        "index": 5,
+        "class": "section-header",
+        "bbox": [
+          72,
+          291,
+          163,
+          304
+        ],
+        "pos": [
+          338,
+          357
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          77,
+          330,
+          541,
+          343
+        ],
+        "pos": [
+          357,
+          459
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          77,
+          363,
+          541,
+          399
+        ],
+        "pos": [
+          459,
+          572
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          77,
+          419,
+          541,
+          453
+        ],
+        "pos": [
+          572,
+          680
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          77,
+          476,
+          541,
+          512
+        ],
+        "pos": [
+          680,
+          797
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          77,
+          532,
+          506,
+          545
+        ],
+        "pos": [
+          797,
+          885
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          77,
+          565,
+          541,
+          599
+        ],
+        "pos": [
+          885,
+          993
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          77,
+          621,
+          422,
+          634
+        ],
+        "pos": [
+          993,
+          1072
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          77,
+          654,
+          365,
+          667
+        ],
+        "pos": [
+          1072,
+          1140
+        ]
+      },
+      {
+        "index": 14,
+        "class": "list-item",
+        "bbox": [
+          77,
+          687,
+          541,
+          723
+        ],
+        "pos": [
+          1140,
+          1282
+        ]
+      },
+      {
+        "index": 15,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1282,
+          1287
+        ]
+      }
+    ],
+    "text": "## **Influence Relevance Voting** \n\nWe evaluate the model on the HIV dataset, using 80/10/10 random train, valid, test splitting. The original paper reported performance under 10-fold cross validation.<sup>75</sup> \n\n## ROC-AUC: \n\n- Original result: 0 _._ 845 \n\n- Reimplementation: 0 _._ 840 for valid subset, 0 _._ 852 for test subset \n\n# **References** \n\n- (1) Gasteiger, J.; Zupan, J. _Angewandte Chemie International Edition_ **1993** , _32_ , 503–527. \n\n- (2) Zupan, J.; Gasteiger, J. _Neural networks in chemistry and drug design_ ; John Wiley & Sons, Inc., 1999. \n\n- (3) Varnek, A.; Baskin, I. _Journal of chemical information and modeling_ **2012** , _52_ , 1413– 1437. \n\n- (4) Mitchell, J. B. _Wiley Interdisciplinary Reviews: Computational Molecular Science_ **2014** , _4_ , 468–481. \n\n- (5) Devillers, J. _Neural networks in QSAR and drug design_ ; Academic Press, 1996. \n\n- (6) Schneider, G.; Wrede, P. _Progress in biophysics and molecular biology_ **1998** , _70_ , 175– 222. \n\n- (7) LeCun, Y.; Bengio, Y.; Hinton, G. _Nature_ **2015** , _521_ , 436–444. \n\n- (8) Schmidhuber, J. _Neural networks_ **2015** , _61_ , 85–117. \n\n- (9) Ma, J.; Sheridan, R. P.; Liaw, A.; Dahl, G. E.; Svetnik, V. _Journal of chemical information and modeling_ **2015** , _55_ , 263–274. \n\n58 \n\n"
+  }
+}

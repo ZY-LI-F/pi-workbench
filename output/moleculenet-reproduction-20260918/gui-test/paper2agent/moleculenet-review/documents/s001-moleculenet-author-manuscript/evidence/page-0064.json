@@ -1,0 +1,537 @@
+{
+  "page": 64,
+  "lines": [
+    {
+      "text": "(70) Behler, J.; Parrinello, M. Physical Review Letters 2007, 98, 146101.",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        447.1123352050781,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(71) Smith, J. S.; Isayev, O.; Roitberg, A. E. arXiv preprint arXiv:1610.08935 2016,",
+      "bbox": [
+        71.99996948242188,
+        109.52810668945312,
+        510.4327697753906,
+        120.14431762695312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(72) Breiman, L. Machine learning 2001, 45, 5–32.",
+      "bbox": [
+        71.99996948242188,
+        143.39907836914062,
+        336.826171875,
+        154.01528930664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(73) Friedman, J. H. Annals of statistics 2001, 1189–1232.",
+      "bbox": [
+        71.99992370605469,
+        177.26907348632812,
+        375.8674621582031,
+        187.88528442382812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(74) Ramsundar, B.; Liu, B.; Wu, Z.; Verras, A.; Tudor, M.; Sheridan, R. P.; Pande, V.",
+      "bbox": [
+        71.99989318847656,
+        211.14004516601562,
+        540.033935546875,
+        221.75625610351562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Manuscript in preparation",
+      "bbox": [
+        98.66389465332031,
+        235.04806518554688,
+        232.45455932617188,
+        245.66427612304688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(75) Swamidass, S. J.; Azencott, C.-A.; Lin, T.-W.; Gramajo, H.; Tsai, S.-C.; Baldi, P.",
+      "bbox": [
+        71.99989318847656,
+        268.9180603027344,
+        540.010009765625,
+        279.5342712402344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Journal of chemical information and modeling 2009, 49, 756–766.",
+      "bbox": [
+        98.66389465332031,
+        292.8260498046875,
+        437.60528564453125,
+        303.4422607421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(76) Gilmer, J.; Schoenholz, S. S.; Riley, P. F.; Vinyals, O.; Dahl, G. E. arXiv preprint",
+      "bbox": [
+        71.99984741210938,
+        326.696044921875,
+        540.0169067382812,
+        337.312255859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "arXiv:1704.01212 2017,",
+      "bbox": [
+        98.66384887695312,
+        350.6040344238281,
+        223.88067626953125,
+        361.2202453613281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(77) others,, et al. The annals of statistics 2000, 28, 337–407.",
+      "bbox": [
+        71.99986267089844,
+        384.47503662109375,
+        391.82427978515625,
+        395.09124755859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(78) Cortes, C.; Vapnik, V. Machine learning 1995, 20, 273–297.",
+      "bbox": [
+        71.99984741210938,
+        418.34503173828125,
+        407.78826904296875,
+        428.96124267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(79) Chen, T.; Guestrin, C. arXiv preprint arXiv:1603.02754 2016,",
+      "bbox": [
+        71.99981689453125,
+        452.2160339355469,
+        421.26959228515625,
+        462.8322448730469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(80) Kearnes, S.; Goldman, B.; Pande, V. arXiv preprint arXiv:1606.08793 2016,",
+      "bbox": [
+        71.99978637695312,
+        486.0860290527344,
+        494.0935974121094,
+        496.7022399902344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(81) Baskin, I. I.; Palyulin, V. A.; Zeﬁrov, N. S. Journal of chemical information and com-",
+      "bbox": [
+        71.99978637695312,
+        519.9569702148438,
+        540.0064697265625,
+        530.5732421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "puter sciences 1997, 37, 715–721.",
+      "bbox": [
+        98.66378784179688,
+        543.864013671875,
+        272.252197265625,
+        554.4802856445312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(82) Kireev, D. B. Journal of chemical information and computer sciences 1995, 35, 175–",
+      "bbox": [
+        71.99980163574219,
+        577.7349853515625,
+        540.0184326171875,
+        588.3512573242188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "180.",
+      "bbox": [
+        98.66378784179688,
+        601.6430053710938,
+        119.48974609375,
+        612.25927734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(83) Vinyals, O.; Bengio, S.; Kudlur, M. arXiv preprint arXiv:1511.06391 2015,",
+      "bbox": [
+        71.99978637695312,
+        635.5130004882812,
+        486.3705749511719,
+        646.1292724609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(84) scikit-learn: Machine Learning in Python. http://scikit-learn.org/stable/, Ac-",
+      "bbox": [
+        71.99978637695312,
+        669.3839721679688,
+        539.9960327148438,
+        680.3349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "cessed: 2017-10-18.",
+      "bbox": [
+        98.66375732421875,
+        693.2919921875,
+        196.36167907714844,
+        703.9082641601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "64",
+      "bbox": [
+        300.1467590332031,
+        741.5910034179688,
+        311.8628845214844,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 64
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          448,
+          87
+        ],
+        "pos": [
+          0,
+          88
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          71,
+          108,
+          511,
+          121
+        ],
+        "pos": [
+          88,
+          184
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          71,
+          142,
+          337,
+          155
+        ],
+        "pos": [
+          184,
+          248
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          71,
+          176,
+          376,
+          189
+        ],
+        "pos": [
+          248,
+          318
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          71,
+          210,
+          541,
+          246
+        ],
+        "pos": [
+          318,
+          437
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          71,
+          268,
+          541,
+          304
+        ],
+        "pos": [
+          437,
+          603
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          71,
+          326,
+          541,
+          362
+        ],
+        "pos": [
+          603,
+          727
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          71,
+          383,
+          392,
+          396
+        ],
+        "pos": [
+          727,
+          806
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          71,
+          417,
+          408,
+          430
+        ],
+        "pos": [
+          806,
+          884
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          71,
+          451,
+          422,
+          464
+        ],
+        "pos": [
+          884,
+          961
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          71,
+          485,
+          495,
+          498
+        ],
+        "pos": [
+          961,
+          1051
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          71,
+          519,
+          541,
+          555
+        ],
+        "pos": [
+          1051,
+          1190
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          71,
+          577,
+          541,
+          611
+        ],
+        "pos": [
+          1190,
+          1297
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          71,
+          634,
+          487,
+          647
+        ],
+        "pos": [
+          1297,
+          1387
+        ]
+      },
+      {
+        "index": 14,
+        "class": "list-item",
+        "bbox": [
+          71,
+          668,
+          540,
+          702
+        ],
+        "pos": [
+          1387,
+          1496
+        ]
+      },
+      {
+        "index": 15,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1496,
+          1501
+        ]
+      }
+    ],
+    "text": "- (70) Behler, J.; Parrinello, M. _Physical Review Letters_ **2007** , _98_ , 146101. \n\n- (71) Smith, J. S.; Isayev, O.; Roitberg, A. E. _arXiv preprint arXiv:1610.08935_ **2016** , \n\n- (72) Breiman, L. _Machine learning_ **2001** , _45_ , 5–32. \n\n- (73) Friedman, J. H. _Annals of statistics_ **2001** , 1189–1232. \n\n- (74) Ramsundar, B.; Liu, B.; Wu, Z.; Verras, A.; Tudor, M.; Sheridan, R. P.; Pande, V. _Manuscript in preparation_ \n\n- (75) Swamidass, S. J.; Azencott, C.-A.; Lin, T.-W.; Gramajo, H.; Tsai, S.-C.; Baldi, P. _Journal of chemical information and modeling_ **2009** , _49_ , 756–766. \n\n- (76) Gilmer, J.; Schoenholz, S. S.; Riley, P. F.; Vinyals, O.; Dahl, G. E. _arXiv preprint arXiv:1704.01212_ **2017** , \n\n- (77) others,, et al. _The annals of statistics_ **2000** , _28_ , 337–407. \n\n- (78) Cortes, C.; Vapnik, V. _Machine learning_ **1995** , _20_ , 273–297. \n\n- (79) Chen, T.; Guestrin, C. _arXiv preprint arXiv:1603.02754_ **2016** , \n\n- (80) Kearnes, S.; Goldman, B.; Pande, V. _arXiv preprint arXiv:1606.08793_ **2016** , \n\n- (81) Baskin, I. I.; Palyulin, V. A.; Zefirov, N. S. _Journal of chemical information and computer sciences_ **1997** , _37_ , 715–721. \n\n- (82) Kireev, D. B. _Journal of chemical information and computer sciences_ **1995** , _35_ , 175– 180. \n\n- (83) Vinyals, O.; Bengio, S.; Kudlur, M. _arXiv preprint arXiv:1511.06391_ **2015** , \n\n- (84) scikit-learn: Machine Learning in Python. `http://scikit-learn.org/stable/` , Accessed: 2017-10-18. \n\n64 \n\n"
+  }
+}

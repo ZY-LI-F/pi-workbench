@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { nativeFixture, protocolReply } from "./helpers/native-fixture";
+import { DEFAULT_SOL_MODE } from "../../src/shared/sol-mode";
 
 const packageMetadata = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
 
@@ -120,10 +121,18 @@ test("pending crash receipts recover as unknown and require an explicit new-inpu
   } finally { await fixture.close(); }
 });
 
-test("reconnects an unexpectedly terminated Pi to the exact session without replaying a turn or losing a draft", async ({}, testInfo) => {
-  const fixture = await nativeFixture(testInfo);
+for (const solEnabled of [false, true]) test(`reconnects an unexpectedly terminated Pi to the exact session without replaying a turn or losing a draft (Sol ${solEnabled ? "on" : "off"})`, async ({}, testInfo) => {
+  const fixture = await nativeFixture(testInfo, undefined, {}, async ({ userDataDir }) => {
+    await writeFile(join(userDataDir, "sol-mode.json"), JSON.stringify({ ...DEFAULT_SOL_MODE, enabled: solEnabled }));
+  });
   const { app, window } = fixture;
   try {
+    await app.evaluate((_, path) => {
+      const { appendFileSync } = process.getBuiltinModule("node:fs");
+      // Observe without swallowing failures; an Electron native error dialog can
+      // otherwise obscure the actual exception behind a teardown timeout.
+      process.on("uncaughtExceptionMonitor", (error) => appendFileSync(path, `${error.stack}\n`));
+    }, testInfo.outputPath("main-process-errors.log"));
     await fixture.openChat();
     const input = window.getByLabel("给 Pi 的消息");
     await input.fill("保留此会话用于断连恢复"); await input.press("Enter");
@@ -160,6 +169,7 @@ test("reconnects an unexpectedly terminated Pi to the exact session without repl
     expect(after.state.sessionFile).toBe(before.state.sessionFile);
     expect(after.scope?.generation).not.toBe(before.scope?.generation);
     expect(after.messages).toEqual(before.messages);
+    expect((await window.evaluate(() => window.stella.solModeGet())).phase).toBe(solEnabled ? "active" : "disabled");
     await expect(input).toHaveValue("断连前正在编辑的草稿");
     expect(fixture.requests.filter((request) => request.body)).toHaveLength(1);
     await input.press("Enter");

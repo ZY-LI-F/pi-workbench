@@ -1,0 +1,134 @@
+{
+  "page": 38,
+  "lines": [
+    {
+      "text": "Figure 13: Benchmark performances for physical chemistry tasks: ESOL, 8 models are",
+      "bbox": [
+        72.0,
+        658.2010498046875,
+        540.0083618164062,
+        668.8173217773438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "evaluated by RMSE on random split; FreeSolv, 8 models are evaluated by RMSE on random",
+      "bbox": [
+        71.99996948242188,
+        672.6470336914062,
+        540.040283203125,
+        683.2633056640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "split; Lipophilicity, 8 models are evaluated by RMSE on random split. Note that for RMSE,",
+      "bbox": [
+        71.99998474121094,
+        687.092041015625,
+        540.0628662109375,
+        697.7083129882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lower value indicates better performance(to the right).",
+      "bbox": [
+        71.99998474121094,
+        701.5380859375,
+        350.7713623046875,
+        712.1543579101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "38",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 38
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          189,
+          77,
+          423,
+          647
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          71,
+          658,
+          541,
+          713
+        ],
+        "pos": [
+          2,
+          334
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          334,
+          339
+        ]
+      }
+    ],
+    "text": "\n\nFigure 13: Benchmark performances for physical chemistry tasks: **ESOL** , 8 models are evaluated by RMSE on random split; **FreeSolv** , 8 models are evaluated by RMSE on random split; **Lipophilicity** , 8 models are evaluated by RMSE on random split. Note that for RMSE, lower value indicates better performance(to the right). \n\n38 \n\n"
+  }
+}

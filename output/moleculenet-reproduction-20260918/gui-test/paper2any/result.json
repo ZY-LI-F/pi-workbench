@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "model": "deepseek-flash",
+  "resolved_model_name": "DeepSeek V4.1 Flash",
+  "upstream_commit": "b538531e25798d9b9d41afd5fa93c9222949b5a5",
+  "stages": [
+    "upstream outline_agent simple mode",
+    "upstream outline_refine_agent simple mode"
+  ],
+  "pages": 10,
+  "outline_seconds": 27.50769240000227,
+  "refine_seconds": 25.797034500006703,
+  "api_calls": [],
+  "source_sha256": "f8b5a55b095f99b75816b2b6c154dc843fcb873a2fe07966e399cf9b51618ef9",
+  "limits": [
+    "Component-level real API test; not the complete Paper2Any web app or multimodal pipeline",
+    "No image model or MinerU/SAM service used; input is reviewed text extracted by Paper2Agent",
+    "Sequential library calls, no autonomous subagent orchestration",
+    "Schema success does not certify scientific accuracy; main-agent content review required"
+  ],
+  "privacy_patches": [
+    "redacted API key in text.py and base_agent.py logs"
+  ]
+}

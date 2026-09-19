@@ -1,0 +1,99 @@
+{
+  "page": 25,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0025.png",
+  "reviewed": true,
+  "review_notes": "GC continuation and implementation, batch normalization/pooling/gather/dense description; Weave. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0025-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        135
+      ],
+      "markdown": "property is shared, to some degree, by all deep architectures considered in MoleculeNet. However, graph convolutional architectures are more explicitly designed to encourage extraction of useful featurizations).",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0025-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        147,
+        541,
+        228
+      ],
+      "markdown": "On a higher level, graph convolutional models treat molecules as undirected graphs, and apply the same learnable function to every node (atom) and its neighbors (bonded atoms) in the graph. This structure recapitulates convolution layers in visual recognition deep networks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0025-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        242,
+        541,
+        422
+      ],
+      "markdown": "MoleculeNet uses the graph convolutional implementation in DeepChem from previous work.<sup>56</sup> This implementation converts SMILES strings into molecular graphs using RDKit<sup>63</sup> As mentioned previously, the initial representations assign to each atom a vector of features including its element, connectivity, valence, etc. Then several graph convolutional modules, each consisting of a graph convolutional layer, a batch normalization layer and a graph pool layer, are sequentially added, followed by a fully-connected dense layer. Finally, the feature vectors for all nodes (atoms) are summed, generating a graph feature vector, which is fed to a classification or regression layer.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0025-b003",
+      "kind": "heading",
+      "bbox": [
+        72,
+        451,
+        156,
+        460
+      ],
+      "markdown": "### Weave models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0025-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        482,
+        541,
+        635
+      ],
+      "markdown": "The Weave architecture is another graph-based model that regards each molecule as a undirected graph. Similar to graph convolutional models, it utilizes the idea of adaptive learning on extracting meaningful representations.<sup>23</sup> The major difference is the size of the convolutions: To update features of an atom, weave models combine information from all other atoms and their corresponding pairs in the molecule. Weave models are more efficient at transmitting information between distant atoms, at the price of increased complexity for each convolution.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0025-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        649,
+        541,
+        710
+      ],
+      "markdown": "In our implementation, a molecule is first encoded into a list of atomic features and a matrix of pair features by the weave model’s featurization method. Then in each weave module, these features are input into four sets of fully connected layers (corresponding to",
+      "source_class": "text"
+    },
+    {
+      "id": "p0025-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "25",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "GC continuation and implementation, batch normalization/pooling/gather/dense description; Weave. Reviewed sequentially by the main agent; no independent agent verification."
+}

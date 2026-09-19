@@ -1,0 +1,65 @@
+{
+  "page": 48,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0048.png",
+  "reviewed": true,
+  "review_notes": "Complete Table 4 runtime retained as source image; footnote preserved; not hardware-comparable to this experiment. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0048-b000",
+      "kind": "caption",
+      "bbox": [
+        72,
+        73,
+        420,
+        100
+      ],
+      "markdown": "Table 4: Time Profile for Tox21, MUV, QM8 and Lipophilicity(second)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0048-b001",
+      "kind": "table",
+      "bbox": [
+        133,
+        108,
+        479,
+        310
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 4",
+      "asset_name": "table-4",
+      "rows": null
+    },
+    {
+      "id": "p0048-b002",
+      "kind": "text",
+      "bbox": [
+        148,
+        313,
+        273,
+        325
+      ],
+      "markdown": "* ECFP/Coulomb Matrix",
+      "source_class": "text"
+    },
+    {
+      "id": "p0048-b003",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "48",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Complete Table 4 runtime retained as source image; footnote preserved; not hardware-comparable to this experiment. Reviewed sequentially by the main agent; no independent agent verification."
+}

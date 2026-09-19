@@ -1,0 +1,7 @@
+deepchem==2.8.0
+tensorflow==2.15.1
+rdkit==2023.9.6
+scikit-learn==1.4.2
+numpy==1.26.4
+pandas==2.2.2
+pytest==8.3.5

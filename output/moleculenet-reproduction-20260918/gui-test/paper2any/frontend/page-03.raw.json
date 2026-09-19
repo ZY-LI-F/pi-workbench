@@ -1,0 +1,205 @@
+{
+  "title": "MoleculeNet 的总体设计",
+  "render_engine": "canvas",
+  "layout_family": "two_column",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 22,
+      "align": "stretch",
+      "padding": 62
+    },
+    "children": [
+      {
+        "type": "component",
+        "id": "title",
+        "component": "heading",
+        "props": {
+          "text_ref": "title"
+        }
+      },
+      {
+        "type": "component",
+        "id": "summary",
+        "component": "text",
+        "props": {
+          "text_ref": "summary"
+        }
+      },
+      {
+        "type": "container",
+        "id": "main",
+        "style": {
+          "direction": "row",
+          "gap": 24,
+          "weight": 1,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "left_col",
+            "style": {
+              "direction": "column",
+              "gap": 18,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "hub",
+                "component": "callout",
+                "props": {
+                  "text_ref": "hub_text"
+                }
+              },
+              {
+                "type": "component",
+                "id": "stat_datasets",
+                "component": "stat",
+                "props": {
+                  "text_ref": "stat_datasets"
+                }
+              },
+              {
+                "type": "component",
+                "id": "stat_compounds",
+                "component": "stat",
+                "props": {
+                  "text_ref": "stat_compounds"
+                }
+              },
+              {
+                "type": "component",
+                "id": "stat_tasks",
+                "component": "stat",
+                "props": {
+                  "text_ref": "stat_tasks"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "right_col",
+            "style": {
+              "direction": "column",
+              "gap": 18,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "pillars_heading",
+                "component": "text",
+                "props": {
+                  "text_ref": "pillars_heading"
+                }
+              },
+              {
+                "type": "component",
+                "id": "key_points",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "key_points"
+                }
+              },
+              {
+                "type": "component",
+                "id": "scope_note",
+                "component": "callout",
+                "props": {
+                  "text_ref": "scope_note"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "title": "MoleculeNet 的总体设计",
+    "summary": "MoleculeNet 以统一接口，把数据集、特征化方法、划分方式与学习模型组合为可复现的分子机器学习基准框架。",
+    "hub_text": "MoleculeNet：统一基准枢纽；数据集、评估指标、特征化与学习模型四条主线均可替换与重新组合。",
+    "stat_datasets": "17 个数据集",
+    "stat_compounds": "70 万+ 化合物",
+    "stat_tasks": "800+ 任务",
+    "pillars_heading": "任务分类与开源集成",
+    "key_points": [
+      "任务分为四类：量子力学、物理化学、生物物理、生理效应",
+      "统一集成到开源 DeepChem，提供数据加载、特征化、划分与模型接口",
+      "强调可替换的 featurization、split 与 learning model 组合",
+      "本次复现仅覆盖 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集"
+    ],
+    "scope_note": "复现范围声明：仅使用 ESOL、FreeSolv、Lipophilicity 三个物理化学数据集，不覆盖其余任务类别。"
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15, 23, 42, 0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24,
+      "summary_size": 26,
+      "eyebrow_size": 18
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700,
+        "color": "#e2e8f0"
+      },
+      "text": {
+        "font_size": 24,
+        "color": "#e2e8f0"
+      },
+      "bullets": {
+        "font_size": 24,
+        "color": "#e2e8f0",
+        "marker_color": "#7dd3fc"
+      },
+      "callout": {
+        "font_size": 24,
+        "color": "#e2e8f0",
+        "accent_color": "#7dd3fc",
+        "background": "rgba(15, 23, 42, 0.92)"
+      },
+      "stat": {
+        "font_size": 30,
+        "color": "#7dd3fc",
+        "label_color": "#94a3b8"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "以两列报告式版式呈现 MoleculeNet 中心枢纽：左侧数字与枢纽说明，右侧任务分类、集成方式与复现范围。"
+}

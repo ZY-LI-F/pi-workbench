@@ -1,0 +1,567 @@
+{
+  "page": 46,
+  "lines": [
+    {
+      "text": "Graph Convolutional models (GC)",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        276.42193603515625,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Layer size of convolutional layers",
+      "bbox": [
+        89.43399810791016,
+        106.61764526367188,
+        270.0246276855469,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Layer size of fully-connected layer",
+      "bbox": [
+        89.43399810791016,
+        140.48764038085938,
+        274.8067321777344,
+        151.77334594726562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        174.35861206054688,
+        170.37802124023438,
+        185.64431762695312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        208.22860717773438,
+        153.5092315673828,
+        219.51431274414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Weave models",
+      "bbox": [
+        72.0,
+        249.53512573242188,
+        155.3874969482422,
+        260.1513366699219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Length of output features(layer size) of convolutional layers",
+      "bbox": [
+        89.43399810791016,
+        280.49462890625,
+        406.6845703125,
+        291.78033447265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        314.3646240234375,
+        170.37802124023438,
+        325.65032958984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        348.2356262207031,
+        153.5092315673828,
+        359.5213317871094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Deep Tensor Neural Networks (DTNN)",
+      "bbox": [
+        72.0,
+        389.5421142578125,
+        305.9273986816406,
+        400.1583251953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Length of atom embedding(features)",
+      "bbox": [
+        89.43399810791016,
+        420.5006103515625,
+        288.8182067871094,
+        431.78631591796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Size of distance bin(from -1˚A to 19˚A)",
+      "bbox": [
+        89.43399810791016,
+        452.9270935058594,
+        294.4730529785156,
+        465.6573181152344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43400573730469,
+        488.2416076660156,
+        170.37803649902344,
+        499.5273132324219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43400573730469,
+        522.112548828125,
+        153.5092315673828,
+        533.3983154296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Directed Acyclic Graph models (DAG)",
+      "bbox": [
+        72.00000762939453,
+        563.4190673828125,
+        302.4006652832031,
+        574.0353393554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Length of features in the convolutional layer",
+      "bbox": [
+        89.43400573730469,
+        594.3785400390625,
+        328.49755859375,
+        605.664306640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Maximum number of propagation of a graph",
+      "bbox": [
+        89.43400573730469,
+        628.24853515625,
+        330.23114013671875,
+        639.5343017578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43400573730469,
+        662.1185302734375,
+        170.37803649902344,
+        673.404296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43400573730469,
+        695.9896240234375,
+        153.5092315673828,
+        707.2753295898438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "46",
+      "bbox": [
+        300.1470031738281,
+        741.591064453125,
+        311.8631286621094,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 46
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          74,
+          277,
+          87
+        ],
+        "pos": [
+          0,
+          40
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          89,
+          107,
+          271,
+          119
+        ],
+        "pos": [
+          40,
+          79
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          89,
+          141,
+          275,
+          152
+        ],
+        "pos": [
+          79,
+          119
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          89,
+          175,
+          171,
+          186
+        ],
+        "pos": [
+          119,
+          137
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          89,
+          208,
+          154,
+          218
+        ],
+        "pos": [
+          137,
+          152
+        ]
+      },
+      {
+        "index": 5,
+        "class": "section-header",
+        "bbox": [
+          72,
+          249,
+          156,
+          258
+        ],
+        "pos": [
+          152,
+          173
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          89,
+          280,
+          407,
+          293
+        ],
+        "pos": [
+          173,
+          239
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          89,
+          315,
+          171,
+          326
+        ],
+        "pos": [
+          239,
+          257
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          89,
+          348,
+          154,
+          358
+        ],
+        "pos": [
+          257,
+          272
+        ]
+      },
+      {
+        "index": 9,
+        "class": "section-header",
+        "bbox": [
+          72,
+          388,
+          306,
+          401
+        ],
+        "pos": [
+          272,
+          315
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          89,
+          420,
+          289,
+          433
+        ],
+        "pos": [
+          315,
+          354
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          89,
+          452,
+          295,
+          467
+        ],
+        "pos": [
+          354,
+          422
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          89,
+          489,
+          171,
+          500
+        ],
+        "pos": [
+          422,
+          440
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          89,
+          522,
+          154,
+          532
+        ],
+        "pos": [
+          440,
+          455
+        ]
+      },
+      {
+        "index": 14,
+        "class": "section-header",
+        "bbox": [
+          72,
+          562,
+          303,
+          575
+        ],
+        "pos": [
+          455,
+          499
+        ]
+      },
+      {
+        "index": 15,
+        "class": "list-item",
+        "bbox": [
+          89,
+          594,
+          329,
+          606
+        ],
+        "pos": [
+          499,
+          549
+        ]
+      },
+      {
+        "index": 16,
+        "class": "list-item",
+        "bbox": [
+          89,
+          628,
+          331,
+          640
+        ],
+        "pos": [
+          549,
+          594
+        ]
+      },
+      {
+        "index": 17,
+        "class": "list-item",
+        "bbox": [
+          89,
+          662,
+          171,
+          674
+        ],
+        "pos": [
+          594,
+          612
+        ]
+      },
+      {
+        "index": 18,
+        "class": "list-item",
+        "bbox": [
+          89,
+          696,
+          154,
+          706
+        ],
+        "pos": [
+          612,
+          627
+        ]
+      },
+      {
+        "index": 19,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          627,
+          632
+        ]
+      }
+    ],
+    "text": "# **Graph Convolutional models (GC)** \n\n- Layer size of convolutional layers \n\n- Layer size of fully-connected layer \n\n- Learning rate \n\n- Batch size \n\n# **Weave models** \n\n- Length of output features(layer size) of convolutional layers \n\n- Learning rate \n\n- Batch size \n\n# **Deep Tensor Neural Networks (DTNN)** \n\n- Length of atom embedding(features) \n\n- Size of distance bin(from -1<sup>˚</sup> A to 19<sup>˚</sup> A) \n\n- Learning rate \n\n- Batch size \n\n# **Directed Acyclic Graph models (DAG)** \n\n- Length of features in the convolutional layer \n\n- Maximum number of propagation of a graph \n\n- Learning rate \n\n- Batch size \n\n46 \n\n"
+  }
+}

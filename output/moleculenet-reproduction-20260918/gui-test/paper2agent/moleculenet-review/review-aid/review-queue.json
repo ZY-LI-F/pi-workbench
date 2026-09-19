@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "id": "s001-moleculenet-author-manuscript",
+      "title": "MoleculeNet author manuscript, arXiv 1703.00564v3",
+      "pages": 65,
+      "contact_sheets": [
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0001-0004.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0005-0008.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0009-0012.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0013-0016.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0017-0020.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0021-0024.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0025-0028.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0029-0032.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0033-0036.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0037-0040.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0041-0044.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0045-0048.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0049-0052.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0053-0056.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0057-0060.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0061-0064.jpg",
+        "review-aid\\s001-moleculenet-author-manuscript\\pages-0065-0065.jpg"
+      ],
+      "items": [
+        {
+          "page": 1,
+          "kind": "extractor_warning",
+          "detail": "Review possible header/footer: p0001-b000"
+        },
+        {
+          "page": 2,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0001-b011",
+          "item": "p0002-b000"
+        },
+        {
+          "page": 3,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0002-b004",
+          "item": "p0003-b000"
+        },
+        {
+          "page": 5,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0004-b003",
+          "item": "p0005-b000"
+        },
+        {
+          "page": 7,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0006-b006",
+          "item": "p0007-b000"
+        },
+        {
+          "page": 9,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0008-b006",
+          "item": "p0009-b000"
+        },
+        {
+          "page": 11,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0010-b007",
+          "item": "p0011-b000"
+        },
+        {
+          "page": 12,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0011-b006",
+          "item": "p0012-b000"
+        },
+        {
+          "page": 16,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0015-b003",
+          "item": "p0016-b000"
+        },
+        {
+          "page": 19,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0018-b006",
+          "item": "p0019-b000"
+        },
+        {
+          "page": 25,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0024-b003",
+          "item": "p0025-b000"
+        },
+        {
+          "page": 26,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0025-b005",
+          "item": "p0026-b000"
+        },
+        {
+          "page": 27,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0026-b005",
+          "item": "p0027-b000"
+        },
+        {
+          "page": 28,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0027-b006",
+          "item": "p0028-b000"
+        },
+        {
+          "page": 32,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0031-b005",
+          "item": "p0032-b000"
+        },
+        {
+          "page": 41,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0040-b004",
+          "item": "p0041-b000"
+        },
+        {
+          "page": 42,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0041-b006",
+          "item": "p0042-b000"
+        },
+        {
+          "page": 43,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0042-b002",
+          "item": "p0043-b000"
+        },
+        {
+          "page": 44,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0043-b010",
+          "item": "p0044-b000"
+        },
+        {
+          "page": 54,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0053-b007",
+          "item": "p0054-b000"
+        },
+        {
+          "page": 56,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0055-b005",
+          "item": "p0056-b000"
+        },
+        {
+          "page": 57,
+          "kind": "possible_cross_page_join",
+          "previous_item": "p0056-b013",
+          "item": "p0057-b000"
+        }
+      ]
+    }
+  ]
+}

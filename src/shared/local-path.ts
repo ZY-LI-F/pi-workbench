@@ -7,6 +7,7 @@ export interface LocalPathInspection {
   readonly name: string;
   readonly kind: LocalPathKind;
   readonly sizeBytes?: number;
+  readonly modifiedAt?: number;
   readonly preview?: LocalFilePreviewDescriptor;
   readonly directOpenAllowed: boolean;
   readonly directOpenBlockedReason?: string;

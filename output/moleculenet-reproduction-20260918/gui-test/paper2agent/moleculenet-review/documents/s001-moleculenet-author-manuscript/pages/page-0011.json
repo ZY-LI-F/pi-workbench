@@ -1,0 +1,111 @@
+{
+  "page": 11,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0011.png",
+  "reviewed": true,
+  "review_notes": "PDBbind continuation, BACE, BBBP and Tox21; source IC50 typography retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0011-b000",
+      "kind": "text",
+      "bbox": [
+        71,
+        75,
+        541,
+        183
+      ],
+      "markdown": "permits structure-based featurization that is aware of the protein-ligand binding geometry. We use the “refined” and “core” subsets of the database,<sup>50</sup> more carefully processed for data artifacts, as additional benchmarking targets. Samples in PDBbind dataset are collected over a relatively long period of time(since 1982), hence a time splitting pattern(introduced in the next subsection) is recommended to mimic actual development in the field.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0011-b001",
+      "kind": "heading",
+      "bbox": [
+        71,
+        211,
+        110,
+        221
+      ],
+      "markdown": "### BACE",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0011-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        242,
+        541,
+        374
+      ],
+      "markdown": "The BACE dataset provides quantitative ( _IC_ 50) and qualitative (binary label) binding results for a set of inhibitors of human _β_ -secretase 1 (BACE-1).<sup>51</sup> All data are experimental values reported in scientific literature over the past decade, some with detailed crystal structures available. We merged a collection of 1522 compounds with their 2D structures and binary labels in MoleculeNet, built as a classification task. Similarly, regarding a single protein target, scaffold splitting will be more practically useful.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0011-b003",
+      "kind": "heading",
+      "bbox": [
+        71,
+        403,
+        110,
+        413
+      ],
+      "markdown": "### BBBP",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0011-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        434,
+        541,
+        590
+      ],
+      "markdown": "The Blood-brain barrier penetration (BBBP) dataset comes from a recent study<sup>52</sup> on the modeling and prediction of the barrier permeability. As a membrane separating circulating blood and brain extracellular fluid, the blood-brain barrier blocks most drugs, hormones and neurotransmitters. Thus penetration of the barrier forms a long-standing issue in development of drugs targeting central nervous system. This dataset includes binary labels for over 2000 compounds on their permeability properties. Scaffold splitting is also recommended for this well-defined target.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0011-b005",
+      "kind": "heading",
+      "bbox": [
+        71,
+        619,
+        108,
+        628
+      ],
+      "markdown": "### Tox21",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0011-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        650,
+        541,
+        710
+      ],
+      "markdown": "The “Toxicology in the 21st Century” (Tox21) initiative created a public database measuring toxicity of compounds, which has been used in the 2014 Tox21 Data Challenge.<sup>53</sup> This dataset contains qualitative toxicity measurements for 8014 compounds on 12 different",
+      "source_class": "text"
+    },
+    {
+      "id": "p0011-b007",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "11",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "PDBbind continuation, BACE, BBBP and Tox21; source IC50 typography retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

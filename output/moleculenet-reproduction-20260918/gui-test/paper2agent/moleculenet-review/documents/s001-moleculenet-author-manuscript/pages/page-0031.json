@@ -1,0 +1,100 @@
+{
+  "page": 31,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0031.png",
+  "reviewed": true,
+  "review_notes": "Figure 9 ClinTox and physiology discussion; sample-size and overfitting caveats retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0031-b000",
+      "kind": "figure",
+      "bbox": [
+        184,
+        66,
+        428,
+        295
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 31 (1)",
+      "asset_name": "figure-p0031-000"
+    },
+    {
+      "id": "p0031-b001",
+      "kind": "caption",
+      "bbox": [
+        72,
+        301,
+        541,
+        327
+      ],
+      "markdown": "Figure 9: Benchmark performances for physiology tasks: **ClinTox** , 9 models are evaluated by AUC-ROC on random split.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0031-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        350,
+        304,
+        364
+      ],
+      "markdown": "### Physiology and Biophysics Tasks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0031-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        383,
+        541,
+        467
+      ],
+      "markdown": "Tables 5, 6 and Figures 7, 8, 9 report AUC-ROC or AUC-PRC results of 4 to 9 different models on biophysics datasets (PCBA, MUV, HIV, BACE) and physiology datasets (BBBP, Tox21, Toxcast, SIDER, ClinTox). Some models were too computationally expensive to be run on the larger datasets. All of these datasets contain only classification tasks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0031-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        478,
+        541,
+        656
+      ],
+      "markdown": "Most models have train scores (listed in Tables 5, 6) higher than validation/test scores, indicating that overfitting is a general issue. Singletask logistic regression exhibits the largest gaps between train scores and validation/test scores, while models incorporating multitask structure generally show less overfit, suggesting that multitask training has a regularizing effect. Most physiological and biophysical datasets in MoleculeNet have only a low volume of data for each task. Multitask algorithms combine different tasks, resulting in a larger pool of data for model training. In particular, multitask training can, to some extent, compensate for the limited data amount available for each individual task.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0031-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        670,
+        541,
+        706
+      ],
+      "markdown": "Graph convolutional models and weave models, each based on an adaptive method of featurization,<sup>22,23</sup> show strong validation/test results on larger datasets, along with less over",
+      "source_class": "text"
+    },
+    {
+      "id": "p0031-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "31",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 9 ClinTox and physiology discussion; sample-size and overfitting caveats retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

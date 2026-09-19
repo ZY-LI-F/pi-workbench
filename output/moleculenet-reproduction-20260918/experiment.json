@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "protocol_name": "MoleculeNet Fig.12 selected models; modern-environment replication",
+  "datasets": ["esol", "freesolv", "lipophilicity"],
+  "seeds": [123, 456, 789],
+  "models": ["mean", "rf", "krr", "gc"],
+  "fractions": {"train": 0.8, "valid": 0.1, "test": 0.1},
+  "primary_split": "random",
+  "scaffold_extension_datasets": ["esol"],
+  "featurization": {"ecfp_radius": 2, "ecfp_bits": 1024, "graph_atom_features": 75},
+  "rf": {"n_estimators": 500},
+  "krr": {"kernel": "rbf", "alpha": 0.001, "gamma": 0.0009765625},
+  "gc": {"graph_conv_layers": [128, 128], "dense_layer_size": 256, "batch_size": 128, "learning_rate": 0.0005, "epochs": 100, "dropout": 0.0, "batch_normalize": true},
+  "cpu_threads": 4,
+  "hpo": "none; upstream preset hyperparameters fixed before execution",
+  "checkpoint_selection": "final epoch 100; no test-set selection",
+  "deviations": [
+    "Modern DeepChem 2.8.0 and TensorFlow 2.15.1, not the original 2017 execution environment",
+    "No Gaussian-process hyperparameter optimization",
+    "Published original seed values and exact split indices are not provided in the article; new explicit seeds are used",
+    "Only 3 datasets and 3 learned models plus a negative baseline, not all 17 datasets/all algorithms",
+    "ESOL scaffold extension is an additional diagnostic, not the Fig.12 original protocol",
+    "ScaffoldSplitter is deterministic; its three seeds vary learner randomness, not the scaffold partition"
+  ]
+}

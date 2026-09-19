@@ -1,0 +1,52 @@
+{
+  "page": 38,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0038.png",
+  "reviewed": true,
+  "review_notes": "Figure 13 full ESOL/FreeSolv/Lipophilicity panels and caption; this corresponds to published Figure 12. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0038-b000",
+      "kind": "figure",
+      "bbox": [
+        184,
+        72,
+        428,
+        652
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 38 (1)",
+      "asset_name": "figure-p0038-000"
+    },
+    {
+      "id": "p0038-b001",
+      "kind": "caption",
+      "bbox": [
+        71,
+        658,
+        541,
+        713
+      ],
+      "markdown": "Figure 13: Benchmark performances for physical chemistry tasks: **ESOL** , 8 models are evaluated by RMSE on random split; **FreeSolv** , 8 models are evaluated by RMSE on random split; **Lipophilicity** , 8 models are evaluated by RMSE on random split. Note that for RMSE, lower value indicates better performance(to the right).",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0038-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "38",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 13 full ESOL/FreeSolv/Lipophilicity panels and caption; this corresponds to published Figure 12. Reviewed sequentially by the main agent; no independent agent verification."
+}

@@ -1,0 +1,521 @@
+{
+  "page": 61,
+  "lines": [
+    {
+      "text": "(34) Bolton, E. E.; Wang, Y.; Thiessen, P. A.; Bryant, S. H. Annual reports in computational",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0087890625,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "chemistry 2008, 4, 217–241.",
+      "bbox": [
+        98.66299438476562,
+        99.56613159179688,
+        244.21836853027344,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(35) Wang, T.; Xiao, J.; Suzek, T. O.; Zhang, J.; Wang, J.; Zhou, Z.; Han, L.; Kara-",
+      "bbox": [
+        72.00000762939453,
+        133.43612670898438,
+        540.0579833984375,
+        144.05233764648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "petyan, K.; Dracheva, S.; Shoemaker, B. A.; Bolton, E.; Gindulyte, A.; Bryant, S. H.",
+      "bbox": [
+        98.66300964355469,
+        157.34414672851562,
+        540.0370483398438,
+        167.96035766601562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Nucleic Acids Research 2012, 40, D400–D412.",
+      "bbox": [
+        98.66300964355469,
+        181.25216674804688,
+        337.17242431640625,
+        191.86837768554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(36) Graˇzulis, S.; Chateigner, D.; Downs, R. T.; Yokochi, A.; Quir´os, M.; Lutterotti, L.;",
+      "bbox": [
+        72.0,
+        215.12216186523438,
+        540.070068359375,
+        225.73837280273438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Manakova, E.; Butkus, J.; Moeck, P.; Le Bail, A. Journal of Applied Crystallography",
+      "bbox": [
+        98.66300201416016,
+        239.03018188476562,
+        540.0110473632812,
+        249.64639282226562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2009, 42, 726–729.",
+      "bbox": [
+        98.66299438476562,
+        262.9382019042969,
+        196.078369140625,
+        273.5544128417969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(37) Groom, C. R.; Bruno, I. J.; Lightfoot, M. P.; Ward, S. C. Acta Crystallographica Section",
+      "bbox": [
+        72.00000762939453,
+        296.8081970214844,
+        540.0130615234375,
+        307.4244079589844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "B: Structural Science, Crystal Engineering and Materials 2016, 72, 171–179.",
+      "bbox": [
+        98.66299438476562,
+        320.7161865234375,
+        493.4693908691406,
+        331.3323974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(38) Berman, H.; Henrick, K.; Nakamura, H. Nature Structural & Molecular Biology 2003,",
+      "bbox": [
+        71.99993896484375,
+        354.5871887207031,
+        540.0007934570312,
+        365.2033996582031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "10, 980–980.",
+      "bbox": [
+        98.6629638671875,
+        378.49517822265625,
+        162.0263214111328,
+        389.11138916015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(39) Quantum Machine. http://quantum-machine.org/datasets/, Accessed: 2017-09-27.",
+      "bbox": [
+        71.99996948242188,
+        412.36517333984375,
+        540.0173950195312,
+        423.3161315917969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(40) Weininger, D. Journal of chemical information and computer sciences 1988, 28, 31–36.",
+      "bbox": [
+        71.99993896484375,
+        446.2361755371094,
+        540.0292358398438,
+        456.8523864746094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(41) Blum, L. C.; Reymond, J.-L. Journal of the American Chemical Society 2009, 131,",
+      "bbox": [
+        71.99993896484375,
+        480.1061706542969,
+        540.000732421875,
+        490.7223815917969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "8732–8733.",
+      "bbox": [
+        98.66390991210938,
+        504.0141296386719,
+        154.63815307617188,
+        514.63037109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(42) Ramakrishnan, R.; Hartmann, M.; Tapavicza, E.; Lilienfeld, O. A. v. The Journal of",
+      "bbox": [
+        71.99990844726562,
+        537.8840942382812,
+        539.995361328125,
+        548.5003662109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Chemical Physics 2015, 143, 084111.",
+      "bbox": [
+        98.66390991210938,
+        561.7921142578125,
+        290.0173034667969,
+        572.4083862304688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(43) Ruddigkeit, L.; Deursen, R. v.; Blum, L. C.; Reymond, J.-L. Journal of Chemical",
+      "bbox": [
+        71.99990844726562,
+        595.6631469726562,
+        540.0067138671875,
+        606.2794189453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Information and Modeling 2012, 52, 2864–2875.",
+      "bbox": [
+        98.66387939453125,
+        619.5701293945312,
+        346.5394287109375,
+        630.1864013671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(44) Ramakrishnan, R.; Dral, P. O.; Rupp, M.; Lilienfeld, O. A. v. Scientiﬁc Data 2014, 1,",
+      "bbox": [
+        71.99986267089844,
+        653.4411010742188,
+        540.000732421875,
+        664.057373046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "140022.",
+      "bbox": [
+        98.66390991210938,
+        677.34912109375,
+        137.0640106201172,
+        687.9653930664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(45) Hersey, A. ChEMBL Deposited Data Set - AZ dataset; 2015.",
+      "bbox": [
+        71.99990844726562,
+        711.2190551757812,
+        408.8222351074219,
+        721.8353881835938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "61",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 61
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "list-item",
+        "bbox": [
+          72,
+          74,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          135
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          72,
+          132,
+          541,
+          192
+        ],
+        "pos": [
+          135,
+          361
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          72,
+          214,
+          541,
+          274
+        ],
+        "pos": [
+          361,
+          570
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          72,
+          296,
+          541,
+          332
+        ],
+        "pos": [
+          570,
+          754
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          71,
+          353,
+          541,
+          390
+        ],
+        "pos": [
+          754,
+          868
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          71,
+          411,
+          541,
+          424
+        ],
+        "pos": [
+          868,
+          957
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          71,
+          445,
+          541,
+          458
+        ],
+        "pos": [
+          957,
+          1061
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          71,
+          479,
+          541,
+          513
+        ],
+        "pos": [
+          1061,
+          1171
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          71,
+          537,
+          540,
+          573
+        ],
+        "pos": [
+          1171,
+          1309
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          71,
+          594,
+          541,
+          631
+        ],
+        "pos": [
+          1309,
+          1454
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          71,
+          652,
+          541,
+          686
+        ],
+        "pos": [
+          1454,
+          1568
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          71,
+          710,
+          409,
+          723
+        ],
+        "pos": [
+          1568,
+          1644
+        ]
+      },
+      {
+        "index": 12,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1644,
+          1649
+        ]
+      }
+    ],
+    "text": "- (34) Bolton, E. E.; Wang, Y.; Thiessen, P. A.; Bryant, S. H. _Annual reports in computational chemistry_ **2008** , _4_ , 217–241. \n\n- (35) Wang, T.; Xiao, J.; Suzek, T. O.; Zhang, J.; Wang, J.; Zhou, Z.; Han, L.; Karapetyan, K.; Dracheva, S.; Shoemaker, B. A.; Bolton, E.; Gindulyte, A.; Bryant, S. H. _Nucleic Acids Research_ **2012** , _40_ , D400–D412. \n\n- (36) Graˇzulis, S.; Chateigner, D.; Downs, R. T.; Yokochi, A.; Quir´os, M.; Lutterotti, L.; Manakova, E.; Butkus, J.; Moeck, P.; Le Bail, A. _Journal of Applied Crystallography_ **2009** , _42_ , 726–729. \n\n- (37) Groom, C. R.; Bruno, I. J.; Lightfoot, M. P.; Ward, S. C. _Acta Crystallographica Section B: Structural Science, Crystal Engineering and Materials_ **2016** , _72_ , 171–179. \n\n- (38) Berman, H.; Henrick, K.; Nakamura, H. _Nature Structural & Molecular Biology_ **2003** , _10_ , 980–980. \n\n- (39) Quantum Machine. `http://quantum-machine.org/datasets/` , Accessed: 2017-09-27. \n\n- (40) Weininger, D. _Journal of chemical information and computer sciences_ **1988** , _28_ , 31–36. \n\n- (41) Blum, L. C.; Reymond, J.-L. _Journal of the American Chemical Society_ **2009** , _131_ , 8732–8733. \n\n- (42) Ramakrishnan, R.; Hartmann, M.; Tapavicza, E.; Lilienfeld, O. A. v. _The Journal of Chemical Physics_ **2015** , _143_ , 084111. \n\n- (43) Ruddigkeit, L.; Deursen, R. v.; Blum, L. C.; Reymond, J.-L. _Journal of Chemical Information and Modeling_ **2012** , _52_ , 2864–2875. \n\n- (44) Ramakrishnan, R.; Dral, P. O.; Rupp, M.; Lilienfeld, O. A. v. _Scientific Data_ **2014** , _1_ , 140022. \n\n- (45) Hersey, A. _ChEMBL Deposited Data Set - AZ_ _~~d~~ ataset_ ; 2015. \n\n61 \n\n"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "page": 7,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0007.png",
+  "reviewed": true,
+  "review_notes": "Figure 2 and QM7/QM7b opening; dataset category continuation joined. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0007-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        158
+      ],
+      "markdown": "various levels of molecular properties, ranging from molecular-level properties to macroscopic influences on human body. For each dataset, we propose a metric and a splitting pattern(introduced in the following texts) that best fit the properties of the dataset. Performances on the recommended metric and split are reported in the results section.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0007-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        169,
+        541,
+        350
+      ],
+      "markdown": "In most datasets, SMILES strings<sup>40</sup> are used to represent input molecules, 3D coordinates are also included in part of the collection as molecular features, which enabled different methods to be applied. Properties, or output labels, are either 0/1 for classification tasks, or floating point numbers for regression tasks. At the time of writing, MoleculeNet contains 17 datasets prepared and benchmarked, but we anticipate adding further datasets in an ongoing fashion. We also highly welcome contributions from other public data collections. For more detailed dataset structure requirements and instructions on curating datasets, please refer to the tutorial on DeepChem webpage.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0007-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        362,
+        541,
+        419
+      ],
+      "markdown": "Table 1 lists details of datasets in the collection, including tasks, compounds and their features, recommended splits and metrics. Contents of each dataset will be elaborated in this subsection.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0007-b003",
+      "kind": "figure",
+      "bbox": [
+        67,
+        427,
+        546,
+        592
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 7 (4)",
+      "asset_name": "figure-p0007-003"
+    },
+    {
+      "id": "p0007-b004",
+      "kind": "caption",
+      "bbox": [
+        82,
+        597,
+        530,
+        609
+      ],
+      "markdown": "Figure 2: Tasks in different datasets focus on different levels of properties of molecules.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0007-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        655,
+        146,
+        668
+      ],
+      "markdown": "### QM7/QM7b",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0007-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        686,
+        541,
+        723
+      ],
+      "markdown": "The QM7/QM7b datasets are subsets of the GDB-13 database,<sup>41</sup> a database of nearly 1 billion stable and synthetically accessible organic molecules, containing up to seven “heavy”",
+      "source_class": "text"
+    },
+    {
+      "id": "p0007-b007",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        751
+      ],
+      "markdown": "7",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 2 and QM7/QM7b opening; dataset category continuation joined. Reviewed sequentially by the main agent; no independent agent verification."
+}

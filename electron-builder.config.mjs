@@ -39,6 +39,8 @@ export default {
   files: [
     "out/**/*",
     "resources/extensions/**/*",
+    "src/extensions/sol-pi/vendor/LICENSE",
+    "src/extensions/sol-pi/vendor/THIRD_PARTY_NOTICES.md",
     "!out/**/*.map",
   ],
   asar: true,

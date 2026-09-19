@@ -1,0 +1,147 @@
+{
+  "page": 39,
+  "lines": [
+    {
+      "text": "Figure 14: Benchmark performances for quantum mechanics tasks: QM7, 8 models are",
+      "bbox": [
+        72.0,
+        649.35107421875,
+        540.0089721679688,
+        659.9673461914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "evaluated by MAE on stratiﬁed split; QM7b, 3 models (QM7b only provides 3D coordinates)",
+      "bbox": [
+        72.0,
+        663.7970581054688,
+        540.0491333007812,
+        674.413330078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "are evaluated by MAE on random split; QM8, 7 models are evaluated by MAE on random",
+      "bbox": [
+        72.0,
+        678.2430419921875,
+        540.0343017578125,
+        688.8593139648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "split; QM9, 5 models are evaluated by MAE on random split. Note that for MAE, lower",
+      "bbox": [
+        71.99996948242188,
+        692.6890258789062,
+        540.0482177734375,
+        703.3052978515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "value indicates better performance(to the right)",
+      "bbox": [
+        71.99996948242188,
+        707.1350708007812,
+        316.95013427734375,
+        717.7513427734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "39",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 39
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          205,
+          72,
+          407,
+          638
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          71,
+          649,
+          541,
+          719
+        ],
+        "pos": [
+          2,
+          410
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          410,
+          415
+        ]
+      }
+    ],
+    "text": "\n\nFigure 14: Benchmark performances for quantum mechanics tasks: **QM7** , 8 models are evaluated by MAE on stratified split; **QM7b** , 3 models (QM7b only provides 3D coordinates) are evaluated by MAE on random split; **QM8** , 7 models are evaluated by MAE on random split; **QM9** , 5 models are evaluated by MAE on random split. Note that for MAE, lower value indicates better performance(to the right) \n\n39 \n\n"
+  }
+}

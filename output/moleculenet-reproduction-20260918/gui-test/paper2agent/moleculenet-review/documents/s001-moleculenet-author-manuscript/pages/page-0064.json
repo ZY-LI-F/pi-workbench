@@ -1,0 +1,206 @@
+{
+  "page": 64,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0064.png",
+  "reviewed": true,
+  "review_notes": "References 70–84 inspected; citation order retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0064-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        448,
+        87
+      ],
+      "markdown": "- (70) Behler, J.; Parrinello, M. _Physical Review Letters_ **2007** , _98_ , 146101.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        108,
+        511,
+        121
+      ],
+      "markdown": "- (71) Smith, J. S.; Isayev, O.; Roitberg, A. E. _arXiv preprint arXiv:1610.08935_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        142,
+        337,
+        155
+      ],
+      "markdown": "- (72) Breiman, L. _Machine learning_ **2001** , _45_ , 5–32.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        176,
+        376,
+        189
+      ],
+      "markdown": "- (73) Friedman, J. H. _Annals of statistics_ **2001** , 1189–1232.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        210,
+        541,
+        246
+      ],
+      "markdown": "- (74) Ramsundar, B.; Liu, B.; Wu, Z.; Verras, A.; Tudor, M.; Sheridan, R. P.; Pande, V. _Manuscript in preparation_",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        268,
+        541,
+        304
+      ],
+      "markdown": "- (75) Swamidass, S. J.; Azencott, C.-A.; Lin, T.-W.; Gramajo, H.; Tsai, S.-C.; Baldi, P. _Journal of chemical information and modeling_ **2009** , _49_ , 756–766.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        326,
+        541,
+        362
+      ],
+      "markdown": "- (76) Gilmer, J.; Schoenholz, S. S.; Riley, P. F.; Vinyals, O.; Dahl, G. E. _arXiv preprint arXiv:1704.01212_ **2017** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b007",
+      "kind": "text",
+      "bbox": [
+        71,
+        383,
+        392,
+        396
+      ],
+      "markdown": "- (77) others,, et al. _The annals of statistics_ **2000** , _28_ , 337–407.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b008",
+      "kind": "text",
+      "bbox": [
+        71,
+        417,
+        408,
+        430
+      ],
+      "markdown": "- (78) Cortes, C.; Vapnik, V. _Machine learning_ **1995** , _20_ , 273–297.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b009",
+      "kind": "text",
+      "bbox": [
+        71,
+        451,
+        422,
+        464
+      ],
+      "markdown": "- (79) Chen, T.; Guestrin, C. _arXiv preprint arXiv:1603.02754_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b010",
+      "kind": "text",
+      "bbox": [
+        71,
+        485,
+        495,
+        498
+      ],
+      "markdown": "- (80) Kearnes, S.; Goldman, B.; Pande, V. _arXiv preprint arXiv:1606.08793_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b011",
+      "kind": "text",
+      "bbox": [
+        71,
+        519,
+        541,
+        555
+      ],
+      "markdown": "- (81) Baskin, I. I.; Palyulin, V. A.; Zefirov, N. S. _Journal of chemical information and computer sciences_ **1997** , _37_ , 715–721.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b012",
+      "kind": "text",
+      "bbox": [
+        71,
+        577,
+        541,
+        611
+      ],
+      "markdown": "- (82) Kireev, D. B. _Journal of chemical information and computer sciences_ **1995** , _35_ , 175– 180.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b013",
+      "kind": "text",
+      "bbox": [
+        71,
+        634,
+        487,
+        647
+      ],
+      "markdown": "- (83) Vinyals, O.; Bengio, S.; Kudlur, M. _arXiv preprint arXiv:1511.06391_ **2015** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b014",
+      "kind": "text",
+      "bbox": [
+        71,
+        668,
+        540,
+        702
+      ],
+      "markdown": "- (84) scikit-learn: Machine Learning in Python. `http://scikit-learn.org/stable/` , Accessed: 2017-10-18.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0064-b015",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "64",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 70–84 inspected; citation order retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

@@ -1,0 +1,14 @@
+{
+  "dataset": "esol",
+  "n": 1128,
+  "tasks": [
+    "measured log solubility in mols per litre"
+  ],
+  "unit": "log10(mol/L)",
+  "data_file": "data\\esol\\delaney-processed.csv",
+  "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+  "unique_canonical_smiles": 1117,
+  "duplicate_structure_rows": 11,
+  "unique_scaffolds": 269,
+  "invalid_smiles": []
+}

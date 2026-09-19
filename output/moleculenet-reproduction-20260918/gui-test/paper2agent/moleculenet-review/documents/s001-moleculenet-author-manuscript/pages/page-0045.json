@@ -1,0 +1,242 @@
+{
+  "page": 45,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0045.png",
+  "reviewed": true,
+  "review_notes": "Neural-network hyperparameter categories; no numeric defaults invented. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0045-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        74,
+        256,
+        87
+      ],
+      "markdown": "### Multitask/Singletask Networks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0045-b001",
+      "kind": "text",
+      "bbox": [
+        89,
+        107,
+        152,
+        119
+      ],
+      "markdown": "- Layer size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b002",
+      "kind": "text",
+      "bbox": [
+        89,
+        141,
+        279,
+        152
+      ],
+      "markdown": "- Weight - initial standard deviation",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b003",
+      "kind": "text",
+      "bbox": [
+        89,
+        175,
+        213,
+        184
+      ],
+      "markdown": "- Bias - initial constant",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b004",
+      "kind": "text",
+      "bbox": [
+        89,
+        209,
+        171,
+        220
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b005",
+      "kind": "text",
+      "bbox": [
+        89,
+        242,
+        189,
+        254
+      ],
+      "markdown": "- L2 regularization",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        276,
+        154,
+        286
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b007",
+      "kind": "heading",
+      "bbox": [
+        72,
+        317,
+        174,
+        328
+      ],
+      "markdown": "### Bypass Networks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0045-b008",
+      "kind": "text",
+      "bbox": [
+        89,
+        348,
+        304,
+        361
+      ],
+      "markdown": "- Layer size(main layer and bypass layer)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b009",
+      "kind": "text",
+      "bbox": [
+        89,
+        382,
+        431,
+        395
+      ],
+      "markdown": "- Weight - initial standard deviation(main layer and bypass layer)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b010",
+      "kind": "text",
+      "bbox": [
+        89,
+        415,
+        364,
+        428
+      ],
+      "markdown": "- Bias - initial constant(main layer and bypass layer)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b011",
+      "kind": "text",
+      "bbox": [
+        89,
+        450,
+        171,
+        462
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b012",
+      "kind": "text",
+      "bbox": [
+        89,
+        484,
+        189,
+        496
+      ],
+      "markdown": "- L2 regularization",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b013",
+      "kind": "text",
+      "bbox": [
+        89,
+        518,
+        154,
+        527
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b014",
+      "kind": "heading",
+      "bbox": [
+        72,
+        558,
+        271,
+        571
+      ],
+      "markdown": "### Influence Relevance Voting (IRV)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0045-b015",
+      "kind": "text",
+      "bbox": [
+        89,
+        589,
+        265,
+        602
+      ],
+      "markdown": "- K(number of nearest neighbors)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b016",
+      "kind": "text",
+      "bbox": [
+        89,
+        624,
+        171,
+        636
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b017",
+      "kind": "text",
+      "bbox": [
+        89,
+        658,
+        154,
+        667
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0045-b018",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "45",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Neural-network hyperparameter categories; no numeric defaults invented. Reviewed sequentially by the main agent; no independent agent verification."
+}

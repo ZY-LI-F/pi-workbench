@@ -13,6 +13,7 @@ class FakeRpcProcess extends EventEmitter {
   readonly requests: Record<string, unknown>[] = [];
   readonly stdin: Writable;
   exitCode: number | null = null;
+  signalCode: NodeJS.Signals | null = null;
 
   constructor() {
     super();
@@ -80,6 +81,25 @@ async function startedRuntime(
 }
 
 describe("PiRpcRuntime request boundaries", () => {
+  it("survives stdin EPIPE after signal exit and never waits for an exit that already happened", async () => {
+    let closed = false;
+    const { child, runtime, signals } = await startedRuntime(5_000, undefined, undefined, undefined, {
+      stopChildren: async () => 0, close: async () => { closed = true; },
+    });
+    const pending = runtime.send({ type: "get_messages" });
+    const rejected = expect(pending).rejects.toThrow("输入管道已断开");
+    child.signalCode = "SIGTERM";
+    child.emit("exit", null, "SIGTERM");
+    expect(runtime.running).toBe(false);
+    expect(() => child.stdin.emit("error", new Error("write EPIPE"))).not.toThrow();
+    await rejected;
+    await runtime.stop();
+    expect(closed).toBe(true);
+    expect(signals).toContainEqual(expect.objectContaining({ type: "protocol_error", message: expect.stringContaining("EPIPE") }));
+    // Late pipe errors from a retired generation remain observed, not uncaught.
+    expect(() => child.stdin.emit("error", new Error("late EPIPE"))).not.toThrow();
+  });
+
   it("does not report Pi stopped when Pi rejects abort even if its children were stopped", async () => {
     const { child, runtime, signals } = await startedRuntime(5_000, undefined, undefined, undefined, {
       stopChildren: async () => 2, close: async () => undefined,

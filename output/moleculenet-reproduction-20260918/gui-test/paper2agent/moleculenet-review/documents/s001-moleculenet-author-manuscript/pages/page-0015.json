@@ -1,0 +1,76 @@
+{
+  "page": 15,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0015.png",
+  "reviewed": true,
+  "review_notes": "All eight Figure 4 panels and full caption; imbalanced ROC/PRC discussion inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0015-b000",
+      "kind": "figure",
+      "bbox": [
+        184,
+        66,
+        429,
+        386
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 15 (1)",
+      "asset_name": "figure-p0015-000"
+    },
+    {
+      "id": "p0015-b001",
+      "kind": "caption",
+      "bbox": [
+        72,
+        391,
+        541,
+        476
+      ],
+      "markdown": "Figure 4: Receiver operating characteristic (ROC) curves and precision recall curves (PRC) for predictions of logistic regression and graph convolutional models under different class imbalance condition.(Details listed in Table 2): **A, B** : task ”FDA ~~A~~ PPROVED” from ClinTox, test subset; **C, D** : task ”Hepatobiliary disorders” from SIDER, test subset; **E, F** : task ”NR-ER” from Tox21, validation subset; **G, H** : task ”HIV ~~a~~ ctive” from HIV, test subset. Black dashed lines are performances of random classifiers.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0015-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        500,
+        541,
+        536
+      ],
+      "markdown": "AUC values of all curves are listed in Table 2. Note that these four tasks have different class imbalances, represented as the number of positive samples and negative samples.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0015-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        547,
+        541,
+        704
+      ],
+      "markdown": "As noted in previous literature,<sup>66</sup> ROC curves and PRCs are highly correlated, but perform significantly differently in case of high class imbalance. As shown in Figure 4, the fraction of positive samples decreases from over 80% (panels A and B) to less than 5% (panels G and H). This change accompanies the difference in how the two metrics treat model performances. In particular, PRCs put more emphasis on the low recall (also known as true positive rate (TPR)) side in case of highly imbalanced data: logistic regression slightly outperforms graph convolutional models in the low TPR side of ROC curves (panels C, E",
+      "source_class": "text"
+    },
+    {
+      "id": "p0015-b004",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "15",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "All eight Figure 4 panels and full caption; imbalanced ROC/PRC discussion inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

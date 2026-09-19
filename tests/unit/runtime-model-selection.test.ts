@@ -5,6 +5,12 @@ import {
 } from "../../src/shared/runtime-model";
 
 describe("runtime model selection", () => {
+  it("treats Pi's unconfigured sentinel as no selection without hiding real custom providers", () => {
+    expect(runtimeModelSelectionFromSession({ provider: "unknown", id: "unknown", api: "unknown", contextWindow: 0 })).toBeUndefined();
+    expect(runtimeModelSelectionFromSession({ provider: "unknown", id: "unknown", api: "openai-completions", contextWindow: 32000 }))
+      .toEqual({ provider: "unknown", model: "unknown" });
+  });
+
   it("maps the current Pi model into the immutable global execution default", () => {
     const selected = runtimeModelSelectionFromSession({ provider: "anthropic", id: "claude-sonnet" });
 

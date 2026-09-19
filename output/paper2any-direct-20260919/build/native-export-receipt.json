@@ -1,0 +1,18 @@
+{
+  "mode": "current-codex-authored-canvas-to-native-paper2any-export",
+  "pi_invoked": false,
+  "external_model_api_invoked": false,
+  "deepseek_invoked": false,
+  "reused_prior_model_outline_or_slides": false,
+  "experiment_rerun": false,
+  "evidence_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\verification\\summary.json",
+  "evidence_sha256": "d6cedec6e1c6fdba05e227f52986a180f954e675a9be86f238bb68cdee3398ec",
+  "upstream_commit": "b538531e25798d9b9d41afd5fa93c9222949b5a5",
+  "exporter_path": "C:\\Users\\qq108\\AppData\\Local\\Temp\\stella-paper2any-20260918\\frontend-workflow\\src\\components\\paper2ppt\\canvasPptxExporter.ts",
+  "exporter_sha256": "c8486169892a37fb8ab28a115b5493f57a1e4fb36aca579ef59ef62a64061a71",
+  "native_export_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\paper2any-direct-20260919\\build\\paper2any-native-export.pptx",
+  "native_export_bytes": 555489,
+  "native_export_sha256": "5c63af6a94bcae03cdf7dd562a69f004daf4c7aa062bff16f43f231a215282a4",
+  "slide_count": 14,
+  "model_generation_service_executed": false
+}

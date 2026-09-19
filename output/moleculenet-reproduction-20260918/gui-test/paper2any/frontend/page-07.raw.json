@@ -1,0 +1,224 @@
+{
+  "title": "论文主要结论",
+  "render_engine": "canvas",
+  "layout_family": "two_column",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 22,
+      "align": "stretch",
+      "padding": 62
+    },
+    "children": [
+      {
+        "type": "component",
+        "id": "title",
+        "component": "heading",
+        "props": {
+          "text_ref": "title"
+        }
+      },
+      {
+        "type": "component",
+        "id": "lead",
+        "component": "text",
+        "props": {
+          "text_ref": "summary"
+        }
+      },
+      {
+        "type": "container",
+        "id": "main",
+        "style": {
+          "direction": "row",
+          "gap": 22,
+          "weight": 1,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "panel_advantage",
+            "style": {
+              "direction": "column",
+              "gap": 16,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "advantage_title",
+                "component": "heading",
+                "props": {
+                  "text_ref": "advantage_title"
+                }
+              },
+              {
+                "type": "component",
+                "id": "advantage_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "advantage_bullets"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "panel_limit",
+            "style": {
+              "direction": "column",
+              "gap": 16,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "limit_title",
+                "component": "heading",
+                "props": {
+                  "text_ref": "limit_title"
+                }
+              },
+              {
+                "type": "component",
+                "id": "limit_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "limit_bullets"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "component",
+        "id": "caveat",
+        "component": "callout",
+        "props": {
+          "text_ref": "caveat"
+        }
+      },
+      {
+        "type": "component",
+        "id": "footer",
+        "component": "text",
+        "props": {
+          "text_ref": "footer"
+        }
+      }
+    ]
+  },
+  "content": {
+    "title": "论文主要结论",
+    "summary": "优势、局限与条件依赖三类判据，均以论文原始基准的完整评测为准。",
+    "key_points": [
+      "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+      "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+      "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+      "量子力学与生物物理任务中，物理感知特征化比模型选择更关键",
+      "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度",
+      "上述结论来自论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论"
+    ],
+    "advantage_title": "结论优势",
+    "advantage_bullets": [
+      "图模型在 11/17 数据集上优于传统方法，可学习特征化总体表现强",
+      "FreeSolv 上合适数据量下，数据驱动方法可达到或超过部分物理算法精度"
+    ],
+    "limit_title": "局限与条件依赖",
+    "limit_bullets": [
+      "数据稀缺的小数据集上，Kernel SVM 与树模型更稳健",
+      "高不平衡分类任务中，传统方法在正例召回上可能优于图模型",
+      "量子力学与生物物理任务中，物理感知特征化比模型选择更关键"
+    ],
+    "caveat": "结论依据：论文原始基准全部 17 个数据集；本次局部复现不用于推翻或确认全部结论。",
+    "footer": "Paper2Any Frontend PPT · 第 07/10 页",
+    "table_1": {
+      "headers": [
+        "维度",
+        "判据"
+      ],
+      "rows": [
+        [
+          "优势",
+          "图模型在 11/17 数据集上更优"
+        ],
+        [
+          "局限",
+          "小数据与高不平衡下传统方法更稳"
+        ],
+        [
+          "条件依赖",
+          "物理感知特征化比模型选择更关键"
+        ]
+      ]
+    },
+    "assets": {}
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15, 23, 42, 0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700
+      },
+      "subheading": {
+        "font_size": 30,
+        "font_weight": 600,
+        "color": "#7dd3fc"
+      },
+      "bullets": {
+        "font_size": 22,
+        "line_height": 1.45
+      },
+      "callout": {
+        "font_size": 20,
+        "color": "#f59e0b"
+      },
+      "footer": {
+        "font_size": 18,
+        "color": "#94a3b8"
+      },
+      "figure": {
+        "image_fit": "contain"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "两栏结论卡对比优势与局限，底部以提示条标注结论所依据的原始基准范围。"
+}

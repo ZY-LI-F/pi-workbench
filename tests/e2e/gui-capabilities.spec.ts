@@ -296,10 +296,12 @@ test("executes native session, modal, command palette, and terminal interactions
     expect(markdownPreview.sizeBytes).toBeGreaterThan(0);
     const htmlInspection = await window.evaluate((path) => window.stella.inspectLocalPath(path), join(paths.project, "preview.html"));
     expect(htmlInspection.preview).toMatchObject({ kind: "html", mimeType: "text/html" });
-    const unsupportedInspection = await window.evaluate((path) => window.stella.inspectLocalPath(path), join(paths.project, "unsupported.ps1"));
-    expect(unsupportedInspection.preview).toBeUndefined();
-    await expect(window.evaluate((path) => window.stella.readLocalFilePreview(path), join(paths.project, "unsupported.ps1")))
-      .rejects.toThrow("暂不支持预览该文件类型");
+    const sourceInspection = await window.evaluate((path) => window.stella.inspectLocalPath(path), join(paths.project, "unsupported.ps1"));
+    expect(sourceInspection.preview).toMatchObject({ kind: "code", mimeType: "text/x-powershell" });
+    expect(sourceInspection.directOpenAllowed).toBe(false);
+    expect((await window.evaluate((path) => window.stella.readLocalFilePreview(path), join(paths.project, "unsupported.ps1"))).kind).toBe("code");
+    await expect(window.evaluate((path) => window.stella.openPath(path), join(paths.project, "unsupported.ps1")))
+      .rejects.toThrow("安全清单");
 
     const thinking = window.getByLabel("思考级别");
     await expect(thinking).toHaveValue("off");

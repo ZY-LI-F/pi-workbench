@@ -1,0 +1,29 @@
+{
+  "session_event_count": 360,
+  "tree_node_count": 359,
+  "longest_parent_chain_nodes": 359,
+  "unresolved_parent_count": 0,
+  "inference": "Each nested GUI tree node adds an object and children array. This measured chain is consistent with the observed Electron bridge >1000 nesting error; no IPC mutation or patched GUI used.",
+  "repeatability_esol_seed123": {
+    "mean": {
+      "rows": 1128,
+      "max_absolute_prediction_difference": 0.0,
+      "changed_prediction_rows": 0
+    },
+    "rf": {
+      "rows": 1128,
+      "max_absolute_prediction_difference": 1.7763568394002505e-15,
+      "changed_prediction_rows": 171
+    },
+    "krr": {
+      "rows": 1128,
+      "max_absolute_prediction_difference": 0.0,
+      "changed_prediction_rows": 0
+    },
+    "gc": {
+      "rows": 1128,
+      "max_absolute_prediction_difference": 0.0,
+      "changed_prediction_rows": 0
+    }
+  }
+}

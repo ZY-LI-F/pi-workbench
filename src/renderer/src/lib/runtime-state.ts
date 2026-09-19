@@ -332,7 +332,7 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
     state = { ...state, scope: event.scope };
   }
   if (event.source === "pi") return handlePiEvent(state, event.payload as unknown as Record<string, unknown>);
-  if (event.source === "board" || event.source === "capability" || event.source === "execution-backend") return state;
+  if (event.source !== "runtime") return state;
   const payload = event.payload;
   if (payload.type === "background_stopped") return { ...state, notices: [...state.notices, { id: crypto.randomUUID(), type: "info",
     message: `Pi 已停止，并核查本机后台进程（终止 ${payload.count} 个）。远程、容器或主动脱离监管的任务须在对应环境核查。` }] };

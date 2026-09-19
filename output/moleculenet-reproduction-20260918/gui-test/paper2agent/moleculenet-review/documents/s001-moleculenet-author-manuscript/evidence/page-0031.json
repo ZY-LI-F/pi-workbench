@@ -1,0 +1,359 @@
+{
+  "page": 31,
+  "lines": [
+    {
+      "text": "Figure 9: Benchmark performances for physiology tasks: ClinTox, 9 models are evaluated",
+      "bbox": [
+        72.0,
+        301.36907958984375,
+        540.0173950195312,
+        311.98529052734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "by AUC-ROC on random split.",
+      "bbox": [
+        72.0,
+        315.8150939941406,
+        232.22360229492188,
+        326.4313049316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Physiology and Biophysics Tasks",
+      "bbox": [
+        72.0,
+        350.3697204589844,
+        303.53326416015625,
+        363.1091613769531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tables 5, 6 and Figures 7, 8, 9 report AUC-ROC or AUC-PRC results of 4 to 9 diﬀerent",
+      "bbox": [
+        72.0,
+        383.6580810546875,
+        540.0579833984375,
+        394.2742919921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "models on biophysics datasets (PCBA, MUV, HIV, BACE) and physiology datasets (BBBP,",
+      "bbox": [
+        72.0,
+        407.5660705566406,
+        540.0103759765625,
+        418.1822814941406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tox21, Toxcast, SIDER, ClinTox). Some models were too computationally expensive to be",
+      "bbox": [
+        72.0,
+        431.47406005859375,
+        540.0579833984375,
+        442.09027099609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "run on the larger datasets. All of these datasets contain only classiﬁcation tasks.",
+      "bbox": [
+        72.0,
+        455.3820495605469,
+        485.9250183105469,
+        465.9982604980469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Most models have train scores (listed in Tables 5, 6) higher than validation/test scores,",
+      "bbox": [
+        89.55899810791016,
+        479.2890625,
+        540.0548706054688,
+        489.9052734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "indicating that overﬁtting is a general issue. Singletask logistic regression exhibits the largest",
+      "bbox": [
+        72.0,
+        503.1970520019531,
+        540.0700073242188,
+        513.8132934570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "gaps between train scores and validation/test scores, while models incorporating multitask",
+      "bbox": [
+        72.0,
+        527.1050415039062,
+        540.0579833984375,
+        537.7213134765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "structure generally show less overﬁt, suggesting that multitask training has a regularizing",
+      "bbox": [
+        72.0,
+        551.0130004882812,
+        540.08203125,
+        561.6292724609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "eﬀect. Most physiological and biophysical datasets in MoleculeNet have only a low volume",
+      "bbox": [
+        72.0,
+        574.9210205078125,
+        540.0460815429688,
+        585.5372924804688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of data for each task. Multitask algorithms combine diﬀerent tasks, resulting in a larger pool",
+      "bbox": [
+        72.0,
+        598.8280029296875,
+        540.0818481445312,
+        609.4442749023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of data for model training. In particular, multitask training can, to some extent, compensate",
+      "bbox": [
+        72.0,
+        622.7360229492188,
+        540.0818481445312,
+        633.352294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for the limited data amount available for each individual task.",
+      "bbox": [
+        72.0,
+        646.64404296875,
+        390.7854919433594,
+        657.2603149414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph convolutional models and weave models, each based on an adaptive method of",
+      "bbox": [
+        89.55899810791016,
+        670.5520629882812,
+        540.0547485351562,
+        681.1683349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "featurization,22,23 show strong validation/test results on larger datasets, along with less over-",
+      "bbox": [
+        72.0,
+        690.1210327148438,
+        540.0671997070312,
+        705.0762939453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "31",
+      "bbox": [
+        300.1470031738281,
+        741.591064453125,
+        311.8631286621094,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 31
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          189,
+          71,
+          423,
+          290
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          72,
+          301,
+          541,
+          327
+        ],
+        "pos": [
+          2,
+          124
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          350,
+          304,
+          364
+        ],
+        "pos": [
+          124,
+          164
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          383,
+          541,
+          467
+        ],
+        "pos": [
+          164,
+          507
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          478,
+          541,
+          656
+        ],
+        "pos": [
+          507,
+          1227
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          670,
+          541,
+          706
+        ],
+        "pos": [
+          1227,
+          1419
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1419,
+          1424
+        ]
+      }
+    ],
+    "text": "\n\nFigure 9: Benchmark performances for physiology tasks: **ClinTox** , 9 models are evaluated by AUC-ROC on random split. \n\n# **Physiology and Biophysics Tasks** \n\nTables 5, 6 and Figures 7, 8, 9 report AUC-ROC or AUC-PRC results of 4 to 9 different models on biophysics datasets (PCBA, MUV, HIV, BACE) and physiology datasets (BBBP, Tox21, Toxcast, SIDER, ClinTox). Some models were too computationally expensive to be run on the larger datasets. All of these datasets contain only classification tasks. \n\nMost models have train scores (listed in Tables 5, 6) higher than validation/test scores, indicating that overfitting is a general issue. Singletask logistic regression exhibits the largest gaps between train scores and validation/test scores, while models incorporating multitask structure generally show less overfit, suggesting that multitask training has a regularizing effect. Most physiological and biophysical datasets in MoleculeNet have only a low volume of data for each task. Multitask algorithms combine different tasks, resulting in a larger pool of data for model training. In particular, multitask training can, to some extent, compensate for the limited data amount available for each individual task. \n\nGraph convolutional models and weave models, each based on an adaptive method of featurization,<sup>22,23</sup> show strong validation/test results on larger datasets, along with less over- \n\n31 \n\n"
+  }
+}

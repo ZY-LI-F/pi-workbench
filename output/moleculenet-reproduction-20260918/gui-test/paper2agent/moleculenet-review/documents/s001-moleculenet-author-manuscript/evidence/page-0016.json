@@ -1,0 +1,530 @@
+{
+  "page": 16,
+  "lines": [
+    {
+      "text": "and G, lower left corner), which creates diﬀerent margins on the low recall side of PRCs.",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        526.9313354492188,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ROC curves and PRCs share one same axis, while using false positive rate (FPR) and",
+      "bbox": [
+        89.55899810791016,
+        99.56613159179688,
+        540.0308227539062,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "precision for the other axis respectively. Recall that FPR and precision are deﬁned as follows:",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        540.0460205078125,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "FPR =",
+      "bbox": [
+        206.9929962158203,
+        156.85617065429688,
+        246.80685424804688,
+        167.47238159179688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "False Positive",
+      "bbox": [
+        293.66400146484375,
+        148.76919555664062,
+        361.4739074707031,
+        159.38540649414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "False Positive + True Negative",
+      "bbox": [
+        251.3179931640625,
+        165.05709838867188,
+        403.83050537109375,
+        175.67330932617188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Precision =",
+      "bbox": [
+        197.17098999023438,
+        195.59408569335938,
+        260.95184326171875,
+        206.21029663085938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "True Positive",
+      "bbox": [
+        306.572998046875,
+        187.50607299804688,
+        372.52984619140625,
+        198.12228393554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "False Positive + True Positive",
+      "bbox": [
+        265.4630126953125,
+        203.79507446289062,
+        413.6357727050781,
+        214.41128540039062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "When positive samples form only a small proportion of all samples, false positive predic-",
+      "bbox": [
+        89.55900573730469,
+        225.97805786132812,
+        540.0428466796875,
+        236.59426879882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tions exert a much greater inﬂuence on precision than FPR, amplifying the diﬀerence between",
+      "bbox": [
+        72.00000762939453,
+        249.88504028320312,
+        540.0220947265625,
+        260.5012512207031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "PRC and ROC curves. Virtual screening experiments do have extremely low positive rates,",
+      "bbox": [
+        72.00000762939453,
+        273.79302978515625,
+        540.0341186523438,
+        284.40924072265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "suggesting that the correct metric to analyze may depend on the experiment at hand. In this",
+      "bbox": [
+        72.00000762939453,
+        297.7010192871094,
+        540.0580444335938,
+        308.3172302246094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "work, we hence propose recommended metrics based on positive rates, PRC-AUC is used for",
+      "bbox": [
+        72.00000762939453,
+        321.6090087890625,
+        539.9982299804688,
+        332.2252197265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "datasets with positive rates less than 2%, otherwise ROC-AUC is used.",
+      "bbox": [
+        72.00000762939453,
+        345.5169982910156,
+        437.2672119140625,
+        356.1332092285156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Featurization",
+      "bbox": [
+        72.00000762939453,
+        390.2646484375,
+        165.17855834960938,
+        403.00408935546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "A core challenge for molecular machine learning is eﬀectively encoding molecules into ﬁxed-",
+      "bbox": [
+        72.00000762939453,
+        423.5530090332031,
+        540.02197265625,
+        434.1692199707031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "length strings or vectors. Although SMILES strings are unique representations of molecules,",
+      "bbox": [
+        72.00000762939453,
+        447.46099853515625,
+        540.046142578125,
+        458.07720947265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "most molecular machine learning methods require further information to learn sophisticated",
+      "bbox": [
+        72.00000762939453,
+        471.3689880371094,
+        540.0580444335938,
+        481.9851989746094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "electronic or topological features of molecules from limited amounts of data. (Recent work",
+      "bbox": [
+        72.00000762939453,
+        495.2769775390625,
+        540.0699462890625,
+        505.8931884765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "has demonstrated the ability to learn useful representations from SMILES strings using more",
+      "bbox": [
+        72.00000762939453,
+        519.1839599609375,
+        540.046142578125,
+        529.8002319335938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sophisticated methods,67 so it may be feasible to use SMILES strings for further learning",
+      "bbox": [
+        72.00000762939453,
+        538.7539672851562,
+        540.0194091796875,
+        553.708251953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tasks in the near future.) Furthermore, the enormity of chemical space often requires repre-",
+      "bbox": [
+        72.0,
+        566.9999389648438,
+        540.0220947265625,
+        577.6162109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sentations of molecules speciﬁcally suited to the learning task at hand. MoleculeNet contains",
+      "bbox": [
+        72.0,
+        590.907958984375,
+        540.0341186523438,
+        601.5242309570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "implementations of six useful molecular featurization methods.",
+      "bbox": [
+        72.0,
+        614.8159790039062,
+        393.5470886230469,
+        625.4322509765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ECFP",
+      "bbox": [
+        72.0,
+        655.4529418945312,
+        108.18838500976562,
+        666.0692138671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Extended-Connectivity Fingerprints (ECFP) are widely-used molecular characterizations in",
+      "bbox": [
+        72.0,
+        687.0809936523438,
+        540.0220336914062,
+        697.697265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "chemical informatics.21 During the featurization process, a molecule is decomposed into",
+      "bbox": [
+        72.0,
+        706.6509399414062,
+        540.0296630859375,
+        721.605224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "16",
+      "bbox": [
+        300.1470031738281,
+        741.5909423828125,
+        311.8631286621094,
+        752.2072143554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 16
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          74,
+          527,
+          87
+        ],
+        "pos": [
+          0,
+          93
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          98,
+          541,
+          135
+        ],
+        "pos": [
+          93,
+          275
+        ]
+      },
+      {
+        "index": 2,
+        "class": "formula",
+        "bbox": [
+          197,
+          148,
+          414,
+          214
+        ],
+        "pos": [
+          275,
+          277
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          225,
+          541,
+          357
+        ],
+        "pos": [
+          277,
+          799
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          390,
+          166,
+          401
+        ],
+        "pos": [
+          799,
+          821
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          423,
+          541,
+          626
+        ],
+        "pos": [
+          821,
+          1631
+        ]
+      },
+      {
+        "index": 6,
+        "class": "section-header",
+        "bbox": [
+          72,
+          655,
+          109,
+          664
+        ],
+        "pos": [
+          1631,
+          1645
+        ]
+      },
+      {
+        "index": 7,
+        "class": "text",
+        "bbox": [
+          72,
+          686,
+          541,
+          722
+        ],
+        "pos": [
+          1645,
+          1835
+        ]
+      },
+      {
+        "index": 8,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1835,
+          1840
+        ]
+      }
+    ],
+    "text": "and G, lower left corner), which creates different margins on the low recall side of PRCs. \n\nROC curves and PRCs share one same axis, while using false positive rate (FPR) and precision for the other axis respectively. Recall that FPR and precision are defined as follows: \n\n\n\nWhen positive samples form only a small proportion of all samples, false positive predictions exert a much greater influence on precision than FPR, amplifying the difference between PRC and ROC curves. Virtual screening experiments do have extremely low positive rates, suggesting that the correct metric to analyze may depend on the experiment at hand. In this work, we hence propose recommended metrics based on positive rates, PRC-AUC is used for datasets with positive rates less than 2%, otherwise ROC-AUC is used. \n\n# **Featurization** \n\nA core challenge for molecular machine learning is effectively encoding molecules into fixedlength strings or vectors. Although SMILES strings are unique representations of molecules, most molecular machine learning methods require further information to learn sophisticated electronic or topological features of molecules from limited amounts of data. (Recent work has demonstrated the ability to learn useful representations from SMILES strings using more sophisticated methods,<sup>67</sup> so it may be feasible to use SMILES strings for further learning tasks in the near future.) Furthermore, the enormity of chemical space often requires representations of molecules specifically suited to the learning task at hand. MoleculeNet contains implementations of six useful molecular featurization methods. \n\n## **ECFP** \n\nExtended-Connectivity Fingerprints (ECFP) are widely-used molecular characterizations in chemical informatics.<sup>21</sup> During the featurization process, a molecule is decomposed into \n\n16 \n\n"
+  }
+}

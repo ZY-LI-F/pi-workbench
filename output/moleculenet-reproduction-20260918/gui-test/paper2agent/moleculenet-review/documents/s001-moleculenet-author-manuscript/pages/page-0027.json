@@ -1,0 +1,111 @@
+{
+  "page": 27,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0027.png",
+  "reviewed": true,
+  "review_notes": "DTNN continuation, ANI-1 and MPNN; 3D-coordinate requirement retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0027-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        132
+      ],
+      "markdown": "is using physical distance instead of graph distance. Note that the use of 3D coordinates to calculate physical distances limits DTNNs to quantum mechanical (or perhaps biophysical) datasets.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0027-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        146,
+        541,
+        278
+      ],
+      "markdown": "We reimplement the model proposed by Sch¨utt et al.<sup>19</sup> in a more generalized fashion. Atom numbers and a distance matrix are calculated by RDKit,<sup>63</sup> using the Coulomb matrix featurizer. After embedding atom numbers into feature vectors _ai_ , we update _ai_ in each convolutional layer by adding the outputs from all network layers which use _dij_ and _aj_ ( _i̸_ = _j_ ) as input. After several layers of convolutions, all atomic features are summed together to form molecular features, used for classification and regression tasks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0027-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        307,
+        109,
+        316
+      ],
+      "markdown": "### ANI-1",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0027-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        338,
+        541,
+        471
+      ],
+      "markdown": "ANI-1 is designed as a deep neural network capable of learning accurate and transferable potentials for organic molecules. It is based on the symmetry function method,<sup>70</sup> with additional changes enabling it to learn different potentials for different atom types. Feature vector, a series of symmetry functions, is built for each atom in the molecule based on its atom type and interaction with other atoms. Then the feature vectors are fed into different neural network potentials(depending on atom types) to generate predictions of properties.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0027-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        481,
+        541,
+        613
+      ],
+      "markdown": "This model is first introduced by Smith et al.<sup>71</sup> In their original article, the model is trained on 58k small molecules with 8 or less heavy atoms, each with multiple poses and potentials. Training set in total has 17.2 million data points, which is far bigger than qm8 or qm9 in our collection. Since we only have molecules in their most stable configuration, we cannot expect similar level of accuracy. Further comparison and benchmarking with similar size of training set is left to future work.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0027-b005",
+      "kind": "heading",
+      "bbox": [
+        71,
+        642,
+        274,
+        654
+      ],
+      "markdown": "### Message Passing Neural Networks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0027-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        673,
+        541,
+        710
+      ],
+      "markdown": "Message Passing Neural Network(MPNN) is a generalized model proposed by Gilmer et al.<sup>76</sup> that targets to formulate a single framework for graph based model. The prediction process",
+      "source_class": "text"
+    },
+    {
+      "id": "p0027-b007",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "27",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "DTNN continuation, ANI-1 and MPNN; 3D-coordinate requirement retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

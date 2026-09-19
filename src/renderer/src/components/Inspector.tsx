@@ -348,9 +348,9 @@ export function Inspector({
           </div>
         </div>
       )}
-      {tab === "files" && (
-        <div className="inspector-file-panel" id="inspector-panel-files" role="tabpanel" aria-labelledby="inspector-tab-files">
-          <FilePreviewPanel api={api} inspection={filePreview} references={fileReferences} onSelect={onSelectFile} onReference={onReferenceFile} />
+      {(tab === "files" || filePreview) && (
+        <div className="inspector-file-panel" id="inspector-panel-files" role="tabpanel" aria-labelledby="inspector-tab-files" hidden={tab !== "files"}>
+          <FilePreviewPanel key={bootstrap.state.sessionId} api={api} inspection={filePreview} references={fileReferences} onSelect={onSelectFile} onReference={onReferenceFile} />
         </div>
       )}
     </aside>

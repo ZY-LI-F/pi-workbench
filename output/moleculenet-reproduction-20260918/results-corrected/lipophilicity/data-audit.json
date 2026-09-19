@@ -1,0 +1,17 @@
+{
+  "dataset": "lipophilicity",
+  "n": 4200,
+  "tasks": [
+    "exp"
+  ],
+  "unit": "logD",
+  "data_file": "data\\lipophilicity\\Lipophilicity.csv",
+  "sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+  "unique_canonical_smiles": 4200,
+  "duplicate_structure_rows": 0,
+  "unique_scaffolds": 2408,
+  "invalid_smiles": [],
+  "source_label_mean": 2.1863357142857143,
+  "source_label_std": 1.2028604901336188,
+  "source_note": "Native MoleculeNet source, no loader transforms"
+}

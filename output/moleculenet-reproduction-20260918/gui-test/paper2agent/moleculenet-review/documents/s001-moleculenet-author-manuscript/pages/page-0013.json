@@ -1,0 +1,89 @@
+{
+  "page": 13,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0013.png",
+  "reviewed": true,
+  "review_notes": "Complete Figure 3 with caption; floating figure repositioned after continuous split paragraph. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0013-b000",
+      "kind": "figure",
+      "bbox": [
+        184,
+        66,
+        428,
+        350
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 13 (1)",
+      "asset_name": "figure-p0013-000"
+    },
+    {
+      "id": "p0013-b001",
+      "kind": "caption",
+      "bbox": [
+        162,
+        356,
+        450,
+        368
+      ],
+      "markdown": "Figure 3: Representation of Data Splits in MoleculeNet.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0013-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        392,
+        541,
+        426
+      ],
+      "markdown": "train models, while validation sets were used for tuning hyperparameters, and test sets were used for evaluation of models.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0013-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        440,
+        550,
+        595
+      ],
+      "markdown": "As mentioned previously, random splitting of molecular data isn’t always best for evaluating machine learning methods. Consequently, MoleculeNet implements multiple different splittings for each dataset. Random splitting randomly splits samples into the training/validation/test subsets. Scaffold splitting splits the samples based on their two-dimensional structural frameworks,<sup>62</sup> as implemented in RDKit.<sup>63</sup> Since scaffold splitting attempts to separate structurally different molecules into different subsets, it offers a greater challenge for learning algorithms than the random split.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0013-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        607,
+        541,
+        715
+      ],
+      "markdown": "In addition, a stratified random sampling method is implemented on the QM7 dataset to reproduce the results from the original work.<sup>18</sup> This method sorts datapoints in order of increasing label value (note this is only defined for real-valued output). This sorted list is then split into training/validation/test by ensuring that each set contains the full range of provided labels. Time splitting is also adopted for dataset that includes time information(PDBbind).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0013-b005",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "13",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Complete Figure 3 with caption; floating figure repositioned after continuous split paragraph. Reviewed sequentially by the main agent; no independent agent verification."
+}

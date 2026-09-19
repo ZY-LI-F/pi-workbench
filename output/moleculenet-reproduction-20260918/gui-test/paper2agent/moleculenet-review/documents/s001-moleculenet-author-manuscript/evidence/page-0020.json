@@ -1,0 +1,463 @@
+{
+  "page": 20,
+  "lines": [
+    {
+      "text": "Weave",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        109.93385314941406,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Similar to graph convolutions, the weave featurization encodes both local chemical environ-",
+      "bbox": [
+        72.0,
+        107.28713989257812,
+        540.0700073242188,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ment and connectivity of atoms in a molecule. Atomic feature vectors are exactly the same,",
+      "bbox": [
+        72.0,
+        131.19515991210938,
+        540.0460205078125,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "while connectivity is represented by more detailed pair features instead of neighbor listing.",
+      "bbox": [
+        72.0,
+        155.10317993164062,
+        540.0341796875,
+        165.71939086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The weave featurization calculates a feature vector for each pair of atoms in the molecule,",
+      "bbox": [
+        72.0,
+        179.01016235351562,
+        540.046142578125,
+        189.62637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "including bond properties (if directly connected), graph distance and ring info, forming a",
+      "bbox": [
+        72.0,
+        202.91818237304688,
+        540.05810546875,
+        213.53439331054688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "feature matrix. The method supports graph-based models that utilize properties of both",
+      "bbox": [
+        72.0,
+        226.82620239257812,
+        540.0460815429688,
+        237.44241333007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "nodes (atoms) and edges (bonds).",
+      "bbox": [
+        72.0,
+        250.73422241210938,
+        245.26673889160156,
+        261.3504333496094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Models - Conventional Models",
+      "bbox": [
+        72.0,
+        295.41485595703125,
+        287.9245910644531,
+        308.154296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MoleculeNet tests the performance of various machine learning models on the datasets dis-",
+      "bbox": [
+        72.0,
+        328.7032165527344,
+        540.0221557617188,
+        339.3194274902344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "cussed previously. These models could be further categorized into conventional methods and",
+      "bbox": [
+        72.0,
+        352.6112060546875,
+        540.0339965820312,
+        363.2274169921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "graph-based methods according to their structures and input types. The following sections",
+      "bbox": [
+        72.0,
+        376.5191955566406,
+        540.046142578125,
+        387.1354064941406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "will give brief introductions to benchmarked algorithms. The results section will discuss per-",
+      "bbox": [
+        72.0,
+        400.42718505859375,
+        540.0101318359375,
+        411.04339599609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "formance numbers in detail. Here we brieﬂy review conventional methods including logistic",
+      "bbox": [
+        72.0,
+        424.3341979980469,
+        540.0221557617188,
+        434.9504089355469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "regression, support vector classiﬁcation, kernel ridge regression, random forests,72 gradient",
+      "bbox": [
+        72.0,
+        443.9041748046875,
+        540.0166625976562,
+        458.8583984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "boosting,73 multitask networks,9,10 bypass networks74 and inﬂuence relevance voting.75 The",
+      "bbox": [
+        72.0,
+        467.8121643066406,
+        539.9964599609375,
+        482.7663879394531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "next section graph-based models will give introductions to graph convolutional models,22",
+      "bbox": [
+        72.00003051757812,
+        494.4848327636719,
+        539.498291015625,
+        506.67437744140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "weave models,23 directed acyclic graph models,14 deep tensor neural networks,19 ANI-171",
+      "bbox": [
+        72.00006103515625,
+        515.6271362304688,
+        539.498291015625,
+        530.5823974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "and message passing neural networks.76 As part of this work, all methods are implemented",
+      "bbox": [
+        72.00006103515625,
+        539.53515625,
+        540.0187377929688,
+        554.4894409179688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "in the open source DeepChem package.30",
+      "bbox": [
+        72.00006103515625,
+        566.2088623046875,
+        281.98828125,
+        578.3974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression",
+      "bbox": [
+        72.00004577636719,
+        608.3511962890625,
+        185.12013244628906,
+        618.9674682617188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic regression models (Logreg) apply the logistic function to weighted linear combina-",
+      "bbox": [
+        72.00004577636719,
+        639.9801635742188,
+        540.0700073242188,
+        650.596435546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tions of their input features to obtain model predictions. It is often common to use regular-",
+      "bbox": [
+        72.00004577636719,
+        663.88818359375,
+        540.0580444335938,
+        674.5044555664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ization to encourage learned weights to be sparse.77 Note that logistic regression models are",
+      "bbox": [
+        72.00004577636719,
+        683.4572143554688,
+        540.03759765625,
+        698.4114379882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "only deﬁned for classiﬁcation tasks.",
+      "bbox": [
+        72.00003051757812,
+        711.7031860351562,
+        253.3962860107422,
+        722.3194580078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "20",
+      "bbox": [
+        300.14703369140625,
+        741.5911865234375,
+        311.8631591796875,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 20
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          75,
+          110,
+          85
+        ],
+        "pos": [
+          0,
+          15
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          107,
+          541,
+          263
+        ],
+        "pos": [
+          15,
+          595
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          295,
+          288,
+          306
+        ],
+        "pos": [
+          595,
+          632
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          328,
+          541,
+          579
+        ],
+        "pos": [
+          632,
+          1711
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          608,
+          186,
+          620
+        ],
+        "pos": [
+          1711,
+          1740
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          639,
+          541,
+          723
+        ],
+        "pos": [
+          1740,
+          2068
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2068,
+          2073
+        ]
+      }
+    ],
+    "text": "## **Weave** \n\nSimilar to graph convolutions, the weave featurization encodes both local chemical environment and connectivity of atoms in a molecule. Atomic feature vectors are exactly the same, while connectivity is represented by more detailed pair features instead of neighbor listing. The weave featurization calculates a feature vector for each pair of atoms in the molecule, including bond properties (if directly connected), graph distance and ring info, forming a feature matrix. The method supports graph-based models that utilize properties of both nodes (atoms) and edges (bonds). \n\n# **Models - Conventional Models** \n\nMoleculeNet tests the performance of various machine learning models on the datasets discussed previously. These models could be further categorized into conventional methods and graph-based methods according to their structures and input types. The following sections will give brief introductions to benchmarked algorithms. The results section will discuss performance numbers in detail. Here we briefly review conventional methods including logistic regression, support vector classification, kernel ridge regression, random forests,<sup>72</sup> gradient boosting,<sup>73</sup> multitask networks,<sup>9,10</sup> bypass networks<sup>74</sup> and influence relevance voting.<sup>75</sup> The next section graph-based models will give introductions to graph convolutional models,<sup>22</sup> weave models,<sup>23</sup> directed acyclic graph models,<sup>14</sup> deep tensor neural networks,<sup>19</sup> ANI-1<sup>71</sup> and message passing neural networks.<sup>76</sup> As part of this work, all methods are implemented in the open source DeepChem package.<sup>30</sup> \n\n## **Logistic Regression** \n\nLogistic regression models (Logreg) apply the logistic function to weighted linear combinations of their input features to obtain model predictions. It is often common to use regularization to encourage learned weights to be sparse.<sup>77</sup> Note that logistic regression models are only defined for classification tasks. \n\n20 \n\n"
+  }
+}

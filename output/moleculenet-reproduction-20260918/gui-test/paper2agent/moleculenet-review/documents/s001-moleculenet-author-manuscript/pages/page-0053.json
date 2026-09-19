@@ -1,0 +1,128 @@
+{
+  "page": 53,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0053.png",
+  "reviewed": true,
+  "review_notes": "Tables 11 and 12 complete source images; Grid Featurizer details and cross-page fingerprint word checked. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0053-b000",
+      "kind": "caption",
+      "bbox": [
+        116,
+        73,
+        496,
+        86
+      ],
+      "markdown": "Table 11: QM8 Test Set Performances of All Tasks(Mean Absolute Error)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0053-b001",
+      "kind": "table",
+      "bbox": [
+        80,
+        93,
+        528,
+        281
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 11",
+      "asset_name": "table-11",
+      "rows": null
+    },
+    {
+      "id": "p0053-b002",
+      "kind": "caption",
+      "bbox": [
+        116,
+        310,
+        496,
+        323
+      ],
+      "markdown": "Table 12: QM9 Test Set Performances of All Tasks(Mean Absolute Error)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0053-b003",
+      "kind": "table",
+      "bbox": [
+        136,
+        330,
+        473,
+        518
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 12",
+      "asset_name": "table-12",
+      "rows": null
+    },
+    {
+      "id": "p0053-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        550,
+        182,
+        561
+      ],
+      "markdown": "### Grid Featurizer",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0053-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        583,
+        541,
+        619
+      ],
+      "markdown": "In our implementation, we generate a vector with length 2052 for each pair of ligand and protein. Detailed process listed below:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0053-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        629,
+        541,
+        691
+      ],
+      "markdown": "First, binding pocket atoms of the protein are extracted using a distance cutoff of 4.5<sup>˚</sup> A. In this process, atom in the protein will be extracted only if it locates within this distance from any atom in the ligand molecule.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0053-b007",
+      "kind": "text",
+      "bbox": [
+        89,
+        702,
+        541,
+        715
+      ],
+      "markdown": "Intra-ligand and intra-protein fingerprints are generated (using the ordinary circular fin",
+      "source_class": "text"
+    },
+    {
+      "id": "p0053-b008",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "53",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Tables 11 and 12 complete source images; Grid Featurizer details and cross-page fingerprint word checked. Reviewed sequentially by the main agent; no independent agent verification."
+}

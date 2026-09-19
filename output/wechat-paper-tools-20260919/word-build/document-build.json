@@ -1,0 +1,63 @@
+[
+  {
+    "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\01-Paper2Agent与Paper2Any实测-图文版.docx",
+    "figures": [
+      {
+        "number": 1,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\01-tool-roles.png",
+        "caption": "两类工具的实际职责。本次科学实验由另外编写的基准脚本执行，不能归为任一工具自动完成的能力。"
+      },
+      {
+        "number": 2,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\02-generation-vs-export.png",
+        "caption": "两轮 Paper2Any 测试使用了不同路径。9 月 19 日原生导出成功，不代表 9 月 18 日失败的模型生成链路已恢复。"
+      },
+      {
+        "number": 3,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\paper2any-direct-20260919\\build\\final-preview\\slide-07.png",
+        "caption": "Paper2Any 原生导出的实际页面。报告保留 FreeSolv 负结果；本次协议不同于原论文，图中差值只作描述性比较。"
+      },
+      {
+        "number": 4,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\03-rmse-real-data.png",
+        "caption": "从已核验 CSV 直接绘制的实测结果。各面板量程和单位不同，误差线不是置信区间。"
+      }
+    ],
+    "tables": 3,
+    "paragraphs": 83,
+    "bytes": 450873
+  },
+  {
+    "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\02-Pi-GUI调用Paper2Agent技术实践-图文版.docx",
+    "figures": [
+      {
+        "number": 1,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\04-pi-call-architecture.png",
+        "caption": "Pi GUI 到本地转换脚本的调用架构示意。文件需通过被识别的路径打开；并非落盘后一定自动进入预览列表。"
+      },
+      {
+        "number": 2,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\05-environments.png",
+        "caption": "本次实际环境的隔离方式。Paper2Skill 不依赖科学训练环境，Paper2Any 的 Python 环境也单独维护。"
+      },
+      {
+        "number": 3,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\evidence\\02-live-tools-and-task.png",
+        "caption": "2026 年 9 月 18 日真实 Pi GUI 截图。左侧任务在运行中可见，中间持续显示工具回执，输入框和停止按钮保留。右侧数值仅是当时界面快照。"
+      },
+      {
+        "number": 4,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\word-build\\figures\\06-review-flow.png",
+        "caption": "转换与审查流程示意。逐页审查不能由 review-aid 命令替代，严格验证通过也需要继续阅读具体状态与限制。"
+      },
+      {
+        "number": 5,
+        "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\evidence\\06-markdown-preview.png",
+        "caption": "真实测试截图同时保留报告预览与右上角 contextBridge 错误。它说明界面可显示部分内容，但长会话全量状态刷新仍然失败。"
+      }
+    ],
+    "tables": 2,
+    "paragraphs": 211,
+    "bytes": 674444
+  }
+]

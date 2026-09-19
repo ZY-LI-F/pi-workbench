@@ -1,0 +1,52 @@
+{
+  "page": 30,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0030.png",
+  "reviewed": true,
+  "review_notes": "Figure 8 all physiology panels and complete caption inspected. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0030-b000",
+      "kind": "figure",
+      "bbox": [
+        67,
+        152,
+        546,
+        557
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 30 (1)",
+      "asset_name": "figure-p0030-000"
+    },
+    {
+      "id": "p0030-b001",
+      "kind": "caption",
+      "bbox": [
+        71,
+        563,
+        541,
+        633
+      ],
+      "markdown": "Figure 8: Benchmark performances for physiology tasks: **ToxCast** , 8 models are evaluated by AUC-ROC on random split; **Tox21** , 9 models are evaluated by AUC-ROC on random split; **BBBP** , 9 models are evaluated by AUC-ROC on scaffold split; **SIDER** , 9 models are evaluated by AUC-ROC on random split. For AUC-ROC, higher value indicates better performance(to the right).",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0030-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "30",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 8 all physiology panels and complete caption inspected. Reviewed sequentially by the main agent; no independent agent verification."
+}

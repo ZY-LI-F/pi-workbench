@@ -1,0 +1,170 @@
+{
+  "page": 47,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0047.png",
+  "reviewed": true,
+  "review_notes": "MPNN/ANI hyperparameters, three fixed seeds and K80 timing context. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0047-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        74,
+        332,
+        87
+      ],
+      "markdown": "### Message Passing Neural Networks (MPNN)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0047-b001",
+      "kind": "text",
+      "bbox": [
+        89,
+        107,
+        280,
+        119
+      ],
+      "markdown": "- Number of message passing phases",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b002",
+      "kind": "text",
+      "bbox": [
+        89,
+        140,
+        332,
+        153
+      ],
+      "markdown": "- Number of steps(iterations) in readout phase",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b003",
+      "kind": "text",
+      "bbox": [
+        89,
+        175,
+        171,
+        186
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b004",
+      "kind": "text",
+      "bbox": [
+        89,
+        208,
+        154,
+        218
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        249,
+        109,
+        258
+      ],
+      "markdown": "### ANI-1",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0047-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        281,
+        152,
+        292
+      ],
+      "markdown": "- Layer size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b007",
+      "kind": "text",
+      "bbox": [
+        89,
+        314,
+        354,
+        326
+      ],
+      "markdown": "- Length of radial and angular symmetry functions",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b008",
+      "kind": "text",
+      "bbox": [
+        89,
+        349,
+        171,
+        360
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b009",
+      "kind": "text",
+      "bbox": [
+        89,
+        382,
+        154,
+        392
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0047-b010",
+      "kind": "text",
+      "bbox": [
+        72,
+        419,
+        541,
+        550
+      ],
+      "markdown": "All final performances were run three times with different fixed numerical seeds on the best-performing hyperparameters, and data splitting methods have been set to maintain determistic behavior. These settings control most randomness in learning process, but benchmark runs(on the same seed) may vary on the order of 1% due to other sources of nondeterminism. Mean and standard deviations of all results are presented in the Performances section of Appendix.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0047-b011",
+      "kind": "text",
+      "bbox": [
+        72,
+        562,
+        541,
+        623
+      ],
+      "markdown": "We measured model running time of Tox21, MUV, QM8 and Lipophicility on a single node in Stanford’s GPU clusters(CPU: Intel Xeon E5-2640 v3 @2.60 GHz, GPU: NVIDIA Tesla K80), results listed below:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0047-b012",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "47",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "MPNN/ANI hyperparameters, three fixed seeds and K80 timing context. Reviewed sequentially by the main agent; no independent agent verification."
+}

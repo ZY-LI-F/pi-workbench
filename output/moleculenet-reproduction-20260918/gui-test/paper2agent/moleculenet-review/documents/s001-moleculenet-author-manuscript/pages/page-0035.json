@@ -1,0 +1,52 @@
+{
+  "page": 35,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0035.png",
+  "reviewed": true,
+  "review_notes": "Figure 11 full PDBbind panels and caption; float repositioned to maintain physical-chemistry prose. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0035-b000",
+      "kind": "figure",
+      "bbox": [
+        184,
+        104,
+        428,
+        635
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 35 (1)",
+      "asset_name": "figure-p0035-000"
+    },
+    {
+      "id": "p0035-b001",
+      "kind": "caption",
+      "bbox": [
+        71,
+        640,
+        541,
+        682
+      ],
+      "markdown": "Figure 11: Benchmark performances of **PDBbind** : 5 models are evaluated by RMSE on the three subsets: core, refined and full. Time split is applied to all three subsets. Noe that for RMSE, lower value indicates better performance(to the right).",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0035-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "35",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 11 full PDBbind panels and caption; float repositioned to maintain physical-chemistry prose. Reviewed sequentially by the main agent; no independent agent verification."
+}

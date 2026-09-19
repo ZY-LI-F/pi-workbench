@@ -1,0 +1,448 @@
+{
+  "page": 37,
+  "lines": [
+    {
+      "text": "For Figure 12, we similarly generated a series of models with diﬀerent training set vol-",
+      "bbox": [
+        89.55899810791016,
+        75.65811157226562,
+        540.0429077148438,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "umes and calculated their out-of-sample RMSE. Each data point displayed is the average of",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.0460205078125,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "5 independent runs, with standard deviations displayed as error bars. Both graph convo-",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        540.0581665039062,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lutional model and weave model are capable of achieving better performances with enough",
+      "bbox": [
+        72.0,
+        147.38113403320312,
+        540.0580444335938,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "training samples (50% and 30% of the data respectively). Given the size of FreeSolv dataset",
+      "bbox": [
+        72.0,
+        171.28915405273438,
+        540.0579833984375,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "is only around 600 compounds, a weave model can reach state-of-the-art free energy calcu-",
+      "bbox": [
+        72.0,
+        195.19717407226562,
+        540.0462036132812,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lation performances by training on merely 200 samples. On the other hand, comparing with",
+      "bbox": [
+        72.0,
+        219.10519409179688,
+        540.08203125,
+        229.72140502929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "singletask network’s performance, weave model achieved the same level of accuracy with only",
+      "bbox": [
+        72.0,
+        243.01321411132812,
+        540.0341186523438,
+        253.62942504882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "one-third of the training samples.",
+      "bbox": [
+        72.0,
+        266.9212341308594,
+        243.5093231201172,
+        277.5374450683594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Quantum Mechanics Tasks",
+      "bbox": [
+        72.0,
+        311.66888427734375,
+        261.1116027832031,
+        324.4083251953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The QM datasets (QM7, QM7b, QM8, QM9) represent another distinct category of prop-",
+      "bbox": [
+        72.0,
+        344.9572448730469,
+        540.070068359375,
+        355.5734558105469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "erties that are typically calculated through solving Schr¨odinger’s equation (approximately",
+      "bbox": [
+        72.0,
+        368.865234375,
+        540.0940551757812,
+        379.4814453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "using techniques such as DFT). As most conventional methods are slower than data-driven",
+      "bbox": [
+        72.0,
+        392.7732238769531,
+        540.0343017578125,
+        403.3894348144531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "methods by orders of magnitude, we hope to learn eﬀective approximators by training on",
+      "bbox": [
+        72.0,
+        416.68121337890625,
+        540.0698852539062,
+        427.29742431640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "existing datasets.",
+      "bbox": [
+        72.0,
+        440.5882263183594,
+        160.3250274658203,
+        451.2044372558594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Table 9 and Figure 14 display the performances in mean absolute error of multiple meth-",
+      "bbox": [
+        89.55899810791016,
+        464.4962158203125,
+        540.042724609375,
+        475.1124267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ods. Table 10, 11 and 12 show detailed performances for each task.(Due to diﬀerence in",
+      "bbox": [
+        72.0,
+        488.4042053222656,
+        540.0579223632812,
+        499.0204162597656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "range of labels, mean performances of QM7b and QM9 are more skewed) Unsurprisingly,",
+      "bbox": [
+        72.0,
+        512.3121948242188,
+        540.0462646484375,
+        522.928466796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "signiﬁcant boosts on performances and less overﬁtting are observed for models incorporat-",
+      "bbox": [
+        72.0,
+        536.2201538085938,
+        540.05810546875,
+        546.83642578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ing distance information (multitask networks and KRR with Coulomb Matrix featurization,",
+      "bbox": [
+        72.0,
+        560.128173828125,
+        540.0819702148438,
+        570.7444458007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ANI-1, DTNN, MPNN). In particular, KRR and multitask networks(CM) outperform their",
+      "bbox": [
+        72.0,
+        584.03515625,
+        540.0460815429688,
+        594.6514282226562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "corresponding baseline models in QM7 and QM9 by a large margin, while ANI-1, DTNN and",
+      "bbox": [
+        72.0,
+        607.9431762695312,
+        540.0580444335938,
+        618.5594482421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MPNN display less error comparing with graph convolutional models as well. At the same",
+      "bbox": [
+        72.0,
+        631.8511962890625,
+        540.0460815429688,
+        642.4674682617188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "time, graph-based methods gain better performances than multitask networks and KRR",
+      "bbox": [
+        72.0,
+        655.7592163085938,
+        540.05810546875,
+        666.37548828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(CM) on most tasks. Table 10 shows that DTNN outperforms KRR(CM) on 12/14 tasks in",
+      "bbox": [
+        72.0,
+        679.6671752929688,
+        540.08203125,
+        690.283447265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "QM7b(Though the mean error shows the opposite result due to averaging errors on diﬀerent",
+      "bbox": [
+        72.0,
+        703.5741577148438,
+        540.0700073242188,
+        714.1904296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "37",
+      "bbox": [
+        300.1470031738281,
+        741.5911865234375,
+        311.8631286621094,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 37
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          278
+        ],
+        "pos": [
+          0,
+          750
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          311,
+          262,
+          325
+        ],
+        "pos": [
+          750,
+          782
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          344,
+          541,
+          452
+        ],
+        "pos": [
+          782,
+          1152
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          464,
+          541,
+          715
+        ],
+        "pos": [
+          1152,
+          2102
+        ]
+      },
+      {
+        "index": 4,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2102,
+          2107
+        ]
+      }
+    ],
+    "text": "For Figure 12, we similarly generated a series of models with different training set volumes and calculated their out-of-sample RMSE. Each data point displayed is the average of 5 independent runs, with standard deviations displayed as error bars. Both graph convolutional model and weave model are capable of achieving better performances with enough training samples (50% and 30% of the data respectively). Given the size of FreeSolv dataset is only around 600 compounds, a weave model can reach state-of-the-art free energy calculation performances by training on merely 200 samples. On the other hand, comparing with singletask network’s performance, weave model achieved the same level of accuracy with only one-third of the training samples. \n\n# **Quantum Mechanics Tasks** \n\nThe QM datasets (QM7, QM7b, QM8, QM9) represent another distinct category of properties that are typically calculated through solving Schr¨odinger’s equation (approximately using techniques such as DFT). As most conventional methods are slower than data-driven methods by orders of magnitude, we hope to learn effective approximators by training on existing datasets. \n\nTable 9 and Figure 14 display the performances in mean absolute error of multiple methods. Table 10, 11 and 12 show detailed performances for each task.(Due to difference in range of labels, mean performances of QM7b and QM9 are more skewed) Unsurprisingly, significant boosts on performances and less overfitting are observed for models incorporating distance information (multitask networks and KRR with Coulomb Matrix featurization, ANI-1, DTNN, MPNN). In particular, KRR and multitask networks(CM) outperform their corresponding baseline models in QM7 and QM9 by a large margin, while ANI-1, DTNN and MPNN display less error comparing with graph convolutional models as well. At the same time, graph-based methods gain better performances than multitask networks and KRR (CM) on most tasks. Table 10 shows that DTNN outperforms KRR(CM) on 12/14 tasks in QM7b(Though the mean error shows the opposite result due to averaging errors on different \n\n37 \n\n"
+  }
+}

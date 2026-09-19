@@ -8,12 +8,17 @@ export interface RuntimeModelSelection {
 interface SessionModelIdentity {
   readonly provider: string;
   readonly id: string;
+  readonly api?: string;
+  readonly contextWindow?: number;
 }
 
 export function runtimeModelSelectionFromSession(
   model: SessionModelIdentity | undefined,
 ): RuntimeModelSelection | undefined {
   if (!model) return undefined;
+  // Official Pi's unconfigured AgentState uses this exact sentinel. It is not
+  // a selectable provider and must not become --provider/--model arguments.
+  if (model.provider === "unknown" && model.id === "unknown" && model.api === "unknown" && model.contextWindow === 0) return undefined;
   const provider = model.provider.trim();
   const modelId = model.id.trim();
   if (provider.length === 0 || modelId.length === 0) {

@@ -2,11 +2,13 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Current source version: **v0.7.2** · Android versionCode: **10**.
+Current source version: **v0.7.3** · Android versionCode: **11**.
 
-The current source pins the official **Pi 0.85.1** runtime. Stella uses one Pi dependency tree and the public SDK/RPC interfaces; no Pi fork or SoL runtime is installed. See the [upgrade verification](docs/testing/pi-0.85.1-upgrade-2026-09-18.md). Previously published installers keep their original bundled version.
+The current source pins the official **Pi 0.85.1** runtime. Stella uses one Pi dependency tree and public SDK/RPC interfaces, without a Pi fork. Sol loads as an optional extension, not a second runtime. See the [upgrade verification](docs/testing/pi-0.85.1-upgrade-2026-09-18.md). Previously published installers keep their original bundled version.
 
-**Preferences → Pi version management** compares your local CLI with the bundled Pi at startup. A mismatch offers an update, but only a native confirmation allows npm to install the exact bundled version (including an explicitly disclosed downgrade). Detection checks the executable and global npm prefix; ambiguous installations are reported, never overwritten. The GUI does not require a separate global Pi. **Sol-Pi is not integrated yet**; the settings page states this explicitly, rather than showing an inactive mode switch.
+**Preferences → Pi version management** compares your local CLI with the bundled Pi at startup. A mismatch offers an update, but only a native confirmation allows npm to install the exact bundled version (including an explicitly disclosed downgrade). Detection checks the executable and global npm prefix; ambiguous installations are reported, never overwritten. The GUI does not require a separate global Pi.
+
+**Preferences → Sol mode**: enable the mode, choose mechanisms, then apply. It starts disabled; enabling preselects Action Fusion (confirmed file-mutation-plus-command operations) and ObservationPack (archived large logs with paged recall). EPR auxiliary-model reduction and OCC phase-boundary compaction/continuation are separate opt-ins. EPR uses an existing Pi model and credentials with additional billable usage; OCC uses native Pi compaction. Applying requires an idle runtime and preserves the session, model, and draft. Settings distinguish pending configuration from actual activation and expose errors and branch-specific auxiliary token usage. Only native conversations are affected, not Team or the global CLI; user `sol-pi.json` files are untouched. Back up the session directory's `sol-pi/` archives together with JSONL history. See the [spec](docs/specs/sol-mode.md), [tickets](docs/specs/sol-mode-tickets.md), [upstream adaptation](src/extensions/sol-pi/UPSTREAM.md), and [verification](docs/testing/sol-mode-2026-09-19.md).
 
 Native reliability maintenance: long session trees now cross IPC as flat nodes and child IDs; usage/context metrics refresh after completed responses during multi-step turns. Stop also terminates supervised local background computation; **Inspector → Activity → Stop Pi and background computation** remains available after a turn ends. Windows uses Job Objects; POSIX tracks an inherited per-runtime marker. Remote/container jobs or processes deliberately escaping that scope require separate verification. See the [design and boundaries](docs/specs/native-runtime-preview-maintenance.md) and [verification record](docs/testing/native-runtime-preview-2026-09-19.md).
 
@@ -89,15 +91,24 @@ When Pi mentions an absolute local path, the output card offers **Preview** unde
 Supported formats:
 
 - Images: PNG, JPEG, GIF, WebP, AVIF, BMP, and sanitized SVG.
-- Web and text: HTML, Markdown, JSON, CSV, TSV, XML, YAML, and plain text. HTML runs in a script-free sandbox with forms, network requests, external assets, and embedded objects isolated.
+- Web and text: HTML, XML, YAML, and plain text. HTML runs in a script-free sandbox with forms, network requests, external assets, and embedded objects isolated.
+- Academic Markdown: locally rendered math, chapter navigation, footnotes, local relative images and file links. Follow a table, source file or an explicit PDF `#page=N` link, then return to the previous document and reading position without resetting the inspector width.
+- CSV/TSV: string-preserving tables with selectable encoding/header row, full-data search, column filtering, text or exact-decimal sorting, frozen first column, pagination and original text. Long identifiers, leading zeros and formula-looking text are not rewritten or evaluated.
+- JSON: expandable/paginated tree, key/value search and original source. Paper2Skill verification reports distinguish mechanical failures, unreviewed/disputed results and review limitations; missing fields are not marked as passed. A report is evidence of recorded checks, not proof of scientific reproduction. Unsafe-size JSON integers are flagged; the original source retains exact digits.
+- Notebook: read-only nbformat 4 cells, Markdown attachments, saved stdout/stderr/errors, images, static HTML tables, math and JSON outputs. No kernel, widget execution or Python installation; missing outputs and unsupported MIME types are explicit.
+- Source/MCP documentation: Python, R, shell, PowerShell and JS/TS highlighting, line numbers, search/jump and complete-source copying. `USAGE.md` and tool schemas are readable without importing code or starting/registering an MCP server.
 - PDF: local PDF.js rendering with selectable text, continuous page scrolling, page navigation and fit-to-width zoom. Fonts, CMaps and decoders are bundled locally; it does not use Chromium's auxiliary text-download/OCR service, execute document scripts, or require an Office plugin. Scanned pages without text are explicitly identified; no OCR is claimed.
 - Word: DOCX is rendered page by page with `docx-preview`, including text, tables, and common styles.
 - PowerPoint: PPTX is converted to isolated HTML slides with `@jvmr/pptx-to-html`. The default fits the whole native-aspect slide to the inspector; manual zoom scrolls the page without scaling the toolbar. Navigate with the page selector, arrows/Page Up/Page Down, or Home/End while the preview is focused. Animations, macros and embedded programs are not executed; complex layouts may differ from PowerPoint. Bold absolute paths in assistant replies are recognized as artifacts.
 - Excel: XLSX/XLSM is rendered with `@office-kit/xlsx`, including worksheets, merged cells, row/column sizing, hidden rows/columns, and common cell styles. Macros are not executed.
 
-Legacy binary DOC/PPT/XLS files are not falsely reported as previewable and can still be opened with a system application. Office parsers are dynamically imported, so ordinary chat startup does not load them. Before every preview, the main process revalidates the canonical path and only reads ordinary files inside the current project, Pi data directory, or Stella application-data directory. Files are never uploaded.
+Legacy binary DOC/PPT/XLS files are not falsely reported as previewable and can still be opened with a system application. Office/math/highlighting readers are dynamically loaded. Before every preview, the main process revalidates the canonical path against the current project, Pi/app/temporary data directories and folders explicitly selected for artifact reading. Files are never uploaded.
 
 The preview toolbar provides zoom, refresh, fit, system open for safe types, reveal in folder, and copy-path actions.
+
+**Browse a reading package:** open **Inspector → Files → 产物目录 (Artifact directory)**, then **选择产物目录 (Choose artifact folder)**. Browse one directory at a time, filter by category or search the current directory; a file need not have been mentioned by the assistant. The dialog closes when you open a file so the whole inspector remains available for reading. **关联证据目录 (Associate evidence folder)** adds a separate review/original-PDF folder without switching the project or granting execution trust. Read grants last for the current app process; cancel makes no change. `artifact_checks[].file` links resolve from the explicitly selected package root, not a guessed folder beside the report. ZIP files must already be extracted.
+
+Design and acceptance: [scientific artifact readers spec](docs/specs/scientific-artifact-readers.md), [tickets](docs/specs/scientific-artifact-readers-tickets.md), [verification record](docs/testing/scientific-artifact-readers-2026-09-19.md).
 
 ## Session Context and Compaction
 

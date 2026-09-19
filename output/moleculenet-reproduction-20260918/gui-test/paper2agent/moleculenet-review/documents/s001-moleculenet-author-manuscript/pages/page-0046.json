@@ -1,0 +1,254 @@
+{
+  "page": 46,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0046.png",
+  "reviewed": true,
+  "review_notes": "GC/Weave/DTNN/DAG hyperparameter names; table-free text and angstrom notation preserved. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0046-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        74,
+        277,
+        87
+      ],
+      "markdown": "### Graph Convolutional models (GC)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0046-b001",
+      "kind": "text",
+      "bbox": [
+        89,
+        107,
+        271,
+        119
+      ],
+      "markdown": "- Layer size of convolutional layers",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b002",
+      "kind": "text",
+      "bbox": [
+        89,
+        141,
+        275,
+        152
+      ],
+      "markdown": "- Layer size of fully-connected layer",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b003",
+      "kind": "text",
+      "bbox": [
+        89,
+        175,
+        171,
+        186
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b004",
+      "kind": "text",
+      "bbox": [
+        89,
+        208,
+        154,
+        218
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        249,
+        156,
+        258
+      ],
+      "markdown": "### Weave models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0046-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        280,
+        407,
+        293
+      ],
+      "markdown": "- Length of output features(layer size) of convolutional layers",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b007",
+      "kind": "text",
+      "bbox": [
+        89,
+        315,
+        171,
+        326
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b008",
+      "kind": "text",
+      "bbox": [
+        89,
+        348,
+        154,
+        358
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b009",
+      "kind": "heading",
+      "bbox": [
+        72,
+        388,
+        306,
+        401
+      ],
+      "markdown": "### Deep Tensor Neural Networks (DTNN)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0046-b010",
+      "kind": "text",
+      "bbox": [
+        89,
+        420,
+        289,
+        433
+      ],
+      "markdown": "- Length of atom embedding(features)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b011",
+      "kind": "text",
+      "bbox": [
+        89,
+        452,
+        295,
+        467
+      ],
+      "markdown": "- Size of distance bin(from -1<sup>˚</sup> A to 19<sup>˚</sup> A)",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b012",
+      "kind": "text",
+      "bbox": [
+        89,
+        489,
+        171,
+        500
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b013",
+      "kind": "text",
+      "bbox": [
+        89,
+        522,
+        154,
+        532
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b014",
+      "kind": "heading",
+      "bbox": [
+        72,
+        562,
+        303,
+        575
+      ],
+      "markdown": "### Directed Acyclic Graph models (DAG)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0046-b015",
+      "kind": "text",
+      "bbox": [
+        89,
+        594,
+        329,
+        606
+      ],
+      "markdown": "- Length of features in the convolutional layer",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b016",
+      "kind": "text",
+      "bbox": [
+        89,
+        628,
+        331,
+        640
+      ],
+      "markdown": "- Maximum number of propagation of a graph",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b017",
+      "kind": "text",
+      "bbox": [
+        89,
+        662,
+        171,
+        674
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b018",
+      "kind": "text",
+      "bbox": [
+        89,
+        696,
+        154,
+        706
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0046-b019",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "46",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "GC/Weave/DTNN/DAG hyperparameter names; table-free text and angstrom notation preserved. Reviewed sequentially by the main agent; no independent agent verification."
+}

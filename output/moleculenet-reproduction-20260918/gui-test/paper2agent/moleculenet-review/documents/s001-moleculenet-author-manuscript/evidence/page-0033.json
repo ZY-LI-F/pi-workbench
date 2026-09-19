@@ -1,0 +1,121 @@
+{
+  "page": 33,
+  "lines": [
+    {
+      "text": "Figure 10: Out-of-sample performances with diﬀerent training set sizes on Tox21. Each",
+      "bbox": [
+        72.0,
+        524.3540649414062,
+        540.0341186523438,
+        534.9703369140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "datapoint is the average of 5 independent runs, with standard deviations shown as error",
+      "bbox": [
+        72.0,
+        538.799072265625,
+        540.0701293945312,
+        549.4153442382812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "bars.",
+      "bbox": [
+        72.0,
+        553.2450561523438,
+        96.78313446044922,
+        563.861328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "33",
+      "bbox": [
+        300.1470031738281,
+        741.591064453125,
+        311.8631286621094,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 33
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          118,
+          226,
+          494,
+          513
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          72,
+          524,
+          541,
+          562
+        ],
+        "pos": [
+          2,
+          185
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          185,
+          190
+        ]
+      }
+    ],
+    "text": "\n\nFigure 10: Out-of-sample performances with different training set sizes on Tox21. Each datapoint is the average of 5 independent runs, with standard deviations shown as error bars. \n\n33 \n\n"
+  }
+}

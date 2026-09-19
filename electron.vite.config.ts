@@ -6,7 +6,10 @@ import { pdfAssets } from "./src/build/pdf-assets";
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
-    build: { sourcemap: true },
+    build: { sourcemap: true, rollupOptions: {
+      external: [/^@earendil-works\//],
+      input: { index: resolve("src/main/index.ts"), "sol-mode": resolve("src/extensions/sol-pi/index.ts") },
+    } },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],

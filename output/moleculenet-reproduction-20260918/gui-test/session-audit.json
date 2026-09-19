@@ -1,0 +1,34 @@
+{
+  "sessionPath": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\pi-agent\\sessions\\--C--Users-qq108-Documents-PI-GUI-output-moleculenet-reproduction-20260918--\\2026-09-18T13-16-56-123Z_01a0b4a4-951b-748b-be87-72b2388c8f77.jsonl",
+  "sessionSha256": "6969b528e5fb662bf22f4cc5e9f498d191723745e6ea963759d6e4bdf52662e6",
+  "sessionId": "01a0b4a4-951b-748b-be87-72b2388c8f77",
+  "eventCount": 426,
+  "userMessages": 10,
+  "assistantMessages": 198,
+  "assistantModels": [
+    "deepseek/deepseek-flash"
+  ],
+  "stopReasons": {
+    "error": 2,
+    "toolUse": 192,
+    "stop": 4
+  },
+  "toolCalls": {
+    "bash": 190,
+    "read": 12,
+    "write": 2,
+    "edit": 10
+  },
+  "toolResults": 214,
+  "toolErrors": 4,
+  "usage": {
+    "input": 223918,
+    "output": 53892,
+    "cacheRead": 17760640,
+    "cacheWrite": 0,
+    "totalTokens": 18038450
+  },
+  "firstTimestamp": "2026-09-18T13:16:56.123Z",
+  "lastTimestamp": "2026-09-18T15:01:58.266Z",
+  "scope": "Metadata only; omits message bodies, commands, environment and secrets. Token usage from saved Pi messages, not a billing statement."
+}

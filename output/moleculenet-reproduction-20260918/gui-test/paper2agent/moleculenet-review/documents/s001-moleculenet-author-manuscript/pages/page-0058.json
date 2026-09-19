@@ -1,0 +1,206 @@
+{
+  "page": 58,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0058.png",
+  "reviewed": true,
+  "review_notes": "IRV validation and References 1–9; decimal emphasis repaired. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0058-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        75,
+        232,
+        87
+      ],
+      "markdown": "### Influence Relevance Voting",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0058-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        106,
+        541,
+        142
+      ],
+      "markdown": "We evaluate the model on the HIV dataset, using 80/10/10 random train, valid, test splitting. The original paper reported performance under 10-fold cross validation.<sup>75</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0058-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        178,
+        131,
+        188
+      ],
+      "markdown": "### ROC-AUC:",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0058-b003",
+      "kind": "text",
+      "bbox": [
+        89,
+        209,
+        211,
+        220
+      ],
+      "markdown": "- Original result: 0.845",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b004",
+      "kind": "text",
+      "bbox": [
+        89,
+        241,
+        423,
+        253
+      ],
+      "markdown": "- Reimplementation: 0.840 for valid subset, 0.852 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        291,
+        163,
+        304
+      ],
+      "markdown": "## References",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0058-b006",
+      "kind": "text",
+      "bbox": [
+        77,
+        330,
+        541,
+        343
+      ],
+      "markdown": "- (1) Gasteiger, J.; Zupan, J. _Angewandte Chemie International Edition_ **1993** , _32_ , 503–527.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b007",
+      "kind": "text",
+      "bbox": [
+        77,
+        363,
+        541,
+        399
+      ],
+      "markdown": "- (2) Zupan, J.; Gasteiger, J. _Neural networks in chemistry and drug design_ ; John Wiley & Sons, Inc., 1999.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b008",
+      "kind": "text",
+      "bbox": [
+        77,
+        419,
+        541,
+        453
+      ],
+      "markdown": "- (3) Varnek, A.; Baskin, I. _Journal of chemical information and modeling_ **2012** , _52_ , 1413– 1437.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b009",
+      "kind": "text",
+      "bbox": [
+        77,
+        476,
+        541,
+        512
+      ],
+      "markdown": "- (4) Mitchell, J. B. _Wiley Interdisciplinary Reviews: Computational Molecular Science_ **2014** , _4_ , 468–481.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b010",
+      "kind": "text",
+      "bbox": [
+        77,
+        532,
+        506,
+        545
+      ],
+      "markdown": "- (5) Devillers, J. _Neural networks in QSAR and drug design_ ; Academic Press, 1996.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b011",
+      "kind": "text",
+      "bbox": [
+        77,
+        565,
+        541,
+        599
+      ],
+      "markdown": "- (6) Schneider, G.; Wrede, P. _Progress in biophysics and molecular biology_ **1998** , _70_ , 175– 222.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b012",
+      "kind": "text",
+      "bbox": [
+        77,
+        621,
+        422,
+        634
+      ],
+      "markdown": "- (7) LeCun, Y.; Bengio, Y.; Hinton, G. _Nature_ **2015** , _521_ , 436–444.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b013",
+      "kind": "text",
+      "bbox": [
+        77,
+        654,
+        365,
+        667
+      ],
+      "markdown": "- (8) Schmidhuber, J. _Neural networks_ **2015** , _61_ , 85–117.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b014",
+      "kind": "text",
+      "bbox": [
+        77,
+        687,
+        541,
+        723
+      ],
+      "markdown": "- (9) Ma, J.; Sheridan, R. P.; Liaw, A.; Dahl, G. E.; Svetnik, V. _Journal of chemical information and modeling_ **2015** , _55_ , 263–274.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0058-b015",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "58",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "IRV validation and References 1–9; decimal emphasis repaired. Reviewed sequentially by the main agent; no independent agent verification."
+}

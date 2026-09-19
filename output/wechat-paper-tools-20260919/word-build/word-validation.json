@@ -1,0 +1,146 @@
+{
+  "status": "passed",
+  "documents": [
+    {
+      "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\01-Paper2Agent与Paper2Any实测-图文版.docx",
+      "sha256": "ac4d2ce44047b36ed3a0ae4c874e57453cc9d05f3833e74f765baa6febdb4871",
+      "bytes": 450873,
+      "pages": 8,
+      "figures": 4,
+      "native_tables": 3,
+      "native_code_blocks": 1,
+      "source_hyperlinks": 5,
+      "original_image_bytes_preserved": true,
+      "source_code_and_tables_preserved": true,
+      "page_checks": [
+        {
+          "page": 1,
+          "words": 53,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 2,
+          "words": 90,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 3,
+          "words": 82,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 4,
+          "words": 72,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 5,
+          "words": 73,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 6,
+          "words": 63,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 7,
+          "words": 38,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 8,
+          "words": 72,
+          "text_bounds_inside_page": true
+        }
+      ]
+    },
+    {
+      "path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\wechat-paper-tools-20260919\\02-Pi-GUI调用Paper2Agent技术实践-图文版.docx",
+      "sha256": "34ab04ad7ab61737866749e30bb5e86c333ee0878d9c562920f895323bee2cb3",
+      "bytes": 674444,
+      "pages": 13,
+      "figures": 5,
+      "native_tables": 2,
+      "native_code_blocks": 14,
+      "source_hyperlinks": 8,
+      "original_image_bytes_preserved": true,
+      "source_code_and_tables_preserved": true,
+      "page_checks": [
+        {
+          "page": 1,
+          "words": 59,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 2,
+          "words": 78,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 3,
+          "words": 84,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 4,
+          "words": 90,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 5,
+          "words": 66,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 6,
+          "words": 43,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 7,
+          "words": 54,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 8,
+          "words": 118,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 9,
+          "words": 114,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 10,
+          "words": 57,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 11,
+          "words": 98,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 12,
+          "words": 46,
+          "text_bounds_inside_page": true
+        },
+        {
+          "page": 13,
+          "words": 46,
+          "text_bounds_inside_page": true
+        }
+      ]
+    }
+  ],
+  "rmse_cells_matched_to_csv": 9,
+  "rendering": "Isolated signed LibreOffice 26.2.6 administrative extraction and bundled Poppler via documents render_docx.py",
+  "visual_review": "Recorded separately after inspecting every final page PNG",
+  "not_claimed": [
+    "Microsoft Word desktop testing",
+    "WPS desktop testing",
+    "new scientific or model test execution"
+  ]
+}

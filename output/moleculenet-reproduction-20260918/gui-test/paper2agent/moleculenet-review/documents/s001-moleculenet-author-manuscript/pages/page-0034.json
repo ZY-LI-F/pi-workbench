@@ -1,0 +1,111 @@
+{
+  "page": 34,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0034.png",
+  "reviewed": true,
+  "review_notes": "Figure 10 discussion continuation, PDBbind and Physical Chemistry Tasks. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0034-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        111
+      ],
+      "markdown": "at around 0.80, we can see graph-based models achieve the similar level of accuracy with multitask networks by using only one-third of the training samples(30% versus 90%).",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0034-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        144,
+        267,
+        158
+      ],
+      "markdown": "### Biophysics Task - PDBbind",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0034-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        177,
+        541,
+        500
+      ],
+      "markdown": "The PDBBind dataset maps distinct ligand-protein structures to their binding affinities. As discussed in the datasets section, we created grid featurizer to harness the joint ligandprotein structural information in PDBBind to build a model that predicts the experimental _Ki_ of binding. We applied time splitting to all three subsets: core, refined, and full subsets of PDBbind(Core contains roughly 200 structures, refined 4000, and full 15000. The smaller datasets are cleaned more thoroughly than larger datasets.), with all results displayed in Table 7 and Figure 11. Clearly as dataset size increased, we can see a significant boost on validation/test set performances. At the same time, for the two larger subsets: refined and full, switching from pure ligand-based ECFP to grid featurizer do increase the performances by a small margin in both Singletask networks and random forests. While for core subset, all models are showing relatively high errors and two featurizations do not show clear differences, which is within expectation as sample amount in core subset is too small to support a stable model performance. Note that models on the full set aren’t significantly superior to models with less data; this effect may be due to the additional data being less clean.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0034-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        512,
+        541,
+        547
+      ],
+      "markdown": "Note that all models display heavy overfitting. Additional clean data may be required to create more accurate models for protein-ligand binding.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0034-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        580,
+        254,
+        594
+      ],
+      "markdown": "### Physical Chemistry Tasks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0034-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        614,
+        541,
+        673
+      ],
+      "markdown": "Solubility, solvation free energy and lipophilicity are basic physical chemistry properties important for understanding how molecules interact with solvents. Figure 13 and Table 8 presented performances on predicting these properties.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0034-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        685,
+        541,
+        721
+      ],
+      "markdown": "Graph-based methods: graph convolutional model, DAG, MPNN and weave model all exhibit significant boosts over vanilla singletask network, indicating the advantages of learnable",
+      "source_class": "text"
+    },
+    {
+      "id": "p0034-b007",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "34",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 10 discussion continuation, PDBbind and Physical Chemistry Tasks. Reviewed sequentially by the main agent; no independent agent verification."
+}

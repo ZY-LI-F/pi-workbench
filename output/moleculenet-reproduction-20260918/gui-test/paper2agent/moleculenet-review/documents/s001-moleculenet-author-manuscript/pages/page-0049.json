@@ -1,0 +1,65 @@
+{
+  "page": 49,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0049.png",
+  "reviewed": true,
+  "review_notes": "Complete Table 5 retained as source image with full caption and merged dataset groupings. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0049-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        73,
+        168,
+        85
+      ],
+      "markdown": "### Performances",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0049-b001",
+      "kind": "caption",
+      "bbox": [
+        72,
+        108,
+        540,
+        132
+      ],
+      "markdown": "Table 5: PCBA, MUV, HIV and BACE Performances: AUC-PRC for PCBA and MUV, AUC-ROC for HIV and BACE",
+      "source_class": "text"
+    },
+    {
+      "id": "p0049-b002",
+      "kind": "table",
+      "bbox": [
+        128,
+        142,
+        480,
+        564
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 5",
+      "asset_name": "table-5",
+      "rows": null
+    },
+    {
+      "id": "p0049-b003",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "49",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Complete Table 5 retained as source image with full caption and merged dataset groupings. Reviewed sequentially by the main agent; no independent agent verification."
+}

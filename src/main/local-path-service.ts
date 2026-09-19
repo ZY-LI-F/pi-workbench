@@ -6,6 +6,7 @@ interface PathMetadata {
   isFile(): boolean;
   isDirectory(): boolean;
   readonly size?: number;
+  readonly mtimeMs?: number;
 }
 
 export interface LocalPathServiceDependencies {
@@ -99,7 +100,7 @@ export class LocalPathService {
       this.#dependencies.allowedRoots(),
     );
     if (!canonicalPath) {
-      throw new Error(`只允许访问当前项目、Pi 数据或应用数据目录内的路径: ${requestedPath}`);
+      throw new Error(`只允许访问当前项目、Pi 数据、应用数据或已授权产物目录内的路径: ${requestedPath}`);
     }
     const metadata = await this.#dependencies.inspectPath(canonicalPath);
     const kind = pathKind(metadata);
@@ -113,6 +114,7 @@ export class LocalPathService {
       name: basename(canonicalPath),
       kind,
       ...(sizeBytes !== undefined ? { sizeBytes } : {}),
+      ...(typeof metadata.mtimeMs === "number" && Number.isFinite(metadata.mtimeMs) ? { modifiedAt: metadata.mtimeMs } : {}),
       ...(preview ? { preview } : {}),
       directOpenAllowed: directOpenBlockedReason === undefined,
       ...(directOpenBlockedReason ? { directOpenBlockedReason } : {}),

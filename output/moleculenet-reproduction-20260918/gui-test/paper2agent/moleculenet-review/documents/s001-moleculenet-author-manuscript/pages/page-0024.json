@@ -1,0 +1,76 @@
+{
+  "page": 24,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0024.png",
+  "reviewed": true,
+  "review_notes": "Figure 6 all six model schematic panels with complete caption; GC opening. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0024-b000",
+      "kind": "figure",
+      "bbox": [
+        67,
+        66,
+        546,
+        312
+      ],
+      "markdown": "",
+      "source_class": "picture",
+      "label": "Figure on PDF page 24 (1)",
+      "asset_name": "figure-p0024-000"
+    },
+    {
+      "id": "p0024-b001",
+      "kind": "caption",
+      "bbox": [
+        72,
+        318,
+        541,
+        518
+      ],
+      "markdown": "Figure 6: Core structures of graph-based models implemented in MoleculeNet. To build features for the central dark green atom: **A** Graph Convolutional Model: features are updated by combination with neighbor atoms; **B** Directed Acyclic Graph Model: all bonds are directed towards the central atom, features are propagated from the farthest atom to the central atom through directed bonds; **C** Weave Model: Pairs are formed between each pair of atoms(including not directly bonded pairs), features for the central atom are updated using all other atoms and their corresponding pairs, pair features are also updated by combination of the two pairing atoms; **D** Message Passing Neural Network: Neighbor atoms’ features are input into bond-type dependent neural networks, forming outputs(messages). Features of the central atom are then updated using the outputs; **E** Deep Tensor Neural Network: No explicit bonding information is included, features are updated using all other atoms based on their corresponding physical distances; **F** ANI-1: features are built on distance information between pairs of atoms(radial symmetry functions) and angular information between triplets of atoms(angular symmetry functions).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0024-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        542,
+        242,
+        553
+      ],
+      "markdown": "### Graph Convolutional models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0024-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        573,
+        541,
+        705
+      ],
+      "markdown": "Graph convolutional models (GC) extend the decomposition principles of circular fingerprints. Both methods gradually merge information from distant atoms by extending radially through bonds. This information is used to generate identifiers for all substructures. However, instead of applying fixed hash functions, graph convolutional models allow for adaptive learning by using differentiable network layers. This creates a learnable process capable of extracting useful representations of molecules suited to the task at hand. (Note that this",
+      "source_class": "text"
+    },
+    {
+      "id": "p0024-b004",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "24",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Figure 6 all six model schematic panels with complete caption; GC opening. Reviewed sequentially by the main agent; no independent agent verification."
+}

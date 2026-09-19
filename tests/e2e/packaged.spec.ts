@@ -93,6 +93,27 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     expect(externalBackends.health.find((item) => item.backendId === "codex")?.state).toBe("unavailable");
     expect(externalBackends.health.find((item) => item.backendId === "claude")?.state).toBe("unavailable");
     await expect(window.getByLabel("给 Pi 的消息")).toBeVisible();
+    // Sol must resolve the bundled core's public modules even with no system
+    // Node/npm/Pi on PATH; this is an actual packaged extension load receipt.
+    const solBefore = await window.evaluate(() => window.stella.refresh());
+    await window.getByRole("button", { name: "偏好设置", exact: true }).click();
+    const solSetting = window.getByRole("region", { name: "Sol 模式", exact: true });
+    await solSetting.getByRole("switch", { name: "启用 Sol 模式", exact: true }).click();
+    await solSetting.getByRole("button", { name: "应用 Sol 设置", exact: true }).click();
+    await expect(solSetting.getByRole("status")).toHaveText("已生效");
+    const solActive = await window.evaluate(() => window.stella.solModeGet());
+    expect(solActive.phase).toBe("active");
+    expect(solActive.features).toEqual(["Action Fusion", "ObservationPack"]);
+    expect((await window.evaluate(() => window.stella.refresh())).state.sessionId).toBe(solBefore.state.sessionId);
+    await expect(solSetting.getByRole("button", { name: "应用 Sol 设置", exact: true })).toBeVisible();
+    await solSetting.getByRole("switch", { name: "启用 Sol 模式", exact: true }).click();
+    await solSetting.getByRole("button", { name: "应用 Sol 设置", exact: true }).click();
+    await expect(solSetting.getByRole("status")).toHaveText("已关闭 · 原生 Pi");
+    // Applying through UI also refreshes the renderer's current session address.
+    await expect(solSetting.getByRole("button", { name: "应用 Sol 设置", exact: true })).toBeVisible();
+    await window.getByRole("dialog").getByRole("button", { name: "关闭", exact: true }).click();
+    await window.getByRole("button", { name: "打开侧栏", exact: true }).click();
+    await expect(window.locator(".sidebar")).toHaveClass(/is-open/);
     const composerResize = window.getByRole("separator", { name: "调整输入区高度" });
     await expect(composerResize).toBeVisible();
     await composerResize.press("ArrowUp");

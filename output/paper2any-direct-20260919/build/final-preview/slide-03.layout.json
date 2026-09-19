@@ -1,0 +1,866 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/ofy9wn61",
+    "id": "ofy9wn61",
+    "slide": 3,
+    "layoutId": "/ppt/slideLayouts/slideLayout1.xml",
+    "layoutName": "DEFAULT",
+    "masterLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+    "backgroundColor": "#F7F8F4",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1279.97,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "Office",
+    "colors": {
+      "accent1": "#4472C4",
+      "accent2": "#ED7D31",
+      "accent3": "#A5A5A5",
+      "accent4": "#FFC000",
+      "accent5": "#5B9BD5",
+      "accent6": "#70AD47",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#44546A",
+      "lt2": "#E7E6E6",
+      "hlink": "#0563C1",
+      "folHlink": "#954F72"
+    },
+    "fontScheme": {
+      "name": "Office",
+      "majorFont": {
+        "latinTypeface": "Noto Sans SC"
+      },
+      "minorFont": {
+        "latinTypeface": "Noto Sans SC"
+      }
+    },
+    "typefaces": [
+      "Noto Sans SC"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "/ppt/slideLayouts/slideLayout1.xml",
+      "name": "DEFAULT",
+      "parentLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "/ppt/slideMasters/slideMaster1.xml",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/cza94vmx",
+      "id": "2",
+      "name": "Text 0",
+      "bbox": [
+        61.76,
+        39.36,
+        1154.85,
+        90.88
+      ],
+      "geometry": "rect",
+      "text": "三个基准使用不同目标与单位",
+      "textPreview": "三个基准使用不同目标与单位",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "三个基准使用不同目标与单位"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "三个基准使用不同目标与单位",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "三个基准使用不同目标与单位",
+              "fontSize": 45.47,
+              "typeface": "Noto Sans SC",
+              "color": "#18362F",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/d0jax03i",
+      "id": "3",
+      "name": "Text 1",
+      "bbox": [
+        64,
+        651.2,
+        1047.97,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "来源：原始数据文件及 verification/summary.json。各任务 RMSE 不跨单位合并。",
+      "textPreview": "来源：原始数据文件及 verification/summary.json。各任务 RMSE 不跨单位合并。",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "来源：原始数据文件及 verification/summary.json。各任务 RMSE 不跨单位合并。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "来源：原始数据文件及 verification/summary.json。各任务 RMSE 不跨单位合并。",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "来源：原始数据文件及 verification/summary.json。各任务 RMSE 不跨单位合并。",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/298ryl4v",
+      "id": "4",
+      "name": "Text 2",
+      "bbox": [
+        1139.17,
+        651.2,
+        80,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "03 / 14",
+      "textPreview": "03 / 14",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "03 / 14"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "03 / 14",
+          "resolvedTextStyle": {
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "03 / 14",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "kind": "table",
+      "scope": "slide",
+      "aid": "tb/v6xo3qh4",
+      "id": "8",
+      "name": "Table 0",
+      "bbox": [
+        64,
+        187.2,
+        1151.97,
+        262.4
+      ],
+      "text": "数据集 | 记录数 | 预测目标 | 报告单位\nESOL | 1128 | 水溶解度 | log10(mol/L)\nFreeSolv | 642 | 溶剂化自由能 | kcal/mol\nLipophilicity | 4200 | 脂溶性 | logD",
+      "textPreview": "数据集 | 记录数 | 预测目标 | 报告单位 | ESOL | 1128 | 水溶解度 | log10(mol/L) | FreeSolv | 642 | 溶剂化自由能 | kcal/mol | Lipophilicity | 4200 | 脂溶性 | logD",
+      "rows": 4,
+      "cols": 4,
+      "cells": [
+        {
+          "index": 1,
+          "row": 1,
+          "column": 1,
+          "bbox": [
+            64,
+            187.2,
+            287.99,
+            65.6
+          ],
+          "text": "数据集",
+          "textPreview": "数据集",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "数据集",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "数据集",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "row": 1,
+          "column": 2,
+          "bbox": [
+            351.99,
+            187.2,
+            287.99,
+            65.6
+          ],
+          "text": "记录数",
+          "textPreview": "记录数",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "记录数",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "记录数",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "row": 1,
+          "column": 3,
+          "bbox": [
+            639.98,
+            187.2,
+            287.99,
+            65.6
+          ],
+          "text": "预测目标",
+          "textPreview": "预测目标",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "预测目标",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "预测目标",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "row": 1,
+          "column": 4,
+          "bbox": [
+            927.98,
+            187.2,
+            287.99,
+            65.6
+          ],
+          "text": "报告单位",
+          "textPreview": "报告单位",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "报告单位",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "报告单位",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "row": 2,
+          "column": 1,
+          "bbox": [
+            64,
+            252.8,
+            287.99,
+            65.6
+          ],
+          "text": "ESOL",
+          "textPreview": "ESOL",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "ESOL",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "ESOL",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "row": 2,
+          "column": 2,
+          "bbox": [
+            351.99,
+            252.8,
+            287.99,
+            65.6
+          ],
+          "text": "1128",
+          "textPreview": "1128",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1128",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1128",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "row": 2,
+          "column": 3,
+          "bbox": [
+            639.98,
+            252.8,
+            287.99,
+            65.6
+          ],
+          "text": "水溶解度",
+          "textPreview": "水溶解度",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "水溶解度",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "水溶解度",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "row": 2,
+          "column": 4,
+          "bbox": [
+            927.98,
+            252.8,
+            287.99,
+            65.6
+          ],
+          "text": "log10(mol/L)",
+          "textPreview": "log10(mol/L)",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "log10(mol/L)",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "log10(mol/L)",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "row": 3,
+          "column": 1,
+          "bbox": [
+            64,
+            318.4,
+            287.99,
+            65.6
+          ],
+          "text": "FreeSolv",
+          "textPreview": "FreeSolv",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "FreeSolv",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "FreeSolv",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "row": 3,
+          "column": 2,
+          "bbox": [
+            351.99,
+            318.4,
+            287.99,
+            65.6
+          ],
+          "text": "642",
+          "textPreview": "642",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "642",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "642",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "row": 3,
+          "column": 3,
+          "bbox": [
+            639.98,
+            318.4,
+            287.99,
+            65.6
+          ],
+          "text": "溶剂化自由能",
+          "textPreview": "溶剂化自由能",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "溶剂化自由能",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "溶剂化自由能",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "row": 3,
+          "column": 4,
+          "bbox": [
+            927.98,
+            318.4,
+            287.99,
+            65.6
+          ],
+          "text": "kcal/mol",
+          "textPreview": "kcal/mol",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "kcal/mol",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "kcal/mol",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "row": 4,
+          "column": 1,
+          "bbox": [
+            64,
+            384,
+            287.99,
+            65.6
+          ],
+          "text": "Lipophilicity",
+          "textPreview": "Lipophilicity",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "Lipophilicity",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "Lipophilicity",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "row": 4,
+          "column": 2,
+          "bbox": [
+            351.99,
+            384,
+            287.99,
+            65.6
+          ],
+          "text": "4200",
+          "textPreview": "4200",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "4200",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "4200",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "row": 4,
+          "column": 3,
+          "bbox": [
+            639.98,
+            384,
+            287.99,
+            65.6
+          ],
+          "text": "脂溶性",
+          "textPreview": "脂溶性",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "脂溶性",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "脂溶性",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 16,
+          "row": 4,
+          "column": 4,
+          "bbox": [
+            927.98,
+            384,
+            287.99,
+            65.6
+          ],
+          "text": "logD",
+          "textPreview": "logD",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "logD",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "logD",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/obq90bml",
+      "id": "6",
+      "name": "Text 3",
+      "bbox": [
+        64,
+        500.8,
+        1148.77,
+        67.2
+      ],
+      "geometry": "rect",
+      "text": "36 次主实验 + 12 次 ESOL 骨架划分诊断 = 48 次",
+      "textPreview": "36 次主实验 + 12 次 ESOL 骨架划分诊断 = 48 次",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "36 次主实验 + 12 次 ESOL 骨架划分诊断 = 48 次"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "36 次主实验 + 12 次 ESOL 骨架划分诊断 = 48 次",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "36 次主实验 + 12 次 ESOL 骨架划分诊断 = 48 次",
+              "fontSize": 27.87,
+              "typeface": "Noto Sans SC",
+              "color": "#176B53",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/pcjqtg36",
+      "id": "7",
+      "name": "Text 4",
+      "bbox": [
+        64,
+        579.2,
+        1127.97,
+        44.8
+      ],
+      "geometry": "rect",
+      "text": "主实验：3 数据集 × 4 模型 × 3 种子",
+      "textPreview": "主实验：3 数据集 × 4 模型 × 3 种子",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "主实验：3 数据集 × 4 模型 × 3 种子"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "主实验：3 数据集 × 4 模型 × 3 种子",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "主实验：3 数据集 × 4 模型 × 3 种子",
+              "fontSize": 21.27,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    }
+  ],
+  "composeRuns": []
+}

@@ -1,0 +1,540 @@
+{
+  "page": 45,
+  "lines": [
+    {
+      "text": "Multitask/Singletask Networks",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        255.33299255371094,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Layer size",
+      "bbox": [
+        89.43399810791016,
+        106.61764526367188,
+        151.89527893066406,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Weight - initial standard deviation",
+      "bbox": [
+        89.43399810791016,
+        140.48764038085938,
+        278.8954162597656,
+        151.77334594726562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Bias - initial constant",
+      "bbox": [
+        89.43399810791016,
+        174.35861206054688,
+        212.12559509277344,
+        185.64431762695312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        208.22860717773438,
+        170.37802124023438,
+        219.51431274414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• L2 regularization",
+      "bbox": [
+        89.43399810791016,
+        242.09957885742188,
+        188.59774780273438,
+        253.38528442382812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        275.9695739746094,
+        153.5092315673828,
+        287.2552795410156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Bypass Networks",
+      "bbox": [
+        72.0,
+        317.27606201171875,
+        173.28443908691406,
+        327.89227294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Layer size(main layer and bypass layer)",
+      "bbox": [
+        89.43399810791016,
+        348.2355651855469,
+        303.58294677734375,
+        359.5212707519531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Weight - initial standard deviation(main layer and bypass layer)",
+      "bbox": [
+        89.43399810791016,
+        382.1055603027344,
+        430.5830993652344,
+        393.3912658691406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Bias - initial constant(main layer and bypass layer)",
+      "bbox": [
+        89.43399810791016,
+        415.9765625,
+        363.81329345703125,
+        427.26226806640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        449.8465576171875,
+        170.37802124023438,
+        461.13226318359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• L2 regularization",
+      "bbox": [
+        89.43399810791016,
+        483.7175598144531,
+        188.59774780273438,
+        495.0032653808594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        517.5875244140625,
+        153.5092315673828,
+        528.873291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Inﬂuence Relevance Voting (IRV)",
+      "bbox": [
+        72.0,
+        558.8939819335938,
+        270.2410888671875,
+        569.51025390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• K(number of nearest neighbors)",
+      "bbox": [
+        89.43399810791016,
+        589.853515625,
+        264.6328430175781,
+        601.1392822265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        623.7235107421875,
+        170.37802124023438,
+        635.00927734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        657.594482421875,
+        153.5092315673828,
+        668.8802490234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "45",
+      "bbox": [
+        300.1470031738281,
+        741.5910034179688,
+        311.8631286621094,
+        752.207275390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 45
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          74,
+          256,
+          87
+        ],
+        "pos": [
+          0,
+          38
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          89,
+          107,
+          152,
+          119
+        ],
+        "pos": [
+          38,
+          53
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          89,
+          141,
+          279,
+          152
+        ],
+        "pos": [
+          53,
+          93
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          89,
+          175,
+          213,
+          184
+        ],
+        "pos": [
+          93,
+          121
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          89,
+          209,
+          171,
+          220
+        ],
+        "pos": [
+          121,
+          139
+        ]
+      },
+      {
+        "index": 5,
+        "class": "list-item",
+        "bbox": [
+          89,
+          242,
+          189,
+          254
+        ],
+        "pos": [
+          139,
+          161
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          89,
+          276,
+          154,
+          286
+        ],
+        "pos": [
+          161,
+          176
+        ]
+      },
+      {
+        "index": 7,
+        "class": "section-header",
+        "bbox": [
+          72,
+          317,
+          174,
+          328
+        ],
+        "pos": [
+          176,
+          200
+        ]
+      },
+      {
+        "index": 8,
+        "class": "list-item",
+        "bbox": [
+          89,
+          348,
+          304,
+          361
+        ],
+        "pos": [
+          200,
+          244
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          89,
+          382,
+          431,
+          395
+        ],
+        "pos": [
+          244,
+          313
+        ]
+      },
+      {
+        "index": 10,
+        "class": "list-item",
+        "bbox": [
+          89,
+          415,
+          364,
+          428
+        ],
+        "pos": [
+          313,
+          370
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          89,
+          450,
+          171,
+          462
+        ],
+        "pos": [
+          370,
+          388
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          89,
+          484,
+          189,
+          496
+        ],
+        "pos": [
+          388,
+          410
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          89,
+          518,
+          154,
+          527
+        ],
+        "pos": [
+          410,
+          425
+        ]
+      },
+      {
+        "index": 14,
+        "class": "section-header",
+        "bbox": [
+          72,
+          558,
+          271,
+          571
+        ],
+        "pos": [
+          425,
+          466
+        ]
+      },
+      {
+        "index": 15,
+        "class": "list-item",
+        "bbox": [
+          89,
+          589,
+          265,
+          602
+        ],
+        "pos": [
+          466,
+          501
+        ]
+      },
+      {
+        "index": 16,
+        "class": "list-item",
+        "bbox": [
+          89,
+          624,
+          171,
+          636
+        ],
+        "pos": [
+          501,
+          519
+        ]
+      },
+      {
+        "index": 17,
+        "class": "list-item",
+        "bbox": [
+          89,
+          658,
+          154,
+          667
+        ],
+        "pos": [
+          519,
+          534
+        ]
+      },
+      {
+        "index": 18,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          534,
+          539
+        ]
+      }
+    ],
+    "text": "# **Multitask/Singletask Networks** \n\n- Layer size \n\n- Weight - initial standard deviation \n\n- Bias - initial constant \n\n- Learning rate \n\n- L2 regularization \n\n- Batch size \n\n# **Bypass Networks** \n\n- Layer size(main layer and bypass layer) \n\n- Weight - initial standard deviation(main layer and bypass layer) \n\n- Bias - initial constant(main layer and bypass layer) \n\n- Learning rate \n\n- L2 regularization \n\n- Batch size \n\n# **Influence Relevance Voting (IRV)** \n\n- K(number of nearest neighbors) \n\n- Learning rate \n\n- Batch size \n\n45 \n\n"
+  }
+}

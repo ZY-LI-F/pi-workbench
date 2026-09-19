@@ -1,0 +1,836 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/udsvah03",
+    "id": "udsvah03",
+    "slide": 9,
+    "layoutId": "/ppt/slideLayouts/slideLayout1.xml",
+    "layoutName": "DEFAULT",
+    "masterLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+    "backgroundColor": "#F7F8F4",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1279.97,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "Office",
+    "colors": {
+      "accent1": "#4472C4",
+      "accent2": "#ED7D31",
+      "accent3": "#A5A5A5",
+      "accent4": "#FFC000",
+      "accent5": "#5B9BD5",
+      "accent6": "#70AD47",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#44546A",
+      "lt2": "#E7E6E6",
+      "hlink": "#0563C1",
+      "folHlink": "#954F72"
+    },
+    "fontScheme": {
+      "name": "Office",
+      "majorFont": {
+        "latinTypeface": "Noto Sans SC"
+      },
+      "minorFont": {
+        "latinTypeface": "Noto Sans SC"
+      }
+    },
+    "typefaces": [
+      "Noto Sans SC"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "/ppt/slideLayouts/slideLayout1.xml",
+      "name": "DEFAULT",
+      "parentLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "/ppt/slideMasters/slideMaster1.xml",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/1cfmhgne",
+      "id": "2",
+      "name": "Text 0",
+      "bbox": [
+        61.76,
+        39.36,
+        1154.85,
+        90.88
+      ],
+      "geometry": "rect",
+      "text": "骨架划分提高了 ESOL 的测试误差",
+      "textPreview": "骨架划分提高了 ESOL 的测试误差",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "骨架划分提高了 ESOL 的测试误差"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "骨架划分提高了 ESOL 的测试误差",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "骨架划分提高了 ESOL 的测试误差",
+              "fontSize": 45.47,
+              "typeface": "Noto Sans SC",
+              "color": "#18362F",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/0b65obm9",
+      "id": "3",
+      "name": "Text 1",
+      "bbox": [
+        64,
+        651.2,
+        1047.97,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "测试 RMSE，log10(mol/L)。骨架划分固定，不是三折交叉验证。",
+      "textPreview": "测试 RMSE，log10(mol/L)。骨架划分固定，不是三折交叉验证。",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "测试 RMSE，log10(mol/L)。骨架划分固定，不是三折交叉验证。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "测试 RMSE，log10(mol/L)。骨架划分固定，不是三折交叉验证。",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "测试 RMSE，log10(mol/L)。骨架划分固定，不是三折交叉验证。",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/nex4jq5k",
+      "id": "4",
+      "name": "Text 2",
+      "bbox": [
+        1139.17,
+        651.2,
+        80,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "09 / 14",
+      "textPreview": "09 / 14",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "09 / 14"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "09 / 14",
+          "resolvedTextStyle": {
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "09 / 14",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "kind": "table",
+      "scope": "slide",
+      "aid": "tb/29wzel8z",
+      "id": "8",
+      "name": "Table 0",
+      "bbox": [
+        64,
+        195.2,
+        1151.97,
+        281.6
+      ],
+      "text": "模型 | 随机划分 | 骨架划分\n训练均值基线 | 2.137 ± 0.016 | 2.315 ± 0.000\nRF / ECFP4 | 1.190 ± 0.159 | 1.691 ± 0.018\nKRR / ECFP4 | 1.485 ± 0.119 | 2.472 ± 0.000\nGraphConv | 1.046 ± 0.106 | 1.370 ± 0.036",
+      "textPreview": "模型 | 随机划分 | 骨架划分 | 训练均值基线 | 2.137 ± 0.016 | 2.315 ± 0.000 | RF / ECFP4 | 1.190 ± 0.159 | 1.691 ± 0.018 | KRR / ECFP4 | 1.485 ± 0.119 | 2....",
+      "rows": 5,
+      "cols": 3,
+      "cells": [
+        {
+          "index": 1,
+          "row": 1,
+          "column": 1,
+          "bbox": [
+            64,
+            195.2,
+            383.99,
+            56.32
+          ],
+          "text": "模型",
+          "textPreview": "模型",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "模型",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "模型",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "row": 1,
+          "column": 2,
+          "bbox": [
+            447.99,
+            195.2,
+            383.99,
+            56.32
+          ],
+          "text": "随机划分",
+          "textPreview": "随机划分",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "随机划分",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "随机划分",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "row": 1,
+          "column": 3,
+          "bbox": [
+            831.98,
+            195.2,
+            383.99,
+            56.32
+          ],
+          "text": "骨架划分",
+          "textPreview": "骨架划分",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "骨架划分",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "骨架划分",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "row": 2,
+          "column": 1,
+          "bbox": [
+            64,
+            251.52,
+            383.99,
+            56.32
+          ],
+          "text": "训练均值基线",
+          "textPreview": "训练均值基线",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "训练均值基线",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "训练均值基线",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "row": 2,
+          "column": 2,
+          "bbox": [
+            447.99,
+            251.52,
+            383.99,
+            56.32
+          ],
+          "text": "2.137 ± 0.016",
+          "textPreview": "2.137 ± 0.016",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "2.137 ± 0.016",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "2.137 ± 0.016",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "row": 2,
+          "column": 3,
+          "bbox": [
+            831.98,
+            251.52,
+            383.99,
+            56.32
+          ],
+          "text": "2.315 ± 0.000",
+          "textPreview": "2.315 ± 0.000",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "2.315 ± 0.000",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "2.315 ± 0.000",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "row": 3,
+          "column": 1,
+          "bbox": [
+            64,
+            307.84,
+            383.99,
+            56.32
+          ],
+          "text": "RF / ECFP4",
+          "textPreview": "RF / ECFP4",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "RF / ECFP4",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "RF / ECFP4",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "row": 3,
+          "column": 2,
+          "bbox": [
+            447.99,
+            307.84,
+            383.99,
+            56.32
+          ],
+          "text": "1.190 ± 0.159",
+          "textPreview": "1.190 ± 0.159",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.190 ± 0.159",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.190 ± 0.159",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "row": 3,
+          "column": 3,
+          "bbox": [
+            831.98,
+            307.84,
+            383.99,
+            56.32
+          ],
+          "text": "1.691 ± 0.018",
+          "textPreview": "1.691 ± 0.018",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.691 ± 0.018",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.691 ± 0.018",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "row": 4,
+          "column": 1,
+          "bbox": [
+            64,
+            364.16,
+            383.99,
+            56.32
+          ],
+          "text": "KRR / ECFP4",
+          "textPreview": "KRR / ECFP4",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "KRR / ECFP4",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "KRR / ECFP4",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "row": 4,
+          "column": 2,
+          "bbox": [
+            447.99,
+            364.16,
+            383.99,
+            56.32
+          ],
+          "text": "1.485 ± 0.119",
+          "textPreview": "1.485 ± 0.119",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.485 ± 0.119",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.485 ± 0.119",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "row": 4,
+          "column": 3,
+          "bbox": [
+            831.98,
+            364.16,
+            383.99,
+            56.32
+          ],
+          "text": "2.472 ± 0.000",
+          "textPreview": "2.472 ± 0.000",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "2.472 ± 0.000",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "2.472 ± 0.000",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "row": 5,
+          "column": 1,
+          "bbox": [
+            64,
+            420.48,
+            383.99,
+            56.32
+          ],
+          "text": "GraphConv",
+          "textPreview": "GraphConv",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "GraphConv",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "GraphConv",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "row": 5,
+          "column": 2,
+          "bbox": [
+            447.99,
+            420.48,
+            383.99,
+            56.32
+          ],
+          "text": "1.046 ± 0.106",
+          "textPreview": "1.046 ± 0.106",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.046 ± 0.106",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.046 ± 0.106",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "row": 5,
+          "column": 3,
+          "bbox": [
+            831.98,
+            420.48,
+            383.99,
+            56.32
+          ],
+          "text": "1.370 ± 0.036",
+          "textPreview": "1.370 ± 0.036",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.370 ± 0.036",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.370 ± 0.036",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/9gzml0nq",
+      "id": "6",
+      "name": "Text 3",
+      "bbox": [
+        64,
+        517.6,
+        1135.97,
+        59.2
+      ],
+      "geometry": "rect",
+      "text": "骨架测试中，KRR 比均值基线更差",
+      "textPreview": "骨架测试中，KRR 比均值基线更差",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "骨架测试中，KRR 比均值基线更差"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "骨架测试中，KRR 比均值基线更差",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "骨架测试中，KRR 比均值基线更差",
+              "fontSize": 29.33,
+              "typeface": "Noto Sans SC",
+              "color": "#A64D27",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ofq5svm5",
+      "id": "7",
+      "name": "Text 4",
+      "bbox": [
+        64,
+        590.4,
+        1135.97,
+        44.8
+      ],
+      "geometry": "rect",
+      "text": "随机划分成绩不能替代新骨架外推评估",
+      "textPreview": "随机划分成绩不能替代新骨架外推评估",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "随机划分成绩不能替代新骨架外推评估"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "随机划分成绩不能替代新骨架外推评估",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "随机划分成绩不能替代新骨架外推评估",
+              "fontSize": 22,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    }
+  ],
+  "composeRuns": []
+}

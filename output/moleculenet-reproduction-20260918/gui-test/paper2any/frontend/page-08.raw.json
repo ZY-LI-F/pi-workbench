@@ -1,0 +1,211 @@
+{
+  "title": "本次复现实验设置与证据边界",
+  "render_engine": "canvas",
+  "layout_family": "two_column",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 20,
+      "align": "stretch",
+      "padding": 0
+    },
+    "children": [
+      {
+        "type": "component",
+        "id": "title",
+        "component": "heading",
+        "props": {
+          "text_ref": "title"
+        }
+      },
+      {
+        "type": "container",
+        "id": "main",
+        "style": {
+          "direction": "row",
+          "gap": 22,
+          "weight": 1,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "config_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "config_heading",
+                "component": "heading",
+                "props": {
+                  "text_ref": "config_heading"
+                }
+              },
+              {
+                "type": "component",
+                "id": "config_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "config_items"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "boundary_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "boundary_heading",
+                "component": "heading",
+                "props": {
+                  "text_ref": "boundary_heading"
+                }
+              },
+              {
+                "type": "component",
+                "id": "boundary_bullets",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "boundary_items"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "component",
+        "id": "disclaimer",
+        "component": "callout",
+        "props": {
+          "text_ref": "disclaimer"
+        }
+      },
+      {
+        "type": "component",
+        "id": "footer",
+        "component": "text",
+        "props": {
+          "text_ref": "footer"
+        }
+      }
+    ]
+  },
+  "content": {
+    "title": "本次复现实验设置与证据边界",
+    "summary": "上方为本次复现的实际实验配置，下方为必须同时说明的协议边界与结论适用范围。",
+    "config_heading": "实验配置",
+    "config_items": [
+      "共 48 次运行，覆盖 ESOL、FreeSolv、Lipophilicity 三个数据集",
+      "模型设置：mean 基线、Random Forest、KRR、Graph Convolution",
+      "随机 80/10/10 划分；随机种子 123、456、789",
+      "报告三次运行的样本标准差（ddof=1）",
+      "运行环境：DeepChem 2.8.0 与 TensorFlow 2.15.1"
+    ],
+    "boundary_heading": "证据边界与偏差",
+    "boundary_items": [
+      "局部现代环境复现，不是论文原始基准的完整复现",
+      "无超参数搜索，未使用论文的高斯过程超参优化",
+      "运行环境为现代版本，不是 2017 年原始环境",
+      "ESOL 骨架划分仅作为额外诊断，不是论文原始协议"
+    ],
+    "disclaimer": "本次复现仅评估分子性质预测指标，不能据此认定任何临床有效性或药物疗效。",
+    "footer": "Paper2Any Frontend PPT · 第 08/10 页",
+    "table_1": {
+      "headers": [
+        "配置维度",
+        "本次设置"
+      ],
+      "rows": [
+        [
+          "运行规模",
+          "48 次运行 / 3 个数据集"
+        ],
+        [
+          "数据划分",
+          "随机 80/10/10，种子 123/456/789"
+        ],
+        [
+          "环境版本",
+          "DeepChem 2.8.0 + TensorFlow 2.15.1"
+        ]
+      ]
+    },
+    "assets": {}
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15,23,42,0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700,
+        "color": "#e2e8f0"
+      },
+      "text": {
+        "font_size": 18,
+        "color": "#94a3b8"
+      },
+      "bullets": {
+        "font_size": 22,
+        "color": "#e2e8f0",
+        "marker_color": "#7dd3fc"
+      },
+      "callout": {
+        "font_size": 22,
+        "color": "#e2e8f0",
+        "border_color": "#f59e0b",
+        "background": "rgba(15,23,42,0.92)"
+      },
+      "figure": {
+        "image_fit": "contain"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "上部双栏并列实验配置与证据边界，底部以强调框收束结论适用范围。"
+}

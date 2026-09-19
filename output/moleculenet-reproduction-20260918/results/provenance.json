@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-09-18T21:01:28+0800",
+  "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "config_sha256": "976ab4c82db0de9e90eba8c7ba97b74899e87e1a552f6d84bae11c7919409aef",
+  "script_sha256": "b586b102882da6ebf3df3a39f2b420326483ff5bdaf72c1b55b180c9f011a91e",
+  "dependencies": {
+    "deepchem": "2.8.0",
+    "tensorflow": "2.15.1",
+    "keras": "2.15.0",
+    "rdkit": "2023.9.6",
+    "scikit-learn": "1.4.2",
+    "numpy": "1.26.4",
+    "pandas": "2.2.2",
+    "scipy": "1.15.3"
+  },
+  "tensorflow_devices": [
+    "/physical_device:CPU:0"
+  ],
+  "subset_arguments": {
+    "datasets": null,
+    "models": null,
+    "seeds": null,
+    "splits": null,
+    "output": "results"
+  },
+  "scientific_core": "upstream DeepChem APIs"
+}

@@ -1,0 +1,499 @@
+{
+  "page": 44,
+  "lines": [
+    {
+      "text": "mized hyperparameters for each model are listed, detailed hyperparameters can be found on",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0339965820312,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Deepchem.",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        127.75907897949219,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression (Logreg)",
+      "bbox": [
+        72.0,
+        140.20315551757812,
+        239.9824676513672,
+        150.81936645507812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        171.16165161132812,
+        170.37802124023438,
+        182.44735717773438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• L2 regularization",
+      "bbox": [
+        89.43399810791016,
+        205.03262329101562,
+        188.59774780273438,
+        216.31832885742188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Batch size",
+      "bbox": [
+        89.43399810791016,
+        238.90261840820312,
+        153.5092315673828,
+        250.18832397460938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Support Vector Classiﬁcation (KernelSVM)",
+      "bbox": [
+        72.0,
+        280.2091064453125,
+        329.7062683105469,
+        290.8253173828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Penalty parameter C",
+      "bbox": [
+        89.43399810791016,
+        311.1686096191406,
+        208.4194793701172,
+        322.4543151855469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Kernel coeﬃcient gamma for radial basis function",
+      "bbox": [
+        89.43399810791016,
+        345.0386047363281,
+        356.35321044921875,
+        356.3243103027344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Kernel Ridge Regression (KRR)",
+      "bbox": [
+        72.0,
+        386.3450927734375,
+        263.223388671875,
+        396.9613037109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Penalty parameter",
+      "bbox": [
+        89.43399810791016,
+        417.3045959472656,
+        196.0697479248047,
+        428.5903015136719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Random Forest (RF)",
+      "bbox": [
+        72.0,
+        458.611083984375,
+        195.6167449951172,
+        469.227294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Number of trees in the forest: 500",
+      "bbox": [
+        89.43399810791016,
+        489.5705871582031,
+        276.0261535644531,
+        500.8562927246094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Gradient Boosting (XGBoost)",
+      "bbox": [
+        72.0,
+        530.8770141601562,
+        249.91725158691406,
+        541.4932861328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Maximum tree depth",
+      "bbox": [
+        89.43399810791016,
+        561.8355712890625,
+        209.5432891845703,
+        573.121337890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Learning rate",
+      "bbox": [
+        89.43399810791016,
+        595.70654296875,
+        170.37802124023438,
+        606.9923095703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Number of boosted tree",
+      "bbox": [
+        89.43399810791016,
+        629.5765380859375,
+        222.9450225830078,
+        640.8623046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "44",
+      "bbox": [
+        300.1470031738281,
+        741.591064453125,
+        311.8631286621094,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 44
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          102
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          139,
+          240,
+          152
+        ],
+        "pos": [
+          102,
+          139
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          89,
+          171,
+          171,
+          183
+        ],
+        "pos": [
+          139,
+          157
+        ]
+      },
+      {
+        "index": 3,
+        "class": "list-item",
+        "bbox": [
+          89,
+          205,
+          189,
+          217
+        ],
+        "pos": [
+          157,
+          179
+        ]
+      },
+      {
+        "index": 4,
+        "class": "list-item",
+        "bbox": [
+          89,
+          239,
+          154,
+          248
+        ],
+        "pos": [
+          179,
+          194
+        ]
+      },
+      {
+        "index": 5,
+        "class": "section-header",
+        "bbox": [
+          72,
+          279,
+          330,
+          292
+        ],
+        "pos": [
+          194,
+          244
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          89,
+          311,
+          209,
+          323
+        ],
+        "pos": [
+          244,
+          268
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          89,
+          345,
+          357,
+          357
+        ],
+        "pos": [
+          268,
+          323
+        ]
+      },
+      {
+        "index": 8,
+        "class": "section-header",
+        "bbox": [
+          72,
+          385,
+          264,
+          398
+        ],
+        "pos": [
+          323,
+          361
+        ]
+      },
+      {
+        "index": 9,
+        "class": "list-item",
+        "bbox": [
+          89,
+          417,
+          197,
+          429
+        ],
+        "pos": [
+          361,
+          383
+        ]
+      },
+      {
+        "index": 10,
+        "class": "section-header",
+        "bbox": [
+          72,
+          457,
+          196,
+          470
+        ],
+        "pos": [
+          383,
+          410
+        ]
+      },
+      {
+        "index": 11,
+        "class": "list-item",
+        "bbox": [
+          89,
+          490,
+          277,
+          499
+        ],
+        "pos": [
+          410,
+          449
+        ]
+      },
+      {
+        "index": 12,
+        "class": "section-header",
+        "bbox": [
+          72,
+          530,
+          250,
+          543
+        ],
+        "pos": [
+          449,
+          485
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          89,
+          562,
+          210,
+          574
+        ],
+        "pos": [
+          485,
+          508
+        ]
+      },
+      {
+        "index": 14,
+        "class": "list-item",
+        "bbox": [
+          89,
+          596,
+          171,
+          608
+        ],
+        "pos": [
+          508,
+          526
+        ]
+      },
+      {
+        "index": 15,
+        "class": "list-item",
+        "bbox": [
+          89,
+          630,
+          223,
+          639
+        ],
+        "pos": [
+          526,
+          553
+        ]
+      },
+      {
+        "index": 16,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          553,
+          558
+        ]
+      }
+    ],
+    "text": "mized hyperparameters for each model are listed, detailed hyperparameters can be found on Deepchem. \n\n# **Logistic Regression (Logreg)** \n\n- Learning rate \n\n- L2 regularization \n\n- Batch size \n\n# **Support Vector Classification (KernelSVM)** \n\n- Penalty parameter C \n\n- Kernel coefficient gamma for radial basis function \n\n# **Kernel Ridge Regression (KRR)** \n\n- Penalty parameter \n\n# **Random Forest (RF)** \n\n- Number of trees in the forest: 500 \n\n# **Gradient Boosting (XGBoost)** \n\n- Maximum tree depth \n\n- Learning rate \n\n- Number of boosted tree \n\n44 \n\n"
+  }
+}

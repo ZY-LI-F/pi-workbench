@@ -1,0 +1,149 @@
+{
+  "title": "致谢 / Thank You",
+  "render_engine": "canvas",
+  "layout_family": "text_focus",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 24,
+      "align": "stretch",
+      "padding": 22
+    },
+    "children": [
+      {
+        "type": "container",
+        "id": "main",
+        "style": {
+          "direction": "column",
+          "gap": 22,
+          "weight": 1,
+          "align": "center",
+          "justify": "center"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "closing_block",
+            "style": {
+              "direction": "column",
+              "gap": 18,
+              "align": "center",
+              "justify": "center"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "eyebrow",
+                "component": "text",
+                "props": {
+                  "text_ref": "eyebrow"
+                }
+              },
+              {
+                "type": "component",
+                "id": "title",
+                "component": "heading",
+                "props": {
+                  "text_ref": "title"
+                }
+              },
+              {
+                "type": "component",
+                "id": "summary",
+                "component": "text",
+                "props": {
+                  "text_ref": "summary"
+                }
+              },
+              {
+                "type": "component",
+                "id": "points",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "key_points"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "component",
+        "id": "footer",
+        "component": "text",
+        "props": {
+          "text_ref": "footer"
+        }
+      }
+    ]
+  },
+  "content": {
+    "title": "致谢 / Thank You",
+    "eyebrow": "第 10/10 页 · 致谢",
+    "summary": "感谢聆听，敬请各位老师与同学批评指正。",
+    "key_points": [
+      "感谢聆听",
+      "欢迎批评指正",
+      "本次汇报仅代表局部现代环境复现结果"
+    ],
+    "footer": "Paper2Any Frontend PPT",
+    "assets": {}
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15, 23, 42, 0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "Noto Sans SC, \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700,
+        "color": "#7dd3fc"
+      },
+      "text": {
+        "font_size": 26,
+        "color": "#e2e8f0"
+      },
+      "bullets": {
+        "font_size": 24,
+        "color": "#e2e8f0",
+        "marker_color": "#f59e0b"
+      },
+      "footer": {
+        "font_size": 18,
+        "color": "#94a3b8"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "简洁致谢页：居中感谢语与三条收束要点，保留页脚与页码信息。"
+}

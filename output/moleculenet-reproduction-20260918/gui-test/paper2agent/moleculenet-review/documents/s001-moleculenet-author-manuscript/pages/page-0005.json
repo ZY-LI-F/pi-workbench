@@ -1,0 +1,63 @@
+{
+  "page": 5,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0005.png",
+  "reviewed": true,
+  "review_notes": "Related Work continuation; repaired cross-page line-wrap 'thou-/sands'. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0005-b000",
+      "kind": "text",
+      "bbox": [
+        71,
+        75,
+        541,
+        254
+      ],
+      "markdown": "sands of protein targets. Both PubChem and ChEMBL are human researcher oriented, with web portals that facilitate browsing of the available targets and compounds. ChemSpider is a repository of nearly 60 million chemical structures, with web based search capabilities for users. The Crystallography Open Database<sup>36</sup> and Cambridge Structural Database<sup>37</sup> offer large repositories of organic and inorganic compounds. The protein data bank<sup>38</sup> offers a repository of experimentally resolved three dimensional protein structures. This listing is by no means comprehensive; the methods section will discuss a number of smaller data sources in greater detail.",
+      "source_class": "text",
+      "join_previous": "none"
+    },
+    {
+      "id": "p0005-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        266,
+        541,
+        518
+      ],
+      "markdown": "These past efforts have been critical in enabling the growth of computational chemistry. However, these previous databases are not machine-learning focused. In particular, these collections don’t define metrics which measure the effectiveness of algorithmic methods in understanding the data contained. Furthermore, there is no prescribed separation of the data into training/validation/test sets (critical for machine learning development). Without specified metrics or splits, the choice is left to individual researchers, and there are indeed many chemical machine learning papers which use subsets of these data stores for machine learning evaluation. Unfortunately, the choice of metric and subset varies widely between groups, so two methods papers using PubChem data may be entirely incomparable. MoleculeNet aims to bridge this gap by providing benchmark results for a reasonable range of metrics, splits, and subsets of these (and other) data collections.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0005-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        529,
+        541,
+        637
+      ],
+      "markdown": "It’s important to note that there have been some efforts to create benchmarking datasets for machine learning in chemistry. The Quantum Machine group<sup>39</sup> and previous work on multitask learning<sup>10</sup> both introduce benchmarking collections which have been used in multiple papers. MoleculeNet incorporates data from both these efforts and significantly expands upon them.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0005-b003",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        751
+      ],
+      "markdown": "5",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Related Work continuation; repaired cross-page line-wrap 'thou-/sands'. Reviewed sequentially by the main agent; no independent agent verification."
+}

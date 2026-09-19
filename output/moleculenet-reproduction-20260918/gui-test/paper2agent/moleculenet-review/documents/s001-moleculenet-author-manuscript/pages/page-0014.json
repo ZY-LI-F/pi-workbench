@@ -1,0 +1,126 @@
+{
+  "page": 14,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0014.png",
+  "reviewed": true,
+  "review_notes": "Metrics and complete Table 2; classification table retained as source image to preserve merged labels. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0014-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        111
+      ],
+      "markdown": "Under this splitting method, model will be trained on older data and tested on newer data, mimicking real world development condition.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0014-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        123,
+        541,
+        159
+      ],
+      "markdown": "MoleculeNet contributes the code for these splitting methods into DeepChem. Users of the library can use these splits on new datasets with short library calls.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0014-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        191,
+        126,
+        202
+      ],
+      "markdown": "### Metrics",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0014-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        224,
+        541,
+        404
+      ],
+      "markdown": "MoleculeNet contains both regression datasets (QM7, QM7b, QM8, QM9, ESOL, FreeSolv, Lipophilicity and PDBbind) and classification datasets (PCBA, MUV, HIV, BACE, BBBP, Tox21, ToxCast and SIDER). Consequently, different performance metrics need to be measured for each. Following suggestions from the community,<sup>64</sup> regression datasets are evaluated by mean absolute error (MAE) and root-mean-square error (RMSE), classification datasets are evaluated by area under curve (AUC) of the receiver operating characteristic (ROC) curve<sup>65</sup> and the precision recall curve (PRC).<sup>66</sup> For datasets containing more than one task, we report the mean metric values over all tasks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0014-b004",
+      "kind": "caption",
+      "bbox": [
+        116,
+        416,
+        496,
+        429
+      ],
+      "markdown": "Table 2: Task details and area under curve(AUC) values of sample curves",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0014-b005",
+      "kind": "table",
+      "bbox": [
+        123,
+        436,
+        489,
+        576
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 2",
+      "asset_name": "table-2",
+      "rows": null
+    },
+    {
+      "id": "p0014-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        578,
+        392,
+        591
+      ],
+      "markdown": "* Number of positive samples/Number of negative samples",
+      "source_class": "text"
+    },
+    {
+      "id": "p0014-b007",
+      "kind": "text",
+      "bbox": [
+        72,
+        616,
+        541,
+        723
+      ],
+      "markdown": "To allow better comparison, we propose regression metrics according to previous work on either same models or datasets. For classification datasets, we propose recommended metrics from the two commonly used metrics: AUC-PRC and AUC-ROC. Four representative sets of ROC curves and PRCs are depicted in Figure 4, resulting from the predictions of logistic regression and graph convolutional models on four tasks. Details about these tasks and",
+      "source_class": "text"
+    },
+    {
+      "id": "p0014-b008",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "14",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Metrics and complete Table 2; classification table retained as source image to preserve merged labels. Reviewed sequentially by the main agent; no independent agent verification."
+}

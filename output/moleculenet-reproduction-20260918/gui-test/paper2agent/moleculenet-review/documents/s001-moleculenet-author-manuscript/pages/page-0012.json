@@ -1,0 +1,135 @@
+{
+  "page": 12,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0012.png",
+  "reviewed": true,
+  "review_notes": "Tox21 continuation, ToxCast, SIDER, ClinTox and 80/10/10 split description. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0012-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        409,
+        87
+      ],
+      "markdown": "targets, including nuclear receptors and stress response pathways.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0012-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        116,
+        121,
+        125
+      ],
+      "markdown": "### ToxCast",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0012-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        147,
+        541,
+        231
+      ],
+      "markdown": "ToxCast is another data collection (from the same initiative as Tox21) providing toxicology data for a large library of compounds based on _in vitro_ high-throughput screening.<sup>54</sup> The processed collection in MoleculeNet includes qualitative results of over 600 experiments on 8615 compounds.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0012-b003",
+      "kind": "heading",
+      "bbox": [
+        72,
+        260,
+        114,
+        269
+      ],
+      "markdown": "### SIDER",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0012-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        291,
+        541,
+        375
+      ],
+      "markdown": "The Side Effect Resource (SIDER) is a database of marketed drugs and adverse drug reactions (ADR).<sup>55</sup> The version of the SIDER dataset in DeepChem<sup>56</sup> has grouped drug sideeffects into 27 system organ classes following MedDRA classifications<sup>57</sup> measured for 1427 approved drugs (following previous usage<sup>56</sup> ).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0012-b005",
+      "kind": "heading",
+      "bbox": [
+        71,
+        404,
+        119,
+        413
+      ],
+      "markdown": "### ClinTox",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0012-b006",
+      "kind": "text",
+      "bbox": [
+        71,
+        435,
+        541,
+        591
+      ],
+      "markdown": "The ClinTox dataset, introduced as part of this work, compares drugs approved by the FDA and drugs that have failed clinical trials for toxicity reasons.<sup>58,59</sup> The dataset includes two classification tasks for 1491 drug compounds with known chemical structures: (1) clinical trial toxicity (or absence of toxicity) and (2) FDA approval status. List of FDA-approved drugs are compiled from the SWEETLEAD database,<sup>60</sup> and list of drugs that failed clinical trials for toxicity reasons are compiled from the Aggregate Analysis of ClinicalTrials.gov (AACT) database.<sup>61</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0012-b007",
+      "kind": "heading",
+      "bbox": [
+        71,
+        624,
+        191,
+        637
+      ],
+      "markdown": "### Dataset splitting",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0012-b008",
+      "kind": "text",
+      "bbox": [
+        71,
+        656,
+        541,
+        717
+      ],
+      "markdown": "Typical machine learning methods require datasets to be split into training/validation/test subsets (or alternatively into _K_ -folds) for benchmarking. All MoleculeNet datasets are split into training, validation and test, following a 80/10/10 ratio. Training sets were used to",
+      "source_class": "text"
+    },
+    {
+      "id": "p0012-b009",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "12",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Tox21 continuation, ToxCast, SIDER, ClinTox and 80/10/10 split description. Reviewed sequentially by the main agent; no independent agent verification."
+}

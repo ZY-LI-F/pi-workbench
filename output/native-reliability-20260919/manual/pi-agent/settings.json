@@ -1,0 +1,10 @@
+{
+  "defaultProvider": "visual-fixture",
+  "defaultModel": "preview-only",
+  "compaction": {
+    "enabled": false
+  },
+  "retry": {
+    "enabled": true
+  }
+}

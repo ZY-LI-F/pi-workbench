@@ -26,7 +26,6 @@ export function PiVersionSetting({ state, onCheck, onSync }: PiVersionSettingPro
     {busy === "syncing" && <p role="status">请在确认窗口选择是否更新。确认后需下载依赖；完成前请保持 GUI 打开。</p>}
     {error && <p className="pi-version-setting__error" role="alert">{error}</p>}
     {result && <p role="status">{result}</p>}
-    <div className="pi-version-setting__sol"><strong>Sol-Pi · 尚未接入</strong><small>目前只有可行性研究，没有可开启的 Sol 模式。本次版本同步不会安装 Sol-Pi，也不会增加第二套 Pi 核心。</small></div>
   </section>;
 }
 

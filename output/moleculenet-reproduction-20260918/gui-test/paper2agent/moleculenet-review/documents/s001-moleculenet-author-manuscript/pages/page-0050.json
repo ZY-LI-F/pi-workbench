@@ -1,0 +1,53 @@
+{
+  "page": 50,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0050.png",
+  "reviewed": true,
+  "review_notes": "Complete Table 6 retained as source image; five dataset groupings and AUC-ROC caption. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0050-b000",
+      "kind": "caption",
+      "bbox": [
+        106,
+        73,
+        506,
+        86
+      ],
+      "markdown": "Table 6: BBBP, Tox21, ToxCast, SIDER, ClinTox Performances (AUC-ROC)",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0050-b001",
+      "kind": "table",
+      "bbox": [
+        126,
+        93,
+        482,
+        720
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 6",
+      "asset_name": "table-6",
+      "rows": null
+    },
+    {
+      "id": "p0050-b002",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "50",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Complete Table 6 retained as source image; five dataset groupings and AUC-ROC caption. Reviewed sequentially by the main agent; no independent agent verification."
+}

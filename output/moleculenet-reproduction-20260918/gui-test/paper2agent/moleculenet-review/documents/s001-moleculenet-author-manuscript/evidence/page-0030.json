@@ -1,0 +1,147 @@
+{
+  "page": 30,
+  "lines": [
+    {
+      "text": "Figure 8: Benchmark performances for physiology tasks: ToxCast, 8 models are evaluated",
+      "bbox": [
+        72.0,
+        563.6050415039062,
+        540.0188598632812,
+        574.2213134765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "by AUC-ROC on random split; Tox21, 9 models are evaluated by AUC-ROC on random",
+      "bbox": [
+        72.0,
+        578.0510864257812,
+        540.0352783203125,
+        588.6673583984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "split; BBBP, 9 models are evaluated by AUC-ROC on scaﬀold split; SIDER, 9 models",
+      "bbox": [
+        72.0,
+        592.4970703125,
+        540.0003051757812,
+        603.1133422851562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "are evaluated by AUC-ROC on random split. For AUC-ROC, higher value indicates better",
+      "bbox": [
+        71.99996948242188,
+        606.9420776367188,
+        540.0580444335938,
+        617.558349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "performance(to the right).",
+      "bbox": [
+        71.99996948242188,
+        621.3880615234375,
+        206.31668090820312,
+        632.0043334960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "30",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 30
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          72,
+          157,
+          541,
+          552
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          71,
+          563,
+          541,
+          633
+        ],
+        "pos": [
+          2,
+          384
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          384,
+          389
+        ]
+      }
+    ],
+    "text": "\n\nFigure 8: Benchmark performances for physiology tasks: **ToxCast** , 8 models are evaluated by AUC-ROC on random split; **Tox21** , 9 models are evaluated by AUC-ROC on random split; **BBBP** , 9 models are evaluated by AUC-ROC on scaffold split; **SIDER** , 9 models are evaluated by AUC-ROC on random split. For AUC-ROC, higher value indicates better performance(to the right). \n\n30 \n\n"
+  }
+}

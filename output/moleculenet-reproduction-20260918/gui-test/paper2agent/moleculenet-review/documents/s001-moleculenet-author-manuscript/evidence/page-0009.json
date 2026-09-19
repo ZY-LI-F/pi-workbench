@@ -1,0 +1,439 @@
+{
+  "page": 9,
+  "lines": [
+    {
+      "text": "functional theory (B3LYP/6-31G(2df,p) based DFT). In our benchmark, geometric prop-",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0579833984375,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "erties (atomic coordinates) are integrated into features, which are then applied to predict",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.0580444335938,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "other properties.",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        156.94171142578125,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The datasets introduced above (QM7, QM7b, QM8, QM9) were curated as part of the",
+      "bbox": [
+        89.55899810791016,
+        147.38113403320312,
+        540.0668334960938,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Quantum-Machine eﬀort,39 which has processed a number of datasets to measure the eﬃcacy",
+      "bbox": [
+        72.0,
+        166.95114135742188,
+        540.0143432617188,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of machine-learning methods for quantum chemistry.",
+      "bbox": [
+        72.0,
+        195.19717407226562,
+        342.3668518066406,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ESOL",
+      "bbox": [
+        72.0,
+        235.83419799804688,
+        106.47879791259766,
+        246.45040893554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ESOL is a small dataset consisting of water solubility data for 1128 compounds.13 The dataset",
+      "bbox": [
+        72.0,
+        263.1242370605469,
+        539.99951171875,
+        278.0794372558594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "has been used to train models that estimate solubility directly from chemical structures (as",
+      "bbox": [
+        72.0,
+        291.3712158203125,
+        540.033935546875,
+        301.9874267578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "encoded in SMILES strings).22 Note that these structures don’t include 3D coordinates, since",
+      "bbox": [
+        72.0,
+        310.9402160644531,
+        540.019775390625,
+        325.8944396972656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "solubility is a property of a molecule and not of its particular conformers.",
+      "bbox": [
+        71.99998474121094,
+        339.18621826171875,
+        449.50946044921875,
+        349.80242919921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "FreeSolv",
+      "bbox": [
+        71.99998474121094,
+        379.8232116699219,
+        122.14009857177734,
+        390.4394226074219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The Free Solvation Database (FreeSolv) provides experimental and calculated hydration free",
+      "bbox": [
+        71.99998474121094,
+        411.45220947265625,
+        540.0699462890625,
+        422.06842041015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "energy of small molecules in water.16 A subset of the compounds in the dataset are also",
+      "bbox": [
+        71.99998474121094,
+        431.0212097167969,
+        540.02587890625,
+        445.9764099121094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "used in the SAMPL blind prediction challenge.15 The calculated values are derived from",
+      "bbox": [
+        71.99996948242188,
+        454.92919921875,
+        540.0117797851562,
+        469.8843994140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "alchemical free energy calculations using molecular dynamics simulations. We include the",
+      "bbox": [
+        71.99996948242188,
+        483.1752014160156,
+        540.0220336914062,
+        493.7914123535156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "experimental values in the benchmark collection, and use calculated values for comparison.",
+      "bbox": [
+        71.99996948242188,
+        507.0832214355469,
+        538.2647705078125,
+        517.699462890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Lipophilicity",
+      "bbox": [
+        71.99996948242188,
+        547.7201538085938,
+        146.25375366210938,
+        558.33642578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Lipophilicity is an important feature of drug molecules that aﬀects both membrane perme-",
+      "bbox": [
+        71.99996948242188,
+        579.3491821289062,
+        540.046142578125,
+        589.9654541015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ability and solubility. This dataset, curated from ChEMBL database,45 provides experimen-",
+      "bbox": [
+        71.99996948242188,
+        598.9181518554688,
+        539.9994506835938,
+        613.8734130859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tal results of octanol/water distribution coeﬃcient (logD at pH 7.4) of 4200 compounds.",
+      "bbox": [
+        71.99996948242188,
+        627.1641235351562,
+        524.8152465820312,
+        637.7803955078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "9",
+      "bbox": [
+        303.073974609375,
+        741.5911254882812,
+        308.9320373535156,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 9
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          74,
+          541,
+          135
+        ],
+        "pos": [
+          0,
+          194
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          146,
+          541,
+          206
+        ],
+        "pos": [
+          194,
+          429
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          235,
+          107,
+          245
+        ],
+        "pos": [
+          429,
+          442
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          71,
+          266,
+          541,
+          350
+        ],
+        "pos": [
+          442,
+          823
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          71,
+          379,
+          123,
+          389
+        ],
+        "pos": [
+          823,
+          840
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          71,
+          410,
+          541,
+          518
+        ],
+        "pos": [
+          840,
+          1310
+        ]
+      },
+      {
+        "index": 6,
+        "class": "section-header",
+        "bbox": [
+          71,
+          547,
+          147,
+          559
+        ],
+        "pos": [
+          1310,
+          1332
+        ]
+      },
+      {
+        "index": 7,
+        "class": "text",
+        "bbox": [
+          71,
+          579,
+          541,
+          639
+        ],
+        "pos": [
+          1332,
+          1611
+        ]
+      },
+      {
+        "index": 8,
+        "class": "page-footer",
+        "bbox": [
+          303,
+          741,
+          309,
+          751
+        ],
+        "pos": [
+          1611,
+          1615
+        ]
+      }
+    ],
+    "text": "functional theory (B3LYP/6-31G(2df,p) based DFT). In our benchmark, geometric properties (atomic coordinates) are integrated into features, which are then applied to predict other properties. \n\nThe datasets introduced above (QM7, QM7b, QM8, QM9) were curated as part of the Quantum-Machine effort,<sup>39</sup> which has processed a number of datasets to measure the efficacy of machine-learning methods for quantum chemistry. \n\n# **ESOL** \n\nESOL is a small dataset consisting of water solubility data for 1128 compounds.<sup>13</sup> The dataset has been used to train models that estimate solubility directly from chemical structures (as encoded in SMILES strings).<sup>22</sup> Note that these structures don’t include 3D coordinates, since solubility is a property of a molecule and not of its particular conformers. \n\n# **FreeSolv** \n\nThe Free Solvation Database (FreeSolv) provides experimental and calculated hydration free energy of small molecules in water.<sup>16</sup> A subset of the compounds in the dataset are also used in the SAMPL blind prediction challenge.<sup>15</sup> The calculated values are derived from alchemical free energy calculations using molecular dynamics simulations. We include the experimental values in the benchmark collection, and use calculated values for comparison. \n\n# **Lipophilicity** \n\nLipophilicity is an important feature of drug molecules that affects both membrane permeability and solubility. This dataset, curated from ChEMBL database,<sup>45</sup> provides experimental results of octanol/water distribution coefficient (logD at pH 7.4) of 4200 compounds. \n\n9 \n\n"
+  }
+}

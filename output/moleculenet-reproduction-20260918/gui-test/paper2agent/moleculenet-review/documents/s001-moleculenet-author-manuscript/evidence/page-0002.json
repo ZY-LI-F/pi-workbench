@@ -1,0 +1,462 @@
+{
+  "page": 2,
+  "lines": [
+    {
+      "text": "open source library). MoleculeNet benchmarks demonstrate that learnable represen-",
+      "bbox": [
+        101.26499938964844,
+        76.38410186767578,
+        510.7599182128906,
+        86.07138061523438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tations are powerful tools for molecular machine learning and broadly oﬀer the best",
+      "bbox": [
+        101.26499938964844,
+        98.80811309814453,
+        510.7815856933594,
+        108.49539184570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "performance. However, this result comes with caveats. Learnable representations still",
+      "bbox": [
+        101.26499938964844,
+        121.23212432861328,
+        510.738037109375,
+        130.91940307617188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "struggle to deal with complex tasks under data scarcity and highly imbalanced classi-",
+      "bbox": [
+        101.26499938964844,
+        143.6561279296875,
+        510.7707214355469,
+        153.34341430664062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ﬁcation. For quantum mechanical and biophysical datasets, the use of physics-aware",
+      "bbox": [
+        101.26499938964844,
+        166.08013916015625,
+        510.7707824707031,
+        175.76742553710938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "featurizations can be more important than choice of particular learning algorithm.",
+      "bbox": [
+        101.26499938964844,
+        188.50311279296875,
+        494.9416809082031,
+        198.19039916992188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Introduction",
+      "bbox": [
+        72.0,
+        238.41651916503906,
+        178.6322021484375,
+        253.70379638671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Overlap between chemistry and statistical learning has had a long history. The ﬁeld of chem-",
+      "bbox": [
+        72.0,
+        277.8141174316406,
+        540.0460815429688,
+        288.4303283691406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "informatics has been utilizing machine learning methods in chemical modeling(e.g. quanti-",
+      "bbox": [
+        72.0,
+        301.72210693359375,
+        540.0340576171875,
+        312.33831787109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tative structure activity relationships, QSAR) for decades.1–6 In the recent 10 years, with",
+      "bbox": [
+        72.0,
+        321.2911071777344,
+        540.010009765625,
+        336.2463073730469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the advent of sophisticated deep learning methods,7,8 machine learning has gathered increas-",
+      "bbox": [
+        71.99996948242188,
+        345.1990966796875,
+        540.0142822265625,
+        360.1533203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ing amounts of attention from the scientiﬁc community. Data-driven analysis has become",
+      "bbox": [
+        72.0,
+        373.4450988769531,
+        540.0579833984375,
+        384.0613098144531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a routine step in many chemical and biological applications, including virtual screening,9–12",
+      "bbox": [
+        72.0,
+        395.7807312011719,
+        539.4934692382812,
+        407.96929931640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "chemical property prediction,13–16 and quantum chemistry calculations.17–20",
+      "bbox": [
+        72.0,
+        416.9220886230469,
+        459.6776123046875,
+        431.8772888183594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "In many such applications, machine learning has shown strong potential to compete with",
+      "bbox": [
+        89.55902099609375,
+        445.1690979003906,
+        540.0549926757812,
+        455.7853088378906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "or even outperform conventional ab-initio computations.16,18 It follows that introduction",
+      "bbox": [
+        72.0000228881836,
+        464.73809814453125,
+        540.0279541015625,
+        479.69329833984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of novel machine learning methods has the potential to reshape research on properties of",
+      "bbox": [
+        72.00003051757812,
+        492.9841003417969,
+        540.05810546875,
+        503.6003112792969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "molecules. However, this potential has been limited by the lack of a standard evaluation",
+      "bbox": [
+        72.00003051757812,
+        516.8920288085938,
+        540.0462036132812,
+        527.50830078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "platform for proposed machine learning algorithms. Algorithmic papers often benchmark",
+      "bbox": [
+        72.00003051757812,
+        540.800048828125,
+        540.0700073242188,
+        551.4163208007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "proposed methods on disjoint dataset collections, making it a challenge to gauge whether a",
+      "bbox": [
+        72.00003051757812,
+        564.7080688476562,
+        540.0700073242188,
+        575.3243408203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "proposed technique does in fact improve performance.",
+      "bbox": [
+        72.00003051757812,
+        588.6160888671875,
+        348.5357971191406,
+        599.2323608398438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Data for molecule-based machine learning tasks are highly heterogeneous and expensive",
+      "bbox": [
+        89.55902862548828,
+        612.5241088867188,
+        540.0429077148438,
+        623.140380859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to gather. Obtaining precise and accurate results for chemical properties typically requires",
+      "bbox": [
+        72.00003051757812,
+        636.4310913085938,
+        540.0580444335938,
+        647.04736328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "specialized instruments as well as expert supervision (contrast with computer speech and",
+      "bbox": [
+        72.00003051757812,
+        660.3390502929688,
+        540.0101928710938,
+        670.955322265625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "vision, where lightly trained workers can annotate data suitable for machine learning sys-",
+      "bbox": [
+        72.00003051757812,
+        684.2470703125,
+        540.0580444335938,
+        694.8633422851562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tems). As a result, molecular datasets are usually much smaller than those available for",
+      "bbox": [
+        72.00003051757812,
+        708.1550903320312,
+        540.05810546875,
+        718.7713623046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "2",
+      "bbox": [
+        303.07403564453125,
+        741.591064453125,
+        308.9320983886719,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 2
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          101,
+          75,
+          511,
+          199
+        ],
+        "pos": [
+          0,
+          504
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          238,
+          179,
+          251
+        ],
+        "pos": [
+          504,
+          525
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          71,
+          277,
+          541,
+          432
+        ],
+        "pos": [
+          525,
+          1203
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          445,
+          541,
+          600
+        ],
+        "pos": [
+          1203,
+          1803
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          612,
+          541,
+          720
+        ],
+        "pos": [
+          1803,
+          2251
+        ]
+      },
+      {
+        "index": 5,
+        "class": "page-footer",
+        "bbox": [
+          303,
+          741,
+          309,
+          750
+        ],
+        "pos": [
+          2251,
+          2255
+        ]
+      }
+    ],
+    "text": "open source library). MoleculeNet benchmarks demonstrate that learnable representations are powerful tools for molecular machine learning and broadly offer the best performance. However, this result comes with caveats. Learnable representations still struggle to deal with complex tasks under data scarcity and highly imbalanced classification. For quantum mechanical and biophysical datasets, the use of physics-aware featurizations can be more important than choice of particular learning algorithm. \n\n# **Introduction** \n\nOverlap between chemistry and statistical learning has had a long history. The field of cheminformatics has been utilizing machine learning methods in chemical modeling(e.g. quantitative structure activity relationships, QSAR) for decades.<sup>1–6</sup> In the recent 10 years, with the advent of sophisticated deep learning methods,<sup>7,8</sup> machine learning has gathered increasing amounts of attention from the scientific community. Data-driven analysis has become a routine step in many chemical and biological applications, including virtual screening,<sup>9–12</sup> chemical property prediction,<sup>13–16</sup> and quantum chemistry calculations.<sup>17–20</sup> \n\nIn many such applications, machine learning has shown strong potential to compete with or even outperform conventional _ab-initio_ computations.<sup>16,18</sup> It follows that introduction of novel machine learning methods has the potential to reshape research on properties of molecules. However, this potential has been limited by the lack of a standard evaluation platform for proposed machine learning algorithms. Algorithmic papers often benchmark proposed methods on disjoint dataset collections, making it a challenge to gauge whether a proposed technique does in fact improve performance. \n\nData for molecule-based machine learning tasks are highly heterogeneous and expensive to gather. Obtaining precise and accurate results for chemical properties typically requires specialized instruments as well as expert supervision (contrast with computer speech and vision, where lightly trained workers can annotate data suitable for machine learning systems). As a result, molecular datasets are usually much smaller than those available for \n\n2 \n\n"
+  }
+}

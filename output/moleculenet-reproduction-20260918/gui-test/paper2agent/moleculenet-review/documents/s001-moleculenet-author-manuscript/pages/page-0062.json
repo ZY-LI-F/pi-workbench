@@ -1,0 +1,170 @@
+{
+  "page": 62,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0062.png",
+  "reviewed": true,
+  "review_notes": "References 46–57 inspected; citation order and source URLs retained. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0062-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        109
+      ],
+      "markdown": "- (46) Rohrer, S. G.; Baumann, K. _Journal of Chemical Information and Modeling_ **2009** , _49_ , 169–184.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        132,
+        541,
+        168
+      ],
+      "markdown": "- (47) AIDS Antiviral Screen Data. `https://wiki.nci.nih.gov/display/NCIDTPdata/ AIDS+Antiviral+Screen+Data` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b002",
+      "kind": "text",
+      "bbox": [
+        71,
+        190,
+        541,
+        224
+      ],
+      "markdown": "- (48) Wang, R.; Fang, X.; Lu, Y.; Wang, S. _Journal of Medicinal Chemistry_ **2004** , _47_ , 2977– 2980.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        248,
+        541,
+        284
+      ],
+      "markdown": "- (49) Wang, R.; Fang, X.; Lu, Y.; Yang, C.-Y.; Wang, S. _Journal of Medicinal Chemistry_ **2005** , _48_ , 4111–4119.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        306,
+        541,
+        342
+      ],
+      "markdown": "- (50) Liu, Z.; Li, Y.; Han, L.; Li, J.; Liu, J.; Zhao, Z.; Nie, W.; Liu, Y.; Wang, R. _Bioinformatics_ **2014** , _31_ , 405–412.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        363,
+        541,
+        400
+      ],
+      "markdown": "- (51) Subramanian, G.; Ramsundar, B.; Pande, V.; Denny, R. A. _Journal of Chemical Information and Modeling_ **2016** , _56_ , 1936–1949.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        421,
+        541,
+        457
+      ],
+      "markdown": "- (52) Martins, I. F.; Teixeira, A. L.; Pinheiro, L.; Falcao, A. O. _Journal of Chemical Information and Modeling_ **2012** , _52_ , 1686–1697.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b007",
+      "kind": "text",
+      "bbox": [
+        72,
+        479,
+        541,
+        513
+      ],
+      "markdown": "- (53) Tox21 Challenge. `https://tripod.nih.gov/tox21/challenge/` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b008",
+      "kind": "text",
+      "bbox": [
+        72,
+        537,
+        491,
+        550
+      ],
+      "markdown": "- (54) Richard, A. M. et al. _Chemical Research in Toxicology_ **2016** , _29_ , 1225–1251.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b009",
+      "kind": "text",
+      "bbox": [
+        72,
+        571,
+        541,
+        605
+      ],
+      "markdown": "- (55) Kuhn, M.; Letunic, I.; Jensen, L. J.; Bork, P. _Nucleic Acids Research_ **2016** , _44_ , D1075– D41079.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b010",
+      "kind": "text",
+      "bbox": [
+        72,
+        628,
+        541,
+        665
+      ],
+      "markdown": "- (56) Altae-Tran, H.; Ramsundar, B.; Pappu, A. S.; Pande, V. _arXiv preprint arXiv:1611.03199_ **2016** ,",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b011",
+      "kind": "text",
+      "bbox": [
+        72,
+        686,
+        540,
+        720
+      ],
+      "markdown": "- (57) Medical Dictionary for Regulatory Activities. `http://www.meddra.org/` , Accessed: 2017-09-27.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0062-b012",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "62",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "References 46–57 inspected; citation order and source URLs retained. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check."
+}

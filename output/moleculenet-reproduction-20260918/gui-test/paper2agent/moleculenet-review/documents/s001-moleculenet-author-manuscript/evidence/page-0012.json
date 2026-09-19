@@ -1,0 +1,479 @@
+{
+  "page": 12,
+  "lines": [
+    {
+      "text": "targets, including nuclear receptors and stress response pathways.",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        408.7662048339844,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ToxCast",
+      "bbox": [
+        72.0,
+        116.29513549804688,
+        120.49030303955078,
+        126.91134643554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ToxCast is another data collection (from the same initiative as Tox21) providing toxicology",
+      "bbox": [
+        72.0,
+        147.92416381835938,
+        540.1060791015625,
+        158.54037475585938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "data for a large library of compounds based on in vitro high-throughput screening.54 The",
+      "bbox": [
+        72.0,
+        167.49313354492188,
+        539.9964599609375,
+        182.44735717773438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "processed collection in MoleculeNet includes qualitative results of over 600 experiments on",
+      "bbox": [
+        72.00003051757812,
+        195.73916625976562,
+        540.0341796875,
+        206.35537719726562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "8615 compounds.",
+      "bbox": [
+        72.00003051757812,
+        219.64718627929688,
+        160.20550537109375,
+        230.26339721679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "SIDER",
+      "bbox": [
+        72.00003051757812,
+        260.2842102050781,
+        113.6399917602539,
+        270.9004211425781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The Side Eﬀect Resource (SIDER) is a database of marketed drugs and adverse drug reac-",
+      "bbox": [
+        72.00003051757812,
+        291.9132080078125,
+        540.0343627929688,
+        302.5294189453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "tions (ADR).55 The version of the SIDER dataset in DeepChem56 has grouped drug side-",
+      "bbox": [
+        72.00003051757812,
+        311.4822082519531,
+        540.0069580078125,
+        326.4374084472656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "eﬀects into 27 system organ classes following MedDRA classiﬁcations57 measured for 1427",
+      "bbox": [
+        72.0,
+        335.39019775390625,
+        540.0267944335938,
+        350.34442138671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "approved drugs (following previous usage56).",
+      "bbox": [
+        72.0,
+        362.0638427734375,
+        300.6717224121094,
+        374.2524108886719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ClinTox",
+      "bbox": [
+        71.99998474121094,
+        404.273193359375,
+        118.36225891113281,
+        414.889404296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The ClinTox dataset, introduced as part of this work, compares drugs approved by the FDA",
+      "bbox": [
+        71.99998474121094,
+        435.9021911621094,
+        540.0582885742188,
+        446.5184020996094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "and drugs that have failed clinical trials for toxicity reasons.58,59 The dataset includes two",
+      "bbox": [
+        71.99998474121094,
+        455.47119140625,
+        540.0079345703125,
+        470.4263916015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "classiﬁcation tasks for 1491 drug compounds with known chemical structures: (1) clinical",
+      "bbox": [
+        71.99996948242188,
+        483.7181701660156,
+        540.0579833984375,
+        494.3343811035156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "trial toxicity (or absence of toxicity) and (2) FDA approval status. List of FDA-approved",
+      "bbox": [
+        71.99996948242188,
+        507.6252136230469,
+        540.0940551757812,
+        518.241455078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "drugs are compiled from the SWEETLEAD database,60 and list of drugs that failed clinical",
+      "bbox": [
+        71.99996948242188,
+        527.1951293945312,
+        540.0261840820312,
+        542.1494140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "trials for toxicity reasons are compiled from the Aggregate Analysis of ClinicalTrials.gov",
+      "bbox": [
+        72.0,
+        555.441162109375,
+        540.0818481445312,
+        566.0574340820312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(AACT) database.61",
+      "bbox": [
+        72.0,
+        577.77587890625,
+        176.79122924804688,
+        589.9654541015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Dataset splitting",
+      "bbox": [
+        71.99999237060547,
+        624.0968627929688,
+        190.1552734375,
+        636.8362426757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Typical machine learning methods require datasets to be split into training/validation/test",
+      "bbox": [
+        71.99999237060547,
+        657.3851928710938,
+        540.0819702148438,
+        668.00146484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "subsets (or alternatively into K-folds) for benchmarking. All MoleculeNet datasets are split",
+      "bbox": [
+        71.99999237060547,
+        681.2931518554688,
+        540.0203247070312,
+        691.909423828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "into training, validation and test, following a 80/10/10 ratio. Training sets were used to",
+      "bbox": [
+        71.99998474121094,
+        705.201171875,
+        540.117919921875,
+        715.8174438476562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "12",
+      "bbox": [
+        300.14697265625,
+        741.5911865234375,
+        311.86309814453125,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 12
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          409,
+          87
+        ],
+        "pos": [
+          0,
+          69
+        ]
+      },
+      {
+        "index": 1,
+        "class": "section-header",
+        "bbox": [
+          72,
+          116,
+          121,
+          125
+        ],
+        "pos": [
+          69,
+          86
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          147,
+          541,
+          231
+        ],
+        "pos": [
+          86,
+          390
+        ]
+      },
+      {
+        "index": 3,
+        "class": "section-header",
+        "bbox": [
+          72,
+          260,
+          114,
+          269
+        ],
+        "pos": [
+          390,
+          405
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          291,
+          541,
+          375
+        ],
+        "pos": [
+          405,
+          756
+        ]
+      },
+      {
+        "index": 5,
+        "class": "section-header",
+        "bbox": [
+          71,
+          404,
+          119,
+          413
+        ],
+        "pos": [
+          756,
+          773
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          71,
+          435,
+          541,
+          591
+        ],
+        "pos": [
+          773,
+          1371
+        ]
+      },
+      {
+        "index": 7,
+        "class": "section-header",
+        "bbox": [
+          71,
+          624,
+          191,
+          637
+        ],
+        "pos": [
+          1371,
+          1397
+        ]
+      },
+      {
+        "index": 8,
+        "class": "text",
+        "bbox": [
+          71,
+          656,
+          541,
+          717
+        ],
+        "pos": [
+          1397,
+          1678
+        ]
+      },
+      {
+        "index": 9,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          1678,
+          1683
+        ]
+      }
+    ],
+    "text": "targets, including nuclear receptors and stress response pathways. \n\n## **ToxCast** \n\nToxCast is another data collection (from the same initiative as Tox21) providing toxicology data for a large library of compounds based on _in vitro_ high-throughput screening.<sup>54</sup> The processed collection in MoleculeNet includes qualitative results of over 600 experiments on 8615 compounds. \n\n## **SIDER** \n\nThe Side Effect Resource (SIDER) is a database of marketed drugs and adverse drug reactions (ADR).<sup>55</sup> The version of the SIDER dataset in DeepChem<sup>56</sup> has grouped drug sideeffects into 27 system organ classes following MedDRA classifications<sup>57</sup> measured for 1427 approved drugs (following previous usage<sup>56</sup> ). \n\n## **ClinTox** \n\nThe ClinTox dataset, introduced as part of this work, compares drugs approved by the FDA and drugs that have failed clinical trials for toxicity reasons.<sup>58,59</sup> The dataset includes two classification tasks for 1491 drug compounds with known chemical structures: (1) clinical trial toxicity (or absence of toxicity) and (2) FDA approval status. List of FDA-approved drugs are compiled from the SWEETLEAD database,<sup>60</sup> and list of drugs that failed clinical trials for toxicity reasons are compiled from the Aggregate Analysis of ClinicalTrials.gov (AACT) database.<sup>61</sup> \n\n# **Dataset splitting** \n\nTypical machine learning methods require datasets to be split into training/validation/test subsets (or alternatively into _K_ -folds) for benchmarking. All MoleculeNet datasets are split into training, validation and test, following a 80/10/10 ratio. Training sets were used to \n\n12 \n\n"
+  }
+}

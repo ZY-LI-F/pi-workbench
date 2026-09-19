@@ -1,4 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { ArtifactLinkRequest } from "../shared/artifact-library";
+import type { SolModeConfig } from "../shared/sol-mode";
 import type {
   BridgeEvent,
   PiCommand,
@@ -51,6 +53,8 @@ import type {
 } from "../shared/external-execution";
 
 const api: StellaDesktopApi = Object.freeze({
+  solModeGet: () => ipcRenderer.invoke("stella:sol:get") as ReturnType<StellaDesktopApi["solModeGet"]>,
+  solModeApply: (config: SolModeConfig) => ipcRenderer.invoke("stella:sol:apply", config) as ReturnType<StellaDesktopApi["solModeApply"]>,
   piVersionCheck: () => ipcRenderer.invoke("stella:pi-version:check") as ReturnType<StellaDesktopApi["piVersionCheck"]>,
   piVersionSync: () => ipcRenderer.invoke("stella:pi-version:sync") as ReturnType<StellaDesktopApi["piVersionSync"]>,
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
@@ -98,6 +102,9 @@ const api: StellaDesktopApi = Object.freeze({
     ipcRenderer.invoke("stella:local-path:inspect", path) as ReturnType<StellaDesktopApi["inspectLocalPath"]>,
   readLocalFilePreview: (path: string) =>
     ipcRenderer.invoke("stella:local-file:preview", path) as ReturnType<StellaDesktopApi["readLocalFilePreview"]>,
+  chooseArtifactDirectory: () => ipcRenderer.invoke("stella:artifact-directory:choose") as ReturnType<StellaDesktopApi["chooseArtifactDirectory"]>,
+  listArtifactDirectory: (path: string) => ipcRenderer.invoke("stella:artifact-directory:list", path) as ReturnType<StellaDesktopApi["listArtifactDirectory"]>,
+  resolveArtifactLink: (request: ArtifactLinkRequest) => ipcRenderer.invoke("stella:artifact-link:resolve", request) as ReturnType<StellaDesktopApi["resolveArtifactLink"]>,
   openPath: (path: string) => ipcRenderer.invoke("stella:open-path", path) as Promise<void>,
   revealPath: (path: string) => ipcRenderer.invoke("stella:reveal-path", path) as Promise<void>,
   openExternal: (url: string) => ipcRenderer.invoke("stella:open-external", url) as Promise<void>,

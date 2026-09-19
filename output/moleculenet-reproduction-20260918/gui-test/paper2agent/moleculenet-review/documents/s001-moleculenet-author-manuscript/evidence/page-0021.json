@@ -1,0 +1,465 @@
+{
+  "page": 21,
+  "lines": [
+    {
+      "text": "Support Vector Classiﬁcation",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        244.84823608398438,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Support vector machine (SVM) is one of the most famous and widely-used machine learning",
+      "bbox": [
+        72.0,
+        107.28713989257812,
+        540.0341186523438,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "method.78 As in classiﬁcation task, it deﬁnes a decision plane which separates data points",
+      "bbox": [
+        72.0,
+        126.85617065429688,
+        540.0232543945312,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of diﬀerent class with maximized margin. To further increase performance, we incorporates",
+      "bbox": [
+        72.00000762939453,
+        155.10317993164062,
+        540.0341186523438,
+        165.71939086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "regularization and a radial basis function kernel (KernelSVM).",
+      "bbox": [
+        72.00000762939453,
+        179.01016235351562,
+        393.10467529296875,
+        189.62637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Kernel Ridge Regression",
+      "bbox": [
+        72.00000762939453,
+        219.64718627929688,
+        217.674072265625,
+        230.26339721679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Kernel ridge regression(KRR) is a combination of ridge regression and kernel trick.",
+      "bbox": [
+        72.00000762939453,
+        251.27621459960938,
+        515.4542846679688,
+        261.8924255371094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "By",
+      "bbox": [
+        525.59228515625,
+        251.27621459960938,
+        540.05810546875,
+        261.8924255371094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "using a nonlinear kernel function(radial basis function), it learns a non-linear function in the",
+      "bbox": [
+        72.00000762939453,
+        275.1842041015625,
+        540.0580444335938,
+        285.8004150390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "original space that maps features to predicted values.",
+      "bbox": [
+        72.00000762939453,
+        299.0921936035156,
+        345.4273986816406,
+        309.7084045410156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Random Forests",
+      "bbox": [
+        72.00000762939453,
+        339.7281799316406,
+        167.48617553710938,
+        350.3443908691406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Random forests (RF) are ensemble prediction methods.72 A random forest consists of many",
+      "bbox": [
+        72.00000762939453,
+        367.0191650390625,
+        540.0221557617188,
+        381.973388671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "individual decision trees, each of which is trained on a subsampled version of the original",
+      "bbox": [
+        72.0,
+        395.2651672363281,
+        540.0342407226562,
+        405.8813781738281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "dataset. The results for individual trees are averaged to provide output predictions for the",
+      "bbox": [
+        72.0,
+        419.17315673828125,
+        540.0580444335938,
+        429.78936767578125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "full forest. Random forests can be used for both classiﬁcation and regression tasks. Training",
+      "bbox": [
+        72.0,
+        443.0811462402344,
+        540.0581665039062,
+        453.6973571777344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a random forest can be computationally intensive, so benchmarks only include random forest",
+      "bbox": [
+        72.0,
+        466.9891357421875,
+        540.0579223632812,
+        477.6053466796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "results for smaller datasets.",
+      "bbox": [
+        72.0,
+        490.8961486816406,
+        212.48556518554688,
+        501.5123596191406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Gradient Boosting",
+      "bbox": [
+        72.0,
+        531.5331420898438,
+        180.66079711914062,
+        542.1494140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Gradient boosting is another ensemble method consisting of individual decision trees.73 In",
+      "bbox": [
+        72.0,
+        558.8240966796875,
+        539.997802734375,
+        573.7783813476562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "contrast to random forests, it builds relatively simple trees which are sequentially incorpo-",
+      "bbox": [
+        72.0,
+        587.0701293945312,
+        540.0459594726562,
+        597.6864013671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "rated to the ensemble. In each step, a new tree is generated in a greedy manner to minimize",
+      "bbox": [
+        72.0,
+        610.9780883789062,
+        540.022216796875,
+        621.5943603515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "loss function. A sequence of such ”weak” trees are combined together into an additive model.",
+      "bbox": [
+        72.0,
+        634.8861083984375,
+        540.0341796875,
+        645.5023803710938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We utilize the XGBoost implementation of gradient boosting in DeepChem.79",
+      "bbox": [
+        72.0,
+        657.2208251953125,
+        470.8822326660156,
+        669.409423828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "21",
+      "bbox": [
+        300.1470031738281,
+        741.5911254882812,
+        311.8631286621094,
+        752.2073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 21
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          75,
+          245,
+          87
+        ],
+        "pos": [
+          0,
+          38
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          106,
+          541,
+          191
+        ],
+        "pos": [
+          38,
+          386
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          219,
+          218,
+          231
+        ],
+        "pos": [
+          386,
+          418
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          250,
+          541,
+          310
+        ],
+        "pos": [
+          418,
+          659
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          339,
+          168,
+          349
+        ],
+        "pos": [
+          659,
+          682
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          369,
+          541,
+          500
+        ],
+        "pos": [
+          682,
+          1184
+        ]
+      },
+      {
+        "index": 6,
+        "class": "section-header",
+        "bbox": [
+          72,
+          531,
+          181,
+          543
+        ],
+        "pos": [
+          1184,
+          1210
+        ]
+      },
+      {
+        "index": 7,
+        "class": "text",
+        "bbox": [
+          72,
+          561,
+          541,
+          670
+        ],
+        "pos": [
+          1210,
+          1676
+        ]
+      },
+      {
+        "index": 8,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          1676,
+          1681
+        ]
+      }
+    ],
+    "text": "# **Support Vector Classification** \n\nSupport vector machine (SVM) is one of the most famous and widely-used machine learning method.<sup>78</sup> As in classification task, it defines a decision plane which separates data points of different class with maximized margin. To further increase performance, we incorporates regularization and a radial basis function kernel (KernelSVM). \n\n# **Kernel Ridge Regression** \n\nKernel ridge regression(KRR) is a combination of ridge regression and kernel trick. By using a nonlinear kernel function(radial basis function), it learns a non-linear function in the original space that maps features to predicted values. \n\n# **Random Forests** \n\nRandom forests (RF) are ensemble prediction methods.<sup>72</sup> A random forest consists of many individual decision trees, each of which is trained on a subsampled version of the original dataset. The results for individual trees are averaged to provide output predictions for the full forest. Random forests can be used for both classification and regression tasks. Training a random forest can be computationally intensive, so benchmarks only include random forest results for smaller datasets. \n\n# **Gradient Boosting** \n\nGradient boosting is another ensemble method consisting of individual decision trees.<sup>73</sup> In contrast to random forests, it builds relatively simple trees which are sequentially incorporated to the ensemble. In each step, a new tree is generated in a greedy manner to minimize loss function. A sequence of such ”weak” trees are combined together into an additive model. We utilize the XGBoost implementation of gradient boosting in DeepChem.<sup>79</sup> \n\n21 \n\n"
+  }
+}

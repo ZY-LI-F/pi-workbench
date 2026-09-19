@@ -1,0 +1,194 @@
+{
+  "page": 57,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0057.png",
+  "reviewed": true,
+  "review_notes": "DTNN and MPNN validation values inspected; not confused with Table 8 benchmark; decimal emphasis repaired. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0057-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        99,
+        162,
+        109
+      ],
+      "markdown": "mean ROC-AUC:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b001",
+      "kind": "text",
+      "bbox": [
+        89,
+        133,
+        449,
+        145
+      ],
+      "markdown": "- Original result: 0.846 _∼_ 0.867 for different model structure settings.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b002",
+      "kind": "text",
+      "bbox": [
+        89,
+        167,
+        423,
+        178
+      ],
+      "markdown": "- Reimplementation: 0.857 for valid subset, 0.843 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b003",
+      "kind": "heading",
+      "bbox": [
+        72,
+        207,
+        245,
+        219
+      ],
+      "markdown": "### Deep Tensor Neural Network",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0057-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        238,
+        541,
+        299
+      ],
+      "markdown": "We evaluate the model on the atomization energy task of qm9, using 80/10/10 random train, valid, test splitting.(train subset with 106,400 samples) The original paper reported performance using different size of training set.<sup>19</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        334,
+        166,
+        347
+      ],
+      "markdown": "MAE in kcal/mol:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        368,
+        505,
+        380
+      ],
+      "markdown": "- Original result: 0.93 ± 0.02 with 2 DTNN layers and 100,000 training samples.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b007",
+      "kind": "text",
+      "bbox": [
+        89,
+        402,
+        411,
+        414
+      ],
+      "markdown": "- Reimplementation: 1.15 for valid subset, 1.26 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b008",
+      "kind": "heading",
+      "bbox": [
+        72,
+        443,
+        269,
+        455
+      ],
+      "markdown": "### Message Passing Neural Network",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0057-b009",
+      "kind": "text",
+      "bbox": [
+        72,
+        474,
+        541,
+        558
+      ],
+      "markdown": "We evaluate the model on the HOMO-LUMO gap task of qm9, using 80/10/10 random train, valid, test splitting.(train subset with 106,400 samples) The original paper reported performance with a training set containing 110,462 randomly picked samples.<sup>76</sup> Due to that no hyperparameter is specified for the model, we are not able to fully repeat the results.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b010",
+      "kind": "text",
+      "bbox": [
+        72,
+        570,
+        541,
+        606
+      ],
+      "markdown": "Note that the original paper trained a single model for each task in the qm9 dataset. Here we only picked one representative task to compare.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b011",
+      "kind": "text",
+      "bbox": [
+        72,
+        642,
+        135,
+        652
+      ],
+      "markdown": "MAE in eV:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0057-b012",
+      "kind": "text",
+      "bbox": [
+        89,
+        676,
+        217,
+        688
+      ],
+      "markdown": "- Original result: 0.0544",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b013",
+      "kind": "text",
+      "bbox": [
+        89,
+        710,
+        429,
+        721
+      ],
+      "markdown": "- Reimplementation: 0.0997 for valid subset, 0.101 for test subset",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0057-b014",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "57",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "DTNN and MPNN validation values inspected; not confused with Table 8 benchmark; decimal emphasis repaired. Reviewed sequentially by the main agent; no independent agent verification."
+}

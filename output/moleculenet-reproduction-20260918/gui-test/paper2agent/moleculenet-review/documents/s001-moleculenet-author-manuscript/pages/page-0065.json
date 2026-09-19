@@ -1,0 +1,38 @@
+{
+  "page": 65,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0065.png",
+  "reviewed": true,
+  "review_notes": "Reference 85 inspected; only final page-number footer omitted. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0065-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        109
+      ],
+      "markdown": "- (85) eXtreme Gradient Boosting. `https://github.com/dmlc/xgboost` , Accessed: 2017-10-18.",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0065-b001",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "65",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Reference 85 inspected; only final page-number footer omitted. Reviewed sequentially by the main agent; no independent agent verification. Corrected extracted sign/date spacing after full-resolution visual check."
+}

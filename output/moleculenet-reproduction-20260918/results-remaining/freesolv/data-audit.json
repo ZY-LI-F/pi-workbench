@@ -1,0 +1,14 @@
+{
+  "dataset": "freesolv",
+  "n": 642,
+  "tasks": [
+    "y"
+  ],
+  "unit": "kcal/mol",
+  "data_file": "data\\freesolv\\freesolv.csv.gz",
+  "sha256": "008e9a8a9e018c6b77eb00df7153d0bf2e35a1d663f18f301de522fe3f8711d7",
+  "unique_canonical_smiles": 642,
+  "duplicate_structure_rows": 0,
+  "unique_scaffolds": 63,
+  "invalid_smiles": []
+}

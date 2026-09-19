@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { LocalPathInspection } from "../../src/shared/local-path";
 import type { StellaDesktopApi } from "../../src/shared/contracts";
 import { FilePreviewPanel } from "../../src/renderer/src/components/FilePreviewPanel";
 
 afterEach(cleanup);
+// The reader is a production lazy chunk; resolve its real module before timing UI interactions.
+beforeAll(async () => { await import("../../src/renderer/src/components/AcademicMarkdown"); });
 
 const newestPath = "C:\\workspace\\newest.md";
 const olderPath = "C:\\workspace\\older.txt";

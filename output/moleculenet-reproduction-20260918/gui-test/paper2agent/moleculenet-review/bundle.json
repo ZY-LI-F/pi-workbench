@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "name": "moleculenet-paper",
+  "title": "MoleculeNet: A Benchmark for Molecular Machine Learning (author manuscript)",
+  "notes": [],
+  "sources": [
+    {
+      "id": "s001-moleculenet-author-manuscript",
+      "role": "main",
+      "title": "MoleculeNet author manuscript, arXiv 1703.00564v3",
+      "reviewed": true,
+      "review_notes": "All 65 pages visually inspected; table/figure fidelity and cross-page repairs documented per page. Table 8 checked full resolution. Sequential main-agent review only.",
+      "asset_name": "moleculenet-author-manuscript"
+    }
+  ]
+}

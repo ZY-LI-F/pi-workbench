@@ -1,0 +1,174 @@
+{
+  "page": 1,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0001.png",
+  "reviewed": true,
+  "review_notes": "Title, authors, affiliations and abstract; author manuscript arXiv v3 dated 26 October 2018, not the publisher PDF. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [
+    "Review possible header/footer: p0001-b000"
+  ],
+  "items": [
+    {
+      "id": "p0001-b000",
+      "kind": "omit",
+      "bbox": [
+        18,
+        213,
+        36,
+        560
+      ],
+      "markdown": "",
+      "source_class": "page-header",
+      "reason": "Vertical arXiv stamp recorded verbatim in package provenance note; not body prose."
+    },
+    {
+      "id": "p0001-b001",
+      "kind": "omit",
+      "bbox": [
+        106,
+        121,
+        506,
+        182
+      ],
+      "markdown": "### MoleculeNet: A Benchmark for Molecular Machine Learning",
+      "source_class": "title",
+      "reason": "Paper title reproduced in the generated package title."
+    },
+    {
+      "id": "p0001-b002",
+      "kind": "text",
+      "bbox": [
+        75,
+        211,
+        536,
+        257
+      ],
+      "markdown": "Zhenqin Wu,<sup>_†_,</sup><sup>_∥_</sup> Bharath Ramsundar,<sup>_‡_,</sup><sup>_∥_</sup> Evan N. Feinberg,<sup>_¶_,</sup><sup>_⊥_</sup> Joseph Gomes,<sup>_†_,</sup><sup>_⊥_</sup> Caleb Geniesse,<sup>_¶_</sup> Aneesh S. Pappu,<sup>_‡_</sup> Karl Leswing,<sup>_§_</sup> and Vijay Pande<sup>_∗_,</sup><sup>_†_</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b003",
+      "kind": "text",
+      "bbox": [
+        184,
+        280,
+        428,
+        292
+      ],
+      "markdown": "_†Department of Chemistry, Stanford University_",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b004",
+      "kind": "text",
+      "bbox": [
+        164,
+        304,
+        448,
+        316
+      ],
+      "markdown": "_‡Department of Computer Science, Stanford University_",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b005",
+      "kind": "text",
+      "bbox": [
+        169,
+        328,
+        443,
+        340
+      ],
+      "markdown": "_¶Program in Biophysics, Stanford School of Medicine_",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b006",
+      "kind": "text",
+      "bbox": [
+        261,
+        352,
+        351,
+        364
+      ],
+      "markdown": "_§Schrodinger Inc._",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b007",
+      "kind": "text",
+      "bbox": [
+        245,
+        376,
+        367,
+        389
+      ],
+      "markdown": "_∥Joint First Authorship_",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b008",
+      "kind": "text",
+      "bbox": [
+        238,
+        400,
+        374,
+        412
+      ],
+      "markdown": "_⊥Joint Second Authorship_",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b009",
+      "kind": "text",
+      "bbox": [
+        237,
+        436,
+        375,
+        447
+      ],
+      "markdown": "E-mail: pande@stanford.edu",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b010",
+      "kind": "heading",
+      "bbox": [
+        281,
+        478,
+        330,
+        487
+      ],
+      "markdown": "### Abstract",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0001-b011",
+      "kind": "text",
+      "bbox": [
+        101,
+        507,
+        511,
+        720
+      ],
+      "markdown": "Molecular machine learning has been maturing rapidly over the last few years. Improved methods and the presence of larger datasets have enabled machine learning algorithms to make increasingly accurate predictions about molecular properties. However, algorithmic progress has been limited due to the lack of a standard benchmark to compare the efficacy of proposed methods; most new algorithms are benchmarked on different datasets making it challenging to gauge the quality of proposed methods. This work introduces MoleculeNet, a large scale benchmark for molecular machine learning. MoleculeNet curates multiple public datasets, establishes metrics for evaluation, and offers high quality open-source implementations of multiple previously proposed molecular featurization and learning algorithms (released as part of the DeepChem",
+      "source_class": "text"
+    },
+    {
+      "id": "p0001-b012",
+      "kind": "omit",
+      "bbox": [
+        303,
+        741,
+        309,
+        750
+      ],
+      "markdown": "1",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Title, authors, affiliations and abstract; author manuscript arXiv v3 dated 26 October 2018, not the publisher PDF. Reviewed sequentially by the main agent; no independent agent verification."
+}

@@ -7,6 +7,7 @@ import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import {
   ModelRuntime,
   SessionManager,
+  SettingsManager,
   VERSION as PI_VERSION,
   hasTrustRequiringProjectResources,
   loadSkillsFromDir,
@@ -71,6 +72,9 @@ import { CodexExecExecutionAdapter } from "./execution-adapters/codex-exec-execu
 import { ClaudePrintExecutionAdapter } from "./execution-adapters/claude-print-execution-adapter";
 import { ExecutionBackendSettingsService } from "./execution-backend-settings-service";
 import { PiVersionService } from "./pi-version-service";
+import { SolModeService } from "./sol-mode-service";
+import { SOL_LAUNCH_ENV, SOL_STATUS_KEY, parseSolModeConfig } from "../shared/sol-mode";
+import type { PiRuntimeStartOptions } from "./pi-rpc-runtime";
 import { sessionTreeSummary } from "./session-tree-summary";
 import { supervisePiProcess } from "./pi-process-supervisor";
 import { NodeCliDiscovery } from "./node-cli-discovery";
@@ -140,6 +144,7 @@ import {
 } from "./path-security";
 import { LocalPathService } from "./local-path-service";
 import { LocalFilePreviewService } from "./local-file-preview-service";
+import { ArtifactLibraryService } from "./artifact-library-service";
 import { ComposerDraftStore } from "./composer-draft-store";
 import { ClaudeExternalExecutionSource } from "./claude-external-execution-source";
 import { CodexExternalExecutionSource } from "./codex-external-execution-source";
@@ -272,6 +277,9 @@ let skinArtworkService: SkinArtworkService;
 let modelConfigurationService: ModelConfigurationService;
 let localPathService: LocalPathService;
 let localFilePreviewService: LocalFilePreviewService;
+let artifactLibraryService: ArtifactLibraryService;
+// Native-picker grants are read-only and process-local, never project execution trust.
+const artifactReadDirectories = new Set<string>();
 let composerDraftStore: ComposerDraftStore;
 let nativeSubmissionService: NativeSubmissionService;
 const nativeOperations = new SerialOperationQueue();
@@ -284,7 +292,9 @@ let companionCommandService: CompanionCommandService | undefined;
 let companionGateway: CompanionGateway | undefined;
 const singleInstanceLock = app.requestSingleInstanceLock();
 
-function broadcast(source: "pi" | "runtime" | "board" | "project" | "capability" | "execution-backend" | "companion", payload: unknown, scope?: RuntimeScope): void {
+let solModeService: SolModeService;
+
+function broadcast(source: "pi" | "runtime" | "board" | "project" | "capability" | "execution-backend" | "companion" | "sol", payload: unknown, scope?: RuntimeScope): void {
   if (!mainWindow || mainWindow.isDestroyed()) return;
   mainWindow.webContents.send("stella:event", { source, payload, scope });
 }
@@ -332,6 +342,12 @@ const runtime = new PiRpcRuntime({
   superviseProcess: (pid, marker) => supervisePiProcess(pid, marker, runtimeResources),
   spawnProcess: (command, args, options) => spawn(command, [...args], options) as ChildProcessWithoutNullStreams,
   emitPiEvent: (event, scope) => {
+    if (event && typeof event === "object" && "type" in event && event.type === "extension_ui_request"
+      && "method" in event && event.method === "setStatus" && "statusKey" in event && event.statusKey === SOL_STATUS_KEY
+      && "statusText" in event && typeof event.statusText === "string") {
+      solModeService?.accept(event.statusText);
+      return;
+    }
     nativeDiagnostics.event(event, scope);
     interactiveCommandRouter?.handlePiEvent(event);
     broadcast("pi", event, scope);
@@ -340,9 +356,11 @@ const runtime = new PiRpcRuntime({
     nativeDiagnostics.event(signal, scope);
     interactiveCommandRouter?.handleRuntimeSignal(signal);
     if (signal.type === "runtime_exit") {
+      solModeService?.stopped();
       interruptedNativeSession = scope;
       capabilityHealth.set("pi", "error", `Pi RPC 意外退出 (code=${String(signal.code)}, signal=${String(signal.signal)})`);
     } else if (signal.type === "protocol_error") {
+      solModeService?.fail(signal.message);
       interruptedNativeSession = scope;
       capabilityHealth.set("pi", "degraded", `Pi RPC 协议错误：${signal.message}`);
     } else if (signal.type === "runtime_ready") {
@@ -357,6 +375,23 @@ const runtime = new PiRpcRuntime({
 });
 
 interactiveCommandRouter = new InteractiveCommandRouter({ runtime, admission: workspaceAdmission });
+
+async function startInteractiveRuntime(options: PiRuntimeStartOptions): Promise<void> {
+  const settings = SettingsManager.create(options.cwd, piAgentDir(), { projectTrusted: options.trusted });
+  const launch = solModeService.begin(settings.getCompactionSettings().keepRecentTokens);
+  try {
+    await runtime.start({ ...options, ...(launch.config.enabled ? {
+      extensions: [...(options.extensions ?? []), fileURLToPath(new URL("./sol-mode.js", import.meta.url))],
+      extensionEnvironment: { [SOL_LAUNCH_ENV]: JSON.stringify(launch) },
+    } : {}) });
+    solModeService.ready();
+  } catch (cause) {
+    interruptedNativeSession = runtime.scope;
+    solModeService.fail(errorMessage(cause));
+    await runtime.stop();
+    throw cause;
+  }
+}
 
 const agentTaskRuntimeFactory: PiRpcExecutionRuntimeFactory = Object.freeze({
   create: (callbacks: Parameters<PiRpcExecutionRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
@@ -975,7 +1010,7 @@ async function hydrate(): Promise<RuntimeBootstrap> {
     if (interrupted?.sessionId && sameProject(interrupted.cwd, currentProject.cwd)) {
       return restartRuntimePreservingSession(interrupted.sessionFile, interrupted.sessionId);
     }
-    await runtime.start(currentProject);
+    await startInteractiveRuntime(currentProject);
   }
   const selectedProject = currentProject;
   const scope = runtime.scope;
@@ -1168,7 +1203,7 @@ async function openProject(path: string, trusted: boolean): Promise<RuntimeBoots
       await boardService.updateProjectTrust(resolvedPath, trusted);
       if (!trusted) await revokeProjectExecutions(resolvedPath);
     }
-    await runtime.start(currentProject);
+    await startInteractiveRuntime(currentProject);
     const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
     return bootstrap;
@@ -1309,7 +1344,7 @@ async function captureCurrentSession(): Promise<RuntimeSessionResumeTarget | und
   });
 }
 
-async function restartRuntimePreservingSession(sessionPath: string | undefined, sessionId?: string): Promise<RuntimeBootstrap> {
+async function restartRuntimePreservingSession(sessionPath: string | undefined, sessionId?: string, selection?: Pick<PiRuntimeStartOptions, "provider" | "model" | "thinking">): Promise<RuntimeBootstrap> {
   if (!currentProject) throw new Error("尚未选择项目");
   capabilityHealth.set("pi", "loading");
   try {
@@ -1319,8 +1354,9 @@ async function restartRuntimePreservingSession(sessionPath: string | undefined, 
     const persistedSessionPath = sessionPath && await pathExists(sessionPath) ? sessionPath : undefined;
     await runtime.stop();
     interactiveCommandRouter?.release();
-    await runtime.start({
+    await startInteractiveRuntime({
       ...currentProject,
+      ...selection,
       sessionPath: persistedSessionPath,
       sessionId: persistedSessionPath ? undefined : sessionId,
     });
@@ -1411,7 +1447,7 @@ async function mutateModelConfiguration(mutation: () => Promise<void>) {
 }
 
 function allowedRevealRoots(): readonly string[] {
-  const roots = [piAgentDir(), app.getPath("userData"), tmpdir()];
+  const roots = [piAgentDir(), app.getPath("userData"), tmpdir(), ...artifactReadDirectories];
   if (currentProject) roots.push(currentProject.cwd);
   return Object.freeze(roots);
 }
@@ -1441,7 +1477,7 @@ async function openTaskSession(value: unknown): Promise<RuntimeBootstrap> {
     await stateStore.recordProject(currentProject.cwd, currentProject.trusted);
     await boardService.updateProjectTrust(projectPath, trusted);
     if (!trusted) await revokeProjectExecutions(projectPath);
-    await runtime.start({ ...currentProject, sessionPath });
+    await startInteractiveRuntime({ ...currentProject, sessionPath });
     const bootstrap = await hydrate();
     capabilityHealth.set("pi", "ready");
     return bootstrap;
@@ -1694,6 +1730,35 @@ async function companionGatewayService(): Promise<CompanionGateway> {
 }
 
 function registerIpcHandlers(): void {
+  ipcMain.handle("stella:sol:get", (event) => {
+    assertMainWindowFrame(event);
+    return solModeService.snapshot();
+  });
+  ipcMain.handle("stella:sol:apply", (event, value: unknown) => {
+    assertMainWindowFrame(event);
+    const config = parseSolModeConfig(value);
+    // Reject before joining the operation queue: never apply a user's old choice later after a long bash finishes.
+    interactiveCommandRouter?.assertMaintenanceAvailable();
+    return nativeOperations.run(async () => {
+      if (!interactiveCommandRouter || !currentProject) throw new Error("请先打开 Pi 工作区");
+      return interactiveCommandRouter.runRuntimeMaintenance(async () => {
+        const session = await captureCurrentSession();
+        const before = runtime.running ? dataFromResponse<RuntimeBootstrap["state"]>(await runtime.send({ type: "get_state" }), "get_state") : undefined;
+        if (config.enabled && config.evidencePreservingReducer && runtime.running) {
+          const available = dataFromResponse<RpcModelsData>(await runtime.send({ type: "get_available_models" }), "get_available_models").models;
+          if (!available.some((model) => model.provider === config.reducerProvider && model.id === config.reducerModel)) {
+            throw new Error("辅助模型不在当前 Pi 可用模型列表中；请先在模型配置页完成配置");
+          }
+        }
+        await solModeService.configure(config);
+        const target = session ?? (interruptedNativeSession ? { sessionPath: interruptedNativeSession.sessionFile, sessionId: interruptedNativeSession.sessionId } : undefined);
+        await restartRuntimePreservingSession(target?.sessionPath, target?.sessionId, before ? {
+          ...runtimeModelSelectionFromSession(before.model), thinking: before.thinkingLevel,
+        } : undefined);
+        return solModeService.snapshot();
+      });
+    });
+  });
   ipcMain.handle("stella:capabilities", () => capabilityHealth.snapshot());
   ipcMain.handle("stella:pi-version:check", (event) => {
     assertMainWindowFrame(event);
@@ -1824,6 +1889,18 @@ function registerIpcHandlers(): void {
   ipcMain.handle("stella:local-file:preview", (event, path: unknown) => {
     assertMainWindowFrame(event);
     return localFilePreviewService.read(path);
+  });
+  ipcMain.handle("stella:artifact-directory:choose", (event) => {
+    assertMainWindowFrame(event);
+    return artifactLibraryService.choose();
+  });
+  ipcMain.handle("stella:artifact-directory:list", (event, path: unknown) => {
+    assertMainWindowFrame(event);
+    return artifactLibraryService.list(path);
+  });
+  ipcMain.handle("stella:artifact-link:resolve", (event, request: unknown) => {
+    assertMainWindowFrame(event);
+    return artifactLibraryService.resolveLink(request);
   });
   ipcMain.handle("stella:open-path", (event, path: unknown) => {
     assertMainWindowFrame(event);
@@ -2070,8 +2147,10 @@ if (!singleInstanceLock) {
     mainWindow.focus();
   });
 
-  void app.whenReady().then(() => {
+  void app.whenReady().then(async () => {
     stateStore = new StateStore(join(app.getPath("userData"), "stella-state.json"));
+    solModeService = new SolModeService(new AtomicJsonFile(join(app.getPath("userData"), "sol-mode.json")), (snapshot) => broadcast("sol", snapshot));
+    await solModeService.initialize();
     projectRegistryService = new ProjectRegistryService({
       storage: new AtomicJsonFile(join(app.getPath("userData"), "projects.json")),
       now: () => new Date().toISOString(),
@@ -2112,7 +2191,7 @@ if (!singleInstanceLock) {
     });
     localPathService = new LocalPathService({
       allowedRoots: allowedRevealRoots,
-      canonicalizeWithinRoots: canonicalPathWithinRoots,
+      canonicalizeWithinRoots: (path, roots) => canonicalPathWithinRoots(path, roots, { pinnedRootPaths: [...artifactReadDirectories] }),
       inspectPath: stat,
       openWithSystem: (path) => shell.openPath(path),
       revealWithSystem: (path) => shell.showItemInFolder(path),
@@ -2120,6 +2199,20 @@ if (!singleInstanceLock) {
     localFilePreviewService = new LocalFilePreviewService({
       inspectLocalPath: (path) => localPathService.inspect(path),
       readFile,
+    });
+    artifactLibraryService = new ArtifactLibraryService({
+      inspect: (path) => localPathService.inspect(path),
+      readDirectory: (path) => readdir(path),
+      realpath,
+      isDirectory: async (path) => (await stat(path)).isDirectory(),
+      grantReadDirectory: (path) => { artifactReadDirectories.add(path); },
+      chooseDirectory: async () => {
+        if (!mainWindow || mainWindow.isDestroyed()) throw new Error("主窗口不可用");
+        const selection = await dialog.showOpenDialog(mainWindow, {
+          title: "选择只读产物或证据目录（不会授予代码执行信任）", properties: ["openDirectory"],
+        });
+        return selection.canceled ? undefined : selection.filePaths[0];
+      },
     });
     composerDraftStore = new ComposerDraftStore(join(app.getPath("userData"), "composer-drafts"));
     nativeSubmissionService = new NativeSubmissionService({

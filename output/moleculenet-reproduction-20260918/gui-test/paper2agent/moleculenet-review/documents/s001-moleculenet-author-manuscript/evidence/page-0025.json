@@ -1,0 +1,489 @@
+{
+  "page": 25,
+  "lines": [
+    {
+      "text": "property is shared, to some degree, by all deep architectures considered in MoleculeNet. How-",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0101928710938,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ever, graph convolutional architectures are more explicitly designed to encourage extraction",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.0819091796875,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of useful featurizations).",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        196.02328491210938,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "On a higher level, graph convolutional models treat molecules as undirected graphs, and",
+      "bbox": [
+        89.55899810791016,
+        147.38113403320312,
+        540.0667724609375,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "apply the same learnable function to every node (atom) and its neighbors (bonded atoms)",
+      "bbox": [
+        72.0,
+        171.28915405273438,
+        540.0701904296875,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "in the graph.",
+      "bbox": [
+        72.0,
+        195.19717407226562,
+        142.00965881347656,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "This structure recapitulates convolution layers in visual recognition deep",
+      "bbox": [
+        152.70956420898438,
+        195.19717407226562,
+        540.0579833984375,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "networks.",
+      "bbox": [
+        72.0,
+        219.10519409179688,
+        120.51420593261719,
+        229.72140502929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MoleculeNet uses the graph convolutional implementation in DeepChem from previous",
+      "bbox": [
+        89.55899810791016,
+        243.01321411132812,
+        540.0308837890625,
+        253.62942504882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "work.56 This implementation converts SMILES strings into molecular graphs using RDKit63",
+      "bbox": [
+        72.0,
+        262.5822448730469,
+        539.4982299804688,
+        277.5374450683594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "As mentioned previously, the initial representations assign to each atom a vector of features",
+      "bbox": [
+        72.0,
+        290.8282470703125,
+        540.0582275390625,
+        301.4444580078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "including its element, connectivity, valence, etc. Then several graph convolutional modules,",
+      "bbox": [
+        72.0,
+        314.7362365722656,
+        540.0341796875,
+        325.3524475097656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "each consisting of a graph convolutional layer, a batch normalization layer and a graph pool",
+      "bbox": [
+        72.0,
+        338.64422607421875,
+        540.1178588867188,
+        349.26043701171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "layer, are sequentially added, followed by a fully-connected dense layer. Finally, the feature",
+      "bbox": [
+        72.0,
+        362.5522155761719,
+        540.0341796875,
+        373.1684265136719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "vectors for all nodes (atoms) are summed, generating a graph feature vector, which is fed to",
+      "bbox": [
+        72.0,
+        386.460205078125,
+        540.0700073242188,
+        397.076416015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a classiﬁcation or regression layer.",
+      "bbox": [
+        72.0,
+        410.3681945800781,
+        246.259033203125,
+        420.9844055175781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Weave models",
+      "bbox": [
+        72.0,
+        451.0041809082031,
+        155.3874969482422,
+        461.6203918457031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The Weave architecture is another graph-based model that regards each molecule as a undi-",
+      "bbox": [
+        72.0,
+        482.6331787109375,
+        540.046142578125,
+        493.2493896484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "rected graph. Similar to graph convolutional models, it utilizes the idea of adaptive learning",
+      "bbox": [
+        72.0,
+        506.5411682128906,
+        540.0819091796875,
+        517.1574096679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "on extracting meaningful representations.23 The major diﬀerence is the size of the convo-",
+      "bbox": [
+        72.0,
+        526.1101684570312,
+        539.99755859375,
+        541.0654296875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "lutions: To update features of an atom, weave models combine information from all other",
+      "bbox": [
+        71.99998474121094,
+        554.3571166992188,
+        540.0699462890625,
+        564.973388671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "atoms and their corresponding pairs in the molecule. Weave models are more eﬃcient at",
+      "bbox": [
+        71.99998474121094,
+        578.26513671875,
+        540.0458374023438,
+        588.8814086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "transmitting information between distant atoms, at the price of increased complexity for",
+      "bbox": [
+        71.99998474121094,
+        602.1721801757812,
+        540.0579833984375,
+        612.7884521484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "each convolution.",
+      "bbox": [
+        71.99998474121094,
+        626.0801391601562,
+        160.45652770996094,
+        636.6964111328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "In our implementation, a molecule is ﬁrst encoded into a list of atomic features and a",
+      "bbox": [
+        89.5589828491211,
+        649.9881591796875,
+        540.042724609375,
+        660.6044311523438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "matrix of pair features by the weave model’s featurization method. Then in each weave",
+      "bbox": [
+        71.99998474121094,
+        673.8961791992188,
+        540.0339965820312,
+        684.512451171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "module, these features are input into four sets of fully connected layers (corresponding to",
+      "bbox": [
+        71.99998474121094,
+        697.8041381835938,
+        540.0341796875,
+        708.42041015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "25",
+      "bbox": [
+        300.14697265625,
+        741.5911865234375,
+        311.86309814453125,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 25
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          135
+        ],
+        "pos": [
+          0,
+          214
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          147,
+          541,
+          228
+        ],
+        "pos": [
+          214,
+          491
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          242,
+          541,
+          422
+        ],
+        "pos": [
+          491,
+          1191
+        ]
+      },
+      {
+        "index": 3,
+        "class": "section-header",
+        "bbox": [
+          72,
+          451,
+          156,
+          460
+        ],
+        "pos": [
+          1191,
+          1212
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          71,
+          482,
+          541,
+          635
+        ],
+        "pos": [
+          1212,
+          1780
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          71,
+          649,
+          541,
+          710
+        ],
+        "pos": [
+          1780,
+          2048
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          2048,
+          2053
+        ]
+      }
+    ],
+    "text": "property is shared, to some degree, by all deep architectures considered in MoleculeNet. However, graph convolutional architectures are more explicitly designed to encourage extraction of useful featurizations). \n\nOn a higher level, graph convolutional models treat molecules as undirected graphs, and apply the same learnable function to every node (atom) and its neighbors (bonded atoms) in the graph. This structure recapitulates convolution layers in visual recognition deep networks. \n\nMoleculeNet uses the graph convolutional implementation in DeepChem from previous work.<sup>56</sup> This implementation converts SMILES strings into molecular graphs using RDKit<sup>63</sup> As mentioned previously, the initial representations assign to each atom a vector of features including its element, connectivity, valence, etc. Then several graph convolutional modules, each consisting of a graph convolutional layer, a batch normalization layer and a graph pool layer, are sequentially added, followed by a fully-connected dense layer. Finally, the feature vectors for all nodes (atoms) are summed, generating a graph feature vector, which is fed to a classification or regression layer. \n\n# **Weave models** \n\nThe Weave architecture is another graph-based model that regards each molecule as a undirected graph. Similar to graph convolutional models, it utilizes the idea of adaptive learning on extracting meaningful representations.<sup>23</sup> The major difference is the size of the convolutions: To update features of an atom, weave models combine information from all other atoms and their corresponding pairs in the molecule. Weave models are more efficient at transmitting information between distant atoms, at the price of increased complexity for each convolution. \n\nIn our implementation, a molecule is first encoded into a list of atomic features and a matrix of pair features by the weave model’s featurization method. Then in each weave module, these features are input into four sets of fully connected layers (corresponding to \n\n25 \n\n"
+  }
+}

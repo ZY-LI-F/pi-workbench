@@ -1,0 +1,99 @@
+{
+  "page": 19,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0019.png",
+  "reviewed": true,
+  "review_notes": "Grid continuation, Symmetry Function and Graph Convolutions; original 3D vs graph limitations retained. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0019-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        159
+      ],
+      "markdown": "for speed, robustness, and generalizability. The intermolecular interactions enumerated by the featurizer include salt bridges and hydrogen bonding between protein and ligand, intraligand circular fingerprints, intra-protein circular fingerprints, and protein-ligand SPLIF fingerprints. A more detailed breakdown can be found in the Appendix.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0019-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        187,
+        189,
+        199
+      ],
+      "markdown": "### Symmetry Function",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0019-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        218,
+        541,
+        350
+      ],
+      "markdown": "Symmetry function, first introduced by Behler and Parrinello,<sup>70</sup> is another common encoding of atomic coordinates information. It focuses on preserving the rotational and permutation symmetry of the system. The local environment of an atom in the molecule is expressed as a series of radial and angular symmetry functions with different distance and angle cutoffs, the former focusing on distances between atom pairs and the latter focusing on angles formed within triplets of atoms.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0019-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        362,
+        541,
+        470
+      ],
+      "markdown": "As symmetry function put most emphasis on spatial positions of atoms, it is intrinsically hard for it to distinguish different atom types(H, C, O). MoleculeNet utilized a slightly modified version of original symmetry function<sup>71</sup> which further separate radial and angular symmetry terms according to the type of atoms in the pair or triplet. Further details can be found in the article<sup>71</sup> or our implementation.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0019-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        499,
+        191,
+        510
+      ],
+      "markdown": "### Graph Convolutions",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0019-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        530,
+        541,
+        662
+      ],
+      "markdown": "The graph convolutions featurization support most graph-based models. It computes an initial feature vector and a neighbor list for each atom. The feature vector summarizes the atom’s local chemical environment, including atom-type, hybridization type, and valence structure. Neighbor lists represent connectivity of the whole molecule, which are further processed in each model to generate graph structures (discussed in further details in following parts).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0019-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "19",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Grid continuation, Symmetry Function and Graph Convolutions; original 3D vs graph limitations retained. Reviewed sequentially by the main agent; no independent agent verification."
+}

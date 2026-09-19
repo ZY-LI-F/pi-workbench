@@ -1,0 +1,9 @@
+{
+  "provider": "fosunpharma-qwen",
+  "requested_model": "qwen3.7-plus",
+  "status": 403,
+  "seconds": 1.0393521000000001,
+  "enable_thinking": false,
+  "response_format": "json_object",
+  "error": "{\"type\":\"non_json_response\",\"content_type\":\"text/html\",\"body_excerpt\":\"<html>\\r\\n<head><title>403 Forbidden</title></head>\\r\\n<body>\\r\\n<center><h1>403 Forbidden</h1></center>\\r\\n<hr><center>nginx</center>\\r\\n</body>\\r\\n</html>\\r\\n\"}"
+}

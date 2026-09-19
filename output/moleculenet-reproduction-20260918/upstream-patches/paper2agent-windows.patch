@@ -1,0 +1,13 @@
+diff --git a/skills/paper2agent/paper2skill/scripts/reading_package.py b/skills/paper2agent/paper2skill/scripts/reading_package.py
+index 34b871a..ff4d48a 100644
+--- a/skills/paper2agent/paper2skill/scripts/reading_package.py
++++ b/skills/paper2agent/paper2skill/scripts/reading_package.py
+@@ -420,7 +420,7 @@ def template_issues(root):
+         if not (root / 'assets' / category).is_dir():
+             issues.append(f'Missing asset directory: {category}')
+     for path in root.rglob('*'):
+-        rel = str(path.relative_to(root))
++        rel = path.relative_to(root).as_posix()
+         if path.is_symlink():
+             issues.append(f'Symlink not allowed in reading package: {rel}')
+         if not path.is_file():

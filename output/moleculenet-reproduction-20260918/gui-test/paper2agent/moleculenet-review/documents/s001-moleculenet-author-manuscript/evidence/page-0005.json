@@ -1,0 +1,408 @@
+{
+  "page": 5,
+  "lines": [
+    {
+      "text": "sands of protein targets. Both PubChem and ChEMBL are human researcher oriented, with",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0221557617188,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "web portals that facilitate browsing of the available targets and compounds. ChemSpider is",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        540.0580444335938,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a repository of nearly 60 million chemical structures, with web based search capabilities for",
+      "bbox": [
+        72.0,
+        123.47415161132812,
+        540.0460205078125,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "users. The Crystallography Open Database36 and Cambridge Structural Database37 oﬀer",
+      "bbox": [
+        72.0,
+        143.04312133789062,
+        540.0038452148438,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "large repositories of organic and inorganic compounds. The protein data bank38 oﬀers a",
+      "bbox": [
+        71.99996948242188,
+        166.95114135742188,
+        540.0045776367188,
+        181.90536499023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "repository of experimentally resolved three dimensional protein structures. This listing is by",
+      "bbox": [
+        72.0,
+        195.19717407226562,
+        540.0341186523438,
+        205.81338500976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "no means comprehensive; the methods section will discuss a number of smaller data sources",
+      "bbox": [
+        72.0,
+        219.10519409179688,
+        540.01025390625,
+        229.72140502929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "in greater detail.",
+      "bbox": [
+        72.0,
+        243.01321411132812,
+        157.20472717285156,
+        253.62942504882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "These past eﬀorts have been critical in enabling the growth of computational chemistry.",
+      "bbox": [
+        89.55899810791016,
+        266.9212341308594,
+        540.0430297851562,
+        277.5374450683594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "However, these previous databases are not machine-learning focused. In particular, these",
+      "bbox": [
+        72.0,
+        290.8282470703125,
+        540.0340576171875,
+        301.4444580078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "collections don’t deﬁne metrics which measure the eﬀectiveness of algorithmic methods in",
+      "bbox": [
+        72.0,
+        314.7362365722656,
+        540.0101318359375,
+        325.3524475097656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "understanding the data contained. Furthermore, there is no prescribed separation of the data",
+      "bbox": [
+        72.0,
+        338.64422607421875,
+        540.0699462890625,
+        349.26043701171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "into training/validation/test sets (critical for machine learning development). Without spec-",
+      "bbox": [
+        72.0,
+        362.5522155761719,
+        540.06982421875,
+        373.1684265136719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "iﬁed metrics or splits, the choice is left to individual researchers, and there are indeed many",
+      "bbox": [
+        72.0,
+        386.460205078125,
+        540.0220336914062,
+        397.076416015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "chemical machine learning papers which use subsets of these data stores for machine learning",
+      "bbox": [
+        72.0,
+        410.3681945800781,
+        540.0220947265625,
+        420.9844055175781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "evaluation. Unfortunately, the choice of metric and subset varies widely between groups, so",
+      "bbox": [
+        72.0,
+        434.27520751953125,
+        540.0341186523438,
+        444.89141845703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "two methods papers using PubChem data may be entirely incomparable. MoleculeNet aims",
+      "bbox": [
+        72.0,
+        458.1831970214844,
+        540.0339965820312,
+        468.7994079589844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to bridge this gap by providing benchmark results for a reasonable range of metrics, splits,",
+      "bbox": [
+        72.0,
+        482.0911865234375,
+        540.0701293945312,
+        492.7073974609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "and subsets of these (and other) data collections.",
+      "bbox": [
+        72.0,
+        505.9991760253906,
+        323.7048034667969,
+        516.6154174804688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "It’s important to note that there have been some eﬀorts to create benchmarking datasets",
+      "bbox": [
+        89.55899810791016,
+        529.9071655273438,
+        540.0668334960938,
+        540.5234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for machine learning in chemistry. The Quantum Machine group39 and previous work on",
+      "bbox": [
+        72.0,
+        549.4761352539062,
+        540.02587890625,
+        564.430419921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "multitask learning10 both introduce benchmarking collections which have been used in multi-",
+      "bbox": [
+        72.0,
+        573.3841552734375,
+        540.0089111328125,
+        588.3384399414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ple papers. MoleculeNet incorporates data from both these eﬀorts and signiﬁcantly expands",
+      "bbox": [
+        72.0,
+        601.6301879882812,
+        540.0462036132812,
+        612.2464599609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "upon them.",
+      "bbox": [
+        72.0,
+        625.5381469726562,
+        130.85546875,
+        636.1544189453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "5",
+      "bbox": [
+        303.0740051269531,
+        741.5911865234375,
+        308.93206787109375,
+        752.2074584960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 5
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          71,
+          75,
+          541,
+          254
+        ],
+        "pos": [
+          0,
+          683
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          266,
+          541,
+          518
+        ],
+        "pos": [
+          683,
+          1650
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          72,
+          529,
+          541,
+          637
+        ],
+        "pos": [
+          1650,
+          2040
+        ]
+      },
+      {
+        "index": 3,
+        "class": "page-footer",
+        "bbox": [
+          303,
+          741,
+          309,
+          751
+        ],
+        "pos": [
+          2040,
+          2044
+        ]
+      }
+    ],
+    "text": "sands of protein targets. Both PubChem and ChEMBL are human researcher oriented, with web portals that facilitate browsing of the available targets and compounds. ChemSpider is a repository of nearly 60 million chemical structures, with web based search capabilities for users. The Crystallography Open Database<sup>36</sup> and Cambridge Structural Database<sup>37</sup> offer large repositories of organic and inorganic compounds. The protein data bank<sup>38</sup> offers a repository of experimentally resolved three dimensional protein structures. This listing is by no means comprehensive; the methods section will discuss a number of smaller data sources in greater detail. \n\nThese past efforts have been critical in enabling the growth of computational chemistry. However, these previous databases are not machine-learning focused. In particular, these collections don’t define metrics which measure the effectiveness of algorithmic methods in understanding the data contained. Furthermore, there is no prescribed separation of the data into training/validation/test sets (critical for machine learning development). Without specified metrics or splits, the choice is left to individual researchers, and there are indeed many chemical machine learning papers which use subsets of these data stores for machine learning evaluation. Unfortunately, the choice of metric and subset varies widely between groups, so two methods papers using PubChem data may be entirely incomparable. MoleculeNet aims to bridge this gap by providing benchmark results for a reasonable range of metrics, splits, and subsets of these (and other) data collections. \n\nIt’s important to note that there have been some efforts to create benchmarking datasets for machine learning in chemistry. The Quantum Machine group<sup>39</sup> and previous work on multitask learning<sup>10</sup> both introduce benchmarking collections which have been used in multiple papers. MoleculeNet incorporates data from both these efforts and significantly expands upon them. \n\n5 \n\n"
+  }
+}

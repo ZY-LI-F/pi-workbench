@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import JSZip from "jszip";
 import type { StellaDesktopApi } from "../../src/shared/contracts";
 import type { LocalFilePreviewData, LocalFilePreviewKind } from "../../src/shared/file-preview";
@@ -11,12 +11,18 @@ import type { LocalPathInspection } from "../../src/shared/local-path";
 import { FilePreviewPanel } from "../../src/renderer/src/components/FilePreviewPanel";
 
 afterEach(cleanup);
+// Measure rendering, not cold math/Markdown module compilation under parallel test load.
+beforeAll(async () => { await import("../../src/renderer/src/components/AcademicMarkdown"); });
 
 const MIME_BY_KIND: Readonly<Record<LocalFilePreviewKind, string>> = Object.freeze({
   image: "image/png",
   html: "text/html",
   markdown: "text/markdown",
   text: "text/plain",
+  code: "text/x-python",
+  json: "application/json",
+  delimited: "text/csv",
+  notebook: "application/x-ipynb+json",
   pdf: "application/pdf",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",

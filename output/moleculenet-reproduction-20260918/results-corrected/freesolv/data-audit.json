@@ -1,0 +1,17 @@
+{
+  "dataset": "freesolv",
+  "n": 642,
+  "tasks": [
+    "expt"
+  ],
+  "unit": "kcal/mol",
+  "data_file": "data\\freesolv\\SAMPL.csv",
+  "sha256": "ab5895d914ee87cb563bd7b9611e869527bba45bec6b014d34dc495a0f9dcb72",
+  "unique_canonical_smiles": 642,
+  "duplicate_structure_rows": 0,
+  "unique_scaffolds": 63,
+  "invalid_smiles": [],
+  "source_label_mean": -3.8030062305295944,
+  "source_label_std": 3.844822204602953,
+  "source_note": "Original MoleculeNet SAMPL.csv expt in kcal/mol; not pre-standardized freesolv.csv.gz"
+}

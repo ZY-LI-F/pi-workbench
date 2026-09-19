@@ -1,0 +1,399 @@
+{
+  "status": "verified",
+  "total_runs": 48,
+  "config_sha256": "976ab4c82db0de9e90eba8c7ba97b74899e87e1a552f6d84bae11c7919409aef",
+  "verification": "Independent raw-data alignment, split cover, train-only normalization, finite metrics, residual identities, and 100-epoch GC checks",
+  "model": "DeepSeek V4.1 Flash (Pi orchestration; numerical training by upstream DeepChem on CPU)",
+  "datasets": {
+    "esol": {
+      "dataset": "esol",
+      "n": 1128,
+      "tasks": [
+        "measured log solubility in mols per litre"
+      ],
+      "unit": "log10(mol/L)",
+      "data_file": "data\\esol\\delaney-processed.csv",
+      "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+      "unique_canonical_smiles": 1117,
+      "duplicate_structure_rows": 11,
+      "unique_scaffolds": 269,
+      "invalid_smiles": []
+    },
+    "freesolv": {
+      "dataset": "freesolv",
+      "n": 642,
+      "tasks": [
+        "expt"
+      ],
+      "unit": "kcal/mol",
+      "data_file": "data\\freesolv\\SAMPL.csv",
+      "sha256": "ab5895d914ee87cb563bd7b9611e869527bba45bec6b014d34dc495a0f9dcb72",
+      "unique_canonical_smiles": 642,
+      "duplicate_structure_rows": 0,
+      "unique_scaffolds": 63,
+      "invalid_smiles": [],
+      "source_label_mean": -3.8030062305295944,
+      "source_label_std": 3.844822204602953,
+      "source_note": "Original MoleculeNet SAMPL.csv expt in kcal/mol; not pre-standardized freesolv.csv.gz"
+    },
+    "lipophilicity": {
+      "dataset": "lipophilicity",
+      "n": 4200,
+      "tasks": [
+        "exp"
+      ],
+      "unit": "logD",
+      "data_file": "data\\lipophilicity\\Lipophilicity.csv",
+      "sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+      "unique_canonical_smiles": 4200,
+      "duplicate_structure_rows": 0,
+      "unique_scaffolds": 2408,
+      "invalid_smiles": [],
+      "source_label_mean": 2.1863357142857143,
+      "source_label_std": 1.2028604901336188,
+      "source_note": "Native MoleculeNet source, no loader transforms"
+    }
+  },
+  "aggregate": [
+    {
+      "dataset": "esol",
+      "split": "random",
+      "model": "mean",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 2.137367586744315,
+      "test_rmse_sample_sd": 0.016228753247077236,
+      "per_seed_test_rmse": {
+        "123": 2.131442212258651,
+        "456": 2.1249341743233363,
+        "789": 2.155726373650958
+      },
+      "test_mae_mean": 1.6341504392075297,
+      "test_r2_mean": -0.00555664165827315,
+      "fit_seconds_total": 0.004065800007083453,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "esol",
+      "split": "random",
+      "model": "rf",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 1.189567101855684,
+      "test_rmse_sample_sd": 0.1592482360662989,
+      "per_seed_test_rmse": {
+        "123": 1.0074347572934184,
+        "456": 1.258704811162481,
+        "789": 1.3025617371111522
+      },
+      "test_mae_mean": 0.8939059948999839,
+      "test_r2_mean": 0.6850740665038352,
+      "fit_seconds_total": 13.566468399993028,
+      "paper_test_rmse": [
+        1.07,
+        0.19
+      ]
+    },
+    {
+      "dataset": "esol",
+      "split": "random",
+      "model": "krr",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 1.4846791592198667,
+      "test_rmse_sample_sd": 0.11922542884266799,
+      "per_seed_test_rmse": {
+        "123": 1.347228609129099,
+        "456": 1.5466804032921577,
+        "789": 1.5601284652383434
+      },
+      "test_mae_mean": 1.1087531631072456,
+      "test_r2_mean": 0.5129303880126241,
+      "fit_seconds_total": 0.19620520000171382,
+      "paper_test_rmse": [
+        1.53,
+        0.06
+      ]
+    },
+    {
+      "dataset": "esol",
+      "split": "random",
+      "model": "gc",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 1.0462900405132818,
+      "test_rmse_sample_sd": 0.10579273823110871,
+      "per_seed_test_rmse": {
+        "123": 0.9306057510989914,
+        "456": 1.070147448212928,
+        "789": 1.1381169222279264
+      },
+      "test_mae_mean": 0.7823032002618958,
+      "test_r2_mean": 0.7575991157679832,
+      "fit_seconds_total": 136.93027820000134,
+      "paper_test_rmse": [
+        0.97,
+        0.01
+      ]
+    },
+    {
+      "dataset": "esol",
+      "split": "scaffold",
+      "model": "mean",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 2.314972895667876,
+      "test_rmse_sample_sd": 0.0,
+      "per_seed_test_rmse": {
+        "123": 2.314972895667876,
+        "456": 2.314972895667876,
+        "789": 2.314972895667876
+      },
+      "test_mae_mean": 1.7759079724506013,
+      "test_r2_mean": -0.19280657407148416,
+      "fit_seconds_total": 0.003329300001496449,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "esol",
+      "split": "scaffold",
+      "model": "rf",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 1.6913050399581044,
+      "test_rmse_sample_sd": 0.01790628480506725,
+      "per_seed_test_rmse": {
+        "123": 1.697816541681616,
+        "456": 1.6710541340662024,
+        "789": 1.7050444441264954
+      },
+      "test_mae_mean": 1.3076655040616225,
+      "test_r2_mean": 0.363271130751933,
+      "fit_seconds_total": 11.957656200000201,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "esol",
+      "split": "scaffold",
+      "model": "krr",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 2.4723326323170998,
+      "test_rmse_sample_sd": 0.0,
+      "per_seed_test_rmse": {
+        "123": 2.4723326323170998,
+        "456": 2.4723326323170998,
+        "789": 2.4723326323170998
+      },
+      "test_mae_mean": 1.9683840071063265,
+      "test_r2_mean": -0.3604795097832889,
+      "fit_seconds_total": 0.24822119998862036,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "esol",
+      "split": "scaffold",
+      "model": "gc",
+      "n_runs": 3,
+      "unit": "log10(mol/L)",
+      "test_rmse_mean": 1.369989918344541,
+      "test_rmse_sample_sd": 0.0359529557492423,
+      "per_seed_test_rmse": {
+        "123": 1.3822613412311757,
+        "456": 1.3982005918981923,
+        "789": 1.3295078219042546
+      },
+      "test_mae_mean": 1.0943235474601627,
+      "test_r2_mean": 0.5820615759889518,
+      "fit_seconds_total": 126.63119129998086,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "freesolv",
+      "split": "random",
+      "model": "mean",
+      "n_runs": 3,
+      "unit": "kcal/mol",
+      "test_rmse_mean": 3.9627927963481384,
+      "test_rmse_sample_sd": 0.47265373274729977,
+      "per_seed_test_rmse": {
+        "123": 3.618433140934817,
+        "456": 4.5016657817120835,
+        "789": 3.768279466397516
+      },
+      "test_mae_mean": 2.948994751836857,
+      "test_r2_mean": -0.010337346723352661,
+      "fit_seconds_total": 0.021789200021885335,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "freesolv",
+      "split": "random",
+      "model": "rf",
+      "n_runs": 3,
+      "unit": "kcal/mol",
+      "test_rmse_mean": 2.0613016056869404,
+      "test_rmse_sample_sd": 0.66399972368442,
+      "per_seed_test_rmse": {
+        "123": 1.7537907029225914,
+        "456": 2.823311458256461,
+        "789": 1.606802655881768
+      },
+      "test_mae_mean": 1.2631356389277384,
+      "test_r2_mean": 0.7276090013918948,
+      "fit_seconds_total": 9.875103400001535,
+      "paper_test_rmse": [
+        2.03,
+        0.22
+      ]
+    },
+    {
+      "dataset": "freesolv",
+      "split": "random",
+      "model": "krr",
+      "n_runs": 3,
+      "unit": "kcal/mol",
+      "test_rmse_mean": 1.9988815446625925,
+      "test_rmse_sample_sd": 0.4101171687452742,
+      "per_seed_test_rmse": {
+        "123": 1.7539701039893805,
+        "456": 2.4723499168654364,
+        "789": 1.7703246131329613
+      },
+      "test_mae_mean": 1.3426616891924734,
+      "test_r2_mean": 0.7451534387646702,
+      "fit_seconds_total": 0.3337288000184344,
+      "paper_test_rmse": [
+        2.11,
+        0.07
+      ]
+    },
+    {
+      "dataset": "freesolv",
+      "split": "random",
+      "model": "gc",
+      "n_runs": 3,
+      "unit": "kcal/mol",
+      "test_rmse_mean": 2.151184785167738,
+      "test_rmse_sample_sd": 0.23176175241104352,
+      "per_seed_test_rmse": {
+        "123": 1.9083070485571643,
+        "456": 2.3699443279200887,
+        "789": 2.1753029790259624
+      },
+      "test_mae_mean": 1.5810528598331388,
+      "test_r2_mean": 0.7008791324186374,
+      "fit_seconds_total": 252.8787547999964,
+      "paper_test_rmse": [
+        1.4,
+        0.16
+      ]
+    },
+    {
+      "dataset": "lipophilicity",
+      "split": "random",
+      "model": "mean",
+      "n_runs": 3,
+      "unit": "logD",
+      "test_rmse_mean": 1.1687792712633265,
+      "test_rmse_sample_sd": 0.014387965443405041,
+      "per_seed_test_rmse": {
+        "123": 1.181661475997374,
+        "456": 1.1714238802329666,
+        "789": 1.153252457559639
+      },
+      "test_mae_mean": 0.949426525888133,
+      "test_r2_mean": -0.001286824321497108,
+      "fit_seconds_total": 0.006811700004618615,
+      "paper_test_rmse": null
+    },
+    {
+      "dataset": "lipophilicity",
+      "split": "random",
+      "model": "rf",
+      "n_runs": 3,
+      "unit": "logD",
+      "test_rmse_mean": 0.8384057012924083,
+      "test_rmse_sample_sd": 0.011224259251101942,
+      "per_seed_test_rmse": {
+        "123": 0.8315968698288524,
+        "456": 0.8513607115769676,
+        "789": 0.832259522471405
+      },
+      "test_mae_mean": 0.6322769021038045,
+      "test_r2_mean": 0.4845748132586006,
+      "fit_seconds_total": 212.82321409998985,
+      "paper_test_rmse": [
+        0.876,
+        0.04
+      ]
+    },
+    {
+      "dataset": "lipophilicity",
+      "split": "random",
+      "model": "krr",
+      "n_runs": 3,
+      "unit": "logD",
+      "test_rmse_mean": 0.835383692489391,
+      "test_rmse_sample_sd": 0.015931357932699175,
+      "per_seed_test_rmse": {
+        "123": 0.8534948590136543,
+        "456": 0.8235357265658784,
+        "789": 0.8291204918886405
+      },
+      "test_mae_mean": 0.6206818257794827,
+      "test_r2_mean": 0.4884087339734228,
+      "fit_seconds_total": 6.564190200006124,
+      "paper_test_rmse": [
+        0.899,
+        0.043
+      ]
+    },
+    {
+      "dataset": "lipophilicity",
+      "split": "random",
+      "model": "gc",
+      "n_runs": 3,
+      "unit": "logD",
+      "test_rmse_mean": 0.7040988922393026,
+      "test_rmse_sample_sd": 0.016058433235718334,
+      "per_seed_test_rmse": {
+        "123": 0.7074449066650563,
+        "456": 0.6866310625018447,
+        "789": 0.7182207075510065
+      },
+      "test_mae_mean": 0.5337657354502752,
+      "test_r2_mean": 0.636242346290191,
+      "fit_seconds_total": 2362.7238857000048,
+      "paper_test_rmse": [
+        0.655,
+        0.036
+      ]
+    }
+  ],
+  "fit_seconds_total": 3134.764893500018,
+  "repeatability_esol_seed123": {
+    "mean": {
+      "byte_identical_predictions": true
+    },
+    "rf": {
+      "byte_identical_predictions": false
+    },
+    "krr": {
+      "byte_identical_predictions": true
+    },
+    "gc": {
+      "byte_identical_predictions": true
+    }
+  },
+  "deviations": [
+    "Modern DeepChem 2.8.0 and TensorFlow 2.15.1, not the original 2017 execution environment",
+    "No Gaussian-process hyperparameter optimization",
+    "Published original seed values and exact split indices are not provided in the article; new explicit seeds are used",
+    "Only 3 datasets and 3 learned models plus a negative baseline, not all 17 datasets/all algorithms",
+    "ESOL scaffold extension is an additional diagnostic, not the Fig.12 original protocol",
+    "ScaffoldSplitter is deterministic; its three seeds vary learner randomness, not the scaffold partition"
+  ],
+  "sd_definition": "This replication: sample standard deviation ddof=1 across 3 runs; paper SD definition not independently recovered",
+  "paper_reference": "MoleculeNet arXiv:1703.00564v3 Table 8, p.51; author manuscript Fig.13 corresponds to published Fig.12"
+}

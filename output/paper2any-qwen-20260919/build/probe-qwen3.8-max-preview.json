@@ -1,0 +1,9 @@
+{
+  "provider": "aliyun-maas",
+  "requested_model": "qwen3.8-max-preview",
+  "status": 403,
+  "seconds": 1.8401575000000001,
+  "enable_thinking": false,
+  "response_format": "json_object",
+  "error": "{\"message\":\"Access to model denied. Please make sure you are eligible for using the model.\",\"id\":\"f114a8da-c3aa-4c48-b901-7caef789adeb\",\"type\":\"AccessDenied.Unpurchased\",\"code\":\"AccessDenied.Unpurchased\"}"
+}

@@ -1,0 +1,147 @@
+{
+  "page": 29,
+  "lines": [
+    {
+      "text": "Figure 7: Benchmark performances for biophysics tasks: PCBA, 4 models are evaluated by",
+      "bbox": [
+        72.0,
+        558.3760375976562,
+        540.026611328125,
+        568.9923095703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "AUC-PRC on random split; MUV, 8 models are evaluated by AUC-PRC on random split;",
+      "bbox": [
+        71.99996948242188,
+        572.8220825195312,
+        540.0315551757812,
+        583.4383544921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "HIV, 8 models are evaluated by AUC-ROC on scaﬀold split; BACE, 9 models are evaluated",
+      "bbox": [
+        71.99996948242188,
+        587.26806640625,
+        540.014404296875,
+        597.8843383789062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "by AUC-ROC on scaﬀold split. For AUC-ROC and AUC-PRC, higher value indicates better",
+      "bbox": [
+        71.99996948242188,
+        601.7130737304688,
+        540.0220947265625,
+        612.329345703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "performance(to the right).",
+      "bbox": [
+        71.99996948242188,
+        616.1590576171875,
+        206.31668090820312,
+        626.7753295898438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "29",
+      "bbox": [
+        300.14697265625,
+        741.591064453125,
+        311.86309814453125,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 29
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          72,
+          163,
+          541,
+          547
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "caption",
+        "bbox": [
+          71,
+          558,
+          541,
+          628
+        ],
+        "pos": [
+          2,
+          391
+        ]
+      },
+      {
+        "index": 2,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          391,
+          396
+        ]
+      }
+    ],
+    "text": "\n\nFigure 7: Benchmark performances for biophysics tasks: **PCBA** , 4 models are evaluated by AUC-PRC on random split; **MUV** , 8 models are evaluated by AUC-PRC on random split; **HIV** , 8 models are evaluated by AUC-ROC on scaffold split; **BACE** , 9 models are evaluated by AUC-ROC on scaffold split. For AUC-ROC and AUC-PRC, higher value indicates better performance(to the right). \n\n29 \n\n"
+  }
+}

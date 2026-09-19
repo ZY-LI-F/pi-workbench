@@ -1,0 +1,219 @@
+{
+  "page": 44,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0044.png",
+  "reviewed": true,
+  "review_notes": "Optimization continuation, RF 500 trees and conventional hyperparameter names. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0044-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        111
+      ],
+      "markdown": "mized hyperparameters for each model are listed, detailed hyperparameters can be found on Deepchem.",
+      "source_class": "text",
+      "join_previous": "none"
+    },
+    {
+      "id": "p0044-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        139,
+        240,
+        152
+      ],
+      "markdown": "### Logistic Regression (Logreg)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0044-b002",
+      "kind": "text",
+      "bbox": [
+        89,
+        171,
+        171,
+        183
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b003",
+      "kind": "text",
+      "bbox": [
+        89,
+        205,
+        189,
+        217
+      ],
+      "markdown": "- L2 regularization",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b004",
+      "kind": "text",
+      "bbox": [
+        89,
+        239,
+        154,
+        248
+      ],
+      "markdown": "- Batch size",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b005",
+      "kind": "heading",
+      "bbox": [
+        72,
+        279,
+        330,
+        292
+      ],
+      "markdown": "### Support Vector Classification (KernelSVM)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0044-b006",
+      "kind": "text",
+      "bbox": [
+        89,
+        311,
+        209,
+        323
+      ],
+      "markdown": "- Penalty parameter C",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b007",
+      "kind": "text",
+      "bbox": [
+        89,
+        345,
+        357,
+        357
+      ],
+      "markdown": "- Kernel coefficient gamma for radial basis function",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b008",
+      "kind": "heading",
+      "bbox": [
+        72,
+        385,
+        264,
+        398
+      ],
+      "markdown": "### Kernel Ridge Regression (KRR)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0044-b009",
+      "kind": "text",
+      "bbox": [
+        89,
+        417,
+        197,
+        429
+      ],
+      "markdown": "- Penalty parameter",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b010",
+      "kind": "heading",
+      "bbox": [
+        72,
+        457,
+        196,
+        470
+      ],
+      "markdown": "### Random Forest (RF)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0044-b011",
+      "kind": "text",
+      "bbox": [
+        89,
+        490,
+        277,
+        499
+      ],
+      "markdown": "- Number of trees in the forest: 500",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b012",
+      "kind": "heading",
+      "bbox": [
+        72,
+        530,
+        250,
+        543
+      ],
+      "markdown": "### Gradient Boosting (XGBoost)",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0044-b013",
+      "kind": "text",
+      "bbox": [
+        89,
+        562,
+        210,
+        574
+      ],
+      "markdown": "- Maximum tree depth",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b014",
+      "kind": "text",
+      "bbox": [
+        89,
+        596,
+        171,
+        608
+      ],
+      "markdown": "- Learning rate",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b015",
+      "kind": "text",
+      "bbox": [
+        89,
+        630,
+        223,
+        639
+      ],
+      "markdown": "- Number of boosted tree",
+      "source_class": "list-item"
+    },
+    {
+      "id": "p0044-b016",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "44",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Optimization continuation, RF 500 trees and conventional hyperparameter names. Reviewed sequentially by the main agent; no independent agent verification."
+}

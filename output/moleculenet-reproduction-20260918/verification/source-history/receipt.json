@@ -1,0 +1,6 @@
+{
+  "esolScriptSha256": "b586b102882da6ebf3df3a39f2b420326483ff5bdaf72c1b55b180c9f011a91e",
+  "currentScriptSha256": "7e71c83f1c5a793d3c9e5c6b3c22961fdb82b8aa08dd0809ee30de86d0b18f2d",
+  "historicalRecovery": "Reversed only the documented FreeSolv source correction and matched the original saved SHA-256 exactly",
+  "changes": "FreeSolv physical source loader; additional raw-label provenance. ESOL numerical implementation unchanged."
+}

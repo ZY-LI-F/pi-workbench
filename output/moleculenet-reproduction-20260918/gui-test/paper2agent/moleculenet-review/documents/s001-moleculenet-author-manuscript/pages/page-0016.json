@@ -1,0 +1,125 @@
+{
+  "page": 16,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0016.png",
+  "reviewed": true,
+  "review_notes": "ROC/PRC continuation; FPR and precision equations retained as one source crop; Featurization and ECFP. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0016-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        527,
+        87
+      ],
+      "markdown": "and G, lower left corner), which creates different margins on the low recall side of PRCs.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0016-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        98,
+        541,
+        135
+      ],
+      "markdown": "ROC curves and PRCs share one same axis, while using false positive rate (FPR) and precision for the other axis respectively. Recall that FPR and precision are defined as follows:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0016-b002",
+      "kind": "formula",
+      "bbox": [
+        192,
+        143,
+        419,
+        219
+      ],
+      "markdown": "",
+      "source_class": "formula",
+      "label": "Formula on PDF page 16 (3)",
+      "asset_name": "formula-p0016-002"
+    },
+    {
+      "id": "p0016-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        225,
+        541,
+        357
+      ],
+      "markdown": "When positive samples form only a small proportion of all samples, false positive predictions exert a much greater influence on precision than FPR, amplifying the difference between PRC and ROC curves. Virtual screening experiments do have extremely low positive rates, suggesting that the correct metric to analyze may depend on the experiment at hand. In this work, we hence propose recommended metrics based on positive rates, PRC-AUC is used for datasets with positive rates less than 2%, otherwise ROC-AUC is used.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0016-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        390,
+        166,
+        401
+      ],
+      "markdown": "### Featurization",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0016-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        423,
+        541,
+        626
+      ],
+      "markdown": "A core challenge for molecular machine learning is effectively encoding molecules into fixedlength strings or vectors. Although SMILES strings are unique representations of molecules, most molecular machine learning methods require further information to learn sophisticated electronic or topological features of molecules from limited amounts of data. (Recent work has demonstrated the ability to learn useful representations from SMILES strings using more sophisticated methods,<sup>67</sup> so it may be feasible to use SMILES strings for further learning tasks in the near future.) Furthermore, the enormity of chemical space often requires representations of molecules specifically suited to the learning task at hand. MoleculeNet contains implementations of six useful molecular featurization methods.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0016-b006",
+      "kind": "heading",
+      "bbox": [
+        72,
+        655,
+        109,
+        664
+      ],
+      "markdown": "### ECFP",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0016-b007",
+      "kind": "text",
+      "bbox": [
+        72,
+        686,
+        541,
+        722
+      ],
+      "markdown": "Extended-Connectivity Fingerprints (ECFP) are widely-used molecular characterizations in chemical informatics.<sup>21</sup> During the featurization process, a molecule is decomposed into",
+      "source_class": "text"
+    },
+    {
+      "id": "p0016-b008",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "16",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "ROC/PRC continuation; FPR and precision equations retained as one source crop; Featurization and ECFP. Reviewed sequentially by the main agent; no independent agent verification."
+}

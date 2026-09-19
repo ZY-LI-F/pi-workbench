@@ -1,0 +1,99 @@
+{
+  "page": 28,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0028.png",
+  "reviewed": true,
+  "review_notes": "MPNN continuation; Results and Discussion, GP hyperparameter search and three independent runs. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0028-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        135
+      ],
+      "markdown": "is separated into two phases: message passing phase and readout phase. Multiple message passing phases are stacked to extract abstract information of the graph, then the readout phase is responsible for mapping the graph to its properties.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0028-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        147,
+        541,
+        300
+      ],
+      "markdown": "Here we reimplemented the best-performing model in the original article: using an edge network as message passing function and a set2set model<sup>83</sup> as readout function. In message passing phase, an edge-dependent neural network maps all neighbor atoms’ feature vectors to updated messages, which are then merged using gated recurrent units. In the final readout phase, feature vectors for all atoms are regarded as a set, then an LSTM with attention mechanism is applied on the top for multiple steps, exporting the final state as outputs for the molecule.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0028-b002",
+      "kind": "heading",
+      "bbox": [
+        71,
+        341,
+        267,
+        354
+      ],
+      "markdown": "## Results and Discussion",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0028-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        380,
+        541,
+        485
+      ],
+      "markdown": "In this section, we discuss the performances of benchmarked models on MoleculeNet datasets. Different models are applied depending on the size, features and task types of the dataset. All graph models use their corresponding featurizations. Non-graph models use ECFP featurizations by default, Coulomb Matrix (CM) and Grid featurizer are also applied for certain datasets.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0028-b004",
+      "kind": "text",
+      "bbox": [
+        71,
+        500,
+        541,
+        605
+      ],
+      "markdown": "We run a brief Gaussian process hyperparameter optimization on each combination of dataset and model. Then three independent runs with different random seeds are performed. More detailed description of optimization method and performance tables can be found in the Appendix. Note that all benchmark results presented here are the average of three runs, with standard deviations listed or illustrated as error bars.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0028-b005",
+      "kind": "text",
+      "bbox": [
+        71,
+        619,
+        541,
+        656
+      ],
+      "markdown": "We also run a set of experiments focusing on how variable size of training set affect model performances.(Tox21, FreeSolv and QM7) Details will be presented in the following texts.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0028-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "28",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "MPNN continuation; Results and Discussion, GP hyperparameter search and three independent runs. Reviewed sequentially by the main agent; no independent agent verification."
+}

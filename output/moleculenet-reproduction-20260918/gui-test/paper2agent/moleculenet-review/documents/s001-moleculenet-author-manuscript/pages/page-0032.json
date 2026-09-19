@@ -1,0 +1,87 @@
+{
+  "page": 32,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0032.png",
+  "reviewed": true,
+  "review_notes": "Graph performance continuation, scaffold generalization and imbalanced MUV caveats. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0032-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        74,
+        541,
+        111
+      ],
+      "markdown": "fit. Similar results are reported in previous graph-based algorithms,<sup>14,19,22,23,76</sup> showing that learnable featurizations can provide a large boost compared with conventional featurizations.",
+      "source_class": "text",
+      "join_previous": "none"
+    },
+    {
+      "id": "p0032-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        122,
+        541,
+        230
+      ],
+      "markdown": "For smaller singletask datasets (less than 3000 samples), differences between models are less clear. Kernel SVM and ensemble tree methods (gradient boosting and random forests) are more robust under data scarcity, while they generally need longer running time (see Table 4). Worse performances of graph-based models are within expectation as complex models generally require more training data.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0032-b002",
+      "kind": "text",
+      "bbox": [
+        72,
+        242,
+        541,
+        350
+      ],
+      "markdown": "Bypass networks show higher train scores and equal or higher validation/test scores compared with vanilla multitask networks, suggesting that the bypass structure does add robustness. IRV models achieve performance broadly comparable with multitask networks. However, the quadratic nearest neighbor search makes the IRV models slower to train than the multitask networks (see Table 4).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0032-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        361,
+        541,
+        565
+      ],
+      "markdown": "Three datasets (HIV, BACE, BBBP) in these two categories are evaluated under scaffold splitting. As compounds are divided by their molecular scaffolds, increasing differences between train, validation and test performances are observed. Scaffold splits provide a stronger test of a given model’s generalizability compared with random splitting. Two datasets (PCBA, MUV) are evaluated by AUC-PRC, which is more practically useful under high class imbalance as discussed above. Graph convolutional model performs the best on PCBA (positive rate 1.40%), while results on MUV (positive rate 0.20%) are much less stable, which is most likely due to its extreme low amount of positive samples. Under such high imbalance, graph-based models are still not robust enough in controlling false positives.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0032-b004",
+      "kind": "text",
+      "bbox": [
+        72,
+        577,
+        541,
+        709
+      ],
+      "markdown": "Here we performed a more detailed experiment to illustrate how model performances change with increasing training samples. We trained multiple models on Tox21 with training sets of different size(10% to 90% of the whole dataset) Figure 10 displayed mean out-ofsample performances (and standard deviations) of five independent runs. A clear increase on performance is observed for each model, and graph-based models (Graph convolutional model and weave model) always stay on top of the lines. By drawing a horizontal line",
+      "source_class": "text"
+    },
+    {
+      "id": "p0032-b005",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "32",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Graph performance continuation, scaffold generalization and imbalanced MUV caveats. Reviewed sequentially by the main agent; no independent agent verification."
+}

@@ -1,0 +1,101 @@
+{
+  "page": 23,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0023.png",
+  "reviewed": true,
+  "review_notes": "IRV continuation, Tanimoto formula source crop and graph-based-model overview. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0023-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        111
+      ],
+      "markdown": "IRV classifier makes its prediction by combining labels from the top K compounds most similar to a provided test sample.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0023-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        123,
+        541,
+        159
+      ],
+      "markdown": "The Jaccard-Tanimoto similarity between fingerprints of compounds is used as the similarity measurement:",
+      "source_class": "text"
+    },
+    {
+      "id": "p0023-b002",
+      "kind": "formula",
+      "bbox": [
+        255,
+        181,
+        356,
+        217
+      ],
+      "markdown": "",
+      "source_class": "formula",
+      "label": "Formula on PDF page 23 (3)",
+      "asset_name": "formula-p0023-002"
+    },
+    {
+      "id": "p0023-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        229,
+        541,
+        313
+      ],
+      "markdown": "Then IRV model calculates a weighted sum of the labels of top K similar compounds to predict the result, in which weights are the outputs of a one-hidden layer neural network with similarities and rankings of top K compounds as input. Detailed descriptions of the model can be found in the original article.<sup>75</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0023-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        346,
+        289,
+        360
+      ],
+      "markdown": "### Models - Graph Based Models",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0023-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        379,
+        541,
+        628
+      ],
+      "markdown": "Early attempts to directly use molecular structures instead of selected features has emerged in 1990s.<sup>81,82</sup> While in recent years, models propelled by the very similar idea start to grow rapidly. These specifically designed methods, namely graph-based models, are naturally suitable for modeling molecules. By defining atoms as nodes, bonds as edges, molecules can be modeled as mathematical graphs. As noted in a recent paper,<sup>76</sup> this natural similarity has inspired a number of models to utilize the graph structure of molecules to gain higher performances. In general, graph-based models apply adaptive functions to nodes and edges, allowing for a learnable featurization process. MoleculeNet provides implementations of multiple graph-based models which use different variants of molecular graphs. We describe these methods in the following sections. Figure 6 provide simple illustrations of these methods’ core structures.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0023-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        751
+      ],
+      "markdown": "23",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "IRV continuation, Tanimoto formula source crop and graph-based-model overview. Reviewed sequentially by the main agent; no independent agent verification."
+}

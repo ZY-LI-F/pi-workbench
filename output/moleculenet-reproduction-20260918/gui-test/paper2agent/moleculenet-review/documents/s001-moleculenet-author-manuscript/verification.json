@@ -1,0 +1,2199 @@
+{
+  "status": "reviewed_with_limitations",
+  "mechanical_ok": true,
+  "all_pages_agent_reviewed": true,
+  "image_only_pages": [],
+  "issues": [],
+  "images": [
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0006-003.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0007-003.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-1.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0013-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-2.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0015-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/formula-p0016-002.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0017-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/formula-p0018-002.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/formula-p0023-002.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0024-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0029-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0030-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0031-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0033-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0035-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0036-002.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0038-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0039-000.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/figure-p0040-002.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-3.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-4.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-5.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-6.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-7.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-9.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-10.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-11.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-12.png",
+      "pixels_match_source_region": true
+    },
+    {
+      "file": "assets/s001-moleculenet-author-manuscript/table-13.png",
+      "pixels_match_source_region": true
+    }
+  ],
+  "pages": [
+    {
+      "page": 1,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 20,
+      "source_text_lines_found": 20,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            18,
+            213,
+            36,
+            560
+          ],
+          "reason": "Vertical arXiv stamp recorded verbatim in package provenance note; not body prose."
+        },
+        {
+          "bbox": [
+            106,
+            121,
+            506,
+            182
+          ],
+          "reason": "Paper title reproduced in the generated package title."
+        },
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 26,
+      "source_text_lines_found": 26,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 27,
+      "source_text_lines_found": 27,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 4,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 25,
+      "source_text_lines_found": 25,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 5,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 24,
+      "source_text_lines_found": 24,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 6,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 17,
+      "source_text_lines_found": 17,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 7,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 19,
+      "source_text_lines_found": 19,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 8,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 17,
+      "source_text_lines_found": 17,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 9,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 21,
+      "source_text_lines_found": 21,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            303,
+            741,
+            309,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 10,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 22,
+      "source_text_lines_found": 22,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 11,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 24,
+      "source_text_lines_found": 24,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 12,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 23,
+      "source_text_lines_found": 23,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 13,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 15,
+      "source_text_lines_found": 15,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 14,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 20,
+      "source_text_lines_found": 20,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 15,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 15,
+      "source_text_lines_found": 15,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 16,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 22,
+      "source_text_lines_found": 22,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 17,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 9,
+      "source_text_lines_found": 9,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 18,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 22,
+      "source_text_lines_found": 22,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 19,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 23,
+      "source_text_lines_found": 23,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 20,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 25,
+      "source_text_lines_found": 25,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {
+          "-171": 1
+        },
+        "extra": {
+          "-1": 1,
+          "71": 1
+        }
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [
+        {
+          "check": "number_differences",
+          "fingerprint": "ec7bee780be8ef1130d517c44945fc8ddd134179d1973a3f783b54d7696e42d6",
+          "reason": "Full-resolution page 20 shows model name ANI-1 immediately followed by superscript reference 71. Output preserves ANI-1<sup>71</sup>; native parser concatenates -1 and 71 into -171. Independent parser reports no difference. No scientific value changed."
+        }
+      ],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 21,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 22,
+      "source_text_lines_found": 22,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 22,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 25,
+      "source_text_lines_found": 25,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 23,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 21,
+      "source_text_lines_found": 21,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 24,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 21,
+      "source_text_lines_found": 21,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 25,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 27,
+      "source_text_lines_found": 27,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 26,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 25,
+      "source_text_lines_found": 25,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 27,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 26,
+      "source_text_lines_found": 26,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 28,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 23,
+      "source_text_lines_found": 23,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 29,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 5,
+      "source_text_lines_found": 5,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 30,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 5,
+      "source_text_lines_found": 5,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 31,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 17,
+      "source_text_lines_found": 17,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 32,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 29,
+      "source_text_lines_found": 29,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 33,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 3,
+      "source_text_lines_found": 3,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 34,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 25,
+      "source_text_lines_found": 25,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 35,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 3,
+      "source_text_lines_found": 3,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 36,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 15,
+      "source_text_lines_found": 15,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {
+          "1": 1,
+          "5": 1
+        },
+        "extra": {
+          "1.5": 1
+        }
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [
+        {
+          "check": "independent_parser_number_differences",
+          "fingerprint": "44446fd2b8c12c227a1e614a1fffb501cbfe1cc38a21a603e95c582ff067e58d",
+          "reason": "Full-resolution page 36 first paragraph visibly reads +/- 1.5 kcal/mol. Output preserves decimal 1.5; independent PDF text parser splits decimal into tokens 1 and 5. Native parser agrees. Negative endpoint -25.5 was separately corrected from actual source and now passes native numeric check."
+        }
+      ],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 37,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 26,
+      "source_text_lines_found": 26,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 38,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 4,
+      "source_text_lines_found": 4,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 39,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 5,
+      "source_text_lines_found": 5,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 40,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 16,
+      "source_text_lines_found": 16,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 41,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 16,
+      "source_text_lines_found": 16,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 42,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 27,
+      "source_text_lines_found": 27,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 43,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 23,
+      "source_text_lines_found": 23,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 44,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 17,
+      "source_text_lines_found": 17,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            750
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 45,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 18,
+      "source_text_lines_found": 18,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 46,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 19,
+      "source_text_lines_found": 19,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 47,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 19,
+      "source_text_lines_found": 19,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 48,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 4,
+      "source_text_lines_found": 4,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 49,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 3,
+      "source_text_lines_found": 3,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 50,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 1,
+      "source_text_lines_found": 1,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 51,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 94,
+      "source_text_lines_found": 94,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 52,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 2,
+      "source_text_lines_found": 2,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 53,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 9,
+      "source_text_lines_found": 9,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 54,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 22,
+      "source_text_lines_found": 22,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 55,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 6,
+      "source_text_lines_found": 6,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 56,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 20,
+      "source_text_lines_found": 20,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 57,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 20,
+      "source_text_lines_found": 20,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 58,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 21,
+      "source_text_lines_found": 21,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 59,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 27,
+      "source_text_lines_found": 27,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 60,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 28,
+      "source_text_lines_found": 28,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 61,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 23,
+      "source_text_lines_found": 23,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 62,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 27,
+      "source_text_lines_found": 27,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {
+          "27": 1
+        },
+        "extra": {
+          "-27": 1
+        }
+      },
+      "independent_parser_number_differences": {
+        "missing": {
+          "27": 1
+        },
+        "extra": {
+          "-27": 1
+        }
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [
+        {
+          "check": "number_differences",
+          "fingerprint": "0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94",
+          "reason": "Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27. Tokenizer interprets the rejoined hyphen as a numeric minus sign; this is a citation date, not a changed observation."
+        },
+        {
+          "check": "independent_parser_number_differences",
+          "fingerprint": "0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94",
+          "reason": "Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27; independent tokenizer treats the date separator as numeric sign. All date digits are retained."
+        }
+      ],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 63,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 29,
+      "source_text_lines_found": 29,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 64,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 20,
+      "source_text_lines_found": 20,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "independent_parser_number_differences": {
+        "missing": {},
+        "extra": {}
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    },
+    {
+      "page": 65,
+      "mode": "native",
+      "agent_reviewed": true,
+      "source_text_lines_checked": 1,
+      "source_text_lines_found": 1,
+      "missing_lines": [],
+      "number_differences": {
+        "missing": {
+          "18": 1
+        },
+        "extra": {
+          "-18": 1
+        }
+      },
+      "independent_parser_number_differences": {
+        "missing": {
+          "18": 1
+        },
+        "extra": {
+          "-18": 1
+        }
+      },
+      "unresolved_checks": [],
+      "applied_adjudications": [
+        {
+          "check": "number_differences",
+          "fingerprint": "e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe",
+          "reason": "Full page 65 shows the access date for reference 85 wrapped 2017-10- then 18. Output rejoins 2017-10-18; parser token 18 becomes -18 solely due to the date hyphen. No scientific number or date changed."
+        },
+        {
+          "check": "independent_parser_number_differences",
+          "fingerprint": "e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe",
+          "reason": "Full page 65 shows reference 85 access date 2017-10-18 across a line break. Rejoined output retains exact date; independent tokenizer changes the last date-token sign, not content."
+        }
+      ],
+      "independent_parser_outside_page_text": [],
+      "omitted_regions": [
+        {
+          "bbox": [
+            300,
+            741,
+            312,
+            751
+          ],
+          "reason": "Visually confirmed page-number-only footer."
+        }
+      ]
+    }
+  ],
+  "applied_adjudications": [
+    {
+      "page": 20,
+      "check": "number_differences",
+      "fingerprint": "ec7bee780be8ef1130d517c44945fc8ddd134179d1973a3f783b54d7696e42d6",
+      "reason": "Full-resolution page 20 shows model name ANI-1 immediately followed by superscript reference 71. Output preserves ANI-1<sup>71</sup>; native parser concatenates -1 and 71 into -171. Independent parser reports no difference. No scientific value changed."
+    },
+    {
+      "page": 36,
+      "check": "independent_parser_number_differences",
+      "fingerprint": "44446fd2b8c12c227a1e614a1fffb501cbfe1cc38a21a603e95c582ff067e58d",
+      "reason": "Full-resolution page 36 first paragraph visibly reads +/- 1.5 kcal/mol. Output preserves decimal 1.5; independent PDF text parser splits decimal into tokens 1 and 5. Native parser agrees. Negative endpoint -25.5 was separately corrected from actual source and now passes native numeric check."
+    },
+    {
+      "page": 62,
+      "check": "number_differences",
+      "fingerprint": "0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94",
+      "reason": "Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27. Tokenizer interprets the rejoined hyphen as a numeric minus sign; this is a citation date, not a changed observation."
+    },
+    {
+      "page": 62,
+      "check": "independent_parser_number_differences",
+      "fingerprint": "0d214fbe6cf82b15a52db8b5c258c9580c586ebd1ecc1e4d99dc4a28bd5b5e94",
+      "reason": "Reference 53 access date visually wraps as 2017-09- then 27. Output rejoins as 2017-09-27; independent tokenizer treats the date separator as numeric sign. All date digits are retained."
+    },
+    {
+      "page": 65,
+      "check": "number_differences",
+      "fingerprint": "e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe",
+      "reason": "Full page 65 shows the access date for reference 85 wrapped 2017-10- then 18. Output rejoins 2017-10-18; parser token 18 becomes -18 solely due to the date hyphen. No scientific number or date changed."
+    },
+    {
+      "page": 65,
+      "check": "independent_parser_number_differences",
+      "fingerprint": "e2e16653c8be875dbe21a28790af50fb4093599dbd4bf84d1dcb0757300bcbbe",
+      "reason": "Full page 65 shows reference 85 access date 2017-10-18 across a line break. Rejoined output retains exact date; independent tokenizer changes the last date-token sign, not content."
+    }
+  ],
+  "stale_adjudications": [],
+  "metric_scope": "Line checks normalize alphanumeric text and ignore whitespace/formatting. Number checks retain printed numeric strings. Pixel checks validate chosen crops, not crop completeness. Review flags record agent review; none of these is a universal accuracy score."
+}

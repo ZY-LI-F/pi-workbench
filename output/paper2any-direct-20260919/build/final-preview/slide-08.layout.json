@@ -1,0 +1,858 @@
+{
+  "schema": "openai.presentation.layout/v4",
+  "unit": "px",
+  "slide": {
+    "aid": "sl/fu1gfa1s",
+    "id": "fu1gfa1s",
+    "slide": 8,
+    "layoutId": "/ppt/slideLayouts/slideLayout1.xml",
+    "layoutName": "DEFAULT",
+    "masterLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+    "backgroundColor": "#F7F8F4",
+    "frame": {
+      "left": 0,
+      "top": 0,
+      "width": 1279.97,
+      "height": 720
+    }
+  },
+  "theme": {
+    "colorSchemeName": "Office",
+    "colors": {
+      "accent1": "#4472C4",
+      "accent2": "#ED7D31",
+      "accent3": "#A5A5A5",
+      "accent4": "#FFC000",
+      "accent5": "#5B9BD5",
+      "accent6": "#70AD47",
+      "dk1": "#000000",
+      "lt1": "#FFFFFF",
+      "dk2": "#44546A",
+      "lt2": "#E7E6E6",
+      "hlink": "#0563C1",
+      "folHlink": "#954F72"
+    },
+    "fontScheme": {
+      "name": "Office",
+      "majorFont": {
+        "latinTypeface": "Noto Sans SC"
+      },
+      "minorFont": {
+        "latinTypeface": "Noto Sans SC"
+      }
+    },
+    "typefaces": [
+      "Noto Sans SC"
+    ]
+  },
+  "inheritedLayers": [
+    {
+      "scope": "layout",
+      "id": "/ppt/slideLayouts/slideLayout1.xml",
+      "name": "DEFAULT",
+      "parentLayoutId": "/ppt/slideMasters/slideMaster1.xml",
+      "elements": []
+    },
+    {
+      "scope": "master",
+      "id": "/ppt/slideMasters/slideMaster1.xml",
+      "type": "master",
+      "elements": []
+    }
+  ],
+  "elements": [
+    {
+      "order": 1,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/18byd4zy",
+      "id": "2",
+      "name": "Text 0",
+      "bbox": [
+        61.76,
+        39.36,
+        1154.85,
+        90.88
+      ],
+      "geometry": "rect",
+      "text": "脂溶性任务中 GraphConv 的平均误差最低",
+      "textPreview": "脂溶性任务中 GraphConv 的平均误差最低",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "脂溶性任务中 GraphConv 的平均误差最低"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "脂溶性任务中 GraphConv 的平均误差最低",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "脂溶性任务中 GraphConv 的平均误差最低",
+              "fontSize": 45.47,
+              "typeface": "Noto Sans SC",
+              "color": "#18362F",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 2,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/g72x4zyd",
+      "id": "3",
+      "name": "Text 1",
+      "bbox": [
+        64,
+        651.2,
+        1047.97,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "测试 RMSE（logD），越低越好。本次均值 ± 样本 SD，n=3。论文：Table 8。",
+      "textPreview": "测试 RMSE（logD），越低越好。本次均值 ± 样本 SD，n=3。论文：Table 8。",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "测试 RMSE（logD），越低越好。本次均值 ± 样本 SD，n=3。论文：Table 8。"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "测试 RMSE（logD），越低越好。本次均值 ± 样本 SD，n=3。论文：Table 8。",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "测试 RMSE（logD），越低越好。本次均值 ± 样本 SD，n=3。论文：Table 8。",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 3,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/ri9g7uhw",
+      "id": "4",
+      "name": "Text 2",
+      "bbox": [
+        1139.17,
+        651.2,
+        80,
+        38.4
+      ],
+      "geometry": "rect",
+      "text": "08 / 14",
+      "textPreview": "08 / 14",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "08 / 14"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "08 / 14",
+          "resolvedTextStyle": {
+            "alignment": "right"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "08 / 14",
+              "fontSize": 15.4,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/6h0fypgb",
+      "id": "5",
+      "name": "Text 3",
+      "bbox": [
+        64,
+        142.4,
+        1143.97,
+        48
+      ],
+      "geometry": "rect",
+      "text": "Lipophilicity   测试 RMSE / logD",
+      "textPreview": "Lipophilicity   测试 RMSE / logD",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 1,
+        "lines": [
+          {
+            "index": 1,
+            "text": "Lipophilicity   测试 RMSE / logD"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "Lipophilicity   测试 RMSE / logD",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "Lipophilicity   测试 RMSE / logD",
+              "fontSize": 24.2,
+              "typeface": "Noto Sans SC",
+              "color": "#566C63"
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "kind": "table",
+      "scope": "slide",
+      "aid": "tb/u9sb2p0r",
+      "id": "8",
+      "name": "Table 0",
+      "bbox": [
+        64,
+        212.8,
+        1151.97,
+        273.6
+      ],
+      "text": "模型 | 本次实验 | 原论文\n训练均值基线 | 1.169 ± 0.014 | 未列此基线\nRF / ECFP4 | 0.838 ± 0.011 | 0.876 ± 0.040\nKRR / ECFP4 | 0.835 ± 0.016 | 0.899 ± 0.043\nGraphConv | 0.704 ± 0.016 | 0.655 ± 0.036",
+      "textPreview": "模型 | 本次实验 | 原论文 | 训练均值基线 | 1.169 ± 0.014 | 未列此基线 | RF / ECFP4 | 0.838 ± 0.011 | 0.876 ± 0.040 | KRR / ECFP4 | 0.835 ± 0.016 | 0.899 ± 0.0...",
+      "rows": 5,
+      "cols": 3,
+      "cells": [
+        {
+          "index": 1,
+          "row": 1,
+          "column": 1,
+          "bbox": [
+            64,
+            212.8,
+            383.99,
+            54.72
+          ],
+          "text": "模型",
+          "textPreview": "模型",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "模型",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "模型",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "row": 1,
+          "column": 2,
+          "bbox": [
+            447.99,
+            212.8,
+            383.99,
+            54.72
+          ],
+          "text": "本次实验",
+          "textPreview": "本次实验",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "本次实验",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "本次实验",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "row": 1,
+          "column": 3,
+          "bbox": [
+            831.98,
+            212.8,
+            383.99,
+            54.72
+          ],
+          "text": "原论文",
+          "textPreview": "原论文",
+          "fillColor": "rgba(255, 255, 255, 0.9)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "原论文",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "原论文",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#176B53",
+                  "bold": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "row": 2,
+          "column": 1,
+          "bbox": [
+            64,
+            267.52,
+            383.99,
+            54.72
+          ],
+          "text": "训练均值基线",
+          "textPreview": "训练均值基线",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "训练均值基线",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "训练均值基线",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "row": 2,
+          "column": 2,
+          "bbox": [
+            447.99,
+            267.52,
+            383.99,
+            54.72
+          ],
+          "text": "1.169 ± 0.014",
+          "textPreview": "1.169 ± 0.014",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "1.169 ± 0.014",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "1.169 ± 0.014",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 6,
+          "row": 2,
+          "column": 3,
+          "bbox": [
+            831.98,
+            267.52,
+            383.99,
+            54.72
+          ],
+          "text": "未列此基线",
+          "textPreview": "未列此基线",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "未列此基线",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "未列此基线",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 7,
+          "row": 3,
+          "column": 1,
+          "bbox": [
+            64,
+            322.24,
+            383.99,
+            54.72
+          ],
+          "text": "RF / ECFP4",
+          "textPreview": "RF / ECFP4",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "RF / ECFP4",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "RF / ECFP4",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 8,
+          "row": 3,
+          "column": 2,
+          "bbox": [
+            447.99,
+            322.24,
+            383.99,
+            54.72
+          ],
+          "text": "0.838 ± 0.011",
+          "textPreview": "0.838 ± 0.011",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.838 ± 0.011",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.838 ± 0.011",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 9,
+          "row": 3,
+          "column": 3,
+          "bbox": [
+            831.98,
+            322.24,
+            383.99,
+            54.72
+          ],
+          "text": "0.876 ± 0.040",
+          "textPreview": "0.876 ± 0.040",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.876 ± 0.040",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.876 ± 0.040",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 10,
+          "row": 4,
+          "column": 1,
+          "bbox": [
+            64,
+            376.96,
+            383.99,
+            54.72
+          ],
+          "text": "KRR / ECFP4",
+          "textPreview": "KRR / ECFP4",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "KRR / ECFP4",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "KRR / ECFP4",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 11,
+          "row": 4,
+          "column": 2,
+          "bbox": [
+            447.99,
+            376.96,
+            383.99,
+            54.72
+          ],
+          "text": "0.835 ± 0.016",
+          "textPreview": "0.835 ± 0.016",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.835 ± 0.016",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.835 ± 0.016",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 12,
+          "row": 4,
+          "column": 3,
+          "bbox": [
+            831.98,
+            376.96,
+            383.99,
+            54.72
+          ],
+          "text": "0.899 ± 0.043",
+          "textPreview": "0.899 ± 0.043",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.899 ± 0.043",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.899 ± 0.043",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 13,
+          "row": 5,
+          "column": 1,
+          "bbox": [
+            64,
+            431.68,
+            383.99,
+            54.72
+          ],
+          "text": "GraphConv",
+          "textPreview": "GraphConv",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "GraphConv",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "GraphConv",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 14,
+          "row": 5,
+          "column": 2,
+          "bbox": [
+            447.99,
+            431.68,
+            383.99,
+            54.72
+          ],
+          "text": "0.704 ± 0.016",
+          "textPreview": "0.704 ± 0.016",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.704 ± 0.016",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.704 ± 0.016",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "index": 15,
+          "row": 5,
+          "column": 3,
+          "bbox": [
+            831.98,
+            431.68,
+            383.99,
+            54.72
+          ],
+          "text": "0.655 ± 0.036",
+          "textPreview": "0.655 ± 0.036",
+          "fillColor": "rgba(255, 255, 255, 0.72)",
+          "paragraphs": [
+            {
+              "index": 1,
+              "text": "0.655 ± 0.036",
+              "runs": [
+                {
+                  "index": 1,
+                  "text": "0.655 ± 0.036",
+                  "fontSize": 20,
+                  "typeface": "Noto Sans SC",
+                  "color": "#18362F"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "order": 6,
+      "kind": "shape",
+      "scope": "slide",
+      "aid": "sh/sjix0zy1",
+      "id": "7",
+      "name": "Text 4",
+      "bbox": [
+        64,
+        521.6,
+        1143.97,
+        94.4
+      ],
+      "geometry": "rect",
+      "text": "GraphConv 为 0.704，RF / KRR 约为 0.84\n本次 GraphConv 仍略高于论文的 0.655",
+      "textPreview": "GraphConv 为 0.704，RF / KRR 约为 0.84 | 本次 GraphConv 仍略高于论文的 0.655",
+      "resolvedFontSize": 24,
+      "resolvedTextStyle": {
+        "anchor": 1,
+        "fontSize": 24,
+        "typeface": "Noto Sans SC",
+        "color": "tx1",
+        "alignment": "left",
+        "verticalAlignment": "top",
+        "wrap": "square",
+        "autoFit": "shrinkText",
+        "insets": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        }
+      },
+      "textLayout": {
+        "lineCount": 2,
+        "lines": [
+          {
+            "index": 1,
+            "text": "GraphConv 为 0.704，RF / KRR 约为 0.84"
+          },
+          {
+            "index": 2,
+            "text": "本次 GraphConv 仍略高于论文的 0.655"
+          }
+        ]
+      },
+      "paragraphs": [
+        {
+          "index": 1,
+          "text": "GraphConv 为 0.704，RF / KRR 约为 0.84",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "GraphConv 为 0.704，RF / KRR 约为 0.84",
+              "fontSize": 27.87,
+              "typeface": "Noto Sans SC",
+              "color": "#176B53",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        },
+        {
+          "index": 2,
+          "text": "本次 GraphConv 仍略高于论文的 0.655",
+          "resolvedTextStyle": {
+            "alignment": "left"
+          },
+          "runs": [
+            {
+              "index": 1,
+              "text": "本次 GraphConv 仍略高于论文的 0.655",
+              "fontSize": 27.87,
+              "typeface": "Noto Sans SC",
+              "color": "#176B53",
+              "bold": true
+            }
+          ],
+          "marginLeft": 0
+        }
+      ]
+    }
+  ],
+  "composeRuns": []
+}

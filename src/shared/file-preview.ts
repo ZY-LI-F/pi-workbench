@@ -3,6 +3,10 @@ export type LocalFilePreviewKind =
   | "html"
   | "markdown"
   | "text"
+  | "code"
+  | "json"
+  | "delimited"
+  | "notebook"
   | "pdf"
   | "docx"
   | "pptx"
@@ -35,15 +39,27 @@ const PREVIEW_BY_EXTENSION: Readonly<Record<string, LocalFilePreviewDescriptor>>
   ".html": Object.freeze({ kind: "html", mimeType: "text/html" }),
   ".markdown": Object.freeze({ kind: "markdown", mimeType: "text/markdown" }),
   ".md": Object.freeze({ kind: "markdown", mimeType: "text/markdown" }),
-  ".csv": Object.freeze({ kind: "text", mimeType: "text/csv" }),
-  ".json": Object.freeze({ kind: "text", mimeType: "application/json" }),
+  ".csv": Object.freeze({ kind: "delimited", mimeType: "text/csv" }),
+  ".json": Object.freeze({ kind: "json", mimeType: "application/json" }),
+  ".ipynb": Object.freeze({ kind: "notebook", mimeType: "application/x-ipynb+json" }),
   ".log": Object.freeze({ kind: "text", mimeType: "text/plain" }),
   ".text": Object.freeze({ kind: "text", mimeType: "text/plain" }),
-  ".tsv": Object.freeze({ kind: "text", mimeType: "text/tab-separated-values" }),
+  ".tsv": Object.freeze({ kind: "delimited", mimeType: "text/tab-separated-values" }),
   ".txt": Object.freeze({ kind: "text", mimeType: "text/plain" }),
   ".xml": Object.freeze({ kind: "text", mimeType: "application/xml" }),
   ".yaml": Object.freeze({ kind: "text", mimeType: "application/yaml" }),
   ".yml": Object.freeze({ kind: "text", mimeType: "application/yaml" }),
+  ".py": Object.freeze({ kind: "code", mimeType: "text/x-python" }),
+  ".r": Object.freeze({ kind: "code", mimeType: "text/x-r" }),
+  ".sh": Object.freeze({ kind: "code", mimeType: "text/x-shellscript" }),
+  ".bash": Object.freeze({ kind: "code", mimeType: "text/x-shellscript" }),
+  ".ps1": Object.freeze({ kind: "code", mimeType: "text/x-powershell" }),
+  ".js": Object.freeze({ kind: "code", mimeType: "text/javascript" }),
+  ".mjs": Object.freeze({ kind: "code", mimeType: "text/javascript" }),
+  ".cjs": Object.freeze({ kind: "code", mimeType: "text/javascript" }),
+  ".ts": Object.freeze({ kind: "code", mimeType: "text/typescript" }),
+  ".tsx": Object.freeze({ kind: "code", mimeType: "text/typescript" }),
+  ".jsx": Object.freeze({ kind: "code", mimeType: "text/javascript" }),
   ".pdf": Object.freeze({ kind: "pdf", mimeType: "application/pdf" }),
   ".docx": Object.freeze({
     kind: "docx",

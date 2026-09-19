@@ -1,0 +1,1100 @@
+{
+  "page": 55,
+  "lines": [
+    {
+      "text": "Table 13: DeepChem commands to load MoleculeNet datasets and models",
+      "bbox": [
+        115.40899658203125,
+        73.81509399414062,
+        496.6246032714844,
+        84.43130493164062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Dataset",
+      "bbox": [
+        121.79499816894531,
+        98.72010040283203,
+        164.06777954101562,
+        108.40737915039062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Command",
+      "bbox": [
+        204.79600524902344,
+        98.72010040283203,
+        261.0760498046875,
+        108.40737915039062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "QM7",
+      "bbox": [
+        130.96200561523438,
+        112.66809844970703,
+        154.907470703125,
+        122.35537719726562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load qm7 from mat",
+      "bbox": [
+        204.79600524902344,
+        113.42082977294922,
+        412.94140625,
+        121.8426513671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "QM7b",
+      "bbox": [
+        127.93199920654297,
+        126.61609649658203,
+        157.94293212890625,
+        136.30337524414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load qm7b from mat",
+      "bbox": [
+        204.79600524902344,
+        127.36882781982422,
+        419.4864196777344,
+        135.7906494140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "QM8",
+      "bbox": [
+        130.96200561523438,
+        140.56304931640625,
+        154.907470703125,
+        150.25033569335938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load qm8",
+      "bbox": [
+        204.79600524902344,
+        141.31578063964844,
+        359.2684020996094,
+        149.73760986328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "QM9",
+      "bbox": [
+        130.96200561523438,
+        154.51104736328125,
+        154.907470703125,
+        164.19833374023438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load qm9",
+      "bbox": [
+        204.79600524902344,
+        155.26377868652344,
+        359.2684020996094,
+        163.68560791015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ESOL",
+      "bbox": [
+        128.53799438476562,
+        168.4591064453125,
+        157.3380126953125,
+        178.14639282226562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load delaney",
+      "bbox": [
+        204.79600524902344,
+        169.2118377685547,
+        385.4502868652344,
+        177.6336669921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "FreeSolv",
+      "bbox": [
+        122.68900299072266,
+        182.40606689453125,
+        163.18359375,
+        192.09335327148438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load sampl",
+      "bbox": [
+        204.79600524902344,
+        183.15879821777344,
+        372.3593444824219,
+        191.58062744140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Lipophilicity",
+      "bbox": [
+        112.7040023803711,
+        196.35406494140625,
+        173.18405151367188,
+        206.04135131835938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load lipo",
+      "bbox": [
+        204.79600524902344,
+        197.10679626464844,
+        365.8138732910156,
+        205.52862548828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "PCBA",
+      "bbox": [
+        127.32599639892578,
+        210.30206298828125,
+        158.5369415283203,
+        219.98934936523438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load pcba",
+      "bbox": [
+        204.79600524902344,
+        211.05479431152344,
+        365.8138732910156,
+        219.47662353515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MUV",
+      "bbox": [
+        129.75,
+        224.24908447265625,
+        156.11729431152344,
+        233.93637084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load muv",
+      "bbox": [
+        204.79600524902344,
+        225.00181579589844,
+        359.2684020996094,
+        233.42364501953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "HIV",
+      "bbox": [
+        132.77999877929688,
+        238.19708251953125,
+        153.0818328857422,
+        247.88436889648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load hiv",
+      "bbox": [
+        204.79600524902344,
+        238.94981384277344,
+        359.2684020996094,
+        247.37164306640625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "BACE",
+      "bbox": [
+        127.47699737548828,
+        252.14508056640625,
+        158.38247680664062,
+        261.8323669433594
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load bace classification",
+      "bbox": [
+        204.79600524902344,
+        252.89781188964844,
+        461.3775939941406,
+        261.31964111328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "PDBbind",
+      "bbox": [
+        120.58300018310547,
+        266.09210205078125,
+        165.29940795898438,
+        275.7793884277344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load pdbbind grid",
+      "bbox": [
+        204.79600524902344,
+        266.8448486328125,
+        415.55987548828125,
+        275.26666259765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "BBBP",
+      "bbox": [
+        127.62899780273438,
+        280.0400695800781,
+        158.22903442382812,
+        289.72735595703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load bbbp",
+      "bbox": [
+        204.79600524902344,
+        280.7928161621094,
+        365.8138732910156,
+        289.2146301269531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tox21",
+      "bbox": [
+        128.53799438476562,
+        293.9880676269531,
+        157.3271026611328,
+        303.67535400390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load tox21",
+      "bbox": [
+        204.79600524902344,
+        294.7408142089844,
+        372.3593444824219,
+        303.1626281738281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ToxCast",
+      "bbox": [
+        123.0530014038086,
+        307.9350891113281,
+        162.80575561523438,
+        317.62237548828125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load toxcast",
+      "bbox": [
+        204.79600524902344,
+        308.6878356933594,
+        385.4502868652344,
+        317.1096496582031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "SIDER",
+      "bbox": [
+        126.03800201416016,
+        321.8830871582031,
+        159.83438110351562,
+        331.57037353515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load sider",
+      "bbox": [
+        204.79600524902344,
+        322.6358337402344,
+        372.3593444824219,
+        331.0576477050781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ClinTox",
+      "bbox": [
+        123.99199676513672,
+        335.8310852050781,
+        161.87930297851562,
+        345.51837158203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.molnet.load clintox",
+      "bbox": [
+        204.79600524902344,
+        336.5838317871094,
+        385.4502868652344,
+        345.0056457519531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Model",
+      "bbox": [
+        125.56400299072266,
+        351.7710876464844,
+        160.298583984375,
+        361.4583740234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Command",
+      "bbox": [
+        204.79600524902344,
+        351.7710876464844,
+        261.0760498046875,
+        361.4583740234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logrega",
+      "bbox": [
+        124.28199768066406,
+        363.79974365234375,
+        161.0801239013672,
+        375.4063720703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sklearn.linear model.LogisticRegression",
+      "bbox": [
+        204.79600524902344,
+        366.4718322753906,
+        457.4512939453125,
+        374.8936462402344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "KernelSVMa",
+      "bbox": [
+        112.54000091552734,
+        377.7467346191406,
+        172.82313537597656,
+        389.3533630371094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sklearn.svm.SVC",
+      "bbox": [
+        204.79600524902344,
+        380.4188232421875,
+        302.97796630859375,
+        388.84063720703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "KRRa",
+      "bbox": [
+        128.16099548339844,
+        391.6947326660156,
+        157.2011260986328,
+        403.3013610839844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sklearn.kernel ridge.KernelRidge",
+      "bbox": [
+        204.79600524902344,
+        394.3668212890625,
+        411.63299560546875,
+        402.78863525390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "RFa",
+      "bbox": [
+        132.85800170898438,
+        412.416748046875,
+        152.50413513183594,
+        424.02337646484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sklearn.ensemble.RandomForestClassifier",
+      "bbox": [
+        204.79600524902344,
+        408.3148193359375,
+        460.06927490234375,
+        416.73663330078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "sklearn.ensemble.RandomForestRegressor",
+      "bbox": [
+        204.79600524902344,
+        421.86383056640625,
+        453.5238037109375,
+        430.28564453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "XGBoostb",
+      "bbox": [
+        118.90899658203125,
+        433.14874267578125,
+        166.45938110351562,
+        444.75537109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.xgboost models.XGBoostModel",
+      "bbox": [
+        204.79600524902344,
+        435.8208312988281,
+        483.6329650878906,
+        444.2426452636719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Multitask/Singletask",
+      "bbox": [
+        93.02300262451172,
+        455.7900695800781,
+        192.8630828857422,
+        465.47735595703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.MultitaskClassifier",
+      "bbox": [
+        204.79600524902344,
+        449.767822265625,
+        433.88739013671875,
+        458.18963623046875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.MultitaskRegressor",
+      "bbox": [
+        204.79600524902344,
+        463.31781005859375,
+        427.3419189453125,
+        471.7396240234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Bypass",
+      "bbox": [
+        126.12899780273438,
+        476.5120849609375,
+        159.72903442382812,
+        486.1993713378906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.RobustMultitaskClassifier",
+      "bbox": [
+        204.79600524902344,
+        477.26483154296875,
+        473.16021728515625,
+        485.6866455078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "IRV",
+      "bbox": [
+        133.46200561523438,
+        490.4600830078125,
+        152.40020751953125,
+        500.1473693847656
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.TensorflowMultitaskIRVClassifier",
+      "bbox": [
+        204.79600524902344,
+        491.21282958984375,
+        518.978515625,
+        499.6346435546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "GC",
+      "bbox": [
+        134.71200561523438,
+        504.4080810546875,
+        151.1520233154297,
+        514.0953979492188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.GraphConvModel",
+      "bbox": [
+        204.79600524902344,
+        505.16082763671875,
+        401.1600341796875,
+        513.5826416015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Weave",
+      "bbox": [
+        127.62899780273438,
+        518.3551025390625,
+        158.22903442382812,
+        528.0424194335938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.WeaveModel",
+      "bbox": [
+        204.79600524902344,
+        519.1078491210938,
+        374.9781494140625,
+        527.5296630859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "DAG",
+      "bbox": [
+        130.69700622558594,
+        532.3031005859375,
+        155.16612243652344,
+        541.9904174804688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.DAGModel",
+      "bbox": [
+        204.79600524902344,
+        533.0558471679688,
+        361.88720703125,
+        541.4776611328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "DTNN",
+      "bbox": [
+        126.64399719238281,
+        546.2510986328125,
+        159.21856689453125,
+        555.9384155273438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.DTNNModel",
+      "bbox": [
+        204.79600524902344,
+        547.0038452148438,
+        368.43267822265625,
+        555.4256591796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ANI-1",
+      "bbox": [
+        128.23500061035156,
+        560.1980590820312,
+        157.62411499023438,
+        569.8853759765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.ANIRegression",
+      "bbox": [
+        204.79600524902344,
+        560.9508056640625,
+        394.61456298828125,
+        569.3726196289062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MPNN",
+      "bbox": [
+        126.03800201416016,
+        574.1460571289062,
+        159.83438110351562,
+        583.8333740234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "deepchem.models.MPNNModel",
+      "bbox": [
+        204.79600524902344,
+        574.8988037109375,
+        368.43267822265625,
+        583.3206176757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "a These models are based on scikit-learn package.84",
+      "bbox": [
+        88.36299896240234,
+        588.2000732421875,
+        334.63824462890625,
+        601.8463745117188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "b XGBoost is based on xgboost package.85",
+      "bbox": [
+        88.36300659179688,
+        601.7490844726562,
+        290.59625244140625,
+        615.3953857421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Model validation",
+      "bbox": [
+        72.00001525878906,
+        651.8517456054688,
+        191.11647033691406,
+        664.5911254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MoleculeNet includes multiple models that are previously proposed. To validate our reimple-",
+      "bbox": [
+        72.00001525878906,
+        685.1390380859375,
+        540.0341796875,
+        695.7553100585938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mentation, here we compare the performances of our implementation with reported values in",
+      "bbox": [
+        72.00001525878906,
+        709.0470581054688,
+        540.0460205078125,
+        719.663330078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "55",
+      "bbox": [
+        300.14703369140625,
+        741.591064453125,
+        311.8631591796875,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 55
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "caption",
+        "bbox": [
+          115,
+          73,
+          497,
+          85
+        ],
+        "pos": [
+          0,
+          70
+        ]
+      },
+      {
+        "index": 1,
+        "class": "table",
+        "bbox": [
+          93,
+          98,
+          519,
+          584
+        ],
+        "pos": [
+          70,
+          1683
+        ]
+      },
+      {
+        "index": 2,
+        "class": "text",
+        "bbox": [
+          88,
+          590,
+          335,
+          602
+        ],
+        "pos": [
+          1683,
+          1742
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          88,
+          603,
+          291,
+          616
+        ],
+        "pos": [
+          1742,
+          1790
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          651,
+          192,
+          662
+        ],
+        "pos": [
+          1790,
+          1815
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          685,
+          541,
+          720
+        ],
+        "pos": [
+          1815,
+          1997
+        ]
+      },
+      {
+        "index": 6,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1997,
+          2002
+        ]
+      }
+    ],
+    "text": "Table 13: DeepChem commands to load MoleculeNet datasets and models \n\n|**Dataset**|**Command**|\n|---|---|\n|QM7|deepchem.molnet.load<br>~~q~~m7<br>~~f~~rom<br>~~m~~at|\n|QM7b|deepchem.molnet.load<br>~~q~~m7b<br>~~f~~rom<br>~~m~~at|\n|QM8|deepchem.molnet.load<br>~~q~~m8|\n|QM9|deepchem.molnet.load<br>~~q~~m9|\n|ESOL|deepchem.molnet.load<br>~~d~~elaney|\n|FreeSolv|deepchem.molnet.load<br>~~s~~ampl|\n|Lipophilicity|deepchem.molnet.load<br>~~l~~ipo|\n|PCBA|deepchem.molnet.load<br>~~p~~cba|\n|MUV|deepchem.molnet.load<br>~~m~~uv|\n|HIV|deepchem.molnet.load<br>~~h~~iv|\n|BACE|deepchem.molnet.load<br>~~b~~ace<br>~~c~~lassification|\n|PDBbind|deepchem.molnet.load<br>~~p~~dbbind<br>~~g~~rid|\n|BBBP|deepchem.molnet.load<br>~~b~~bbp|\n|Tox21|deepchem.molnet.load<br>~~t~~ox21|\n|ToxCast|deepchem.molnet.load<br>~~t~~oxcast|\n|SIDER|deepchem.molnet.load<br>~~s~~ider|\n|ClinTox|deepchem.molnet.load<br>~~c~~lintox|\n|**Model**|**Command**|\n|Logreg<sup>_a_</sup>|sklearn.linear<br>~~m~~odel.LogisticRegression|\n|KernelSVM<sup>_a_</sup>|sklearn.svm.SVC|\n|KRR<sup>_a_</sup>|sklearn.kernel<br>~~r~~idge.KernelRidge|\n|RF<sup>_a_</sup><br>|sklearn.ensemble.RandomForestClassifier<br>sklearn.ensemble.RandomForestRegressor|\n|XGBoost<sup>_b_</sup>|deepchem.models.xgboost<br>~~m~~odels.XGBoostModel|\n|Multitask/Singletask|deepchem.models.MultitaskClassifier<br>deepchem.models.MultitaskRegressor|\n|Bypass|deepchem.models.RobustMultitaskClassifier|\n|IRV|deepchem.models.TensorflowMultitaskIRVClassifier|\n|GC|deepchem.models.GraphConvModel|\n|Weave|deepchem.models.WeaveModel|\n|DAG|deepchem.models.DAGModel|\n|DTNN|deepchem.models.DTNNModel|\n|ANI-1|deepchem.models.ANIRegression|\n|MPNN|deepchem.models.MPNNModel|\n\n\n\n> _a_ These models are based on scikit-learn package. 84 \n\n> _b_ XGBoost is based on xgboost package. 85 \n\n# **Model validation** \n\nMoleculeNet includes multiple models that are previously proposed. To validate our reimplementation, here we compare the performances of our implementation with reported values in \n\n55 \n\n"
+  }
+}

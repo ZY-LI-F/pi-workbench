@@ -1,0 +1,620 @@
+{
+  "page": 18,
+  "lines": [
+    {
+      "text": "Coulomb Matrix",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        170.06851196289062,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Ab-initio electronic structure calculations typically require a set of nuclear charges {Z} and",
+      "bbox": [
+        72.0,
+        106.61764526367188,
+        540.0062255859375,
+        117.90335083007812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the corresponding Cartesian coordinates {R} as input.",
+      "bbox": [
+        72.0,
+        130.52566528320312,
+        362.6306457519531,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The Coulomb Matrix (CM) M,",
+      "bbox": [
+        372.6132507324219,
+        131.19515991210938,
+        540.0008544921875,
+        141.81137084960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "proposed by Rupp et al.17 and deﬁned below, encodes this information by use of the atomic",
+      "bbox": [
+        72.00003051757812,
+        150.76419067382812,
+        540.0259399414062,
+        165.71939086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "self-energies and internuclear Coulomb repulsion operator.",
+      "bbox": [
+        72.00001525878906,
+        179.01016235351562,
+        370.4018859863281,
+        189.62637329101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MIJ =",
+      "bbox": [
+        211.71900939941406,
+        255.38217163085938,
+        245.640869140625,
+        267.7914123535156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        231.51885986328125,
+        259.58416748046875,
+        239.17019653320312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        242.27886962890625,
+        259.58416748046875,
+        249.93020629882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        245.8658447265625,
+        259.58416748046875,
+        253.51718139648438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        249.45184326171875,
+        259.58416748046875,
+        257.1031799316406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        270.97186279296875,
+        259.58416748046875,
+        278.6231994628906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        274.557861328125,
+        259.58416748046875,
+        282.2091979980469
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "",
+      "bbox": [
+        248.9560089111328,
+        278.14483642578125,
+        259.58416748046875,
+        285.7961730957031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.5Z2.4",
+      "bbox": [
+        259.5830078125,
+        242.21380615234375,
+        294.2301025390625,
+        254.40237426757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "I",
+      "bbox": [
+        282.552978515625,
+        249.57281494140625,
+        286.2272033691406,
+        256.6502685546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for I = J",
+      "bbox": [
+        318.1419677734375,
+        243.78616333007812,
+        363.7617492675781,
+        254.40237426757812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ZIZJ",
+      "bbox": [
+        268.02398681640625,
+        270.19580078125,
+        287.8117370605469,
+        278.2257080078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "|RI−RJ|",
+      "bbox": [
+        260.77801513671875,
+        278.91741943359375,
+        296.1162109375,
+        287.3936462402344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "for I̸ = J",
+      "bbox": [
+        320.72503662109375,
+        271.80560302734375,
+        366.3448181152344,
+        283.09130859375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Here, the oﬀ-diagonal elements correspond to the Coulomb repulsion between atoms I",
+      "bbox": [
+        89.55905151367188,
+        310.17010498046875,
+        540.031005859375,
+        320.78631591796875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "and J, and the diagonal elements correspond to a polynomial ﬁt of atomic self-energy to",
+      "bbox": [
+        72.00005340576172,
+        334.0780944824219,
+        540.0701904296875,
+        344.6943054199219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "nuclear charge. The Coulomb Matrix of a molecule is invariant to translation and rotation",
+      "bbox": [
+        72.00005340576172,
+        357.986083984375,
+        540.093994140625,
+        368.602294921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of that molecule, but not with respect to atom index permutation. In the construction of",
+      "bbox": [
+        72.00005340576172,
+        381.8930969238281,
+        540.0580444335938,
+        392.5093078613281
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "coulomb matrix, we ﬁrst use the nuclear charges and distance matrix generated by RDKit63",
+      "bbox": [
+        72.00005340576172,
+        404.2287292480469,
+        539.498291015625,
+        416.41729736328125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "to acquire the original coulomb matrix, then an optional random atom index sorting and",
+      "bbox": [
+        72.00006103515625,
+        429.7090759277344,
+        540.10595703125,
+        440.3252868652344
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "binary expansion transformation can be applied during training in order to achieve atom",
+      "bbox": [
+        72.00006103515625,
+        453.6170654296875,
+        540.0939331054688,
+        464.2332763671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "index invariance, as reported by Montavon et al.18",
+      "bbox": [
+        72.00006103515625,
+        475.95172119140625,
+        330.2733154296875,
+        488.1412658691406
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Grid Featurizer",
+      "bbox": [
+        72.00007629394531,
+        518.1610717773438,
+        163.32583618164062,
+        528.77734375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The grid featurizer is a featurization method (introduced in the current work) initially de-",
+      "bbox": [
+        72.00007629394531,
+        549.7900390625,
+        540.0460815429688,
+        560.4063110351562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "signed for the PDBbind dataset in which structural information of both the ligand and",
+      "bbox": [
+        72.00007629394531,
+        573.6980590820312,
+        540.05810546875,
+        584.3143310546875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "target protein are considered. Since binding aﬃnity stems largely from the intermolecular",
+      "bbox": [
+        72.00007629394531,
+        597.6060180664062,
+        540.05810546875,
+        608.2222900390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "forces between ligands and proteins, in addition to intramolecular interactions, we seek to",
+      "bbox": [
+        72.00007629394531,
+        621.5140380859375,
+        540.046142578125,
+        632.1303100585938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "incorporate both the chemical interaction within the binding pocket as well as features of",
+      "bbox": [
+        72.00007629394531,
+        645.4220581054688,
+        540.0460815429688,
+        656.038330078125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the protein and ligand individually.",
+      "bbox": [
+        72.00007629394531,
+        669.3290405273438,
+        253.14529418945312,
+        679.9453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "The grid featurizer was inspired by the NNscore featurizer68 and SPLIF69 but optimized",
+      "bbox": [
+        89.55907440185547,
+        688.8990478515625,
+        540.0103149414062,
+        703.8533325195312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "18",
+      "bbox": [
+        300.1470947265625,
+        741.591064453125,
+        311.86322021484375,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 18
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "section-header",
+        "bbox": [
+          72,
+          75,
+          171,
+          85
+        ],
+        "pos": [
+          0,
+          23
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          106,
+          541,
+          190
+        ],
+        "pos": [
+          23,
+          382
+        ]
+      },
+      {
+        "index": 2,
+        "class": "formula",
+        "bbox": [
+          211,
+          232,
+          367,
+          290
+        ],
+        "pos": [
+          382,
+          384
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          310,
+          541,
+          489
+        ],
+        "pos": [
+          384,
+          1076
+        ]
+      },
+      {
+        "index": 4,
+        "class": "section-header",
+        "bbox": [
+          72,
+          518,
+          164,
+          527
+        ],
+        "pos": [
+          1076,
+          1100
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          549,
+          541,
+          681
+        ],
+        "pos": [
+          1100,
+          1591
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          89,
+          691,
+          541,
+          704
+        ],
+        "pos": [
+          1591,
+          1702
+        ]
+      },
+      {
+        "index": 7,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1702,
+          1707
+        ]
+      }
+    ],
+    "text": "# **Coulomb Matrix** \n\n_Ab-initio_ electronic structure calculations typically require a set of nuclear charges _{Z }_ and the corresponding Cartesian coordinates _{_ **R** _}_ as input. The Coulomb Matrix (CM) **M** , proposed by Rupp et al.<sup>17</sup> and defined below, encodes this information by use of the atomic self-energies and internuclear Coulomb repulsion operator. \n\n\n\nHere, the off-diagonal elements correspond to the Coulomb repulsion between atoms I and J, and the diagonal elements correspond to a polynomial fit of atomic self-energy to nuclear charge. The Coulomb Matrix of a molecule is invariant to translation and rotation of that molecule, but not with respect to atom index permutation. In the construction of coulomb matrix, we first use the nuclear charges and distance matrix generated by RDKit<sup>63</sup> to acquire the original coulomb matrix, then an optional random atom index sorting and binary expansion transformation can be applied during training in order to achieve atom index invariance, as reported by Montavon et al.<sup>18</sup> \n\n# **Grid Featurizer** \n\nThe grid featurizer is a featurization method (introduced in the current work) initially designed for the PDBbind dataset in which structural information of both the ligand and target protein are considered. Since binding affinity stems largely from the intermolecular forces between ligands and proteins, in addition to intramolecular interactions, we seek to incorporate both the chemical interaction within the binding pocket as well as features of the protein and ligand individually. \n\nThe grid featurizer was inspired by the NNscore featurizer<sup>68</sup> and SPLIF<sup>69</sup> but optimized \n\n18 \n\n"
+  }
+}

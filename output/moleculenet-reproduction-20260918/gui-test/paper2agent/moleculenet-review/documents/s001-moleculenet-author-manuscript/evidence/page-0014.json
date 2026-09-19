@@ -1,0 +1,959 @@
+{
+  "page": 14,
+  "lines": [
+    {
+      "text": "Under this splitting method, model will be trained on older data and tested on newer data,",
+      "bbox": [
+        72.0,
+        75.65811157226562,
+        540.0580444335938,
+        86.27432250976562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mimicking real world development condition.",
+      "bbox": [
+        72.0,
+        99.56613159179688,
+        302.2452697753906,
+        110.18234252929688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MoleculeNet contributes the code for these splitting methods into DeepChem. Users of",
+      "bbox": [
+        89.55899810791016,
+        123.47415161132812,
+        540.0070190429688,
+        134.09036254882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the library can use these splits on new datasets with short library calls.",
+      "bbox": [
+        72.0,
+        147.38113403320312,
+        438.69000244140625,
+        157.99734497070312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Metrics",
+      "bbox": [
+        72.0,
+        191.81478881835938,
+        125.58306884765625,
+        204.55421447753906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MoleculeNet contains both regression datasets (QM7, QM7b, QM8, QM9, ESOL, Free-",
+      "bbox": [
+        72.0,
+        225.10317993164062,
+        540.0460815429688,
+        235.71939086914062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Solv, Lipophilicity and PDBbind) and classiﬁcation datasets (PCBA, MUV, HIV, BACE,",
+      "bbox": [
+        72.0,
+        249.01119995117188,
+        540.022216796875,
+        259.6274108886719
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "BBBP, Tox21, ToxCast and SIDER). Consequently, diﬀerent performance metrics need to",
+      "bbox": [
+        72.0,
+        272.919189453125,
+        540.0220947265625,
+        283.535400390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "be measured for each. Following suggestions from the community,64 regression datasets are",
+      "bbox": [
+        72.0,
+        292.4881896972656,
+        540.013916015625,
+        307.4433898925781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "evaluated by mean absolute error (MAE) and root-mean-square error (RMSE), classiﬁcation",
+      "bbox": [
+        72.0,
+        320.73516845703125,
+        540.0700073242188,
+        331.35137939453125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "datasets are evaluated by area under curve (AUC) of the receiver operating characteristic",
+      "bbox": [
+        72.0,
+        344.6421813964844,
+        540.0580444335938,
+        355.2583923339844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "(ROC) curve65 and the precision recall curve (PRC).66 For datasets containing more than",
+      "bbox": [
+        72.0,
+        364.212158203125,
+        540.0372924804688,
+        379.1663818359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "one task, we report the mean metric values over all tasks.",
+      "bbox": [
+        72.0,
+        392.4581604003906,
+        367.54461669921875,
+        403.0743713378906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Table 2: Task details and area under curve(AUC) values of sample curves",
+      "bbox": [
+        116.91999816894531,
+        417.6251525878906,
+        495.11090087890625,
+        428.2413635253906
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Task",
+      "bbox": [
+        180.40499877929688,
+        442.43109130859375,
+        207.57916259765625,
+        453.04730224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "P/N*",
+      "bbox": [
+        278.6400146484375,
+        442.43109130859375,
+        310.92608642578125,
+        453.04730224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Model",
+      "bbox": [
+        347.2170104980469,
+        442.43109130859375,
+        384.42156982421875,
+        453.04730224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ROC",
+      "bbox": [
+        413.4419860839844,
+        442.43109130859375,
+        442.92352294921875,
+        453.04730224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "PRC",
+      "bbox": [
+        454.8699951171875,
+        442.43109130859375,
+        483.44293212890625,
+        453.04730224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "“FDA APPROVED”",
+      "bbox": [
+        139.79100036621094,
+        457.2760925292969,
+        248.20823669433594,
+        467.8923034667969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ClinTox, test subset",
+      "bbox": [
+        139.79098510742188,
+        471.72210693359375,
+        242.4144287109375,
+        482.33831787109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "128/21",
+      "bbox": [
+        277.22100830078125,
+        464.49908447265625,
+        312.369384765625,
+        475.11529541015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression",
+      "bbox": [
+        330.3450012207031,
+        460.041748046875,
+        401.2709045410156,
+        467.11920166015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.691",
+      "bbox": [
+        414.84600830078125,
+        457.2760925292969,
+        441.5300598144531,
+        467.8923034667969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.932",
+      "bbox": [
+        455.8179931640625,
+        457.2760925292969,
+        482.5020446777344,
+        467.8923034667969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolution",
+      "bbox": [
+        330.14801025390625,
+        474.4877624511719,
+        401.46441650390625,
+        481.5652160644531
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.791",
+      "bbox": [
+        414.84600830078125,
+        471.72210693359375,
+        441.5300598144531,
+        482.33831787109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.959",
+      "bbox": [
+        455.8179931640625,
+        471.72210693359375,
+        482.5020446777344,
+        482.33831787109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "“Hepatobiliary disorders”",
+      "bbox": [
+        128.5709991455078,
+        486.56610107421875,
+        259.444580078125,
+        497.18231201171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "SIDER, test subset",
+      "bbox": [
+        128.5709991455078,
+        501.0121154785156,
+        226.794921875,
+        511.6283264160156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "64/79",
+      "bbox": [
+        280.14801025390625,
+        493.7890930175781,
+        309.4383239746094,
+        504.4053039550781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression",
+      "bbox": [
+        330.3450012207031,
+        489.3317565917969,
+        401.2709045410156,
+        496.4092102050781
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.659",
+      "bbox": [
+        414.84600830078125,
+        486.56610107421875,
+        441.5300598144531,
+        497.18231201171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.612",
+      "bbox": [
+        455.8179931640625,
+        486.56610107421875,
+        482.5020446777344,
+        497.18231201171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolution",
+      "bbox": [
+        330.14801025390625,
+        503.7777404785156,
+        401.46441650390625,
+        510.8551940917969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.675",
+      "bbox": [
+        414.84600830078125,
+        501.0120849609375,
+        441.5300598144531,
+        511.6282958984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.620",
+      "bbox": [
+        455.8179931640625,
+        501.0120849609375,
+        482.5020446777344,
+        511.6282958984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "“NR-ER”",
+      "bbox": [
+        144.82699584960938,
+        515.8560791015625,
+        194.41717529296875,
+        526.4723510742188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Tox21, valid subset",
+      "bbox": [
+        144.82699584960938,
+        530.3020629882812,
+        243.17047119140625,
+        540.9183349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "81/553",
+      "bbox": [
+        277.22100830078125,
+        523.0790405273438,
+        312.369384765625,
+        533.6953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression",
+      "bbox": [
+        330.3450012207031,
+        518.6217651367188,
+        401.2709045410156,
+        525.69921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.612",
+      "bbox": [
+        414.84600830078125,
+        515.8560791015625,
+        441.5300598144531,
+        526.4723510742188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.308",
+      "bbox": [
+        455.8179931640625,
+        515.8560791015625,
+        482.5020446777344,
+        526.4723510742188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolution",
+      "bbox": [
+        330.14801025390625,
+        533.0677490234375,
+        401.46441650390625,
+        540.1452026367188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.705",
+      "bbox": [
+        414.84600830078125,
+        530.3020629882812,
+        441.5300598144531,
+        540.9183349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.333",
+      "bbox": [
+        455.8179931640625,
+        530.3020629882812,
+        482.5020446777344,
+        540.9183349609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "“HIV active”",
+      "bbox": [
+        152.11700439453125,
+        545.1460571289062,
+        219.7399139404297,
+        555.7623291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "HIV, test subset",
+      "bbox": [
+        152.1169891357422,
+        559.592041015625,
+        235.8631591796875,
+        570.2083129882812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "132/4059",
+      "bbox": [
+        271.3689880371094,
+        552.3690795898438,
+        318.2334899902344,
+        562.9853515625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Logistic Regression",
+      "bbox": [
+        330.3450012207031,
+        547.9117431640625,
+        401.2709045410156,
+        554.9891967773438
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.724",
+      "bbox": [
+        414.84600830078125,
+        545.1460571289062,
+        441.5300598144531,
+        555.7623291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.236",
+      "bbox": [
+        455.8179931640625,
+        545.1460571289062,
+        482.5020446777344,
+        555.7623291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolution",
+      "bbox": [
+        330.14801025390625,
+        562.3577880859375,
+        401.46441650390625,
+        569.4352416992188
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.783",
+      "bbox": [
+        414.84600830078125,
+        559.5921020507812,
+        441.5300598144531,
+        570.2083740234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "0.169",
+      "bbox": [
+        455.8179931640625,
+        559.5921020507812,
+        482.5020446777344,
+        570.2083740234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "* Number of positive samples/Number of negative samples",
+      "bbox": [
+        89.55899810791016,
+        578.7700805664062,
+        391.3321838378906,
+        589.3863525390625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "To allow better comparison, we propose regression metrics according to previous work on",
+      "bbox": [
+        89.55899810791016,
+        616.0720825195312,
+        540.0667724609375,
+        626.6883544921875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "either same models or datasets. For classiﬁcation datasets, we propose recommended metrics",
+      "bbox": [
+        72.0,
+        639.9800415039062,
+        540.0340576171875,
+        650.5963134765625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "from the two commonly used metrics: AUC-PRC and AUC-ROC. Four representative sets",
+      "bbox": [
+        72.0,
+        663.8880615234375,
+        540.022216796875,
+        674.5043334960938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of ROC curves and PRCs are depicted in Figure 4, resulting from the predictions of logistic",
+      "bbox": [
+        72.0,
+        687.7951049804688,
+        540.0460205078125,
+        698.411376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "regression and graph convolutional models on four tasks. Details about these tasks and",
+      "bbox": [
+        72.0,
+        711.7030639648438,
+        540.08203125,
+        722.3193359375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "14",
+      "bbox": [
+        300.1470031738281,
+        741.591064453125,
+        311.8631286621094,
+        752.2073364257812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 14
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          75,
+          541,
+          111
+        ],
+        "pos": [
+          0,
+          137
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          123,
+          541,
+          159
+        ],
+        "pos": [
+          137,
+          299
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          191,
+          126,
+          202
+        ],
+        "pos": [
+          299,
+          315
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          224,
+          541,
+          404
+        ],
+        "pos": [
+          315,
+          1013
+        ]
+      },
+      {
+        "index": 4,
+        "class": "caption",
+        "bbox": [
+          116,
+          416,
+          496,
+          429
+        ],
+        "pos": [
+          1013,
+          1087
+        ]
+      },
+      {
+        "index": 5,
+        "class": "table",
+        "bbox": [
+          128,
+          441,
+          484,
+          571
+        ],
+        "pos": [
+          1087,
+          1608
+        ]
+      },
+      {
+        "index": 6,
+        "class": "text",
+        "bbox": [
+          89,
+          578,
+          392,
+          591
+        ],
+        "pos": [
+          1608,
+          1666
+        ]
+      },
+      {
+        "index": 7,
+        "class": "text",
+        "bbox": [
+          72,
+          616,
+          541,
+          723
+        ],
+        "pos": [
+          1666,
+          2109
+        ]
+      },
+      {
+        "index": 8,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          2109,
+          2114
+        ]
+      }
+    ],
+    "text": "Under this splitting method, model will be trained on older data and tested on newer data, mimicking real world development condition. \n\nMoleculeNet contributes the code for these splitting methods into DeepChem. Users of the library can use these splits on new datasets with short library calls. \n\n# **Metrics** \n\nMoleculeNet contains both regression datasets (QM7, QM7b, QM8, QM9, ESOL, FreeSolv, Lipophilicity and PDBbind) and classification datasets (PCBA, MUV, HIV, BACE, BBBP, Tox21, ToxCast and SIDER). Consequently, different performance metrics need to be measured for each. Following suggestions from the community,<sup>64</sup> regression datasets are evaluated by mean absolute error (MAE) and root-mean-square error (RMSE), classification datasets are evaluated by area under curve (AUC) of the receiver operating characteristic (ROC) curve<sup>65</sup> and the precision recall curve (PRC).<sup>66</sup> For datasets containing more than one task, we report the mean metric values over all tasks. \n\nTable 2: Task details and area under curve(AUC) values of sample curves \n\n|**Task**|**P/N***|**Model**|**ROC**|**PRC**|\n|---|---|---|---|---|\n|“FDA<br>~~A~~PPROVED”|128/21|Logistic Regression|0.691|0.932|\n|ClinTox, test subset||Graph Convolution|0.791|0.959|\n|“Hepatobiliary disorders”|64/79|Logistic Regression|0.659|0.612|\n|SIDER, test subset||Graph Convolution|0.675|0.620|\n|“NR-ER”|81/553|Logistic Regression|0.612|0.308|\n|Tox21, valid subset||Graph Convolution|0.705|0.333|\n|“HIV<br>~~a~~ctive”|132/4059|Logistic Regression|0.724|0.236|\n|HIV, test subset||Graph Convolution|0.783|0.169|\n\n\n\n* Number of positive samples/Number of negative samples \n\nTo allow better comparison, we propose regression metrics according to previous work on either same models or datasets. For classification datasets, we propose recommended metrics from the two commonly used metrics: AUC-PRC and AUC-ROC. Four representative sets of ROC curves and PRCs are depicted in Figure 4, resulting from the predictions of logistic regression and graph convolutional models on four tasks. Details about these tasks and \n\n14 \n\n"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "status": "completed_with_failures",
+  "environment": "Real Electron app from current PI-GUI workspace, isolated test profile, real Pi 0.85.1 and DeepSeek V4.1 Flash; no mock transport",
+  "model": "deepseek/deepseek-flash",
+  "session_id": "01a0b4a4-951b-748b-be87-72b2388c8f77",
+  "deck_screenshot": "gui-test/evidence/06-markdown-preview.png",
+  "checks": [
+    {"status":"通过","name":"模型配置与真实连通","evidence":"模型路由显示 DeepSeek V4.1 Flash；GUI 最小真实请求返回连通已验证，deepseek-flash，9373 ms。截图01。"},
+    {"status":"通过","name":"技能快捷补全","evidence":"输入 /skill:paper2agent 出现真实技能选项，Tab 确认并保留参数输入位置。"},
+    {"status":"通过","name":"Enter 发送与技能正文折叠","evidence":"按 Enter 发出实际任务，技能显示为可展开摘要，没有铺满正文。"},
+    {"status":"通过","name":"运行中任务和工具回执","evidence":"左侧任务在回合结束前可见，read/bash 调用持续显示；输入框与停止按钮始终保留。截图02。"},
+    {"status":"通过","name":"Paper2Agent 阅读包运行","evidence":"Pi 在GUI内执行原生转换流程；35文件，strict verify 为 reviewed_with_limitations，mechanical_ok=true、issues=[]、0过期裁定。"},
+    {"status":"通过","name":"侧栏开合与分栏拖拽","evidence":"关闭并重新展开左栏；将检查器左界从约1127px拖至923px，右栏实际变宽。宽布局存在单独记录的顶部重叠问题。"},
+    {"status":"通过","name":"窄中栏更多菜单","evidence":"约650px中栏下控件收进更多；菜单含新建会话、Session复制、准确模型配置、思考级别与检查器。截图04。"},
+    {"status":"通过","name":"Session地址复制入口","evidence":"在更多菜单点击复制，界面明确提示 Session 地址已复制 · 01a0b4a4；未另行读取系统剪贴板。"},
+    {"status":"通过","name":"输入区拖高与恢复","evidence":"拖动输入区上沿将高度从约112px增至258px，双击手柄恢复自动高度。截图05。"},
+    {"status":"通过","name":"Paper2Any真实大纲生成与修订","evidence":"Pi 在 GUI 内执行两轮原生组件测试；第二轮保留两条真实模型回执（deepseek-flash、finish_reason=stop），原始与修订大纲均为10页且内容确实变化。"},
+    {"status":"未通过","name":"Paper2Any原生结构化制片","evidence":"20次真实API调用，10次主题均截断、3次页面截断并回退；保存10页原始输出和失败结果，未进入PPT导出，不把模板当成生成成功。"},
+    {"status":"通过","name":"右侧Markdown预览与文件切换","evidence":"下拉框按显示时间由新到旧列出stage1、stage2报告及PDF；实际由MD切PDF再切stage2，右栏从标题滚动至审计表，独立滚动且占满可用高度。截图06、07。"},
+    {"status":"部分通过","name":"65页PDF预览","evidence":"65页PDF可见正文、缩略图、页数与缩放；内置阅读器的可访问性树同时提示无法下载文本提取文件。视觉显示可用，不宣称辅助技术读取全部正常。"},
+    {"status":"未通过","name":"长会话完整状态刷新","evidence":"约350个持久化事件的长会话结束后，出现Electron contextBridge recursion depth exceeded；再次Enter提交被Pi接收但状态刷新失败，流式工具仍继续。截图09。"},
+    {"status":"通过（有限范围）","name":"右侧PPTX预览","evidence":"Pi 只读核对最终审定版 445239 字节及完整 SHA-256 与回执一致；点击助手输出文件的预览按钮，右栏识别16页，实际查看封面、第2页原生表格及第7页原生柱状图。下一页和页码下拉跳转有效。100%在约720px右栏会横向裁切，手动缩至70%后整页可见；未声称像素级保真。截图08。"},
+    {"status":"通过","name":"检查器关闭后重开","evidence":"点击关闭检查器，中栏扩展占据宽度；点击顶部检查器图标重新打开，仍显示审定版PPTX第7页及70%缩放，没有丢失当前预览选择。"}
+  ],
+  "issues": [
+    "长回合中统计检查器保留上一刷新值；发送补充指令触发刷新后从0.059M活动上下文/1.09M缓存读取更新为0.079M/5.85M。同一回合的新工具消息不持续刷新面板，左侧消息计数也有同样现象。",
+    "左侧栏收起且中栏约1120px时，顶部会话快捷控件与长项目名出现重叠；缩窄中栏后更多菜单可正常访问。截图03。",
+    "停止按钮中止了当前Pi等待工具，但代理以nohup启动的科学后台子进程继续运行；主代理核对命令行后按确定PID停止了该错误批次，未影响其他进程。",
+    "模型配置页点击当前选中的历史任务未返回会话，须从PI原生工作台的当前会话入口返回。该导航路径已如实记录，未修改业务代码。",
+    "绝对路径用Markdown粗体包装时未识别为会话文件；同一路径用行内代码正常。工具write成功本身也不会被当前文件扫描器发现。",
+    "长会话全量bootstrap跨Electron contextBridge时发生递归深度错误，未修复，不能将长任务稳定性判为通过。",
+    "PPTX默认100%预览没有适应窄右栏，约720px宽度时表格末列被裁切；手动缩至70%才整页可见。缩放同时缩小内嵌页码控件，低倍率下控件偏小。",
+    "自动压缩、全部模型、跨平台安装、完整Paper2MCP以及Paper2Any多模态Web工作流不在本次已通过范围。"
+  ]
+}

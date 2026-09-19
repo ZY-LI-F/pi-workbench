@@ -69,11 +69,25 @@ function PdfPage({ document, library, pageNumber, width, zoom, scrollRoot }: Pdf
   </section>;
 }
 
-function PdfReader({ document, library }: PdfState) {
+function PdfReader({ document, library, requestedPage }: PdfState & { readonly requestedPage?: number }) {
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [zoom, setZoom] = useState<"fit" | number>("fit");
+  const [linkError, setLinkError] = useState<string>();
+  const appliedLinkPage = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    setLinkError(undefined);
+    if (!root || width <= 0 || requestedPage === undefined) return;
+    if (appliedLinkPage.current === requestedPage) return;
+    if (requestedPage > document.numPages) { setLinkError(`链接请求第 ${requestedPage} 页，但此 PDF 只有 ${document.numPages} 页。`); return; }
+    const timer = requestAnimationFrame(() => {
+      appliedLinkPage.current = requestedPage;
+      setPageNumber(requestedPage);
+      root.querySelector<HTMLElement>(`[data-page="${requestedPage}"]`)?.scrollIntoView({ block: "start" });
+    });
+    return () => cancelAnimationFrame(timer);
+  }, [document, requestedPage, root, width]);
   useEffect(() => {
     if (!root) return;
     const update = () => setWidth(root.clientWidth);
@@ -87,10 +101,17 @@ function PdfReader({ document, library }: PdfState) {
   };
   const onScroll = () => {
     if (!root) return;
-    const top = root.getBoundingClientRect().top;
+    const viewport = root.getBoundingClientRect();
+    let mostVisible = 0;
+    let next = pageNumber;
     for (const page of root.querySelectorAll<HTMLElement>("[data-page]")) {
-      if (page.getBoundingClientRect().bottom > top + 32) { setPageNumber(Number(page.dataset.page)); break; }
+      const bounds = page.getBoundingClientRect();
+      const visible = Math.max(0, Math.min(bounds.bottom, viewport.bottom) - Math.max(bounds.top, viewport.top));
+      // A narrow fit-to-width page can be shorter than the viewport. Keeping
+      // the first partially visible page selected undoes explicit page jumps.
+      if (visible > mostVisible) { mostVisible = visible; next = Number(page.dataset.page); }
     }
+    if (mostVisible > 0) setPageNumber(next);
   };
   return <div className="file-preview__pdf-reader" role="region" aria-label="PDF 本地阅读器">
     <div className="file-preview__pager">
@@ -108,11 +129,11 @@ function PdfReader({ document, library }: PdfState) {
     <div className="file-preview__pdf-scroll" ref={setRoot} onScroll={onScroll} tabIndex={0} aria-label="PDF 页面滚动区域">
       {Array.from({ length: document.numPages }, (_, index) => <PdfPage key={index} document={document} library={library} pageNumber={index + 1} width={width} zoom={zoom} scrollRoot={root} />)}
     </div>
-    <small className="file-preview__slide-note">本地只读 · 文字可选择复制 · 不执行 PDF 脚本、不自动下载 OCR</small>
+    <small className="file-preview__slide-note" role={linkError ? "alert" : undefined}>{linkError ?? "本地只读 · 文字可选择复制 · 不执行 PDF 脚本、不自动下载 OCR"}</small>
   </div>;
 }
 
-export function PdfPreview({ data }: { readonly data: LocalFilePreviewData }) {
+export function PdfPreview({ data, requestedPage }: { readonly data: LocalFilePreviewData; readonly requestedPage?: number }) {
   const [pdf, setPdf] = useState<PdfState>();
   const [error, setError] = useState<string>();
   useEffect(() => {
@@ -133,5 +154,5 @@ export function PdfPreview({ data }: { readonly data: LocalFilePreviewData }) {
     return () => { active = false; void task?.destroy(); };
   }, [data]);
   if (error) return <div className="file-preview__error" role="alert"><strong>PDF 预览失败</strong><p>{error}</p><small>可刷新重试，或通过“更多”使用系统应用打开。</small></div>;
-  return pdf ? <PdfReader {...pdf} /> : <div className="file-preview__loading" role="status"><LoaderCircle className="spin" /><strong>正在本地载入 PDF</strong></div>;
+  return pdf ? <PdfReader {...pdf} requestedPage={requestedPage} /> : <div className="file-preview__loading" role="status"><LoaderCircle className="spin" /><strong>正在本地载入 PDF</strong></div>;
 }

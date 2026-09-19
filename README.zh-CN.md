@@ -2,11 +2,13 @@
 
 [English](README.md) | **简体中文**
 
-当前源码版本：**v0.7.2** · Android versionCode：**10**。
+当前源码版本：**v0.7.3** · Android versionCode：**11**。
 
-当前源码精确锁定官方 **Pi 0.85.1**。Stella 只保留一套 Pi 依赖，使用公开 SDK/RPC 接口；未 fork Pi，也未安装 SoL 运行时。升级验证见[验收记录](docs/testing/pi-0.85.1-upgrade-2026-09-18.md)。历史已发布安装包仍保留各自原有的内置版本。
+当前源码精确锁定官方 **Pi 0.85.1**。Stella 只保留一套 Pi 依赖，使用公开 SDK/RPC 接口；未 fork Pi。Sol 以可选扩展加载，不安装第二套运行时。升级验证见[验收记录](docs/testing/pi-0.85.1-upgrade-2026-09-18.md)。历史已发布安装包仍保留各自原有的内置版本。
 
-**偏好设置 → Pi 版本管理**：启动时对比本机命令行 Pi 与 GUI 内置 Pi，版本不一致时提示同步，只有原生确认窗口中同意后才安装精确目标版本（本机版本较高时会明确提示降级）。先核对启动入口和 npm 全局目录，不覆盖来源不明的安装。GUI 不要求设备另装全局 Pi。**Sol-Pi 尚未接入**，设置页明确显示此状态，没有无效的模式开关。
+**偏好设置 → Pi 版本管理**：启动时对比本机命令行 Pi 与 GUI 内置 Pi，版本不一致时提示同步，只有原生确认窗口中同意后才安装精确目标版本（本机版本较高时会明确提示降级）。先核对启动入口和 npm 全局目录，不覆盖来源不明的安装。GUI 不要求设备另装全局 Pi。
+
+**偏好设置 → Sol 模式**：开启总开关、选择机制，再点击“应用 Sol 设置”。默认关闭；开启时预选 Action Fusion（修改文件后执行命令，执行前确认）和 ObservationPack（大日志原文归档与按需召回）。EPR 辅助模型提炼、OCC 阶段压缩与续跑独立选择，前者需要选择已有 Pi 模型并产生额外调用费用，后者复用 Pi 原生压缩。运行、压缩或队列未结束时不能切换；空闲应用保留 Session、模型与草稿。界面分别显示未应用设置、实际加载结果、失败原因和本分支辅助 token 用量。仅影响原生会话，不自动影响 Team 或全局 CLI，也不改写用户的 `sol-pi.json`。原文归档在 Pi 会话目录的 `sol-pi/` 下，备份会话时应一起保留。详见 [Spec](docs/specs/sol-mode.md)、[Tickets](docs/specs/sol-mode-tickets.md)、[上游适配](src/extensions/sol-pi/UPSTREAM.md) 和[验收](docs/testing/sol-mode-2026-09-19.md)。
 
 原生可靠性维护：长会话树改为扁平节点与子节点 ID 跨 IPC；长回合中的用量与上下文在完成响应后独立刷新。停止操作同时清理受管本机后台计算；回合结束后仍可使用 **检查器 → 活动 → 停止 Pi 与后台计算**。Windows 使用 Job Object，POSIX 按运行实例继承标记跟踪；远程、容器或主动脱离监管范围的任务需在对应环境核查。详见[设计及边界](docs/specs/native-runtime-preview-maintenance.md)和[验收记录](docs/testing/native-runtime-preview-2026-09-19.md)。
 
@@ -93,13 +95,22 @@ Pi 在回复中提及绝对本地文件路径后，“输出文件与路径”�
 支持范围：
 
 - 图片：PNG、JPEG、GIF、WebP、AVIF、BMP、SVG；SVG 会先移除脚本、事件处理器与外部引用。
-- 网页与文本：HTML、Markdown、JSON、CSV、TSV、XML、YAML 和普通文本；HTML 在无脚本 sandbox 中显示，表单、网络请求、外部资源和嵌入对象被隔离，Markdown 链接仍由 Stella 的受控外链入口打开。
+- 网页与文本：HTML、XML、YAML 和普通文本；HTML 在无脚本 sandbox 中显示，表单、网络请求、外部资源和嵌入对象被隔离。
+- 学术 Markdown：本地公式、章节目录、脚注、相对图片和文件链接；可跳到表格、源码或明确提供 `#page=N` 的 PDF 页，再返回原文原阅读位置，不重置右栏宽度。网络图片不自动加载，HTTP(S) 链接由受控外链入口打开。
+- CSV / TSV：保留字符串原值，支持编码/表头选择、全数据搜索、列过滤、文本/精确十进制排序、冻结首列、分页和原始文本。长编号、前导零不丢失，以 `=` 开头的文本不当公式运行。
+- JSON：折叠/分页树、键值搜索、原文；Paper2Skill 验证摘要区分机械失败、未复核、未解决差异、已复核有限制等状态，缺失字段不猜成通过。报告不证明科学复现成功；超出安全整数精度的值明确提示以原始 JSON 为准。
+- Notebook：只读 nbformat 4 单元、Markdown 附件、已保存的日志、错误、图片、静态 HTML 表格、公式和 JSON 输出。不启动内核、不执行 widget、不安装 Python；无输出或未知 MIME 明确提示。
+- 源码与 MCP 说明：Python、R、Shell、PowerShell、JS/TS 高亮、行号、查找/跳转、完整源码复制；`USAGE.md` 和工具 schema 可直接阅读，不 import 代码、不启动或注册 MCP。
 - PDF：使用本地 PDF.js，支持连续页滚动、页码跳转、适应宽度、倍率和可选择复制的文字层。字体、CMaps 和解码器随构建提供，不依赖 Chromium 辅助文本下载或 Office 插件；不执行文档脚本，不自动下载 OCR，扫描页无文字时明确提示。
 - Word：DOCX 使用 [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) 按页呈现文字、表格和常见样式；不执行 AltChunk、批注、修订或嵌入程序。
 - PowerPoint：PPTX 使用 [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html) 转为隔离 HTML 幻灯片，并规范化合法的 OOXML 包根关系路径；默认按原始比例适应整页，放大时滚动画布，翻页工具栏不随之缩小。支持页码下拉、前后翻页，以及预览聚焦时的方向键、Page Up/Down、Home/End。不执行动画、宏和嵌入式程序；复杂排版可能与 PowerPoint 不同。助手正文中加粗的绝对文件路径也能识别为产物。
 - Excel：XLSX / XLSM 使用 [@office-kit/xlsx](https://github.com/office-kit/xlsx) 读取工作表、合并单元格、行列尺寸、隐藏行列和常见单元格样式；支持工作表与大范围分页切换，不执行宏。旧二进制 `DOC / PPT / XLS` 不伪装为可预览，仍可通过“所在位置”交给用户选择系统应用。
 
-Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
+Office、公式和代码高亮阅读器按需加载。主进程在每次预览前重新校验 canonical path，只读取当前项目、Pi/应用/临时数据目录，以及用户明确选择授权的产物目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
+
+**查看整个论文包：**进入 **检查器 → 文件 → 产物目录 → 选择产物目录**。按目录进入，可搜索当前目录、筛选类别；文件不必先被助手提及。选择文件后弹层关闭，整个右栏用于阅读。通过 **关联证据目录** 可浏览分开保存的验证记录与原始 PDF，不切换当前项目、不授予代码执行信任；读取授权仅在本次应用运行期间有效，取消不改变原选择。验证报告中 `artifact_checks[].file` 相对于明确关联的产物根目录解析，不猜测报告旁边的文件夹。ZIP 需要先解压。
+
+设计与验收：[Spec](docs/specs/scientific-artifact-readers.md)、[Tickets](docs/specs/scientific-artifact-readers-tickets.md)、[验收记录](docs/testing/scientific-artifact-readers-2026-09-19.md)。
 
 ## Session 上下文压缩
 

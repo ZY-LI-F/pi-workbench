@@ -1,0 +1,510 @@
+{
+  "page": 57,
+  "lines": [
+    {
+      "text": "mean ROC-AUC:",
+      "bbox": [
+        72.0,
+        99.56607055664062,
+        161.9031219482422,
+        110.18228149414062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.846 ∼0.867 for diﬀerent model structure settings.",
+      "bbox": [
+        89.43399810791016,
+        132.76657104492188,
+        448.5042724609375,
+        144.05227661132812
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 0.857 for valid subset, 0.843 for test subset",
+      "bbox": [
+        89.43399047851562,
+        166.63754272460938,
+        422.3791809082031,
+        177.92324829101562
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Deep Tensor Neural Network",
+      "bbox": [
+        72.0,
+        207.94406127929688,
+        244.9678192138672,
+        218.56027221679688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on the atomization energy task of qm9, using 80/10/10 random train,",
+      "bbox": [
+        72.0,
+        239.57205200195312,
+        540.1179809570312,
+        250.18826293945312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "valid, test splitting.(train subset with 106,400 samples) The original paper reported perfor-",
+      "bbox": [
+        72.0,
+        263.4800720214844,
+        540.070068359375,
+        274.0962829589844
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "mance using diﬀerent size of training set.19",
+      "bbox": [
+        72.0,
+        285.8157043457031,
+        292.0382385253906,
+        298.0042724609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MAE in kcal/mol:",
+      "bbox": [
+        72.0,
+        335.20404052734375,
+        165.15493774414062,
+        345.82025146484375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.93 ± 0.02 with 2 DTNN layers and 100,000 training samples.",
+      "bbox": [
+        89.43399810791016,
+        368.404541015625,
+        504.6023254394531,
+        379.69024658203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 1.15 for valid subset, 1.26 for test subset",
+      "bbox": [
+        89.43399047851562,
+        402.2755432128906,
+        410.6681213378906,
+        413.5612487792969
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Message Passing Neural Network",
+      "bbox": [
+        72.00001525878906,
+        443.5810241699219,
+        268.3760986328125,
+        454.1972351074219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "We evaluate the model on the HOMO-LUMO gap task of qm9, using 80/10/10 random",
+      "bbox": [
+        72.00001525878906,
+        475.21002197265625,
+        540.1060791015625,
+        485.82623291015625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "train, valid, test splitting.(train subset with 106,400 samples) The original paper reported",
+      "bbox": [
+        72.00001525878906,
+        499.1180114746094,
+        540.0819702148438,
+        509.7342224121094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "performance with a training set containing 110,462 randomly picked samples.76 Due to that",
+      "bbox": [
+        72.00001525878906,
+        518.6869506835938,
+        540.0145874023438,
+        533.6422119140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "no hyperparameter is speciﬁed for the model, we are not able to fully repeat the results.",
+      "bbox": [
+        72.00003051757812,
+        546.9339599609375,
+        524.2772216796875,
+        557.5502319335938
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Note that the original paper trained a single model for each task in the qm9 dataset.",
+      "bbox": [
+        89.55902862548828,
+        570.8419799804688,
+        540.078857421875,
+        581.458251953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Here we only picked one representative task to compare.",
+      "bbox": [
+        72.00003051757812,
+        594.7489624023438,
+        360.8974914550781,
+        605.365234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "MAE in eV:",
+      "bbox": [
+        72.00003051757812,
+        642.5650024414062,
+        134.25076293945312,
+        653.1812744140625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Original result: 0.0544",
+      "bbox": [
+        89.43402862548828,
+        675.7664794921875,
+        216.45921325683594,
+        687.05224609375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "• Reimplementation: 0.0997 for valid subset, 0.101 for test subset",
+      "bbox": [
+        89.43402099609375,
+        709.636474609375,
+        428.2322082519531,
+        720.9222412109375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "57",
+      "bbox": [
+        300.14703369140625,
+        741.5909423828125,
+        311.8631591796875,
+        752.2072143554688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 57
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "text",
+        "bbox": [
+          72,
+          99,
+          162,
+          109
+        ],
+        "pos": [
+          0,
+          16
+        ]
+      },
+      {
+        "index": 1,
+        "class": "list-item",
+        "bbox": [
+          89,
+          133,
+          449,
+          145
+        ],
+        "pos": [
+          16,
+          101
+        ]
+      },
+      {
+        "index": 2,
+        "class": "list-item",
+        "bbox": [
+          89,
+          167,
+          423,
+          178
+        ],
+        "pos": [
+          101,
+          177
+        ]
+      },
+      {
+        "index": 3,
+        "class": "section-header",
+        "bbox": [
+          72,
+          207,
+          245,
+          219
+        ],
+        "pos": [
+          177,
+          212
+        ]
+      },
+      {
+        "index": 4,
+        "class": "text",
+        "bbox": [
+          72,
+          238,
+          541,
+          299
+        ],
+        "pos": [
+          212,
+          453
+        ]
+      },
+      {
+        "index": 5,
+        "class": "text",
+        "bbox": [
+          72,
+          334,
+          166,
+          347
+        ],
+        "pos": [
+          453,
+          472
+        ]
+      },
+      {
+        "index": 6,
+        "class": "list-item",
+        "bbox": [
+          89,
+          368,
+          505,
+          380
+        ],
+        "pos": [
+          472,
+          564
+        ]
+      },
+      {
+        "index": 7,
+        "class": "list-item",
+        "bbox": [
+          89,
+          402,
+          411,
+          414
+        ],
+        "pos": [
+          564,
+          638
+        ]
+      },
+      {
+        "index": 8,
+        "class": "section-header",
+        "bbox": [
+          72,
+          443,
+          269,
+          455
+        ],
+        "pos": [
+          638,
+          677
+        ]
+      },
+      {
+        "index": 9,
+        "class": "text",
+        "bbox": [
+          72,
+          474,
+          541,
+          558
+        ],
+        "pos": [
+          677,
+          1042
+        ]
+      },
+      {
+        "index": 10,
+        "class": "text",
+        "bbox": [
+          72,
+          570,
+          541,
+          606
+        ],
+        "pos": [
+          1042,
+          1186
+        ]
+      },
+      {
+        "index": 11,
+        "class": "text",
+        "bbox": [
+          72,
+          642,
+          135,
+          652
+        ],
+        "pos": [
+          1186,
+          1199
+        ]
+      },
+      {
+        "index": 12,
+        "class": "list-item",
+        "bbox": [
+          89,
+          676,
+          217,
+          688
+        ],
+        "pos": [
+          1199,
+          1231
+        ]
+      },
+      {
+        "index": 13,
+        "class": "list-item",
+        "bbox": [
+          89,
+          710,
+          429,
+          721
+        ],
+        "pos": [
+          1231,
+          1308
+        ]
+      },
+      {
+        "index": 14,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          751
+        ],
+        "pos": [
+          1308,
+          1313
+        ]
+      }
+    ],
+    "text": "mean ROC-AUC: \n\n- Original result: 0 _._ 846 _∼_ 0 _._ 867 for different model structure settings. \n\n- Reimplementation: 0 _._ 857 for valid subset, 0 _._ 843 for test subset \n\n# **Deep Tensor Neural Network** \n\nWe evaluate the model on the atomization energy task of qm9, using 80/10/10 random train, valid, test splitting.(train subset with 106,400 samples) The original paper reported performance using different size of training set.<sup>19</sup> \n\nMAE in kcal/mol: \n\n- Original result: 0 _._ 93 _±_ 0 _._ 02 with 2 DTNN layers and 100,000 training samples. \n\n- Reimplementation: 1 _._ 15 for valid subset, 1 _._ 26 for test subset \n\n# **Message Passing Neural Network** \n\nWe evaluate the model on the HOMO-LUMO gap task of qm9, using 80/10/10 random train, valid, test splitting.(train subset with 106,400 samples) The original paper reported performance with a training set containing 110,462 randomly picked samples.<sup>76</sup> Due to that no hyperparameter is specified for the model, we are not able to fully repeat the results. \n\nNote that the original paper trained a single model for each task in the qm9 dataset. Here we only picked one representative task to compare. \n\nMAE in eV: \n\n- Original result: 0 _._ 0544 \n\n- Reimplementation: 0 _._ 0997 for valid subset, 0 _._ 101 for test subset \n\n57 \n\n"
+  }
+}

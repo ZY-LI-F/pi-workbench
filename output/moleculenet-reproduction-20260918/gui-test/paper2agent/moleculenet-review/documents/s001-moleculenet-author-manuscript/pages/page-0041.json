@@ -1,0 +1,114 @@
+{
+  "page": 41,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0041.png",
+  "reviewed": true,
+  "review_notes": "Table 3 summary retained as complete source image; Conclusion begins. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0041-b000",
+      "kind": "text",
+      "bbox": [
+        72,
+        75,
+        541,
+        111
+      ],
+      "markdown": "used by ANI-1, DTNN and MPNN are explicitly calculated on charges and physical distances, which are exactly the required inputs for solving Schr¨odinger’s equation.",
+      "source_class": "text",
+      "join_previous": "space"
+    },
+    {
+      "id": "p0041-b001",
+      "kind": "heading",
+      "bbox": [
+        72,
+        150,
+        165,
+        163
+      ],
+      "markdown": "## Conclusion",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0041-b002",
+      "kind": "caption",
+      "bbox": [
+        72,
+        189,
+        541,
+        216
+      ],
+      "markdown": "Table 3: Summary of performances(test subset): conventional methods versus graph-based methods. Graph-based models outperform conventional methods on 11/17 datasets.",
+      "source_class": "caption"
+    },
+    {
+      "id": "p0041-b003",
+      "kind": "table",
+      "bbox": [
+        67,
+        223,
+        540,
+        460
+      ],
+      "markdown": "",
+      "source_class": "table",
+      "label": "Table 3",
+      "asset_name": "table-3",
+      "rows": null
+    },
+    {
+      "id": "p0041-b004",
+      "kind": "text",
+      "bbox": [
+        86,
+        460,
+        541,
+        483
+      ],
+      "markdown": "* As discussed in section 4.4, DTNN outperforms KRR(CM) on 14/16 tasks in QM7b while the meanMAE is skewed due to different magnitudes of labels.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0041-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        511,
+        541,
+        643
+      ],
+      "markdown": "This work introduces MoleculeNet, a benchmark for molecular machine learning. We gathered data for a wide range of molecular properties: 17 dataset collections including over 800 different tasks on 700,000 compounds. Tasks are categorized into 4 levels as illustrated in Figure 2: (i) quantum mechanical properties; (ii) physical chemistry properties; (iii) biophysical affinity and activity with bio-macromolecules; (iv) macroscopic physiological effects on human body.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0041-b006",
+      "kind": "text",
+      "bbox": [
+        72,
+        655,
+        541,
+        714
+      ],
+      "markdown": "MoleculeNet contributes a data-loading framework, featurization methods, data splitting methods, and learning models to the open source DeepChem package (Figure 1). By adding interchangeable featurizations, splits and learning models into the DeepChem framework,",
+      "source_class": "text"
+    },
+    {
+      "id": "p0041-b007",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "41",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Table 3 summary retained as complete source image; Conclusion begins. Reviewed sequentially by the main agent; no independent agent verification."
+}

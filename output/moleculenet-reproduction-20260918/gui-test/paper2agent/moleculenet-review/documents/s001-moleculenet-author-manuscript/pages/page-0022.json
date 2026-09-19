@@ -1,0 +1,98 @@
+{
+  "page": 22,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0022.png",
+  "reviewed": true,
+  "review_notes": "Multitask, bypass and IRV; heading hierarchy normalized. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0022-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        74,
+        251,
+        87
+      ],
+      "markdown": "### Multitask/Singletask Network",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0022-b001",
+      "kind": "text",
+      "bbox": [
+        71,
+        105,
+        541,
+        331
+      ],
+      "markdown": "In a multitask network,<sup>10</sup> input featurizations are processed by fully connected neural network layers. The processed output is shared among all learning tasks in a dataset, and then fed into separate linear classifiers/regressors for each different task. In the case that a dataset contains only a single task, multitask networks are just fully connected neural networks(Singletask Network). Since multitask networks are trained on the joint data available for various tasks, the parameters of the shared layers are encouraged to produce a joint representation which can share information between learning tasks. This effect does seem to have limitations; merging data from uncorrelated tasks has only moderate effect.<sup>80</sup> As a result, MoleculeNet does not attempt to train extremely large multitask networks combining all data for all datasets.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0022-b002",
+      "kind": "heading",
+      "bbox": [
+        71,
+        363,
+        235,
+        374
+      ],
+      "markdown": "### Bypass Multitask Networks",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0022-b003",
+      "kind": "text",
+      "bbox": [
+        71,
+        394,
+        541,
+        621
+      ],
+      "markdown": "Multitask modeling relies on the fact that some features have explanatory power that is shared among multiple tasks. Note that the opposite may well be true; features useful for one task can be detrimental to other tasks. As a result, vanilla multitask networks can lack the power to explain unrelated variations in the samples. Bypass networks attempt to overcome this variation by merging in per-task independent layers that “bypass” shared layers to directly connect inputs with outputs.<sup>74</sup> In other words, bypass multitask networks consist of _n_ tasks + 1 independent components: one “multitask” layer mapping all inputs to shared representations, and _n_ tasks “bypass” layers mapping inputs for each specific task to their labels. As the two groups have separate parameters, bypass networks may have greater explanatory power than vanilla multitask networks.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0022-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        650,
+        232,
+        662
+      ],
+      "markdown": "### Influence Relevance Voting",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0022-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        680,
+        541,
+        717
+      ],
+      "markdown": "Influence Relevance Voting (IRV) systems are refined K-nearest neighbor classifiers.<sup>75</sup> Using the hypothesis that compounds with similar substructures have similar functionality, the",
+      "source_class": "text"
+    },
+    {
+      "id": "p0022-b006",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "22",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "Multitask, bypass and IRV; heading hierarchy normalized. Reviewed sequentially by the main agent; no independent agent verification."
+}

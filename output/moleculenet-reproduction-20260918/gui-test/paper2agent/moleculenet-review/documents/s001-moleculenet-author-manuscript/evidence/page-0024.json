@@ -1,0 +1,383 @@
+{
+  "page": 24,
+  "lines": [
+    {
+      "text": "Figure 6: Core structures of graph-based models implemented in MoleculeNet. To build",
+      "bbox": [
+        72.0,
+        318.1750793457031,
+        540.0100708007812,
+        328.7912902832031
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "features for the central dark green atom: A Graph Convolutional Model: features are up-",
+      "bbox": [
+        72.0,
+        332.6200866699219,
+        540.0239868164062,
+        343.2362976074219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "dated by combination with neighbor atoms; B Directed Acyclic Graph Model: all bonds are",
+      "bbox": [
+        72.0,
+        347.06610107421875,
+        540.015380859375,
+        357.68231201171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "directed towards the central atom, features are propagated from the farthest atom to the",
+      "bbox": [
+        72.00003051757812,
+        361.5121154785156,
+        540.0821533203125,
+        372.1283264160156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "central atom through directed bonds; C Weave Model: Pairs are formed between each pair of",
+      "bbox": [
+        72.00003051757812,
+        375.9581298828125,
+        540.0128784179688,
+        386.5743408203125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "atoms(including not directly bonded pairs), features for the central atom are updated using",
+      "bbox": [
+        72.00006103515625,
+        390.4041442871094,
+        540.070068359375,
+        401.0203552246094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "all other atoms and their corresponding pairs, pair features are also updated by combination",
+      "bbox": [
+        72.00006103515625,
+        404.85015869140625,
+        540.0819091796875,
+        415.46636962890625
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of the two pairing atoms; D Message Passing Neural Network: Neighbor atoms’ features are",
+      "bbox": [
+        72.00006103515625,
+        419.295166015625,
+        540.0399780273438,
+        429.911376953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "input into bond-type dependent neural networks, forming outputs(messages). Features of",
+      "bbox": [
+        72.00004577636719,
+        433.7411804199219,
+        540.046142578125,
+        444.3573913574219
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "the central atom are then updated using the outputs; E Deep Tensor Neural Network: No",
+      "bbox": [
+        72.00004577636719,
+        448.18719482421875,
+        540.0191650390625,
+        458.80340576171875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "explicit bonding information is included, features are updated using all other atoms based on",
+      "bbox": [
+        72.00006103515625,
+        462.6332092285156,
+        540.0580444335938,
+        473.2494201660156
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "their corresponding physical distances; F ANI-1: features are built on distance information",
+      "bbox": [
+        72.00006103515625,
+        477.0792236328125,
+        540.0269775390625,
+        487.6954345703125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "between pairs of atoms(radial symmetry functions) and angular information between triplets",
+      "bbox": [
+        72.00007629394531,
+        491.5252380371094,
+        540.070068359375,
+        502.1414489746094
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "of atoms(angular symmetry functions).",
+      "bbox": [
+        72.00007629394531,
+        505.9702453613281,
+        271.8910217285156,
+        516.5864868164062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph Convolutional models",
+      "bbox": [
+        72.00007629394531,
+        542.1852416992188,
+        241.17807006835938,
+        552.801513671875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "Graph convolutional models (GC) extend the decomposition principles of circular ﬁnger-",
+      "bbox": [
+        72.00007629394531,
+        573.814208984375,
+        540.0341186523438,
+        584.4304809570312
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "prints. Both methods gradually merge information from distant atoms by extending radially",
+      "bbox": [
+        72.00007629394531,
+        597.72119140625,
+        540.0940551757812,
+        608.3374633789062
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "through bonds. This information is used to generate identiﬁers for all substructures. How-",
+      "bbox": [
+        72.00007629394531,
+        621.6292114257812,
+        540.0343627929688,
+        632.2454833984375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "ever, instead of applying ﬁxed hash functions, graph convolutional models allow for adaptive",
+      "bbox": [
+        72.00007629394531,
+        645.5372314453125,
+        540.08203125,
+        656.1535034179688
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "learning by using diﬀerentiable network layers. This creates a learnable process capable of",
+      "bbox": [
+        72.00007629394531,
+        669.4452514648438,
+        540.0343017578125,
+        680.0615234375
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "extracting useful representations of molecules suited to the task at hand. (Note that this",
+      "bbox": [
+        72.00007629394531,
+        693.3532104492188,
+        540.0579833984375,
+        703.969482421875
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    },
+    {
+      "text": "24",
+      "bbox": [
+        300.1470947265625,
+        741.5912475585938,
+        311.86322021484375,
+        752.20751953125
+      ],
+      "direction": [
+        1.0,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "metadata": {
+      "format": "PDF 1.7",
+      "title": "",
+      "author": "",
+      "subject": "",
+      "keywords": "",
+      "creator": "LaTeX with hyperref package",
+      "producer": "pdfTeX-1.40.17",
+      "creationDate": "D:20181029003012Z",
+      "modDate": "D:20181029003012Z",
+      "trapped": "",
+      "encryption": null,
+      "file_path": "C:\\Users\\qq108\\Documents\\PI-GUI\\output\\moleculenet-reproduction-20260918\\gui-test\\paper2agent\\moleculenet-review\\documents\\.pdf-skill-scan-78tboast\\review\\source.pdf",
+      "page_count": 65,
+      "page_number": 24
+    },
+    "toc_items": [],
+    "page_boxes": [
+      {
+        "index": 0,
+        "class": "picture",
+        "bbox": [
+          72,
+          71,
+          541,
+          307
+        ],
+        "pos": [
+          0,
+          2
+        ]
+      },
+      {
+        "index": 1,
+        "class": "text",
+        "bbox": [
+          72,
+          318,
+          541,
+          518
+        ],
+        "pos": [
+          2,
+          1228
+        ]
+      },
+      {
+        "index": 2,
+        "class": "section-header",
+        "bbox": [
+          72,
+          542,
+          242,
+          553
+        ],
+        "pos": [
+          1228,
+          1263
+        ]
+      },
+      {
+        "index": 3,
+        "class": "text",
+        "bbox": [
+          72,
+          573,
+          541,
+          705
+        ],
+        "pos": [
+          1263,
+          1809
+        ]
+      },
+      {
+        "index": 4,
+        "class": "page-footer",
+        "bbox": [
+          300,
+          741,
+          312,
+          750
+        ],
+        "pos": [
+          1809,
+          1814
+        ]
+      }
+    ],
+    "text": "\n\nFigure 6: Core structures of graph-based models implemented in MoleculeNet. To build features for the central dark green atom: **A** Graph Convolutional Model: features are updated by combination with neighbor atoms; **B** Directed Acyclic Graph Model: all bonds are directed towards the central atom, features are propagated from the farthest atom to the central atom through directed bonds; **C** Weave Model: Pairs are formed between each pair of atoms(including not directly bonded pairs), features for the central atom are updated using all other atoms and their corresponding pairs, pair features are also updated by combination of the two pairing atoms; **D** Message Passing Neural Network: Neighbor atoms’ features are input into bond-type dependent neural networks, forming outputs(messages). Features of the central atom are then updated using the outputs; **E** Deep Tensor Neural Network: No explicit bonding information is included, features are updated using all other atoms based on their corresponding physical distances; **F** ANI-1: features are built on distance information between pairs of atoms(radial symmetry functions) and angular information between triplets of atoms(angular symmetry functions). \n\n# **Graph Convolutional models** \n\nGraph convolutional models (GC) extend the decomposition principles of circular fingerprints. Both methods gradually merge information from distant atoms by extending radially through bonds. This information is used to generate identifiers for all substructures. However, instead of applying fixed hash functions, graph convolutional models allow for adaptive learning by using differentiable network layers. This creates a learnable process capable of extracting useful representations of molecules suited to the task at hand. (Note that this \n\n24 \n\n"
+  }
+}

@@ -1,0 +1,19 @@
+# NVIDIA SoL-Pi → Stella RPC integration
+
+- Source: https://github.com/NVlabs/SoL-Pi/tree/bd005888b9b8a3fcdb511feb91fc27d3dfa8f2b1
+- Upstream version: 0.1.0, MIT, NVIDIA copyright retained in `vendor/`.
+- Compatible pinned official Pi: 0.85.1. No modification to Pi, second core, or upstream development dependencies.
+- `vendor/` contains upstream source, LICENSE, SECURITY and third-party notices. Relative `.ts` import suffixes are removed for the repository's TypeScript build.
+- Entry `index.ts` is a Stella-owned adapter, compiled separately to `out/main/sol-mode.js`. Pi's extension loader supplies the exact same Pi/AI/TUI modules as the running core. TypeScript and unit-test aliases point at Pi's shrinkwrapped nested dependencies; no second npm install is used. The production build leaves those module imports external.
+
+## Deliberate local changes
+
+1. Dedicated validated per-process configuration, actual launch receipt, branch-specific reducer usage and visible activity. No global `sol-pi.json` mutation; advanced model/cost/continuation semantics are opt-in.
+2. Action Fusion checks active bash and asks for confirmation **before** file mutation. This combined call has an edit/write tool event, not a separate bash event: third-party policies listening only to bash do not intercept it. The explicit confirmation discloses this; environments requiring those policies should disable Action Fusion. Normal separate tools remain available. Upstream success/failure/skipped markers are retained; a failed command does not roll back successful mutation.
+3. Archive helpers check all directory components, reject directory symlinks/junctions and hardlinks, compare opened file identity with its path, and verify immutable object content. Windows does not rely on undefined `O_NOFOLLOW`. Canonicalize the trusted session directory before deriving storage. Like ordinary Node filesystem checks, this is not a kernel sandbox against a hostile process continuously racing directory mutations.
+4. ObservationPack counters reset on session/branch restoration. Projection failures retain the original result and report why. Exact immutable objects and paging remain upstream behavior, not task limits.
+5. EPR validates full-output file handles; inability to read/verify a referenced complete log is visible and does not silently summarize a truncated substitute. Archive/provider/receipt failures retain the original result. Extra calls, including rejected receipts, appear in auxiliary token usage; cost is not inferred from an absent/zero catalog price. Original provider exceptions are retained in journal reasons.
+6. OCC estimates only the legally removable prefix using public Pi cut-point APIs and uses actual `keepRecentTokens`. A GUI abort advances a cancellation revision through the existing child IPC channel and cancels native Pi operations; pending phases cannot start another continuation. Stage decisions and errors are visible. A split turn may legitimately require two summary requests for one native compaction.
+7. Duplicate enabled tool names/overrides are rejected before registration, and the GUI can disable the mode to recover. This does not claim to detect arbitrary hook-only third-party optimizers: loaded extensions are trusted code, not a sandbox. Do not install another SoL-Pi alongside this adapter. Disabled means this bundled adapter is not injected, not that third-party code was uninstalled.
+
+`tests/e2e/sol-mode.spec.ts` runs real Electron, official Pi RPC, filesystem tools and HTTP model protocols in isolated directories; deterministic provider replies are **test fixtures**, not production fallbacks or performance evidence. `sol-mode.live.ts` is a separate opt-in real-model test using local credentials without logging them. No fixed cost-reduction claim is made.

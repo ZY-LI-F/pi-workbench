@@ -1,0 +1,122 @@
+{
+  "page": 21,
+  "width": 612.0,
+  "height": 792.0,
+  "mode": "native",
+  "preview": "previews/page-0021.png",
+  "reviewed": true,
+  "review_notes": "SVM, KRR, RF and gradient boosting text inspected; no claims added. Reviewed sequentially by the main agent; no independent agent verification.",
+  "warnings": [],
+  "items": [
+    {
+      "id": "p0021-b000",
+      "kind": "heading",
+      "bbox": [
+        72,
+        75,
+        245,
+        87
+      ],
+      "markdown": "### Support Vector Classification",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0021-b001",
+      "kind": "text",
+      "bbox": [
+        72,
+        106,
+        541,
+        191
+      ],
+      "markdown": "Support vector machine (SVM) is one of the most famous and widely-used machine learning method.<sup>78</sup> As in classification task, it defines a decision plane which separates data points of different class with maximized margin. To further increase performance, we incorporates regularization and a radial basis function kernel (KernelSVM).",
+      "source_class": "text"
+    },
+    {
+      "id": "p0021-b002",
+      "kind": "heading",
+      "bbox": [
+        72,
+        219,
+        218,
+        231
+      ],
+      "markdown": "### Kernel Ridge Regression",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0021-b003",
+      "kind": "text",
+      "bbox": [
+        72,
+        250,
+        541,
+        310
+      ],
+      "markdown": "Kernel ridge regression(KRR) is a combination of ridge regression and kernel trick. By using a nonlinear kernel function(radial basis function), it learns a non-linear function in the original space that maps features to predicted values.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0021-b004",
+      "kind": "heading",
+      "bbox": [
+        72,
+        339,
+        168,
+        349
+      ],
+      "markdown": "### Random Forests",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0021-b005",
+      "kind": "text",
+      "bbox": [
+        72,
+        369,
+        541,
+        500
+      ],
+      "markdown": "Random forests (RF) are ensemble prediction methods.<sup>72</sup> A random forest consists of many individual decision trees, each of which is trained on a subsampled version of the original dataset. The results for individual trees are averaged to provide output predictions for the full forest. Random forests can be used for both classification and regression tasks. Training a random forest can be computationally intensive, so benchmarks only include random forest results for smaller datasets.",
+      "source_class": "text"
+    },
+    {
+      "id": "p0021-b006",
+      "kind": "heading",
+      "bbox": [
+        72,
+        531,
+        181,
+        543
+      ],
+      "markdown": "### Gradient Boosting",
+      "source_class": "section-header"
+    },
+    {
+      "id": "p0021-b007",
+      "kind": "text",
+      "bbox": [
+        72,
+        561,
+        541,
+        670
+      ],
+      "markdown": "Gradient boosting is another ensemble method consisting of individual decision trees.<sup>73</sup> In contrast to random forests, it builds relatively simple trees which are sequentially incorporated to the ensemble. In each step, a new tree is generated in a greedy manner to minimize loss function. A sequence of such ”weak” trees are combined together into an additive model. We utilize the XGBoost implementation of gradient boosting in DeepChem.<sup>79</sup>",
+      "source_class": "text"
+    },
+    {
+      "id": "p0021-b008",
+      "kind": "omit",
+      "bbox": [
+        300,
+        741,
+        312,
+        750
+      ],
+      "markdown": "21",
+      "source_class": "page-footer",
+      "reason": "Visually confirmed page-number-only footer."
+    }
+  ],
+  "imported_review_notes": "SVM, KRR, RF and gradient boosting text inspected; no claims added. Reviewed sequentially by the main agent; no independent agent verification."
+}

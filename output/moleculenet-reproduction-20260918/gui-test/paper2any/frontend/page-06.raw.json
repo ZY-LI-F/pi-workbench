@@ -1,0 +1,240 @@
+{
+  "title": "特征化与学习模型",
+  "render_engine": "canvas",
+  "layout_family": "two_column",
+  "root": {
+    "type": "container",
+    "id": "root",
+    "style": {
+      "direction": "column",
+      "gap": 22,
+      "align": "stretch",
+      "padding": 62
+    },
+    "children": [
+      {
+        "type": "component",
+        "id": "title",
+        "component": "heading",
+        "props": {
+          "text_ref": "title"
+        }
+      },
+      {
+        "type": "component",
+        "id": "summary",
+        "component": "text",
+        "props": {
+          "text_ref": "summary"
+        }
+      },
+      {
+        "type": "component",
+        "id": "feature_matrix",
+        "component": "table",
+        "props": {
+          "table_ref": "table_1"
+        }
+      },
+      {
+        "type": "container",
+        "id": "model_compare",
+        "style": {
+          "direction": "row",
+          "gap": 24,
+          "weight": 1,
+          "align": "stretch"
+        },
+        "children": [
+          {
+            "type": "container",
+            "id": "traditional_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "traditional_label",
+                "component": "text",
+                "props": {
+                  "text_ref": "traditional_label"
+                }
+              },
+              {
+                "type": "component",
+                "id": "traditional_items",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "traditional_items"
+                }
+              }
+            ]
+          },
+          {
+            "type": "container",
+            "id": "graph_col",
+            "style": {
+              "direction": "column",
+              "gap": 14,
+              "weight": 1,
+              "align": "stretch"
+            },
+            "children": [
+              {
+                "type": "component",
+                "id": "graph_label",
+                "component": "text",
+                "props": {
+                  "text_ref": "graph_label"
+                }
+              },
+              {
+                "type": "component",
+                "id": "graph_items",
+                "component": "bullets",
+                "props": {
+                  "items_ref": "graph_items"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "component",
+        "id": "scope_note",
+        "component": "callout",
+        "props": {
+          "text_ref": "scope_note"
+        }
+      }
+    ]
+  },
+  "content": {
+    "title": "特征化与学习模型",
+    "summary": "特征化方式决定分子表征：固定表征与传统模型配对，可学习表征对应图模型；标注为本次复现涉及的部分。",
+    "key_points": [
+      "特征化包括 ECFP、Coulomb Matrix、Grid、Symmetry Function、Graph Convolutions、Weave",
+      "传统模型包括 Logistic Regression、Kernel SVM、KRR、Random Forest、XGBoost、Multitask/Singletask、Bypass、IRV",
+      "图模型包括 GC、Weave、DAG、DTNN、ANI-1、MPNN",
+      "图模型使用可学习表征，传统模型默认使用 ECFP，部分任务使用 CM 或 Grid",
+      "本次复现仅涉及 mean 基线、Random Forest、KRR、Graph Convolution 四种设置"
+    ],
+    "table_1": {
+      "headers": [
+        "特征化方法",
+        "表征性质"
+      ],
+      "rows": [
+        [
+          "ECFP（默认）",
+          "固定表征"
+        ],
+        [
+          "Coulomb Matrix",
+          "固定表征（部分任务）"
+        ],
+        [
+          "Grid",
+          "固定表征（部分任务）"
+        ],
+        [
+          "Symmetry Function",
+          "固定表征"
+        ],
+        [
+          "Graph Convolutions（★复现）",
+          "可学习表征"
+        ],
+        [
+          "Weave",
+          "可学习表征"
+        ]
+      ]
+    },
+    "traditional_label": "传统模型（默认 ECFP，部分任务使用 CM 或 Grid）",
+    "traditional_items": [
+      "Logistic Regression",
+      "Kernel SVM",
+      "KRR（★复现）",
+      "Random Forest（★复现）",
+      "XGBoost",
+      "Multitask / Singletask",
+      "Bypass 与 IRV"
+    ],
+    "graph_label": "图模型（使用可学习表征）",
+    "graph_items": [
+      "GC — Graph Convolution（★复现）",
+      "Weave",
+      "DAG — Directed Acyclic Graph",
+      "DTNN",
+      "ANI-1",
+      "MPNN"
+    ],
+    "scope_note": "本次复现仅涉及四种设置：mean 基线、Random Forest、KRR、Graph Convolution。",
+    "assets": {}
+  },
+  "visual_spec": {
+    "palette": {
+      "bg": "#0b1020",
+      "panel": "rgba(15,23,42,0.92)",
+      "primary": "#7dd3fc",
+      "secondary": "#38bdf8",
+      "accent": "#f59e0b",
+      "text": "#e2e8f0",
+      "muted": "#94a3b8"
+    },
+    "typography": {
+      "title_font_stack": "Georgia, \"Times New Roman\", serif",
+      "body_font_stack": "\"Noto Sans SC\", \"Segoe UI\", \"PingFang SC\", \"Microsoft YaHei\", sans-serif",
+      "title_size": 56,
+      "body_size": 24
+    },
+    "surface": {
+      "card_radius": 24,
+      "card_padding": 22,
+      "section_gap": 22
+    },
+    "layout": {
+      "safe_margin": 62,
+      "section_gap": 22,
+      "content_gap": 18,
+      "max_columns": 2
+    },
+    "component_styles": {
+      "heading": {
+        "font_size": 56,
+        "font_weight": 700
+      },
+      "text": {
+        "font_size": 24,
+        "color": "#94a3b8"
+      },
+      "bullets": {
+        "font_size": 22,
+        "line_gap": 10,
+        "marker_color": "#7dd3fc"
+      },
+      "table": {
+        "font_size": 20,
+        "header_color": "#7dd3fc",
+        "border_color": "rgba(148,163,184,0.35)"
+      },
+      "callout": {
+        "font_size": 22,
+        "accent_color": "#f59e0b"
+      }
+    }
+  },
+  "constraints": {
+    "min_font_size": 18,
+    "max_font_size": 56,
+    "allow_overflow": false,
+    "fit_mode": "browser_measure"
+  },
+  "generation_note": "上表下双列的结构先给出特征化方法矩阵，再并置传统模型与图模型，并以标签标出本次复现涉及的四种设置。"
+}

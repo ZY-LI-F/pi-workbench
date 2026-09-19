@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   ChevronDown,
   Copy,
@@ -15,9 +15,8 @@ import {
   RotateCcw,
   ZoomIn,
   ZoomOut,
+  ArrowLeft,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import type { LocalFilePreviewData, LocalFilePreviewKind } from "@shared/file-preview";
 import type { LocalPathInspection } from "@shared/local-path";
 import type { StellaDesktopApi } from "@shared/contracts";
@@ -27,6 +26,17 @@ import { PptxPreview } from "./PptxPreview";
 import { PdfPreview } from "./PdfPreview";
 import { SpreadsheetPreview } from "./SpreadsheetPreview";
 import { fileReferenceText } from "../lib/file-reference";
+import { previewParent, previewText, pdfFragmentPage } from "../lib/artifact-preview";
+import { ArtifactImage } from "./ArtifactMedia";
+import { ArtifactLibraryPicker } from "./ArtifactLibraryPicker";
+import { ArtifactReaderBoundary } from "./ArtifactReaderBoundary";
+import "../styles/artifact-readers.css";
+
+const AcademicMarkdown = lazy(() => import("./AcademicMarkdown"));
+const DelimitedPreview = lazy(() => import("./DelimitedPreview"));
+const JsonPreview = lazy(() => import("./JsonPreview"));
+const NotebookPreview = lazy(() => import("./NotebookPreview"));
+const CodePreview = lazy(() => import("./CodePreview"));
 
 type PreviewState =
   | { readonly status: "idle" }
@@ -43,6 +53,10 @@ const PREVIEW_LABELS: Readonly<Record<LocalFilePreviewKind, string>> = Object.fr
   docx: "Word",
   pptx: "PowerPoint",
   spreadsheet: "Excel",
+  code: "源码",
+  json: "JSON",
+  delimited: "CSV / TSV",
+  notebook: "Notebook",
 });
 
 function errorMessage(cause: unknown): string {
@@ -63,60 +77,11 @@ function bytesAsArrayBuffer(bytes: Uint8Array): ArrayBuffer {
 }
 
 function decodeText(bytes: Uint8Array): string {
-  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-}
-
-function prettyText(data: LocalFilePreviewData): string {
-  const source = decodeText(data.bytes);
-  if (data.mimeType !== "application/json") return source;
-  try {
-    return JSON.stringify(JSON.parse(source), null, 2);
-  } catch {
-    return source;
-  }
-}
-
-function sanitizedSvg(source: string): string {
-  const document = new DOMParser().parseFromString(source, "image/svg+xml");
-  if (document.querySelector("parsererror")) throw new Error("SVG 文件不是有效的 XML");
-  document.querySelectorAll("script, foreignObject, iframe, object, embed, audio, video").forEach((node) => node.remove());
-  document.querySelectorAll("*").forEach((node) => {
-    for (const attribute of [...node.attributes]) {
-      const name = attribute.name.toLocaleLowerCase("en-US");
-      const value = attribute.value.trim();
-      if (name.startsWith("on")) node.removeAttribute(attribute.name);
-      if ((name === "href" || name === "xlink:href") && !value.startsWith("#") && !value.startsWith("data:image/")) {
-        node.removeAttribute(attribute.name);
-      }
-      if (name === "style" && /url\((?!["']?data:image\/)/i.test(value)) node.removeAttribute(attribute.name);
-    }
-  });
-  return new XMLSerializer().serializeToString(document.documentElement);
-}
-
-function useObjectUrl(bytes: Uint8Array, mimeType: string, transform?: (source: string) => string): string | undefined {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    const blob = transform
-      ? new Blob([transform(decodeText(bytes))], { type: mimeType })
-      : new Blob([bytesAsArrayBuffer(bytes)], { type: mimeType });
-    const next = URL.createObjectURL(blob);
-    setUrl(next);
-    return () => URL.revokeObjectURL(next);
-  }, [bytes, mimeType, transform]);
-  return url;
+  return previewText(bytes);
 }
 
 function LoadingPreview({ label }: { readonly label: string }) {
   return <div className="file-preview__loading" role="status"><LoaderCircle className="spin" /><strong>{label}</strong><small>文件保留在本机，正在构建只读视图…</small></div>;
-}
-
-function ImagePreview({ data }: { readonly data: LocalFilePreviewData }) {
-  const transformer = data.mimeType === "image/svg+xml" ? sanitizedSvg : undefined;
-  const url = useObjectUrl(data.bytes, data.mimeType, transformer);
-  return url
-    ? <div className="file-preview__image"><img src={url} alt={data.name} /></div>
-    : <LoadingPreview label="正在载入图片" />;
 }
 
 function HtmlPreview({ data }: { readonly data: LocalFilePreviewData }) {
@@ -127,32 +92,8 @@ function HtmlPreview({ data }: { readonly data: LocalFilePreviewData }) {
   return <iframe className="file-preview__html" title={`${data.name} HTML 预览`} sandbox="" srcDoc={source} />;
 }
 
-function MarkdownPreview({ api, data }: { readonly api: StellaDesktopApi; readonly data: LocalFilePreviewData }) {
-  const source = useMemo(() => decodeText(data.bytes), [data]);
-  return (
-    <article className="file-preview__document-page markdown-body file-preview__markdown">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          a: ({ href, children }) => {
-            const external = typeof href === "string" && /^https?:\/\//i.test(href);
-            return <a href={external ? href : undefined} title={external ? href : "相对链接不会离开预览器"} onClick={(event) => {
-              event.preventDefault();
-              if (external && href) void api.openExternal(href);
-            }}>{children}</a>;
-          },
-          img: ({ src, alt }) => {
-            const safe = typeof src === "string" && src.startsWith("data:image/");
-            return safe ? <img src={src} alt={alt ?? "Markdown 图片"} /> : <span className="file-preview__blocked-resource">图片资源已隔离：{alt || src}</span>;
-          },
-        }}
-      >{source}</ReactMarkdown>
-    </article>
-  );
-}
-
 function TextPreview({ data }: { readonly data: LocalFilePreviewData }) {
-  const source = useMemo(() => prettyText(data), [data]);
+  const source = useMemo(() => decodeText(data.bytes), [data]);
   return <pre className="file-preview__text">{source}</pre>;
 }
 
@@ -196,12 +137,20 @@ function DocxPreview({ data }: { readonly data: LocalFilePreviewData }) {
   );
 }
 
-function PreviewContent({ api, data }: { readonly api: StellaDesktopApi; readonly data: LocalFilePreviewData }) {
-  if (data.kind === "image") return <ImagePreview data={data} />;
+function PreviewContent({ api, data, onNavigate, artifactRoot, fragment, onReady }: {
+  readonly api: StellaDesktopApi; readonly data: LocalFilePreviewData; readonly onNavigate: (href: string, root?: string) => Promise<void>;
+  readonly artifactRoot?: string; readonly fragment?: string; readonly onReady: () => void;
+}) {
+  useEffect(onReady, [onReady]);
+  if (data.kind === "image") return <div className="file-preview__image"><ArtifactImage {...data} /></div>;
   if (data.kind === "html") return <HtmlPreview data={data} />;
-  if (data.kind === "markdown") return <MarkdownPreview api={api} data={data} />;
+  if (data.kind === "markdown") return <AcademicMarkdown api={api} source={decodeText(data.bytes)} fromPath={data.canonicalPath} onNavigate={onNavigate} fragment={fragment} onReady={onReady} />;
+  if (data.kind === "delimited") return <DelimitedPreview data={data} />;
+  if (data.kind === "json") return <JsonPreview data={data} onNavigate={onNavigate} artifactRoot={artifactRoot} />;
+  if (data.kind === "notebook") return <NotebookPreview api={api} data={data} onNavigate={onNavigate} />;
+  if (data.kind === "code") return <CodePreview source={decodeText(data.bytes)} name={data.name} onCopy={api.copyText} />;
   if (data.kind === "text") return <TextPreview data={data} />;
-  if (data.kind === "pdf") return <PdfPreview data={data} />;
+  if (data.kind === "pdf") return <PdfPreview data={data} requestedPage={pdfFragmentPage(fragment ?? "")} />;
   if (data.kind === "docx") return <DocxPreview data={data} />;
   if (data.kind === "pptx") return <PptxPreview data={data} />;
   return <SpreadsheetPreview data={data} />;
@@ -282,7 +231,7 @@ function SessionFilePicker({
 
   return (
     <label className="file-preview-file-picker">
-      <span className="file-preview-file-picker__label"><Files size={14} /><strong>会话文件</strong><small>{items.length} 项 · 最新在前</small></span>
+      <span className="file-preview-file-picker__label"><Files size={14} /><strong>会话文件</strong><small>{items.length} 项 · 按最后提及时间</small></span>
       <span className="file-preview-file-picker__select">
         <select
           aria-label="切换会话文件"
@@ -352,6 +301,40 @@ export function FilePreviewPanel({
   const [selectedText, setSelectedText] = useState("");
   const [referenceBusy, setReferenceBusy] = useState(false);
   const [referenceFeedback, setReferenceFeedback] = useState<string>();
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [artifactRoot, setArtifactRoot] = useState<string>();
+  const [evidenceRoot, setEvidenceRoot] = useState<string>();
+  const [history, setHistory] = useState<readonly string[]>([]);
+  const [linkTarget, setLinkTarget] = useState<{ path: string; fragment: string }>();
+  const stageRef = useRef<HTMLDivElement>(null);
+  const readingPositions = useRef(new Map<string, number>());
+  const currentPath = inspection?.canonicalPath;
+  const currentPathRef = useRef(currentPath);
+  currentPathRef.current = currentPath;
+  const navigationId = useRef(0);
+  useEffect(() => () => { navigationId.current++; }, []);
+
+  const savePosition = () => {
+    if (currentPath && stageRef.current) readingPositions.current.set(pathIdentity(currentPath), stageRef.current.scrollTop);
+  };
+  const selectFile = (next: LocalPathInspection, fragment = "") => {
+    savePosition();
+    if (currentPath && pathIdentity(currentPath) !== pathIdentity(next.canonicalPath)) setHistory((previous) => [...previous, currentPath]);
+    setLinkTarget({ path: next.canonicalPath, fragment });
+    onSelect(next);
+  };
+  const navigate = async (href: string, root?: string) => {
+    if (!currentPath) throw new Error("请先选择链接来源文件");
+    const id = ++navigationId.current;
+    const target = await api.resolveArtifactLink({ fromPath: currentPath, href, artifactRoot: root });
+    if (id !== navigationId.current || currentPathRef.current !== currentPath) return;
+    if (target.inspection.preview?.kind === "pdf" && target.fragment && pdfFragmentPage(target.fragment) === undefined) throw new Error(`无法定位 PDF 链接：${target.fragment}。当前支持 #page=正整数，不猜测其他页码格式。`);
+    selectFile(target.inspection, target.fragment);
+  };
+  const restorePosition = useCallback(() => {
+    if (currentPath && stageRef.current) stageRef.current.scrollTop = readingPositions.current.get(pathIdentity(currentPath)) ?? 0;
+  }, [currentPath]);
+  useEffect(() => { if (state.status === "ready") restorePosition(); }, [state, restorePosition]);
 
   useEffect(() => {
     const captureSelection = () => {
@@ -442,7 +425,20 @@ export function FilePreviewPanel({
       <div className="file-preview-panel__body">
         <section className={`file-preview__reader${inspection ? "" : " file-preview__reader--empty"}`} aria-label={inspection ? `预览 ${inspection.name}` : "文件预览空状态"}>
           <div className="file-preview__toolbar">
-            <SessionFilePicker api={api} references={references} activeInspection={inspection} onSelect={onSelect} />
+            <SessionFilePicker api={api} references={references} activeInspection={inspection} onSelect={selectFile} />
+            <div className="artifact-tools artifact-reading-navigation">
+              <button type="button" aria-label="返回上一文件" disabled={!history.length} onClick={() => void runAction(async () => {
+                const previous = history.at(-1); if (!previous) return;
+                const id = ++navigationId.current;
+                const file = await api.inspectLocalPath(previous);
+                if (id !== navigationId.current || currentPathRef.current !== currentPath) return;
+                if (file.kind !== "file" || !file.preview) throw new Error("上一文件已不可预览");
+                savePosition(); setHistory((items) => items.slice(0, -1)); setLinkTarget(undefined); onSelect(file);
+              })}><ArrowLeft size={14} /><span>返回</span></button>
+              <button type="button" onClick={() => setLibraryOpen(true)}><FolderOpen size={14} />产物目录</button>
+              {artifactRoot && <small title={artifactRoot}>已关联阅读包</small>}
+              {evidenceRoot && <small title={evidenceRoot}>已关联证据目录</small>}
+            </div>
             {inspection && <div className="file-preview__identity">
               <span>{data ? PREVIEW_LABELS[data.kind] : inspection.preview ? PREVIEW_LABELS[inspection.preview.kind] : "文件"}</span>
               <strong title={inspection.canonicalPath}>{inspection.name}</strong>
@@ -471,14 +467,15 @@ export function FilePreviewPanel({
           </div>
           {actionError && <div className="file-preview__action-error" role="alert">操作失败：{actionError}</div>}
           {referenceFeedback && <div className="file-preview__reference-feedback" role="status">{referenceFeedback}</div>}
-          <div className={`file-preview__stage file-preview__stage--${inspection ? data?.kind ?? "loading" : "idle"}`}>
+          <div ref={stageRef} className={`file-preview__stage file-preview__stage--${inspection ? data?.kind ?? "loading" : "idle"}`}>
             {!inspection && <div className="file-preview__empty" role="status"><FileSearch size={30} /><strong>选择一个会话文件</strong><p>从上方下拉框选择输出，或点击对话中的“预览”按钮。</p></div>}
             {inspection && state.status === "loading" && <LoadingPreview label="正在读取本地文件" />}
             {inspection && state.status === "error" && <div className="file-preview__error" role="alert"><strong>无法预览这个文件</strong><p>{state.message}</p><button type="button" className="button-secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw size={14} />重新读取</button></div>}
-            {inspection && data && <div ref={viewportRef} className="file-preview__viewport" style={{ "--file-preview-zoom": internalPreviewZoom ? 1 : zoom / 100 } as CSSProperties}><PreviewContent api={api} data={data} /></div>}
+            {inspection && data && <div ref={viewportRef} className="file-preview__viewport" style={{ "--file-preview-zoom": internalPreviewZoom ? 1 : zoom / 100 } as CSSProperties}><ArtifactReaderBoundary key={`${data.canonicalPath}:${data.version}:${reload}`}><Suspense fallback={<LoadingPreview label="正在载入阅读器" />}><PreviewContent api={api} data={data} onNavigate={navigate} artifactRoot={artifactRoot} fragment={linkTarget?.path === currentPath ? linkTarget?.fragment : undefined} onReady={restorePosition} /></Suspense></ArtifactReaderBoundary></div>}
           </div>
         </section>
       </div>
+      {libraryOpen && <ArtifactLibraryPicker api={api} initialPath={currentPath ? previewParent(currentPath) : artifactRoot} artifactRoot={artifactRoot} evidenceRoot={evidenceRoot} onRoot={(path, evidence) => evidence ? setEvidenceRoot(path) : setArtifactRoot(path)} onSelect={selectFile} onClose={() => setLibraryOpen(false)} />}
     </section>
   );
 }
