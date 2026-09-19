@@ -51,6 +51,8 @@ import type {
 } from "../shared/external-execution";
 
 const api: StellaDesktopApi = Object.freeze({
+  piVersionCheck: () => ipcRenderer.invoke("stella:pi-version:check") as ReturnType<StellaDesktopApi["piVersionCheck"]>,
+  piVersionSync: () => ipcRenderer.invoke("stella:pi-version:sync") as ReturnType<StellaDesktopApi["piVersionSync"]>,
   capabilities: () => ipcRenderer.invoke("stella:capabilities") as Promise<CapabilityHealthSnapshot>,
   retryCapability: (name: CapabilityName) => ipcRenderer.invoke("stella:capability:retry", name) as Promise<CapabilityHealthSnapshot>,
   executionBackendsInitialize: () => ipcRenderer.invoke("stella:execution-backends:initialize") as Promise<ExecutionBackendCatalogSnapshot>,

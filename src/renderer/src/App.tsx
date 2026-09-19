@@ -59,6 +59,8 @@ import { Conversation } from "./components/Conversation";
 import { ExtensionDialog } from "./components/ExtensionDialog";
 import { Inspector, type InspectorTab } from "./components/Inspector";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { PiVersionNotice } from "./components/PiVersionSetting";
+import { usePiVersion } from "./hooks/use-pi-version";
 import { Sidebar, type WorkspaceView } from "./components/Sidebar";
 import { TerminalDrawer } from "./components/TerminalDrawer";
 import { TextPromptDialog } from "./components/TextPromptDialog";
@@ -154,6 +156,7 @@ export function App({ api }: AppProps) {
   const kanban = useKanban(api);
   const capabilities = useCapabilities(api);
   const executionBackends = useExecutionBackends(api);
+  const piVersion = usePiVersion(api);
   const companionGateway = useCompanionGateway(api);
   const { state } = controller;
   const [preferences, setPreferences, preferencesStorageError] = usePreferences();
@@ -458,7 +461,12 @@ export function App({ api }: AppProps) {
   };
 
   const switchSession = async (session: SessionSummary) => {
-    if (session.path === state.bootstrap?.state.sessionFile) return;
+    if (session.path === state.bootstrap?.state.sessionFile) {
+      setWorkspaceView("chat");
+      setSidebarOpen(false);
+      focusComposer();
+      return;
+    }
     await composerDraft.flush();
     const response = await controller.command({ type: "switch_session", sessionPath: session.path }, true);
     if (wasCancelled(responseData(response), "switch_session")) {
@@ -893,6 +901,7 @@ export function App({ api }: AppProps) {
         onSelectFile={(inspection) => { setFilePreview(inspection); if (sessionViews.key) sessionViews.views.selectFile(sessionViews.key, inspection.canonicalPath); }}
         onClose={() => setInspectorOpen(false)}
         onCompact={() => runAction("压缩上下文", compact)}
+        onStopBackground={piReady ? () => runAction("停止后台计算", () => controller.command({ type: "abort" })) : undefined}
         onExport={() => runAction("导出会话", exportSession)}
         onClone={() => runAction("克隆会话", cloneSession)}
         onRename={() => setRenameOpen(true)}
@@ -932,6 +941,7 @@ export function App({ api }: AppProps) {
       }} />}
       {settingsOpen && (
         <SettingsDialog
+          piVersion={{ state: piVersion.state, onCheck: () => void piVersion.check(), onSync: () => void piVersion.sync() }}
           bootstrap={bootstrap}
           preferences={preferences}
           customArtwork={skinArtwork.bySkin}
@@ -964,6 +974,7 @@ export function App({ api }: AppProps) {
         />
       )}
       <ToastStack notices={state.notices} onDismiss={controller.dismissNotice} />
+      {piVersion.notice && !settingsOpen && <PiVersionNotice state={piVersion.state} onSettings={() => { piVersion.dismiss(); openSettings(); }} onDismiss={piVersion.dismiss} />}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { AGENT_THINKING_LEVELS } from "../shared/kanban";
 type JsonRecord = Readonly<Record<string, unknown>>;
 
 const COMMAND_TYPES = new Set([
-  "prompt", "steer", "follow_up", "abort", "new_session", "get_state", "set_model",
+  "prompt", "steer", "follow_up", "abort", "clear_queue", "new_session", "get_state", "set_model",
   "cycle_model", "get_available_models", "set_thinking_level", "cycle_thinking_level",
   "get_available_thinking_levels", "set_steering_mode", "set_follow_up_mode", "compact",
   "set_auto_compaction", "set_auto_retry", "abort_retry", "bash", "abort_bash",
@@ -144,6 +144,7 @@ export function validatedPiCommand(value: unknown): PiCommand {
     case "set_session_name":
       return command({ type, name: requiredString(record.name, "Pi RPC 会话名称") });
     case "abort":
+    case "clear_queue":
     case "get_state":
     case "cycle_model":
     case "get_available_models":

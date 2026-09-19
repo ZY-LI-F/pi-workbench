@@ -2,7 +2,13 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Current source version: **v0.7.1** · Android versionCode: **9**.
+Current source version: **v0.7.2** · Android versionCode: **10**.
+
+The current source pins the official **Pi 0.85.1** runtime. Stella uses one Pi dependency tree and the public SDK/RPC interfaces; no Pi fork or SoL runtime is installed. See the [upgrade verification](docs/testing/pi-0.85.1-upgrade-2026-09-18.md). Previously published installers keep their original bundled version.
+
+**Preferences → Pi version management** compares your local CLI with the bundled Pi at startup. A mismatch offers an update, but only a native confirmation allows npm to install the exact bundled version (including an explicitly disclosed downgrade). Detection checks the executable and global npm prefix; ambiguous installations are reported, never overwritten. The GUI does not require a separate global Pi. **Sol-Pi is not integrated yet**; the settings page states this explicitly, rather than showing an inactive mode switch.
+
+Native reliability maintenance: long session trees now cross IPC as flat nodes and child IDs; usage/context metrics refresh after completed responses during multi-step turns. Stop also terminates supervised local background computation; **Inspector → Activity → Stop Pi and background computation** remains available after a turn ends. Windows uses Job Objects; POSIX tracks an inherited per-runtime marker. Remote/container jobs or processes deliberately escaping that scope require separate verification. See the [design and boundaries](docs/specs/native-runtime-preview-maintenance.md) and [verification record](docs/testing/native-runtime-preview-2026-09-19.md).
 
 > **A native Pi desktop workbench with a local multi-CLI Agent control plane.** Use real Pi conversations, route managed tasks through Pi/Codex/Claude, inspect external CLI activity, and keep Kanban, human approval, artifacts, and automation in one installable application.
 
@@ -24,7 +30,7 @@ This upgrade focuses on the native Pi GUI, without expanding Team or modifying o
 - File previews expose content versions and can append a file reference or selection to the composer. Changed files require an explicit refresh; existing and concurrently edited drafts are preserved.
 - Reading anchors, selected files, and unread attention are retained per session. A saved running observation is not treated as a live process after restart. Receipts live in `native-submissions.json` under application data; view metadata stays in local renderer storage. Neither rewrites Pi JSONL history.
 
-Receipts prove GUI intent and Pi command acceptance, not cross-application exactly-once model execution. Incompatible future formats and write failures are explicit, and existing data is preserved. If a selection inside an isolated HTML/PDF viewer is inaccessible, file-level references remain available without weakening isolation. Windows artifacts are unsigned; macOS still requires platform-specific building, signing, and validation.
+Receipts prove GUI intent and Pi command acceptance, not cross-application exactly-once model execution. Incompatible future formats and write failures are explicit, and existing data is preserved. If a selection inside an isolated HTML/PPTX viewer is inaccessible, file-level references remain available without weakening isolation. Windows artifacts are unsigned; macOS still requires platform-specific building, signing, and validation.
 
 | Surface | What users get | Architectural boundary |
 | --- | --- | --- |
@@ -84,9 +90,9 @@ Supported formats:
 
 - Images: PNG, JPEG, GIF, WebP, AVIF, BMP, and sanitized SVG.
 - Web and text: HTML, Markdown, JSON, CSV, TSV, XML, YAML, and plain text. HTML runs in a script-free sandbox with forms, network requests, external assets, and embedded objects isolated.
-- PDF: rendered by Electron/Chromium's local PDF viewer without an Office plugin.
+- PDF: local PDF.js rendering with selectable text, continuous page scrolling, page navigation and fit-to-width zoom. Fonts, CMaps and decoders are bundled locally; it does not use Chromium's auxiliary text-download/OCR service, execute document scripts, or require an Office plugin. Scanned pages without text are explicitly identified; no OCR is claimed.
 - Word: DOCX is rendered page by page with `docx-preview`, including text, tables, and common styles.
-- PowerPoint: PPTX is converted to isolated HTML slides with `@jvmr/pptx-to-html`; animations, macros, and embedded programs are not executed.
+- PowerPoint: PPTX is converted to isolated HTML slides with `@jvmr/pptx-to-html`. The default fits the whole native-aspect slide to the inspector; manual zoom scrolls the page without scaling the toolbar. Navigate with the page selector, arrows/Page Up/Page Down, or Home/End while the preview is focused. Animations, macros and embedded programs are not executed; complex layouts may differ from PowerPoint. Bold absolute paths in assistant replies are recognized as artifacts.
 - Excel: XLSX/XLSM is rendered with `@office-kit/xlsx`, including worksheets, merged cells, row/column sizing, hidden rows/columns, and common cell styles. Macros are not executed.
 
 Legacy binary DOC/PPT/XLS files are not falsely reported as previewable and can still be opened with a system application. Office parsers are dynamically imported, so ordinary chat startup does not load them. Before every preview, the main process revalidates the canonical path and only reads ordinary files inside the current project, Pi data directory, or Stella application-data directory. Files are never uploaded.
@@ -318,7 +324,7 @@ npm run preview
 
 ## Windows and macOS Installers
 
-Installers bundle `@earendil-works/pi-coding-agent@0.84.2` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path. Codex and Claude are optional external CLIs and are deliberately not bundled.
+Builds from the current source bundle `@earendil-works/pi-coding-agent@0.85.1` and its production dependencies. The Electron main process uses Electron's Node runtime to launch the bundled RPC entry, so recipients do not need a global `pi` command or a particular Pi installation path. Codex and Claude are optional external CLIs and are deliberately not bundled.
 
 Recipient configuration is still read from Pi's standard directory:
 

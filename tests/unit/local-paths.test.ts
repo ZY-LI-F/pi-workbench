@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { extractLocalPaths, normalizeLocalPathCandidate } from "../../src/renderer/src/lib/local-paths";
 
 describe("local path extraction", () => {
+  it("recognizes bold generated PPTX paths with spaces and Chinese names", () => {
+    const path = "C:\\研究 资料\\报告_审定版.pptx";
+    expect(extractLocalPaths(`已生成 **${path}**，请查看。`)).toEqual([path]);
+    expect(extractLocalPaths(`**https://example.com/report.pptx**`)).toEqual([]);
+  });
   it("recognizes descriptive labels without mistaking the label for part of the path", () => {
     expect(extractLocalPaths("参考文件：C:\\project\\README.md\nReport: /Users/stella/report.docx\n交付物：C:\\研究 资料\\报告.md"))
       .toEqual(["C:\\project\\README.md", "/Users/stella/report.docx", "C:\\研究 资料\\报告.md"]);

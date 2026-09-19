@@ -32,6 +32,24 @@ function runtimeApi(overrides: Partial<StellaDesktopApi>): StellaDesktopApi {
 afterEach(() => cleanup());
 
 describe("usePiRuntime error reporting", () => {
+  it("refreshes native metrics during a multi-step turn without replacing messages or waiting for agent_settled", async () => {
+    let emit!: (event: BridgeEvent) => void;
+    const initial = bootstrap("live");
+    const stats = { ...initial.stats, totalMessages: 12, tokens: { ...initial.stats.tokens, cacheRead: 500000 }, contextUsage: { tokens: 20000, percent: 20, contextWindow: 100000 } };
+    const api = runtimeApi({ initialize: async () => initial, onEvent: (listener) => { emit = listener; return () => undefined; },
+      command: vi.fn(async () => ({ type: "response", command: "get_session_stats", success: true, data: stats })), refresh: vi.fn() });
+    const { result } = renderHook(() => usePiRuntime(api));
+    await waitFor(() => expect(result.current.state.phase).toBe("ready"));
+    act(() => {
+      emit({ source: "pi", payload: { type: "agent_start" } });
+      emit({ source: "pi", payload: { type: "message_end", message: { role: "user", content: "live content", timestamp: 0 } } } as BridgeEvent);
+    });
+    await waitFor(() => expect(result.current.state.bootstrap?.stats.tokens.cacheRead).toBe(500000));
+    expect(result.current.state.bootstrap?.stats.contextUsage?.tokens).toBe(20000);
+    expect(result.current.state.streaming).toBe(true);
+    expect(result.current.state.messages).toHaveLength(1);
+    expect(api.refresh).not.toHaveBeenCalled();
+  });
   it("does not overwrite newer streamed content with an older refresh snapshot", async () => {
     let emit!: (event: BridgeEvent) => void;
     let complete!: (snapshot: RuntimeBootstrap) => void;

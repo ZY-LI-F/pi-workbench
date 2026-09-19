@@ -14,8 +14,10 @@ import type { FontSizePreference, Preferences, ThemePreference } from "../hooks/
 import { SKIN_OPTIONS, skinDefinition } from "../lib/skins";
 import { Modal } from "./Modal";
 import { FeatureGuideDialog } from "../features/help/FeatureGuideDialog";
+import { PiVersionSetting, type PiVersionSettingProps } from "./PiVersionSetting";
 
 interface SettingsDialogProps {
+  readonly piVersion?: PiVersionSettingProps;
   readonly bootstrap?: RuntimeBootstrap;
   readonly preferences: Preferences;
   readonly customArtwork: SkinArtworkBySkin;
@@ -171,6 +173,7 @@ function CompanionSetting({
 }
 
 export function SettingsDialog({
+  piVersion,
   bootstrap,
   preferences,
   customArtwork,
@@ -206,6 +209,7 @@ export function SettingsDialog({
     <><Modal title="偏好设置" eyebrow="STELLA SETTINGS" onClose={onClose} className="settings-dialog">
       <div className="settings-scroll">
         <button type="button" className="settings-guide-entry" onClick={() => setGuideOpen(true)}><BookOpen size={26} /><span><strong>功能介绍与操作说明</strong><small>项目看板、任务、Pi 会话与手机连接 · 图文三步上手</small></span><ArrowRight size={18} /></button>
+        {piVersion && <PiVersionSetting {...piVersion} />}
         <section className="settings-section settings-section--skins">
           <div className="settings-section__heading"><span>皮肤</span><small>选择一套完整的视觉性格</small></div>
           <div className="skin-options" role="radiogroup" aria-label="界面皮肤">

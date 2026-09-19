@@ -3,10 +3,11 @@ import { randomUUID } from "node:crypto";
 import { homedir, hostname, tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import {
   ModelRuntime,
   SessionManager,
+  VERSION as PI_VERSION,
   hasTrustRequiringProjectResources,
   loadSkillsFromDir,
   type SessionEntry,
@@ -32,7 +33,6 @@ import type {
   RuntimeBootstrap,
   SessionEntrySummary,
   SessionSummary,
-  SessionTreeSummary,
   SlashCommandSummary,
 } from "../shared/contracts";
 import { CAPABILITY_NAMES, type CapabilityHealthSnapshot, type CapabilityName } from "../shared/capabilities";
@@ -70,6 +70,10 @@ import { PiRpcExecutionAdapter, type PiRpcExecutionRuntimeFactory } from "./exec
 import { CodexExecExecutionAdapter } from "./execution-adapters/codex-exec-execution-adapter";
 import { ClaudePrintExecutionAdapter } from "./execution-adapters/claude-print-execution-adapter";
 import { ExecutionBackendSettingsService } from "./execution-backend-settings-service";
+import { PiVersionService } from "./pi-version-service";
+import { sessionTreeSummary } from "./session-tree-summary";
+import { supervisePiProcess } from "./pi-process-supervisor";
+import { NodeCliDiscovery } from "./node-cli-discovery";
 import { AgentTaskService } from "./agent-task-service";
 import { AgentSkillService } from "./agent-skill-service";
 import { AutopilotService } from "./autopilot-service";
@@ -150,6 +154,7 @@ import { CompanionCommandService, type CompanionAbortExecutionInput } from "./co
 import { writeVerifiedClipboardText } from "./clipboard-service";
 
 const rpcEntryPath = fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent/rpc-entry"));
+const runtimeResources = app.isPackaged ? join(process.resourcesPath, "runtime") : join(app.getAppPath(), "resources", "runtime");
 const piRpcRequestTimeoutMs = piRpcRequestTimeoutFromEnvironment(process.env.STELLA_PI_RPC_TIMEOUT_MS);
 const piRpcCompactionTimeoutMs = piRpcCompactionTimeoutFromEnvironment(process.env.STELLA_PI_COMPACTION_TIMEOUT_MS);
 const piRpcMaxRecordBytes = piRpcMaxRecordBytesFromEnvironment(process.env.STELLA_PI_RPC_MAX_RECORD_BYTES);
@@ -190,10 +195,6 @@ interface RpcEntriesData {
   readonly leafId: string | null;
 }
 
-interface RpcTreeData {
-  readonly tree: readonly Record<string, unknown>[];
-  readonly leafId: string | null;
-}
 
 function requiredString(value: unknown, label: string): string {
   if (typeof value !== "string" || value.trim().length === 0) throw new Error(`${label} 必须是非空字符串`);
@@ -227,6 +228,25 @@ function validatedExtensionResponse(value: unknown): PiExtensionResponse {
 }
 
 let mainWindow: BrowserWindow | null = null;
+const piVersionService = new PiVersionService({
+  guiVersion: app.getVersion(),
+  bundledVersion: PI_VERSION,
+  discovery: new NodeCliDiscovery({ excludedDirectories: [join(app.getAppPath(), "node_modules", ".bin")] }),
+  confirm: async (snapshot) => {
+    if (!mainWindow || mainWindow.isDestroyed()) throw new Error("主窗口不可用，无法确认更新 Pi");
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "question",
+      title: "同步本机 Pi 版本",
+      message: `是否将本机 Pi ${snapshot.localVersion} 同步到 ${snapshot.bundledVersion}？`,
+      detail: `GUI ${snapshot.guiVersion} 内置 Pi ${snapshot.bundledVersion}。\n\n命令位置：${snapshot.localPath}\n安装目录：${snapshot.installPrefix}\n\n将通过 npm 安装精确版本，不使用 latest。本机版本较高时会降级到此版本。请先退出终端中正在运行的 Pi。\n\nGUI 内置 Pi 不会改变；不会删除模型配置、Skills 或会话。需要联网及此目录的写入权限，不会自动提权。`,
+      buttons: ["暂不更新", "同步到对应版本"],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+    return response === 1;
+  },
+});
 let currentProject: CurrentProject | null = null;
 // Recovery target from the interrupted native process, never an instruction to replay input.
 let interruptedNativeSession: RuntimeScope | undefined;
@@ -308,7 +328,9 @@ function validatedCapabilityName(value: unknown): CapabilityName {
 const runtime = new PiRpcRuntime({
   executablePath: process.execPath,
   rpcEntryPath,
-  spawnProcess: (command, args, options) => spawn(command, [...args], options),
+  launcherPath: join(runtimeResources, "pi-launcher.cjs"),
+  superviseProcess: (pid, marker) => supervisePiProcess(pid, marker, runtimeResources),
+  spawnProcess: (command, args, options) => spawn(command, [...args], options) as ChildProcessWithoutNullStreams,
   emitPiEvent: (event, scope) => {
     nativeDiagnostics.event(event, scope);
     interactiveCommandRouter?.handlePiEvent(event);
@@ -340,7 +362,9 @@ const agentTaskRuntimeFactory: PiRpcExecutionRuntimeFactory = Object.freeze({
   create: (callbacks: Parameters<PiRpcExecutionRuntimeFactory["create"]>[0]) => new PiRpcRuntime({
     executablePath: process.execPath,
     rpcEntryPath,
-    spawnProcess: (command, args, options) => spawn(command, [...args], options),
+    launcherPath: join(runtimeResources, "pi-launcher.cjs"),
+    superviseProcess: (pid, marker) => supervisePiProcess(pid, marker, runtimeResources),
+    spawnProcess: (command, args, options) => spawn(command, [...args], options) as ChildProcessWithoutNullStreams,
     emitPiEvent: callbacks.emitPiEvent,
     emitRuntimeSignal: callbacks.emitRuntimeSignal,
     requestTimeoutMs: piRpcRequestTimeoutMs,
@@ -900,22 +924,6 @@ function mapSessionEntry(entry: Record<string, unknown>): SessionEntrySummary {
   });
 }
 
-function mapTreeNode(node: Record<string, unknown>): SessionTreeSummary {
-  if (typeof node.entry !== "object" || node.entry === null) {
-    throw new Error("Pi RPC 返回的会话树节点缺少 entry");
-  }
-  const children = Array.isArray(node.children)
-    ? node.children.map((child) => {
-        if (typeof child !== "object" || child === null) throw new Error("Pi RPC 返回了无效的会话树子节点");
-        return mapTreeNode(child as Record<string, unknown>);
-      })
-    : [];
-  return Object.freeze({
-    entry: mapSessionEntry(node.entry as Record<string, unknown>),
-    children: Object.freeze(children),
-    label: typeof node.label === "string" ? node.label : undefined,
-  });
-}
 
 function mapSession(session: Awaited<ReturnType<typeof SessionManager.list>>[number]): SessionSummary {
   return Object.freeze({
@@ -949,13 +957,6 @@ async function readGitBranch(cwd: string): Promise<string | undefined> {
   }
 }
 
-async function getPiVersion(): Promise<string> {
-  const packagePath = join(dirname(rpcEntryPath), "..", "package.json");
-  const parsed = JSON.parse(await readFile(packagePath, "utf8")) as Record<string, unknown>;
-  if (typeof parsed.version !== "string") throw new Error(`${packagePath} 缺少 version`);
-  return parsed.version;
-}
-
 async function getProjectMeta(project: CurrentProject): Promise<ProjectMeta> {
   return Object.freeze({
     cwd: project.cwd,
@@ -980,7 +981,7 @@ async function hydrate(): Promise<RuntimeBootstrap> {
   const scope = runtime.scope;
   if (!scope) throw new Error("Pi Runtime 没有可读取的运行代际");
 
-  const [stateResponse, messagesResponse, modelsResponse, thinkingLevelsResponse, commandsResponse, statsResponse, entriesResponse, treeResponse] =
+  const [stateResponse, messagesResponse, modelsResponse, thinkingLevelsResponse, commandsResponse, statsResponse, entriesResponse] =
     await Promise.all([
       runtime.send({ type: "get_state" }),
       runtime.send({ type: "get_messages" }),
@@ -989,7 +990,6 @@ async function hydrate(): Promise<RuntimeBootstrap> {
       runtime.send({ type: "get_commands" }),
       runtime.send({ type: "get_session_stats" }),
       runtime.send({ type: "get_entries" }),
-      runtime.send({ type: "get_tree" }),
     ]);
 
   const state = dataFromResponse<RuntimeBootstrap["state"]>(stateResponse, "get_state");
@@ -999,12 +999,11 @@ async function hydrate(): Promise<RuntimeBootstrap> {
   const commands = dataFromResponse<RpcCommandsData>(commandsResponse, "get_commands").commands.map(mapCommand);
   const stats = dataFromResponse<RuntimeBootstrap["stats"]>(statsResponse, "get_session_stats");
   const entriesData = dataFromResponse<RpcEntriesData>(entriesResponse, "get_entries");
-  const treeData = dataFromResponse<RpcTreeData>(treeResponse, "get_tree");
-  const [sessions, persisted, project, piVersion] = await Promise.all([
+  const entries = Object.freeze(entriesData.entries.map(mapSessionEntry));
+  const [sessions, persisted, project] = await Promise.all([
     SessionManager.list(selectedProject.cwd),
     stateStore.read(),
     getProjectMeta(selectedProject),
-    getPiVersion(),
   ]);
 
   if (currentProject !== selectedProject || !runtime.scope || !sameRuntimeScope(scope, runtime.scope)) {
@@ -1023,6 +1022,7 @@ async function hydrate(): Promise<RuntimeBootstrap> {
     scope: { ...scope, sessionId: state.sessionId, sessionFile: state.sessionFile },
     messageSequence: runtime.responseScope(messagesResponse)?.sequence,
     stateSequence: runtime.responseScope(stateResponse)?.sequence,
+    statsSequence: runtime.responseScope(statsResponse)?.sequence,
     submissions,
     submissionError,
     project,
@@ -1034,12 +1034,10 @@ async function hydrate(): Promise<RuntimeBootstrap> {
     commands: Object.freeze(commands),
     sessions: visibleInteractiveSessions(sessions.map(mapSession)),
     stats,
-    entries: Object.freeze(entriesData.entries.map(mapSessionEntry)),
-    tree: Object.freeze(
-      treeData.tree.map((node) => mapTreeNode(node)),
-    ),
-    leafId: treeData.leafId ?? entriesData.leafId,
-    piVersion,
+    entries,
+    tree: sessionTreeSummary(entries, entriesData.entries),
+    leafId: entriesData.leafId,
+    piVersion: PI_VERSION,
   });
 }
 
@@ -1534,7 +1532,6 @@ async function initializeTaskCapability(): Promise<void> {
       emitChanged: emitSnapshot,
       projectIdentity: pathComparisonKey,
     });
-    const piBackendVersion = await getPiVersion();
     executionBackendRegistry = new ExecutionBackendRegistry({
       backends: [
         new PiRpcExecutionAdapter({
@@ -1542,7 +1539,7 @@ async function initializeTaskCapability(): Promise<void> {
           globalModel: () => globalModelSelection,
           coordinatorExtensionPath: join(app.getAppPath(), "resources", "extensions", "coordinator-action.ts"),
           skills: agentSkillService,
-          backendVersion: () => piBackendVersion,
+          backendVersion: () => PI_VERSION,
         }),
         new CodexExecExecutionAdapter({ copyText: (value) => clipboard.writeText(value) }),
         new ClaudePrintExecutionAdapter({ copyText: (value) => clipboard.writeText(value) }),
@@ -1698,6 +1695,14 @@ async function companionGatewayService(): Promise<CompanionGateway> {
 
 function registerIpcHandlers(): void {
   ipcMain.handle("stella:capabilities", () => capabilityHealth.snapshot());
+  ipcMain.handle("stella:pi-version:check", (event) => {
+    assertMainWindowFrame(event);
+    return piVersionService.check();
+  });
+  ipcMain.handle("stella:pi-version:sync", (event) => {
+    assertMainWindowFrame(event);
+    return piVersionService.sync();
+  });
   ipcMain.handle("stella:capability:retry", (_event, name: unknown) => retryCapability(validatedCapabilityName(name)));
   ipcMain.handle("stella:execution-backends:initialize", async () => (await executionBackendSettings()).snapshot());
   ipcMain.handle("stella:execution-backends:configure", async (_event, input: unknown) => {
@@ -1752,7 +1757,7 @@ function registerIpcHandlers(): void {
       return interactiveCommandRouter.send(command, currentProject.cwd);
     };
     // Cancellation must interrupt a long bash/compaction; it cannot wait behind it.
-    return command.type === "abort" || command.type === "abort_bash" || command.type === "abort_retry"
+    return command.type === "abort" || command.type === "abort_bash" || command.type === "abort_retry" || command.type === "get_session_stats"
       ? execute() : nativeOperations.run(execute);
   });
   ipcMain.handle("stella:native-submit", (event, value: unknown) => nativeOperations.run(async () => {
@@ -1772,7 +1777,7 @@ function registerIpcHandlers(): void {
     const layout = validateDiagnosticLayout(value);
     const scope = runtime.scope ?? interruptedNativeSession;
     const receipts = scope?.sessionId ? await nativeSubmissionService.list(scope.sessionId) : [];
-    const snapshot = { ...nativeDiagnostics.snapshot(app.getVersion(), await getPiVersion(), scope, layout, receipts), runtimeConnected: runtime.running };
+    const snapshot = { ...nativeDiagnostics.snapshot(app.getVersion(), PI_VERSION, scope, layout, receipts), runtimeConnected: runtime.running };
     const choice = await dialog.showSaveDialog({ title: "导出本机诊断（不包含对话正文或密钥）", defaultPath: `stella-diagnostics-${new Date().toISOString().replace(/[:.]/g, "-")}.json`, filters: [{ name: "JSON 诊断", extensions: ["json"] }] });
     if (choice.canceled || !choice.filePath) return null;
     await new AtomicJsonFile(choice.filePath).write(snapshot);

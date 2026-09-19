@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { nativeFixture, protocolReply } from "./helpers/native-fixture";
 
+const packageMetadata = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+
 test("v0.6 native receipts, duplicate delivery, file references and private diagnostics work through Electron", async ({}, testInfo) => {
   let projectDir = "";
   const fixture = await nativeFixture(testInfo, (request, response) => protocolReply(response, request.model,
@@ -59,7 +61,9 @@ test("v0.6 native receipts, duplicate delivery, file references and private diag
     const diagnostic = await readFile(outputPath, "utf8");
     expect(diagnostic).not.toContain("PRIVATE_NATIVE_PROMPT"); expect(diagnostic).not.toContain("stella-e2e-secret");
     const parsed = JSON.parse(diagnostic);
-    expect(parsed.appVersion).toBe("0.6.0"); expect(parsed.submissions).toHaveLength(2);
+    expect(parsed.appVersion).toBe(packageMetadata.version);
+    expect(parsed.piVersion).toBe(packageMetadata.dependencies["@earendil-works/pi-coding-agent"]);
+    expect(parsed.submissions).toHaveLength(2);
     expect(parsed.requests.some((request: { id: string }) => request.id === snapshot.submissions![0]!.id)).toBe(true);
     await window.screenshot({ path: testInfo.outputPath("native-upgrade-diagnostics.png"), animations: "disabled" });
 

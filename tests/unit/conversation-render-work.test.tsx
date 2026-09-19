@@ -32,5 +32,7 @@ describe("native conversation rendering work", () => {
     expect(initial).toBe(81);
     expect(metrics.parses - initial).toBe(40);
     expect(view.container.querySelectorAll(".conversation-entry")).toHaveLength(81);
-  });
+    // Work is bounded by parser-call assertions, not a machine-dependent jsdom
+    // wall-clock budget; 80 tables + 40 renders exceed 5s on loaded Windows hosts.
+  }, 20_000);
 });

@@ -53,6 +53,10 @@ export function extractLocalPaths(markdown: string): readonly string[] {
   for (const match of markdown.matchAll(/["']([A-Za-z]:[\\/][^"'\r\n]+)["']/g)) {
     collectCandidate(candidates, match[1] ?? "");
   }
+  // Generated deliverables are often emphasized. The markup is not part of the path.
+  for (const match of markdown.matchAll(/\*\*([^\r\n]+?)\*\*|__([^\r\n]+?)__/g)) {
+    collectCandidate(candidates, match[1] ?? match[2] ?? "");
+  }
   for (const line of markdown.split(/\r?\n/)) collectCandidate(candidates, line);
 
   const unique = new Map<string, string>();

@@ -411,7 +411,7 @@ export function Composer({
             <span className="composer__signature" aria-label="Stella 签名">Stella</span>
             <span className="composer__hint">Enter 发送 · Shift Enter 换行</span>
             {streaming ? (
-              <button type="button" className="send-button send-button--stop" aria-label="停止" onClick={onStop}><Square size={15} fill="currentColor" /></button>
+              <button type="button" className="send-button send-button--stop" aria-label="停止" title="停止 Pi 与此运行实例派生的本机后台计算；远程或容器任务需另行核查" onClick={onStop}><Square size={15} fill="currentColor" /></button>
             ) : (
               <button type="button" className="send-button" disabled={sending || sendDisabled || (!draft.trim() && images.length === 0)} aria-label="发送" onClick={() => void submit()}><ArrowUp size={18} /></button>
             )}

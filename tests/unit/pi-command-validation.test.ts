@@ -46,4 +46,9 @@ describe("validatedPiCommand", () => {
     expect(() => validatedPiCommand({ type: "launch_everything" })).toThrow("不支持的 Pi RPC 命令");
     expect(() => validatedPiCommand(null)).toThrow("必须是对象");
   });
+
+  it("accepts the official queue-clearing command without forwarding renderer-owned fields", () => {
+    expect(validatedPiCommand({ type: "clear_queue", id: "untrusted", message: "not forwarded" }))
+      .toEqual({ type: "clear_queue" });
+  });
 });

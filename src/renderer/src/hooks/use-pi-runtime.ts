@@ -15,6 +15,7 @@ import {
   type RuntimeUiState,
 } from "../lib/runtime-state";
 import { OrderedEventBatch } from "../lib/ordered-event-batch";
+import type { RuntimeScope } from "@shared/runtime-scope";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
@@ -85,6 +86,30 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
 
   useEffect(() => {
     let active = true;
+    let metricsTimer: ReturnType<typeof setTimeout> | undefined;
+    let metricsBusy = false;
+    let metricsRequested = false;
+    let metricsScope: RuntimeScope | undefined;
+    const refreshMetrics = async () => {
+      metricsTimer = undefined;
+      if (!active || metricsBusy) return;
+      metricsBusy = true;
+      try {
+        while (active && metricsRequested) {
+          metricsRequested = false;
+          const scope = metricsScope;
+          const epoch = bootstrapRequestEpoch.current;
+          try {
+            const result = await api.command({ type: "get_session_stats" });
+            if (!result.success) throw new Error(result.error);
+            if (result.command !== "get_session_stats") throw new Error("Pi 返回了错误的统计响应类型");
+            if (active && epoch === bootstrapRequestEpoch.current) dispatch({ type: "SESSION_METRICS", stats: result.data, scope });
+          } catch (cause) {
+            if (active && epoch === bootstrapRequestEpoch.current) dispatch({ type: "SESSION_METRICS_FAILED", error: errorMessage(cause), scope });
+          }
+        }
+      } finally { metricsBusy = false; }
+    };
     activeRef.current = true;
     const batch = new OrderedEventBatch<BridgeEvent>((events) => {
       if (!active) return;
@@ -101,6 +126,11 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
     flushEvents.current = () => batch.flush();
     const unsubscribe = api.onEvent((event: BridgeEvent) => {
       if (!active) return;
+      if (event.source === "pi" && ["message_end", "compaction_end", "agent_settled"].includes(event.payload.type)) {
+        metricsRequested = true;
+        metricsScope = event.scope;
+        if (!metricsBusy && metricsTimer === undefined) metricsTimer = setTimeout(() => void refreshMetrics(), 200);
+      }
       if (event.source === "pi") liveRevision.current += 1;
       batch.push(event);
       if (event.source === "runtime" || (event.source === "pi" && (event.payload.type === "extension_ui_request" || event.payload.type === "agent_settled"))) batch.flush();
@@ -123,6 +153,7 @@ export function usePiRuntime(api: StellaDesktopApi): PiRuntimeController {
       active = false;
       activeRef.current = false;
       batch.dispose();
+      if (metricsTimer !== undefined) clearTimeout(metricsTimer);
       flushEvents.current = () => undefined;
       unsubscribe();
     };

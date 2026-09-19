@@ -4,8 +4,10 @@ import { PassThrough, Writable } from "node:stream";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { afterEach, describe, expect, it } from "vitest";
 import { PiRpcRuntime, piRpcCompactionTimeoutFromEnvironment, piRpcMaxRecordBytesFromEnvironment, piRpcRequestTimeoutFromEnvironment, type PiRuntimeStartOptions } from "../../src/main/pi-rpc-runtime";
+import type { PiProcessSupervisor } from "../../src/main/pi-process-supervisor";
 
 class FakeRpcProcess extends EventEmitter {
+  readonly pid = 12345;
   readonly stdout = new PassThrough();
   readonly stderr = new PassThrough();
   readonly requests: Record<string, unknown>[] = [];
@@ -51,6 +53,7 @@ async function startedRuntime(
   maxProtocolRecordBytes?: number,
   startOptions: PiRuntimeStartOptions = { cwd: process.cwd(), trusted: false },
   compactionTimeoutMs?: number,
+  supervisor?: PiProcessSupervisor,
 ) {
   const child = new FakeRpcProcess();
   const signals: unknown[] = [];
@@ -69,6 +72,7 @@ async function startedRuntime(
     requestTimeoutMs: timeout,
     compactionTimeoutMs,
     maxProtocolRecordBytes,
+    ...(supervisor ? { superviseProcess: async () => supervisor } : {}),
   });
   runtimes.push(runtime);
   await runtime.start(startOptions);
@@ -76,6 +80,28 @@ async function startedRuntime(
 }
 
 describe("PiRpcRuntime request boundaries", () => {
+  it("does not report Pi stopped when Pi rejects abort even if its children were stopped", async () => {
+    const { child, runtime, signals } = await startedRuntime(5_000, undefined, undefined, undefined, {
+      stopChildren: async () => 2, close: async () => undefined,
+    });
+    const stopping = runtime.send({ type: "abort" });
+    const request = child.requests.at(-1)!;
+    child.stdout.write(`${JSON.stringify({ type: "response", id: request.id, command: "abort", success: false, error: "Abort rejected" })}\n`);
+    await expect(stopping).rejects.toThrow("Abort rejected");
+    expect(signals).not.toContainEqual(expect.objectContaining({ type: "background_stopped" }));
+  });
+
+  it("exposes background termination failure even when Pi acknowledges abort", async () => {
+    const { child, runtime, signals } = await startedRuntime(5_000, undefined, undefined, undefined, {
+      stopChildren: async () => { throw new Error("Termination denied"); }, close: async () => undefined,
+    });
+    const stopping = runtime.send({ type: "abort" });
+    const request = child.requests.at(-1)!;
+    child.stdout.write(`${JSON.stringify({ type: "response", id: request.id, command: "abort", success: true })}\n`);
+    await expect(stopping).rejects.toThrow("无法确认本机后台计算已停止");
+    expect(signals).not.toContainEqual(expect.objectContaining({ type: "background_stopped" }));
+  });
+
   it("waits for protocol-failure termination before a stop or replacement start completes", async () => {
     const children: FakeRpcProcess[] = [];
     const runtime = new PiRpcRuntime({

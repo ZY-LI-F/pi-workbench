@@ -7,15 +7,16 @@ import { join } from "node:path";
 export interface ProtocolRequest {
   readonly model: string;
   readonly messages: readonly { readonly role: string; readonly content?: unknown; readonly tool_call_id?: string }[];
+  readonly tools?: readonly { readonly type: string; readonly function: { readonly name: string } }[];
 }
 
-export function protocolReply(response: ServerResponse, model: string, text: string, tool?: { readonly id: string; readonly name: string; readonly args: unknown }, promptTokens = 400) {
+export function protocolReply(response: ServerResponse, model: string, text: string, tool?: { readonly id: string; readonly name: string; readonly args: unknown }, promptTokens: number | null = 400) {
   const base = { id: "chatcmpl-test-fixture", object: "chat.completion.chunk", created: 1, model };
   const delta = tool ? { role: "assistant", tool_calls: [{ index: 0, id: tool.id, type: "function", function: { name: tool.name, arguments: JSON.stringify(tool.args) } }] } : { role: "assistant", content: text };
   response.writeHead(200, { "content-type": "text/event-stream" });
   response.end([
     `data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason: null }] })}`, "",
-    `data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta: {}, finish_reason: tool ? "tool_calls" : "stop" }], usage: { prompt_tokens: promptTokens, completion_tokens: 100, total_tokens: promptTokens + 100 } })}`, "",
+    `data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta: {}, finish_reason: tool ? "tool_calls" : "stop" }], ...(promptTokens === null ? {} : { usage: { prompt_tokens: promptTokens, completion_tokens: 100, total_tokens: promptTokens + 100 } }) })}`, "",
     "data: [DONE]", "", "",
   ].join("\n"));
 }
@@ -101,6 +102,10 @@ export async function nativeFixture(testInfo: TestInfo, respond = (request: Prot
       await window.waitForLoadState("domcontentloaded");
       await expect(window.locator(".app-shell, .startup-screen--error")).toBeVisible({ timeout: 45_000 });
       if (await window.locator(".startup-screen--error").isVisible()) throw new Error(await window.locator(".startup-screen--error").innerText());
+      // Detection is read-only. Do not update the developer's global Pi during E2E.
+      await window.evaluate(() => window.stella.piVersionCheck());
+      const versionNotice = window.getByRole("status", { name: "Pi 版本不一致" });
+      if (await versionNotice.isVisible()) await versionNotice.getByRole("button", { name: "暂不更新", exact: true }).click();
       const openChat = async () => {
         await window.locator(".sidebar").getByRole("tab", { name: "PI 原生工作台", exact: true }).click();
         await window.getByRole("button", { name: "当前会话", exact: true }).click();

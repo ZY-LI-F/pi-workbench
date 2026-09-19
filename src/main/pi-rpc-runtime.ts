@@ -6,16 +6,19 @@ import type { AgentThinkingLevel } from "../shared/kanban";
 import { appendDiagnosticText } from "../shared/diagnostics";
 import type { RuntimeScope } from "../shared/runtime-scope";
 import type { NativeRequestTrace } from "../shared/native-diagnostics";
+import type { PiProcessSupervisor } from "./pi-process-supervisor";
 
 type SpawnProcess = (
   command: string,
   args: readonly string[],
-  options: SpawnOptionsWithoutStdio,
+  options: Omit<SpawnOptionsWithoutStdio, "stdio"> & { readonly stdio?: ("pipe" | "ipc")[] },
 ) => ChildProcessWithoutNullStreams;
 
 interface RuntimeDependencies {
   readonly executablePath: string;
   readonly rpcEntryPath: string;
+  readonly launcherPath?: string;
+  readonly superviseProcess?: (pid: number, marker: string) => Promise<PiProcessSupervisor>;
   readonly spawnProcess: SpawnProcess;
   readonly emitPiEvent: (event: unknown, scope: RuntimeScope) => void;
   readonly emitRuntimeSignal: (event: RuntimeSignal, scope: RuntimeScope) => void;
@@ -71,6 +74,8 @@ interface ProcessContext {
   sessionId?: string;
   sessionFile?: string;
   stopPromise?: Promise<void>;
+  supervisor?: PiProcessSupervisor;
+  abortPromise?: Promise<PiResponse>;
 }
 
 /** A negative Pi response is authoritative rejection, unlike a lost transport response. */
@@ -161,7 +166,7 @@ export class PiRpcRuntime {
     await this.#termination;
     if (this.#context) await this.#stopContext(this.#context);
 
-    const args: string[] = [this.#dependencies.rpcEntryPath, options.trusted ? "--approve" : "--no-approve"];
+    const args: string[] = [...(this.#dependencies.launcherPath ? [this.#dependencies.launcherPath] : []), this.#dependencies.rpcEntryPath, options.trusted ? "--approve" : "--no-approve"];
     if (options.sessionPath) args.push("--session", options.sessionPath);
     else if (options.sessionId) args.push("--session-id", options.sessionId);
     if (options.sessionName) args.push("--name", options.sessionName);
@@ -178,10 +183,12 @@ export class PiRpcRuntime {
     if (options.disablePromptTemplates) args.push("--no-prompt-templates");
     if (options.disableContextFiles) args.push("--no-context-files");
     for (const extension of options.extensions ?? []) args.push("--extension", extension);
+    const processMarker = randomUUID();
     const child = this.#dependencies.spawnProcess(this.#dependencies.executablePath, args, {
       cwd: options.cwd,
-      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1", STELLA_PI_PROCESS_SCOPE: processMarker },
       windowsHide: true,
+      ...(this.#dependencies.launcherPath ? { stdio: ["pipe", "pipe", "pipe", "ipc"] as ("pipe" | "ipc")[] } : {}),
     });
     const context: ProcessContext = {
       child, generation: randomUUID(), cwd: options.cwd, pending: new Map(),
@@ -206,12 +213,23 @@ export class PiRpcRuntime {
       this.#rejectPending(context, new Error(`Pi RPC 已退出 (code=${String(code)}, signal=${String(signal)})${context.stderrBuffer ? `\n${context.stderrBuffer}` : ""}`));
       context.retired = true;
       if (this.#context === context) this.#context = null;
+      if (context.supervisor) {
+        this.#termination = context.supervisor.close();
+        void this.#termination.catch((cause: unknown) => this.#signal(context, { type: "runtime_stderr", message: `后台进程清理失败：${String(cause)}` }));
+      }
     });
 
     try {
       await new Promise<void>((resolve, reject) => {
         child.once("spawn", () => { context.spawned = true; resolve(); });
         child.once("error", reject);
+      });
+      if (this.#dependencies.superviseProcess) {
+        if (!child.pid) throw new Error("Pi 未返回可监管的进程 PID");
+        context.supervisor = await this.#dependencies.superviseProcess(child.pid, processMarker);
+      }
+      if (this.#dependencies.launcherPath) await new Promise<void>((resolve, reject) => {
+        child.send({ type: "stella:start" }, (error: Error | null) => error ? reject(error) : resolve());
       });
       await this.#send(context, { type: "get_state" });
     } catch (cause) {
@@ -254,6 +272,7 @@ export class PiRpcRuntime {
       child.once("error", () => { clearTimeout(timeout); resolve(); });
       child.kill("SIGTERM");
     });
+    await context.supervisor?.close();
   }
 
   async abortAndStop(): Promise<void> {
@@ -272,6 +291,22 @@ export class PiRpcRuntime {
   send(command: PiCommand, requestId?: string): Promise<PiResponse> {
     const context = this.#context;
     if (!context) throw new Error("Pi RPC 未运行");
+    if ((command.type === "abort" || command.type === "abort_bash") && context.supervisor) {
+      if (context.abortPromise) return context.abortPromise;
+      context.abortPromise = (async () => {
+        const response = this.#send(context, command, requestId);
+        // Observe both immediately: termination may finish before Pi acknowledges the abort.
+        const [result, stopped] = await Promise.allSettled([response, context.supervisor!.stopChildren()]);
+        if (stopped.status === "rejected") throw new Error(`无法确认本机后台计算已停止：${String(stopped.reason)}`);
+        if (result.status === "rejected") throw result.reason;
+        this.#signal(context, { type: "background_stopped", count: stopped.value });
+        return result.value;
+      })().finally(() => { context.abortPromise = undefined; });
+      return context.abortPromise;
+    }
+    if (context.abortPromise && ["prompt", "steer", "follow_up", "bash", "powershell", "new_session", "switch_session"].includes(command.type)) {
+      return context.abortPromise.then(() => this.#send(context, command, requestId));
+    }
     return this.#send(context, command, requestId);
   }
 

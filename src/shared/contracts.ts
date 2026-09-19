@@ -26,6 +26,7 @@ import type {
   UpdateSquadInput,
 } from "./kanban";
 import type { CapabilityHealthSnapshot, CapabilityName } from "./capabilities";
+import type { PiVersionSnapshot, PiVersionSyncResult } from "./pi-version";
 import type {
   ConfigureExecutionBackendInput,
   ExecutionBackendCatalogSnapshot,
@@ -133,7 +134,8 @@ export interface SessionEntrySummary {
 
 export interface SessionTreeSummary {
   readonly entry: SessionEntrySummary;
-  readonly children: readonly SessionTreeSummary[];
+  /** Flat IDs keep long sessions below Electron contextBridge's nesting limit. */
+  readonly children: readonly string[];
   readonly label?: string;
 }
 
@@ -218,6 +220,8 @@ export interface RuntimeBootstrap {
   readonly scope?: RuntimeScope;
   readonly messageSequence?: number;
   readonly stateSequence?: number;
+  readonly statsSequence?: number;
+  readonly statsError?: string;
   readonly submissions?: readonly NativeSubmissionReceipt[];
   readonly submissionError?: string;
   readonly project: ProjectMeta;
@@ -236,6 +240,7 @@ export interface RuntimeBootstrap {
 }
 
 export type RuntimeSignal =
+  | { readonly type: "background_stopped"; readonly count: number }
   | { readonly type: "runtime_starting"; readonly cwd: string }
   | { readonly type: "runtime_ready"; readonly cwd: string }
   | { readonly type: "runtime_stderr"; readonly message: string }
@@ -252,6 +257,8 @@ export type BridgeEvent =
   | { readonly source: "companion"; readonly payload: { readonly type: "gateway-status"; readonly status: CompanionGatewayStatus } };
 
 export interface StellaDesktopApi {
+  piVersionCheck(): Promise<PiVersionSnapshot>;
+  piVersionSync(): Promise<PiVersionSyncResult>;
   capabilities(): Promise<CapabilityHealthSnapshot>;
   retryCapability(name: CapabilityName): Promise<CapabilityHealthSnapshot>;
   executionBackendsInitialize(): Promise<ExecutionBackendCatalogSnapshot>;

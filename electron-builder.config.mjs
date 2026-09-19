@@ -42,6 +42,7 @@ export default {
     "!out/**/*.map",
   ],
   asar: true,
+  extraResources: [{ from: "resources/runtime", to: "runtime" }],
   asarUnpack: [
     "node_modules/@earendil-works/**/*",
     "node_modules/@silvia-odwyer/photon-node/**/*",

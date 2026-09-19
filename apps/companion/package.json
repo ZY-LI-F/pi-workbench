@@ -1,7 +1,7 @@
 {
   "name": "@stella/companion",
-  "version": "0.7.1",
-  "androidVersionCode": 9,
+  "version": "0.7.2",
+  "androidVersionCode": 10,
   "private": true,
   "type": "module",
   "scripts": {

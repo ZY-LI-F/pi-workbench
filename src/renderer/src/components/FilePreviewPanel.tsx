@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Copy,
   Ellipsis,
   ExternalLink,
@@ -24,7 +22,9 @@ import type { LocalFilePreviewData, LocalFilePreviewKind } from "@shared/file-pr
 import type { LocalPathInspection } from "@shared/local-path";
 import type { StellaDesktopApi } from "@shared/contracts";
 import type { SessionFileReference } from "../lib/session-files";
-import { normalizePptxRelationshipTargets } from "../lib/pptx-package";
+import { secureHtmlDocument } from "../lib/html-preview";
+import { PptxPreview } from "./PptxPreview";
+import { PdfPreview } from "./PdfPreview";
 import { SpreadsheetPreview } from "./SpreadsheetPreview";
 import { fileReferenceText } from "../lib/file-reference";
 
@@ -44,19 +44,6 @@ const PREVIEW_LABELS: Readonly<Record<LocalFilePreviewKind, string>> = Object.fr
   pptx: "PowerPoint",
   spreadsheet: "Excel",
 });
-
-const HTML_PREVIEW_CSP = [
-  "default-src 'none'",
-  "img-src data: blob:",
-  "style-src 'unsafe-inline'",
-  "font-src data:",
-  "media-src data: blob:",
-  "connect-src 'none'",
-  "frame-src 'none'",
-  "object-src 'none'",
-  "form-action 'none'",
-  "base-uri 'none'",
-].join("; ");
 
 function errorMessage(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause);
@@ -87,24 +74,6 @@ function prettyText(data: LocalFilePreviewData): string {
   } catch {
     return source;
   }
-}
-
-function secureHtmlDocument(source: string, extraStyle = ""): string {
-  const document = new DOMParser().parseFromString(source, "text/html");
-  document.querySelectorAll('meta[http-equiv="Content-Security-Policy"], base').forEach((node) => node.remove());
-  const policy = document.createElement("meta");
-  policy.httpEquiv = "Content-Security-Policy";
-  policy.content = HTML_PREVIEW_CSP;
-  document.head.prepend(policy);
-  const charset = document.createElement("meta");
-  charset.setAttribute("charset", "UTF-8");
-  document.head.prepend(charset);
-  if (extraStyle) {
-    const style = document.createElement("style");
-    style.textContent = extraStyle;
-    document.head.append(style);
-  }
-  return `<!doctype html>${document.documentElement.outerHTML}`;
 }
 
 function sanitizedSvg(source: string): string {
@@ -148,13 +117,6 @@ function ImagePreview({ data }: { readonly data: LocalFilePreviewData }) {
   return url
     ? <div className="file-preview__image"><img src={url} alt={data.name} /></div>
     : <LoadingPreview label="正在载入图片" />;
-}
-
-function PdfPreview({ data }: { readonly data: LocalFilePreviewData }) {
-  const url = useObjectUrl(data.bytes, data.mimeType);
-  return url
-    ? <iframe className="file-preview__pdf" title={`${data.name} PDF 预览`} src={url} />
-    : <LoadingPreview label="正在载入 PDF" />;
 }
 
 function HtmlPreview({ data }: { readonly data: LocalFilePreviewData }) {
@@ -230,53 +192,6 @@ function DocxPreview({ data }: { readonly data: LocalFilePreviewData }) {
       {state === "loading" && <LoadingPreview label="正在解析 Word 文档" />}
       {typeof state === "object" && <div className="file-preview__error" role="alert"><strong>Word 预览失败</strong><p>{state.error}</p></div>}
       <div className={state === "ready" ? "file-preview__docx-pages is-ready" : "file-preview__docx-pages"} ref={containerRef} />
-    </div>
-  );
-}
-
-function PptxPreview({ data }: { readonly data: LocalFilePreviewData }) {
-  const [state, setState] = useState<
-    | { readonly status: "loading" }
-    | { readonly status: "ready"; readonly slides: readonly string[] }
-    | { readonly status: "error"; readonly message: string }
-  >({ status: "loading" });
-  const [slideIndex, setSlideIndex] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setState({ status: "loading" });
-    setSlideIndex(0);
-    void normalizePptxRelationshipTargets(bytesAsArrayBuffer(data.bytes))
-      .then(async (source) => {
-        const { pptxToHtml } = await import("@jvmr/pptx-to-html");
-        return pptxToHtml(source, { width: 960, height: 540, scaleToFit: true, letterbox: true });
-      }).then(
-      (slides) => { if (active) setState({ status: "ready", slides: Object.freeze([...slides]) }); },
-      (cause: unknown) => { if (active) setState({ status: "error", message: errorMessage(cause) }); },
-    );
-    return () => { active = false; };
-  }, [data]);
-  if (state.status === "loading") return <LoadingPreview label="正在解析 PowerPoint 幻灯片" />;
-  if (state.status === "error") return <div className="file-preview__error" role="alert"><strong>PowerPoint 预览失败</strong><p>{state.message}</p></div>;
-  if (state.slides.length === 0) return <div className="file-preview__empty"><FileSearch size={30} /><strong>演示文稿中没有幻灯片</strong></div>;
-  const slide = state.slides[slideIndex] ?? state.slides[0] ?? "";
-  const document = secureHtmlDocument(slide, `
-    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #11131a; }
-    body { display: grid; place-items: center; }
-  `);
-  return (
-    <div className="file-preview__pptx">
-      <div className="file-preview__pager">
-        <button type="button" aria-label="上一张幻灯片" disabled={slideIndex === 0} onClick={() => setSlideIndex((value) => value - 1)}><ChevronLeft size={15} /></button>
-        <label className="file-preview__slide-picker">
-          <span className="sr-only">跳转幻灯片</span>
-          <select aria-label="跳转幻灯片" value={slideIndex} onChange={(event) => setSlideIndex(Number(event.target.value))}>
-            {state.slides.map((_, index) => <option value={index} key={index}>第 {index + 1} / {state.slides.length} 张</option>)}
-          </select>
-          <ChevronDown size={13} aria-hidden="true" />
-        </label>
-        <button type="button" aria-label="下一张幻灯片" disabled={slideIndex >= state.slides.length - 1} onClick={() => setSlideIndex((value) => value + 1)}><ChevronRight size={15} /></button>
-      </div>
-      <iframe className="file-preview__slide" title={`${data.name} 第 ${slideIndex + 1} 张`} sandbox="" srcDoc={document} />
     </div>
   );
 }
@@ -490,7 +405,7 @@ export function FilePreviewPanel({
   }, [moreOpen]);
 
   const data = state.status === "ready" ? state.data : undefined;
-  const nativePdfZoom = data?.kind === "pdf";
+  const internalPreviewZoom = data?.kind === "pdf" || data?.kind === "pptx";
   const statusNote = data?.kind === "html"
     ? "只读 · 脚本、表单与外部资源已隔离"
     : data?.kind === "docx" || data?.kind === "pptx" || data?.kind === "spreadsheet"
@@ -536,7 +451,7 @@ export function FilePreviewPanel({
               {data?.version && <small title={`SHA-256: ${data.version}`}>本机读取已验证 · 版本 {data.version.slice(0, 12)}</small>}
             </div>}
             {inspection && <div className="file-preview__controls">
-              {!nativePdfZoom && <div className="file-preview__zoom" aria-label="预览缩放">
+              {!internalPreviewZoom && <div className="file-preview__zoom" aria-label="预览缩放">
                 <button type="button" aria-label="缩小预览" disabled={zoom <= 50} onClick={() => setZoom((value) => Math.max(50, value - 10))}><ZoomOut size={14} /></button>
                 <button type="button" aria-label="重置预览缩放" onClick={() => setZoom(100)}>{zoom}%</button>
                 <button type="button" aria-label="放大预览" disabled={zoom >= 200} onClick={() => setZoom((value) => Math.min(200, value + 10))}><ZoomIn size={14} /></button>
@@ -560,7 +475,7 @@ export function FilePreviewPanel({
             {!inspection && <div className="file-preview__empty" role="status"><FileSearch size={30} /><strong>选择一个会话文件</strong><p>从上方下拉框选择输出，或点击对话中的“预览”按钮。</p></div>}
             {inspection && state.status === "loading" && <LoadingPreview label="正在读取本地文件" />}
             {inspection && state.status === "error" && <div className="file-preview__error" role="alert"><strong>无法预览这个文件</strong><p>{state.message}</p><button type="button" className="button-secondary" onClick={() => setReload((value) => value + 1)}><RotateCcw size={14} />重新读取</button></div>}
-            {inspection && data && <div ref={viewportRef} className="file-preview__viewport" style={{ "--file-preview-zoom": zoom / 100 } as CSSProperties}><PreviewContent api={api} data={data} /></div>}
+            {inspection && data && <div ref={viewportRef} className="file-preview__viewport" style={{ "--file-preview-zoom": internalPreviewZoom ? 1 : zoom / 100 } as CSSProperties}><PreviewContent api={api} data={data} /></div>}
           </div>
         </section>
       </div>

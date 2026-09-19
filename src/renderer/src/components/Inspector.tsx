@@ -57,6 +57,7 @@ interface InspectorProps {
   readonly onRefreshSubmissions?: () => void;
   readonly onReferenceFile?: (text: string) => void;
   readonly onExportDiagnostics?: () => void;
+  readonly onStopBackground?: () => void;
 }
 
 export type InspectorTab = "context" | "activity" | "tree" | "files";
@@ -86,11 +87,13 @@ function TreeNode({
   leafId,
   depth,
   onFork,
+  nodes,
 }: {
   readonly node: SessionTreeSummary;
   readonly leafId: string | null;
   readonly depth: number;
   readonly onFork: (entryId: string) => void;
+  readonly nodes: ReadonlyMap<string, SessionTreeSummary>;
 }) {
   const [open, setOpen] = useState(depth < 2);
   const hasChildren = node.children.length > 0;
@@ -112,11 +115,17 @@ function TreeNode({
       </div>
       {open && hasChildren && (
         <div className="tree-node__children">
-          {node.children.map((child) => <TreeNode key={child.entry.id} node={child} leafId={leafId} depth={depth + 1} onFork={onFork} />)}
+          {node.children.map((id) => nodes.get(id)).filter((child): child is SessionTreeSummary => Boolean(child)).map((child) => <TreeNode key={child.entry.id} node={child} nodes={nodes} leafId={leafId} depth={depth + 1} onFork={onFork} />)}
         </div>
       )}
     </div>
   );
+}
+
+function SessionTree({ nodes, leafId, onFork }: { readonly nodes: readonly SessionTreeSummary[]; readonly leafId: string | null; readonly onFork: (id: string) => void }) {
+  const byId = useMemo(() => new Map(nodes.map((node) => [node.entry.id, node])), [nodes]);
+  const roots = nodes.filter((node) => node.entry.parentId === null || node.entry.parentId === node.entry.id || !byId.has(node.entry.parentId));
+  return roots.map((node) => <TreeNode key={node.entry.id} node={node} nodes={byId} leafId={leafId} depth={0} onFork={onFork} />);
 }
 
 function ContextPanel({
@@ -142,6 +151,7 @@ function ContextPanel({
         <small>{stats.contextUsage?.tokens === null ? "压缩后用量待更新；下一次模型响应后显示" : "当前活动上下文，不是 Session 历史累计值"}</small>
       </div>
 
+      {bootstrap.statsError && <p className="context-stats-error" role="alert">统计刷新失败：{bootstrap.statsError}。当前显示最后一次成功读取的数值。</p>}
       <div className="context-compaction-status" role="status">
         <span className={autoCompactionEnabled ? "is-enabled" : "is-disabled"}>
           {autoCompactionEnabled ? <Check size={13} /> : <CircleAlert size={13} />}
@@ -246,6 +256,7 @@ export function Inspector({
   onRefreshSubmissions,
   onReferenceFile,
   onExportDiagnostics,
+  onStopBackground,
 }: InspectorProps) {
   const resizeStart = useRef<Readonly<{ clientX: number; width: number }> | null>(null);
   const [resizing, setResizing] = useState(false);
@@ -324,6 +335,7 @@ export function Inspector({
       </div>
       {tab === "context" && <ContextPanel bootstrap={bootstrap} compactDisabled={compactDisabled} onCompact={onCompact} onExport={onExport} onClone={onClone} onRename={onRename} onExportDiagnostics={onExportDiagnostics} />}
       {tab === "activity" && <div className="inspector-panel">
+        {onStopBackground && <button type="button" className="inspector-action" onClick={onStopBackground}><CircleAlert size={15} /><span><strong>停止 Pi 与后台计算</strong><small>本次 Pi 运行实例的本机子进程；远程 / 容器任务需另行核查</small></span></button>}
         <ActivityPanel tools={tools} queue={queue} extensionStatuses={extensionStatuses} extensionWidgets={extensionWidgets} />
         <NativeSubmissionPanel api={api} receipts={submissions ?? bootstrap.submissions ?? []} error={bootstrap.submissionError} onRefresh={onRefreshSubmissions ?? (() => undefined)} />
       </div>}
@@ -331,7 +343,7 @@ export function Inspector({
         <div className="inspector-panel tree-panel" id="inspector-panel-tree" role="tabpanel" aria-labelledby="inspector-tab-tree">
           <div className="tree-panel__intro"><GitFork size={15} /><p>会话是追加式树结构。可从任一用户消息创建新的独立分支。</p></div>
           <div className="session-tree">
-            {bootstrap.tree.map((node) => <TreeNode key={node.entry.id} node={node} leafId={bootstrap.leafId} depth={0} onFork={onFork} />)}
+            <SessionTree nodes={bootstrap.tree} leafId={bootstrap.leafId} onFork={onFork} />
             {bootstrap.tree.length === 0 && <div className="activity-empty"><GitFork size={18} /><p>发送第一条消息后，会话树会出现在这里。</p></div>}
           </div>
         </div>

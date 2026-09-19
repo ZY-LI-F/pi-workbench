@@ -68,6 +68,8 @@ export interface RuntimeUiState {
 }
 
 export type RuntimeAction =
+  | { readonly type: "SESSION_METRICS"; readonly stats: RuntimeBootstrap["stats"]; readonly scope?: RuntimeScope }
+  | { readonly type: "SESSION_METRICS_FAILED"; readonly error: string; readonly scope?: RuntimeScope }
   | { readonly type: "BOOTSTRAP"; readonly payload: RuntimeBootstrap; readonly preserveLiveState?: boolean }
   | { readonly type: "INITIALIZE_FAILED"; readonly error: string }
   | { readonly type: "SYNC_FAILED"; readonly error: string }
@@ -332,6 +334,8 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
   if (event.source === "pi") return handlePiEvent(state, event.payload as unknown as Record<string, unknown>);
   if (event.source === "board" || event.source === "capability" || event.source === "execution-backend") return state;
   const payload = event.payload;
+  if (payload.type === "background_stopped") return { ...state, notices: [...state.notices, { id: crypto.randomUUID(), type: "info",
+    message: `Pi 已停止，并核查本机后台进程（终止 ${payload.count} 个）。远程、容器或主动脱离监管的任务须在对应环境核查。` }] };
   if (payload.type === "runtime_stderr") return { ...state, stderr: appendDiagnosticText(state.stderr, payload.message) };
   // 运行时重启成功后清除上一次 runtime_exit / protocol_error 留下的错误横幅。
   if (payload.type === "runtime_ready") return { ...state, error: undefined };
@@ -349,6 +353,17 @@ function handleBridgeEvent(state: RuntimeUiState, event: BridgeEvent): RuntimeUi
 }
 
 export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): RuntimeUiState {
+  if (action.type === "SESSION_METRICS" || action.type === "SESSION_METRICS_FAILED") {
+    const bootstrap = state.bootstrap;
+    if (!bootstrap || (action.scope && state.scope && !sameRuntimeScope(action.scope, state.scope))
+      || (action.scope && action.scope.sequence < (bootstrap.statsSequence ?? -1))) return state;
+    if (action.type === "SESSION_METRICS_FAILED") return { ...state, bootstrap: { ...bootstrap, statsError: action.error } };
+    if (action.stats.sessionId !== bootstrap.state.sessionId
+      || (action.scope && action.scope.sequence < (bootstrap.statsSequence ?? -1))) return state;
+    return { ...state, bootstrap: { ...bootstrap, stats: action.stats, statsError: undefined, statsSequence: action.scope?.sequence,
+      sessions: bootstrap.sessions.map((session) => session.id === action.stats.sessionId
+        ? { ...session, messageCount: action.stats.totalMessages } : session) } };
+  }
   if (action.type === "EDITOR_INJECTION_APPLIED") {
     return state.editorInjection?.id === action.id ? { ...state, editorInjection: undefined } : state;
   }
@@ -371,7 +386,9 @@ export function runtimeReducer(state: RuntimeUiState, action: RuntimeAction): Ru
     return {
       ...base,
       phase: "ready",
-      bootstrap: action.payload,
+      bootstrap: !identityChanged && scoped && (state.bootstrap?.statsSequence ?? -1) > (action.payload.statsSequence ?? -1)
+        ? { ...action.payload, stats: state.bootstrap!.stats, statsSequence: state.bootstrap!.statsSequence, statsError: state.bootstrap!.statsError }
+        : action.payload,
       ...(scoped ? reconcileSnapshotMessages(state, action.payload) : preserveLive ? {} : resumeMessageProjection(action.payload.messages, action.payload.state.isStreaming)),
       scope: (liveStateNewer || preserveLive) && state.scope ? state.scope : action.payload.scope,
       retiredGenerations: state.retiredGenerations,

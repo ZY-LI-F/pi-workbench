@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import { defineConfig, externalizeDepsPlugin } from "electron-vite";
+import { pdfAssets } from "./src/build/pdf-assets";
 
 export default defineConfig({
   main: {
@@ -21,7 +22,7 @@ export default defineConfig({
   },
   renderer: {
     root: resolve("src/renderer"),
-    plugins: [react()],
+    plugins: [react(), pdfAssets()],
     resolve: {
       alias: {
         "@renderer": resolve("src/renderer/src"),

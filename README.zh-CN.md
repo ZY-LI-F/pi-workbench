@@ -2,7 +2,13 @@
 
 [English](README.md) | **简体中文**
 
-当前源码版本：**v0.7.1** · Android versionCode：**9**。
+当前源码版本：**v0.7.2** · Android versionCode：**10**。
+
+当前源码精确锁定官方 **Pi 0.85.1**。Stella 只保留一套 Pi 依赖，使用公开 SDK/RPC 接口；未 fork Pi，也未安装 SoL 运行时。升级验证见[验收记录](docs/testing/pi-0.85.1-upgrade-2026-09-18.md)。历史已发布安装包仍保留各自原有的内置版本。
+
+**偏好设置 → Pi 版本管理**：启动时对比本机命令行 Pi 与 GUI 内置 Pi，版本不一致时提示同步，只有原生确认窗口中同意后才安装精确目标版本（本机版本较高时会明确提示降级）。先核对启动入口和 npm 全局目录，不覆盖来源不明的安装。GUI 不要求设备另装全局 Pi。**Sol-Pi 尚未接入**，设置页明确显示此状态，没有无效的模式开关。
+
+原生可靠性维护：长会话树改为扁平节点与子节点 ID 跨 IPC；长回合中的用量与上下文在完成响应后独立刷新。停止操作同时清理受管本机后台计算；回合结束后仍可使用 **检查器 → 活动 → 停止 Pi 与后台计算**。Windows 使用 Job Object，POSIX 按运行实例继承标记跟踪；远程、容器或主动脱离监管范围的任务需在对应环境核查。详见[设计及边界](docs/specs/native-runtime-preview-maintenance.md)和[验收记录](docs/testing/native-runtime-preview-2026-09-19.md)。
 
 > **Pi 原生桌面工作台 + 本地多 CLI Agent 控制面。** 在同一个应用里完成真实 Pi 会话、Pi/Codex/Claude 任务执行、外部 CLI 活动查看、任务看板、人工验收、产物与自动化。
 
@@ -24,7 +30,7 @@ Stella 是为 [earendil-works/pi](https://github.com/earendil-works/pi) 打造�
 - 右侧文件预览显示内容版本，可将文件路径或选区追加到草稿。磁盘文件变化时需刷新后引用；已有草稿与发送中新增内容不会被覆盖。
 - 阅读位置、选中文件和未读提示按会话保留；保存的旧“运行中”不会被当作重启后的实时状态。回执使用应用数据目录中的 `native-submissions.json`，视图元数据保存在本机页面存储，均不修改 Pi JSONL。
 
-当前回执仅证明 GUI 提交及 Pi 接收情况，不承诺跨应用的 exactly-once 模型执行。未来格式不兼容或写盘失败会明确报错并保留原数据。隔离 HTML/PDF 内部选区不可读取时，预览仍提供文件级引用，不取消隔离。Windows 安装包未签名；macOS 仍需在对应平台构建、签名和验证。
+当前回执仅证明 GUI 提交及 Pi 接收情况，不承诺跨应用的 exactly-once 模型执行。未来格式不兼容或写盘失败会明确报错并保留原数据。隔离 HTML/PPTX 内部选区不可读取时，预览仍提供文件级引用，不取消隔离。Windows 安装包未签名；macOS 仍需在对应平台构建、签名和验证。
 
 | 能力面 | 用户得到什么 | 架构边界 |
 | --- | --- | --- |
@@ -88,9 +94,9 @@ Pi 在回复中提及绝对本地文件路径后，“输出文件与路径”�
 
 - 图片：PNG、JPEG、GIF、WebP、AVIF、BMP、SVG；SVG 会先移除脚本、事件处理器与外部引用。
 - 网页与文本：HTML、Markdown、JSON、CSV、TSV、XML、YAML 和普通文本；HTML 在无脚本 sandbox 中显示，表单、网络请求、外部资源和嵌入对象被隔离，Markdown 链接仍由 Stella 的受控外链入口打开。
-- PDF：使用 Electron / Chromium 内置的本地 PDF 阅读器，不引入 PDF.js 或 Office 插件。
+- PDF：使用本地 PDF.js，支持连续页滚动、页码跳转、适应宽度、倍率和可选择复制的文字层。字体、CMaps 和解码器随构建提供，不依赖 Chromium 辅助文本下载或 Office 插件；不执行文档脚本，不自动下载 OCR，扫描页无文字时明确提示。
 - Word：DOCX 使用 [docx-preview](https://github.com/VolodymyrBaydalka/docxjs) 按页呈现文字、表格和常见样式；不执行 AltChunk、批注、修订或嵌入程序。
-- PowerPoint：PPTX 使用 [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html) 转为隔离 HTML 幻灯片，并在解析前规范化合法的 OOXML 包根关系路径；支持逐页切换，不执行动画、宏和嵌入式程序。
+- PowerPoint：PPTX 使用 [@jvmr/pptx-to-html](https://github.com/javier-mora/pptx-to-html) 转为隔离 HTML 幻灯片，并规范化合法的 OOXML 包根关系路径；默认按原始比例适应整页，放大时滚动画布，翻页工具栏不随之缩小。支持页码下拉、前后翻页，以及预览聚焦时的方向键、Page Up/Down、Home/End。不执行动画、宏和嵌入式程序；复杂排版可能与 PowerPoint 不同。助手正文中加粗的绝对文件路径也能识别为产物。
 - Excel：XLSX / XLSM 使用 [@office-kit/xlsx](https://github.com/office-kit/xlsx) 读取工作表、合并单元格、行列尺寸、隐藏行列和常见单元格样式；支持工作表与大范围分页切换，不执行宏。旧二进制 `DOC / PPT / XLS` 不伪装为可预览，仍可通过“所在位置”交给用户选择系统应用。
 
 Word、PowerPoint 和 Excel 解析器均为动态导入，普通聊天启动不会加载这些代码。主进程在每次预览前重新校验 canonical path，只允许读取当前项目、Pi 数据目录或 Stella 应用数据目录内的普通文件；文件不会上传。工具栏提供缩放、刷新、铺满窗口、系统打开（安全类型）、打开所在位置和复制完整路径。
@@ -325,7 +331,7 @@ npm run preview
 
 ## Windows / macOS 安装包
 
-安装包采用“内置 Pi 运行时、复用用户配置”的结构。`@earendil-works/pi-coding-agent@0.84.2` 及其生产依赖会随 Stella 一起进入安装包，主进程使用 Electron 自带的 Node 运行内置 RPC 入口，因此接收者的全局 `pi` 命令安装在哪里、有没有加入 `PATH`，都不会影响 GUI 启动。Codex 与 Claude 是可选外部 CLI，明确不进入安装包。
+从当前源码构建的安装包采用“内置 Pi 运行时、复用用户配置”的结构。`@earendil-works/pi-coding-agent@0.85.1` 及其生产依赖会随 Stella 一起进入安装包，主进程使用 Electron 自带的 Node 运行内置 RPC 入口，因此接收者的全局 `pi` 命令安装在哪里、有没有加入 `PATH`，都不会影响 GUI 启动。Codex 与 Claude 是可选外部 CLI，明确不进入安装包。
 
 接收者自己的配置、认证、会话、扩展和技能仍从 Pi 的标准用户目录读取：
 

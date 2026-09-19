@@ -1,8 +1,11 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { expect, test, _electron as electron } from "@playwright/test";
 import { enableTeamFeatures } from "./helpers/team-features";
 import { availableLoopbackPort } from "./helpers/native-fixture";
+
+const expectedPiVersion = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"))
+  .dependencies["@earendil-works/pi-coding-agent"] as string;
 
 function packagedExecutable(): string | undefined {
   const explicit = process.env.STELLA_PACKAGED_EXECUTABLE;
@@ -216,7 +219,7 @@ test("packaged app boots its bundled Pi RPC runtime", async ({}, testInfo) => {
     }
     await window.getByRole("button", { name: "偏好设置", exact: true }).click();
     const settings = window.getByRole("dialog", { name: "偏好设置" });
-    await expect(settings.getByText(/Pi Workbench · Pi v0\.84\.2/)).toBeVisible();
+    await expect(settings.getByText(`Pi Workbench · Pi v${expectedPiVersion}`, { exact: false })).toBeVisible();
     await expect(window.locator(".sidebar")).not.toHaveClass(/is-open/);
     expect(pageErrors).toEqual([]);
   } finally {
