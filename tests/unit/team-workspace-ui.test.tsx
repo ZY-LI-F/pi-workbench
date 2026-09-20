@@ -2,11 +2,12 @@ import React from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { StellaDesktopApi } from "@shared/contracts";
+import type { ProjectMeta, StellaDesktopApi } from "@shared/contracts";
 import { BOARD_SCHEMA_VERSION, type BoardBootstrap, type KanbanTask } from "@shared/kanban";
 import { BUILTIN_ORCHESTRATION_CATALOG } from "@shared/orchestration-catalog";
 import type { KanbanController } from "@renderer/hooks/use-kanban";
 import { TeamWorkspace } from "@renderer/features/team/TeamWorkspace";
+import { useTeamChannel } from "@renderer/hooks/use-team-channel";
 
 afterEach(() => cleanup());
 
@@ -66,6 +67,7 @@ function stubController(): KanbanController {
       liveAgentTaskEvents: Object.freeze({}),
     },
     createTask: operation,
+    assignTaskProject: operation,
     launchTeamTask: operation,
     updateTask: operation,
     moveTask: operation,
@@ -93,19 +95,27 @@ const API = Object.freeze({
   copyText: vi.fn(async () => undefined),
 }) as unknown as StellaDesktopApi;
 
-function renderWorkspace() {
-  return render(
+function WorkspaceHarness({ project = PROJECT, controller = stubController(), visible = true, focusLaunchRequest = 0 }: { project?: ProjectMeta; controller?: KanbanController; visible?: boolean; focusLaunchRequest?: number }) {
+  const channel = useTeamChannel(project.cwd);
+  return visible ? (
     <TeamWorkspace
       api={API}
-      controller={stubController()}
-      project={PROJECT}
+      controller={controller}
+      project={project}
+      selectedTaskId={channel.selectedTaskId}
+      onSelectTask={channel.selectTask}
+      focusLaunchRequest={focusLaunchRequest}
       executionEnabled
       onOpenSidebar={() => undefined}
       onNewTask={() => undefined}
       onContinueTaskSession={async () => undefined}
       onError={() => undefined}
     />,
-  );
+  ) : null;
+}
+
+function renderWorkspace() {
+  return render(<WorkspaceHarness />);
 }
 
 describe("TeamWorkspace", () => {
@@ -139,17 +149,53 @@ describe("TeamWorkspace", () => {
     const user = userEvent.setup();
     const controller = stubController();
     const view = render(
-      <TeamWorkspace api={API} controller={controller} project={PROJECT} executionEnabled onOpenSidebar={() => undefined} onNewTask={() => undefined} onContinueTaskSession={async () => undefined} onError={() => undefined} />,
+      <WorkspaceHarness controller={controller} project={PROJECT} />,
     );
     await user.click(screen.getByRole("button", { name: /任务一/ }));
     expect(screen.getByLabelText("任务详情：任务一")).toBeTruthy();
 
     view.rerender(
-      <TeamWorkspace api={API} controller={controller} project={OTHER_PROJECT} executionEnabled onOpenSidebar={() => undefined} onNewTask={() => undefined} onContinueTaskSession={async () => undefined} onError={() => undefined} />,
+      <WorkspaceHarness controller={controller} project={OTHER_PROJECT} />,
     );
 
     await waitFor(() => expect(screen.queryByLabelText("任务详情：任务一")).toBeNull());
     expect(screen.getByRole("button", { name: /其他项目任务/ })).toBeTruthy();
     expect(screen.getByRole("region", { name: "任务启动台" })).toBeTruthy();
+  });
+
+  it("restores the selected channel across page unmounts even after a launch request", async () => {
+    const user = userEvent.setup();
+    const controller = stubController();
+    const view = render(<WorkspaceHarness controller={controller} focusLaunchRequest={1} />);
+    await user.click(screen.getByRole("button", { name: /任务二/ }));
+    view.rerender(<WorkspaceHarness controller={controller} visible={false} focusLaunchRequest={1} />);
+    view.rerender(<WorkspaceHarness controller={controller} focusLaunchRequest={1} />);
+    expect(screen.getByLabelText("任务详情：任务二")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /任务二/ }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("remembers channels per project instead of leaking one project's room into another", async () => {
+    const user = userEvent.setup();
+    const controller = stubController();
+    const view = render(<WorkspaceHarness controller={controller} />);
+    await user.click(screen.getByRole("button", { name: /任务一/ }));
+    view.rerender(<WorkspaceHarness controller={controller} project={OTHER_PROJECT} />);
+    await user.click(screen.getByRole("button", { name: /其他项目任务/ }));
+    view.rerender(<WorkspaceHarness controller={controller} />);
+    expect(screen.getByLabelText("任务详情：任务一")).toBeTruthy();
+    view.rerender(<WorkspaceHarness controller={controller} project={OTHER_PROJECT} />);
+    expect(screen.getByLabelText("任务详情：其他项目任务")).toBeTruthy();
+  });
+
+  it("does not discard selection during loading, but clears a removed task after loading", async () => {
+    const user = userEvent.setup();
+    const controller = stubController();
+    const view = render(<WorkspaceHarness controller={controller} />);
+    await user.click(screen.getByRole("button", { name: /任务一/ }));
+    view.rerender(<WorkspaceHarness controller={{ ...controller, state: { ...controller.state, bootstrap: undefined, phase: "loading" } }} />);
+    view.rerender(<WorkspaceHarness controller={controller} />);
+    expect(screen.getByLabelText("任务详情：任务一")).toBeTruthy();
+    view.rerender(<WorkspaceHarness controller={{ ...controller, state: { ...controller.state, bootstrap: { ...BOOTSTRAP, board: { ...BOOTSTRAP.board, tasks: [] } } } }} />);
+    await waitFor(() => expect(screen.getByRole("region", { name: "任务启动台" })).toBeTruthy());
   });
 });

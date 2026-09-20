@@ -186,6 +186,8 @@ test("unassigned Tasks work before choosing a project and long Task lists remain
     await window.getByPlaceholder("记录进展、决定或阻塞…").fill("没有项目也能保存进展");
     await window.getByRole("button", { name: "发送评论", exact: true }).click();
     await window.getByLabel("手动移动任务").selectOption("review");
+    // selectOption dispatches the UI event; it does not await the Board commit.
+    await expect(window.locator(".task-detail__badges .status-chip")).toHaveText("任务 · 待审核");
     const created = (await window.evaluate(() => window.stella.boardInitialize())).board.tasks.find((task) => task.title === "无需项目即可创建")!;
     createdId = created.id;
     expect(created.projectPath).toBeUndefined();

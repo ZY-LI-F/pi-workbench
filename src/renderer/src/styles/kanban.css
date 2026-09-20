@@ -1023,6 +1023,7 @@
 
 .kanban-card__topline {
   display: flex;
+  flex-wrap: wrap;
   min-width: 0;
   align-items: center;
   gap: 5px;
@@ -1127,7 +1128,13 @@
   justify-content: space-between;
   color: var(--text-faint);
   font-size: 0.75rem;
+  gap: 6px;
 }
+
+.kanban-card__workflow > span { min-width: 0; overflow-wrap: anywhere; }
+.kanban-card__workflow > strong { flex: none; }
+.kanban-card__agent > svg, .kanban-card__agent > .agent-pulse { flex: none; }
+.kanban-card__agent-event { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .kanban-card__workflow strong {
   color: var(--text-muted);
@@ -2451,7 +2458,8 @@
   margin: 2px 0 9px;
   padding: 6px 8px;
   overflow: hidden;
-  grid-template-columns: 29px minmax(0, 1fr) auto;
+  grid-template-columns: 29px minmax(0, 1fr);
+  row-gap: 3px;
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
   border-radius: var(--radius-sm);
@@ -2500,9 +2508,9 @@
 }
 
 .agent-task-rail > div { display: flex; min-width: 0; flex-direction: column; }
-.agent-task-rail small { color: var(--accent); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; }
+.agent-task-rail small { overflow: hidden; color: var(--accent); font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-overflow: ellipsis; white-space: nowrap; }
 .agent-task-rail strong { overflow: hidden; margin-top: 2px; color: var(--text-soft); font-size: 0.75rem; text-overflow: ellipsis; white-space: nowrap; }
-.agent-task-rail > em { position: relative; z-index: 1; color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; font-style: normal; }
+.agent-task-rail > em { position: relative; z-index: 1; grid-column: 2; min-width: 0; overflow: hidden; color: var(--text-faint); font-family: var(--font-mono); font-size: 0.75rem; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .agent-task-rail--succeeded { border-color: color-mix(in srgb, var(--success) 25%, var(--border)); }
 .agent-task-rail--succeeded > span i { border-color: var(--success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 8%, transparent); }
 .agent-task-rail--failed,

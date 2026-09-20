@@ -58,7 +58,7 @@ export function AgentExecutionGraph({ agentTasks, activeRootId, queueEntries = [
         return <div className="agent-execution-round" key={round}>
           <div className="agent-execution-round__label"><GitBranch size={12} /><span>第 {round} 轮</span></div>
           {delegated.length > 0 && <div className="agent-execution-round__nodes">{delegated.map((candidate) => <GraphNode key={candidate.id} agentTask={candidate} queueEntry={queueById.get(candidate.id)} />)}</div>}
-          {reviews.length > 0 && <div className="agent-execution-round__merge"><GitMerge size={13} />{reviews.map((candidate) => <GraphNode key={candidate.id} agentTask={candidate} queueEntry={queueById.get(candidate.id)} />)}</div>}
+          {reviews.map((candidate) => <div key={candidate.id} className="agent-execution-round__merge"><GitMerge size={13} /><GraphNode agentTask={candidate} queueEntry={queueById.get(candidate.id)} /></div>)}
         </div>;
       })}
     </section>

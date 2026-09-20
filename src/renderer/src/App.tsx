@@ -31,6 +31,7 @@ import type { LocalPathInspection } from "@shared/local-path";
 import type { SkinArtworkDescriptor, SkinId } from "@shared/skin-artwork";
 import { isReportedRuntimeError, usePiRuntime } from "./hooks/use-pi-runtime";
 import { useKanban } from "./hooks/use-kanban";
+import { useTeamChannel } from "./hooks/use-team-channel";
 import { useProjectRegistry } from "./hooks/use-project-registry";
 import { sameProjectPath } from "@shared/project-path";
 import { ProjectBoardWorkspace } from "./features/projects/ProjectBoardWorkspace";
@@ -192,6 +193,7 @@ export function App({ api }: AppProps) {
   const piHealth = capabilitySnapshot?.pi;
   const taskHealth = capabilitySnapshot?.task;
   const bootstrap = state.bootstrap;
+  const teamChannel = useTeamChannel(bootstrap?.project.cwd);
   const projects = useProjectRegistry(api, bootstrap?.project.requiresSelection ? undefined : bootstrap?.project.cwd);
   const composerDraft = useSessionComposerDraft(bootstrap, api);
   const nativeSubmissions = useNativeSubmissions(api, bootstrap, controller.notify);
@@ -383,6 +385,7 @@ export function App({ api }: AppProps) {
       return;
     }
     setWorkspaceView("team");
+    teamChannel.selectTask(undefined);
     setTeamLaunchRequest((value) => value + 1);
   };
 
@@ -846,6 +849,8 @@ export function App({ api }: AppProps) {
           onOpenSidebar={openSidebar}
           onNewTask={newTeamTask}
           focusLaunchRequest={teamLaunchRequest}
+          selectedTaskId={teamChannel.selectedTaskId}
+          onSelectTask={teamChannel.selectTask}
           availableSkillNames={bootstrap?.commands.flatMap((command) => command.source === "skill" && command.name.startsWith("skill:") ? [command.name.slice(6)] : [])}
           modelLabel={bootstrap?.state.model ? `${bootstrap.state.model.provider} / ${bootstrap.state.model.id}` : undefined}
           taskCapabilityError={taskHealth?.error}

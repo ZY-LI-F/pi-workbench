@@ -21,6 +21,8 @@ interface TaskCardProps {
   readonly executionLabel: string;
   readonly run?: WorkflowRun;
   readonly agentTask?: AgentTask;
+  readonly activeAgents?: readonly AgentTask[];
+  readonly liveAgentTaskEvents?: Readonly<Record<string, Extract<BoardBridgeEvent, { type: "agent-task-event" }>>>;
   readonly activities: readonly TaskActivity[];
   readonly liveEvent?: Extract<BoardBridgeEvent, { type: "agent-event" }>;
   readonly liveAgentTaskEvent?: Extract<BoardBridgeEvent, { type: "agent-task-event" }>;
@@ -42,12 +44,17 @@ function trailClass(status: WorkflowRun["steps"][number]["status"]): string {
   return "";
 }
 
-export function TaskCard({ task, workflow, executionLabel, run, agentTask, activities, liveEvent, liveAgentTaskEvent, busy, executionEnabled, executionDisabledReason, readOnly = false, onOpen, onDispatch, onDragStart, onDragEnd }: TaskCardProps) {
+export function TaskCard({ task, workflow, executionLabel, run: latestRun, agentTask: latestAgentTask, activeAgents = [], activities, liveEvent, liveAgentTaskEvent, liveAgentTaskEvents, busy, executionEnabled, executionDisabledReason, readOnly = false, onOpen, onDispatch, onDragStart, onDragEnd }: TaskCardProps) {
+  const executions = [latestRun, latestAgentTask].filter((candidate): candidate is WorkflowRun | AgentTask => Boolean(candidate));
+  const currentId = task.activeRunId ?? task.activeAgentTaskId ?? task.awaitingReviewExecution?.id;
+  const execution = executions.find((candidate) => candidate.id === currentId)
+    ?? executions.sort((left, right) => right.executionAttempt - left.executionAttempt || Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0];
+  const run = execution === latestRun ? latestRun : undefined;
+  const agentTask = execution === latestAgentTask ? latestAgentTask : undefined;
   const step = activeStep(run);
   const latestActivity = activities.at(-1);
   const isManual = task.executionTarget.kind === "manual";
   const canDispatch = !isManual && !task.activeRunId && !task.activeAgentTaskId && task.stage !== "completed";
-  const execution = run ?? agentTask;
   const collaborationScope = taskCollaborationScope(task, Boolean(run || agentTask));
   return (
     <article
@@ -99,8 +106,8 @@ export function TaskCard({ task, workflow, executionLabel, run, agentTask, activ
       {agentTask && (
         <div className={`agent-task-rail agent-task-rail--${agentTask.status}`}>
           <span><i /><b /></span>
-          <div><small>{agentTask.kind === "direct" ? "DIRECT AGENT" : agentTask.kind === "mention-root" ? "MENTION GROUP" : agentTask.kind === "squad-leader" ? "SQUAD LEADER" : agentTask.kind === "coordinator" ? "LEAD COORDINATOR" : agentTask.kind === "coordinator-review" ? "LEAD REVIEW" : "DELEGATED"}</small><strong>{agentTask.agentSnapshot.name}</strong></div>
-          <em>{liveAgentTaskEvent?.eventType ?? agentTask.status}</em>
+          <div><small>{agentTask.kind === "coordinator" || agentTask.kind === "squad-leader" ? "协调负责人" : agentTask.kind === "mention-root" ? "委派负责人" : "执行负责人"}</small><strong title={agentTask.agentSnapshot.name}>{agentTask.agentSnapshot.name}</strong></div>
+          <em title={agentTask.status === "running" ? liveAgentTaskEvent?.eventType : undefined}>{agentTask.status === "running" && liveAgentTaskEvent ? liveAgentTaskEvent.eventType : EXECUTION_STATUS_LABEL[agentTask.status]}</em>
         </div>
       )}
 
@@ -112,13 +119,14 @@ export function TaskCard({ task, workflow, executionLabel, run, agentTask, activ
           {step.status === "running" && <i className="agent-pulse" />}
         </div>
       )}
-      {!step && agentTask && !["reported", "failed", "interrupted", "cancelled"].includes(agentTask.status) && (
-        <div className="kanban-card__agent">
+      {!step && activeAgents.map((executor) => {
+        const event = liveAgentTaskEvents?.[executor.id];
+        return <div key={executor.id} className="kanban-card__agent" aria-label={`当前 Agent：${executor.agentSnapshot.name}`}>
           <Bot size={14} />
-          <span><small>当前 Agent</small><strong>{agentTask.agentSnapshot.name}</strong></span>
-          {agentTask.status === "running" && <i className="agent-pulse" />}
-        </div>
-      )}
+          <span><small>当前 Agent</small><strong title={executor.agentSnapshot.name}>{executor.agentSnapshot.name}</strong>{event && <small className="kanban-card__agent-event" title={event.eventType}>{event.eventType}</small>}</span>
+          <i className="agent-pulse" />
+        </div>;
+      })}
 
       <div className="kanban-card__footer">
         <span title={latestActivity?.summary}><Clock3 size={11} />{formatRelativeTime(latestActivity?.createdAt ?? task.updatedAt)}</span>

@@ -17,6 +17,7 @@ import { projectPathKey, sameProjectPath } from "@shared/project-path";
 import type { RegisteredProject } from "@shared/project-registry";
 import { deriveAgentPresences } from "@shared/agent-presence";
 import { deriveAgentTaskQueue } from "@shared/agent-task-scheduler";
+import { activeTaskAgents } from "@shared/active-task-agents";
 import {
   canMoveTaskManually,
   MANUAL_TASK_STAGES,
@@ -417,6 +418,8 @@ export function KanbanWorkspace({
                         executionLabel={executionLabelForTask(task, catalog, board.squads)}
                         run={run}
                         agentTask={agentTask}
+                        activeAgents={activeTaskAgents(task, agentTasks)}
+                        liveAgentTaskEvents={state.liveAgentTaskEvents}
                         activities={taskActivities(task.id)}
                         liveEvent={task.activeRunId && run ? state.liveEvents[run.id] : undefined}
                         liveAgentTaskEvent={agentTask ? state.liveAgentTaskEvents[agentTask.id] : undefined}
